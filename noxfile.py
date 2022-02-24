@@ -42,9 +42,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
 def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
-    install_with_constraints(
-        session, "invoke", "pytest", "xdoctest", "coverage[toml]", "pytest-cov"
-    )
+    install_with_constraints(session, "invoke", "pytest", "xdoctest", "coverage[toml]", "pytest-cov")
     try:
         session.run(
             "inv",

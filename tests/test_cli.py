@@ -13,7 +13,7 @@ from rics import cli
     [
         ([], "rics.cli.main"),
         (["--help"], "Usage: main [OPTIONS]"),
-        (["--version"], f"main, version { rics.__version__ }\n"),
+        (["--version"], f"main, version {rics.__version__}\n"),
     ],
 )
 def test_command_line_interface(options: List[str], expected: str) -> None:
