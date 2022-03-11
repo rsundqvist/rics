@@ -3,7 +3,6 @@ branch = true
 
 [report]
 omit =
-    tests/*
     src/rics/translation/fetching/*
     src/rics/translation/dio/*
     src/rics/_internal*
