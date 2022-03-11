@@ -2,6 +2,8 @@
 branch = true
 
 [report]
+source = src
+
 omit =
     src/rics/translation/fetching/*
     src/rics/translation/dio/*
