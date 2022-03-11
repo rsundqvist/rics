@@ -103,6 +103,6 @@ Examples:
     ('{id}:{name}, nice={is_nice}', '1:Morris, nice=True')
 
 .. _Translating with a SQL database:
-    https://github.com/rsundqvist/rics/jupyterlab/demo/sql-translation/SqlFetcher.ipynb
+    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/SqlFetcher.ipynb
 .. _config.yaml:
-    https://github.com/rsundqvist/rics/jupyterlab/demo/sql-translation/config.yaml
+    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.yaml
