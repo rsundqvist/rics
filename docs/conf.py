@@ -13,12 +13,12 @@
 #
 import rics
 
-# -- Project information -----------------------------------------------------
+# -- Project information -------------------------------------------------------
 
 # General information about the project.
-project = "rics"
-copyright = "2022, Richard Sundqvist"  # noqa: A001
-author = "Richard Sundqvist"
+project = rics.__title__
+copyright = rics.__copyright__  # noqa: A001
+author = rics.__author__
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
 # the built documents.
@@ -28,7 +28,7 @@ version = rics.__version__
 # The full version, including alpha/beta/rc tags.
 release = rics.__version__
 
-# -- General configuration ---------------------------------------------------
+# -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -37,6 +37,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
     "recommonmark",
 ]
 
@@ -48,25 +49,54 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
-# -- Options for HTML output -------------------------------------------------
+# -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "alabaster"
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+    "display_version": True,
+}
+
+# Used py sphinx_rtd_theme
+html_context = {
     "github_user": "rsundqvist",
-    "github_repo": "rics",
-    "github_banner": True,
-    "show_related": False,
-    "fixed_sidebar": True,
+    "display_github": True,  # Integrate GitHub
+    "github_version": "master",  # Version
+    "conf_py_path": "/docs/",  # Path in the checkout to the docs root
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_logo = "logo.png"
+
+# -- Nitpicky configuration ----------------------------------------------------
+nitpicky = True
+nitpick_ignore = [("py:class", "re.Pattern")]
+nitpick_ignore_regex = []
+with open("nitpick-regex-exceptions") as f:
+    for line in map(str.rstrip, filter(lambda l: l.strip(), f.readlines())):
+        if line.startswith("#"):
+            continue
+        nitpick_ignore_regex.append(("py:.*", "rics.*" + line))
+
+# -- Autodoc configuration -----------------------------------------------------
+autodoc_typehints = "signature"
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "member-order": "bysource",
+}
+
+# -- Intersphinx configuration -------------------------------------------------
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
+}
