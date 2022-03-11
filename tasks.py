@@ -20,6 +20,7 @@ COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
 COVERAGE_REPORT = COVERAGE_DIR.joinpath("index.html")
 SOURCE_DIR = ROOT_DIR.joinpath("src/rics")
 TEST_DIR = ROOT_DIR.joinpath("tests")
+NOTEBOOK_DIR = ROOT_DIR.joinpath("jupyterlab")
 PYTHON_TARGETS = [
     SOURCE_DIR,
     TEST_DIR,
@@ -99,6 +100,10 @@ def format_(c, check=False):
     black_options = ["--diff", "--check"] if check else ["--quiet"]
     _run(c, f"poetry run black {' '.join(black_options)} {PYTHON_TARGETS_STR}")
 
+    notebooks_only = r"--include .*\.ipynb"
+    _run(c, f"poetry run black {notebooks_only} {' '.join(black_options)} {NOTEBOOK_DIR}")
+    # _run(c, f"poetry run isort {' '.join(isort_options)} {NOTEBOOK_DIR}")
+
 
 @task()
 def flake8(c):
@@ -128,14 +133,14 @@ def lint(c):
 def mypy(c):
     # type: (Context) -> None
     """Run mypy."""
-    _run(c, f"poetry run mypy {PYTHON_TARGETS_STR}")
+    _run(c, f"poetry run mypy --non-interactive {PYTHON_TARGETS_STR}")
 
 
 @task()
 def tests(c):
     # type: (Context) -> None
     """Run tests."""
-    pytest_options = ["--xdoctest", "--cov", "--cov-report=", "--cov-fail-under=0"]
+    pytest_options = ["--xdoctest", "--cov", "--cov-append", "--cov-report=", "--cov-fail-under=0"]
     _run(c, f"poetry run pytest {' '.join(pytest_options)} {TEST_DIR} {SOURCE_DIR}")
 
 
