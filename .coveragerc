@@ -1,9 +1,13 @@
+[paths]
+source =
+    src
+    */site-packages
+
 [run]
-source = src
 branch = true
+source = rics
 
 [report]
-
 omit =
     src/rics/translation/fetching/*
     src/rics/translation/dio/*
