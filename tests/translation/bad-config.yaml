@@ -1,0 +1,74 @@
+extra-key-that-should-not-exist:
+  whatever
+
+################################################################################
+# For help, see https://rics.readthedocs.io                                    #
+#                                                                              #
+# Translator top-level configuration:                                          #
+# Same values are forwarded. See 'Forwarded configs' section.                  #
+################################################################################
+translator:
+  fmt: "{id}:{name}[ (original: {original_name})] *{from}†{to}"
+
+################################################################################
+# Fetcher configuration:
+################################################################################
+fetcher:
+  # Full class reference required only for custom implementations.
+  class: PandasFetcher
+
+  # --------------------------
+  # Base fetcher configuration
+  # --------------------------
+  allow_fetch_all: True
+
+#_______________________________________________________________________________
+#                              Forwarded configs                               #
+#-------------------------------------------------------------------------------
+# These are sent from the Translator to whoever needs them. All of them are    #
+# optional. This sections can be entirely removed  in which case defaults will #
+# be used instead. Not recommended as some tweaking is often needed.           #
+#-------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
+# Placeholder override configuration. Optional.
+#
+# Do the column names in your database lack internal consistency? This is the
+# section for you. Use this to bind strange placeholder names to "proper" names.
+# ------------------------------------------------------------------------------
+placeholder-overrides:
+  source-specific:
+    name_basics:
+      nconst: id
+      primaryName: name
+      birthYear: from
+      deathYear: to
+
+    title_basics:
+      tconst: id
+      primaryTitle: name
+      originalTitle: original_name
+      startYear: from
+      endYear: to
+
+  shared:
+  # Nothing for this example.
+
+# ------------------------------------------------------------------------------
+# Name-to-source mapping configuration. Optional.
+#
+# Overrides can be used to fix names that are "too hard" to be correctly mapped
+# programmatically. Overrides take precedence over the parameterized logic.
+# ------------------------------------------------------------------------------
+name-to-source-mapping:
+  unmapped_values_action: raise
+
+  score-function:
+    # Name is mandatory, everything else depends on the chosen function
+    name: like_database_table
+    apply_heuristics: True
+
+  overrides:
+    firstTitle: title_basics
+    nconst: name_basics
+    tconst: title_basics
