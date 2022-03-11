@@ -4,7 +4,7 @@
 # Settings -> Advanced Settings Editor -> Notebook -> Insert ``{ "recordTiming": true }``
 # under User Preferences (right panel). Using JSON Settings Editor is easier.
 
-# Allow connections temporarily (Ubuntu 20.04)
+# Allow connections temporarily (Ubuntu 20.04, needed to attach debugger)
 # echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope
 
 echo "================================================"

@@ -5,7 +5,7 @@ extra-key-that-should-not-exist:
 # For help, see https://rics.readthedocs.io                                    #
 #                                                                              #
 # Translator top-level configuration:                                          #
-# Same values are forwarded. See 'Forwarded configs' section.                  #
+# Some values are forwarded. See 'Forwarded configs' section.                  #
 ################################################################################
 translator:
   fmt: "{id}:{name}[ (original: {original_name})] *{from}†{to}"
