@@ -7,7 +7,7 @@ import nox
 from nox.sessions import Session
 
 nox.options.sessions = ["tests", "mypy"]
-python_versions = ["3.7", "3.8", "3.9", "3.10"]
+python_versions = ["3.8", "3.9", "3.10"]
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
@@ -20,7 +20,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
     versions specified in poetry.lock. This allows you to manage the
     packages as Poetry development dependencies.
 
-    Arguments:
+    Args:
         session: The Session object.
         args: Command-line arguments for pip.
         kwargs: Additional keyword arguments for Session.install.
@@ -42,7 +42,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
 def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
-    install_with_constraints(session, "invoke", "pytest", "xdoctest", "coverage[toml]", "pytest-cov")
+    install_with_constraints(session, "invoke", "pytest", "xdoctest", "coverage", "pytest-cov")
     try:
         session.run(
             "inv",
@@ -60,7 +60,7 @@ def tests(session: Session) -> None:
 def coverage(session: Session) -> None:
     """Produce the coverage report."""
     args = session.posargs if session.posargs and len(session._runner.manifest) == 1 else []
-    install_with_constraints(session, "invoke", "coverage[toml]")
+    install_with_constraints(session, "invoke", "coverage")
     session.run("inv", "coverage", *args)
 
 
