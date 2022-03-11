@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The `rics.utils` module for various common operations
+- The `rics.translation` package for translating IDs into human-readable labels
+- The `rics.mapping` package for linking elements in multiple directions
+- The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
+
+
 ## [0.1.0] - 2022-02-24
 ### Added
 - First release on PyPI.
