@@ -1,0 +1,29 @@
+[run]
+branch = true
+
+[report]
+omit =
+    tests/*
+    src/rics/translation/fetching/*
+    src/rics/translation/dio/*
+    src/rics/_internal*
+    */exceptions.py
+
+fail_under = 99
+
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug
+    if settings.DEBUG:
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == __main__:
+    LOGGER.isEnabledFor
+    if not isinstance\(other
+
+show_missing = true
+
+[html]
+directory = htmlcov
