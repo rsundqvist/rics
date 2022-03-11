@@ -1,0 +1,20 @@
+# Regex exceptions for nitpick. There's an issue for any and all generics
+# and typevars of which there are a lot.
+
+\.types\..*
+
+# Online translation
+_fetch_instruction\.FetchInstruction
+_resolve\.DefaultTranslatable
+_ids_to_fetch\.IdsToFetch
+
+# Offline translation
+_placeholder_overrides\.T
+online\.PlaceholderOverrides
+_magic_dict\.MagicDict
+
+# Mapping
+mapping\.BidirectionalMapping
+_directional_mapping\.(HL|HR)
+score_functions\.H
+_mapper\.(ValueType|CandidateType)
