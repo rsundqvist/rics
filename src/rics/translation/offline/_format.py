@@ -104,7 +104,7 @@ class Format:
         """
         ans = []
         pos = 0
-        while pos != -1:
+        while True:
             match = Format.PLACEHOLDER_PATTERN.search(format_string, pos=pos)
             if match is None:
                 break

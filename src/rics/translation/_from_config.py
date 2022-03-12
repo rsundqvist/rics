@@ -51,7 +51,7 @@ def _parse(path: str) -> "Translator":
 
 
 def _make_mapper(**config: Any) -> Mapper:
-    if "score-function" in config:
+    if "score-function" in config:  # pragma: no cover
         config["score_function_kwargs"] = config.pop("score-function")
         config["score_function"] = config["score_function_kwargs"].pop("name")
 

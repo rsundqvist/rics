@@ -14,7 +14,7 @@ omit =
     src/rics/_internal*
     */exceptions.py
 
-fail_under = 99
+fail_under = 100
 
 exclude_lines =
     pragma: no cover

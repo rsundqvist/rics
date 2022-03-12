@@ -49,7 +49,7 @@ def _extract_wildcards(**kwargs: Any) -> Tuple[Dict[str, Union[int, str]], Dict[
         if key and key.endswith(_LOG_LEVEL_SUFFIX):
             wildcard_key = key[: -len(_LOG_LEVEL_SUFFIX)].replace("_", ".")
             log_level = kwargs.pop(key)
-            if log_level is not None:
+            if log_level is not None:  # pragma: no cover
                 wildcard_log_levels[wildcard_key] = log_level
 
     return wildcard_log_levels, kwargs
