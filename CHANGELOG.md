@@ -9,9 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+## [0.1.1] - 2022-03-12
+First release on PyPI
+
 ## [0.1.0] - 2022-03-12
 ### Added
-- First release on PyPI!
 - The `rics.utility` package for various common operations
 - The `rics.translation` package suite for translating IDs into human-readable labels
 - The `rics.mapping` package for linking elements in multiple directions
