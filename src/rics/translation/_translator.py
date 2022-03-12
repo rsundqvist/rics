@@ -38,11 +38,11 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     """
 
     @classmethod
-    def from_config(cls, path: PathLikeType) -> "Translator":
+    def from_config(cls, path: Union[PathLikeType, Dict[str, Any]]) -> "Translator":
         """Create a translator from a YAML file.
 
         Args:
-            path: Path to a YAML file.
+            path: Path to a YAML file, or a pre-parsed dict.
 
         Returns:
             A Translator object.
