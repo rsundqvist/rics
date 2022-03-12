@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, Union
 
 import yaml
 
@@ -13,11 +13,11 @@ if TYPE_CHECKING:
     from rics.translation._translator import Translator  # pragma: no cover
 
 
-def translator_from_yaml_config(path: PathLikeType) -> "Translator":
+def translator_from_yaml_config(path: Union[PathLikeType, Dict[str, Any]]) -> "Translator":
     """Create a translator from a YAML file.
 
     Args:
-        path: Path to a YAML file.
+        path: Path to a YAML file, or a pre-parsed dict.
 
     Returns:
         A Translator object.
@@ -25,16 +25,19 @@ def translator_from_yaml_config(path: PathLikeType) -> "Translator":
     Raises:
         ConfigurationError: If the config is invalid.
     """
+    if isinstance(path, dict):
+        config = path  # pragma: no cover
+    else:
+        with open(path) as f:
+            config = yaml.safe_load(f)
+
     try:
-        return _parse(str(path))
+        return _parse(config)
     except Exception as e:  # noqa: B902, pragma: no cover
         raise ConfigurationError(f"{e}, {path=}") from e
 
 
-def _parse(path: str) -> "Translator":
-    with open(path) as f:
-        config = yaml.safe_load(f)
-
+def _parse(config: Dict[str, Any]) -> "Translator":
     main = config.pop("translator")
     fetcher = config.pop("fetcher")
     mapper = _make_mapper(**config.pop("name-to-source-mapping", {}))
