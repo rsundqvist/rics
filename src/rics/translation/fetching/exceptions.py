@@ -12,8 +12,9 @@ class ForbiddenOperationError(FetcherError):
         operation: The operation which was not supported.
     """
 
-    def __init__(self, operation: str) -> None:
-        super().__init__(f"Operation '{operation}' not supported by this fetcher.")
+    def __init__(self, operation: str, reason: str = "not supported by this fetcher.") -> None:
+        super().__init__(f"Operation '{operation}' " + reason)
+        self.operation = operation
 
 
 class ImplementationError(FetcherError):

@@ -42,6 +42,8 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         * :class:`rics.translation.Translator`, the main user interface for translation.
     """
 
+    FETCH_ALL: str = "FETCH_ALL"
+
     def __init__(
         self,
         allow_fetch_all: bool = True,
@@ -79,6 +81,11 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
     def placeholder_overrides(self, overrides: PlaceholderOverrides = None) -> None:
         self._overrides = overrides
 
+    @property
+    def allow_fetch_all(self) -> bool:
+        """Flag indicating whether the FETCH_ALL operation is permitted."""
+        return self._allow_fetch_all
+
     def fetch(
         self,
         ids_to_fetch: Iterable[IdsToFetch],
@@ -110,8 +117,8 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             sources = self.sources
             raise exceptions.UnknownSourceError(f"Sources {unknown_sources} not recognized: Known {sources=}.")
 
-        if not self._allow_fetch_all and any(t.ids is None for t in ids_to_fetch):
-            raise exceptions.ForbiddenOperationError(_FETCH_ALL)
+        if not self.allow_fetch_all and any(t.ids is None for t in ids_to_fetch):
+            raise exceptions.ForbiddenOperationError(self.FETCH_ALL)
 
         return self._fetch(ids_to_fetch, set(required_placeholders), set(optional_placeholders))
 
@@ -134,8 +141,8 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             UnknownPlaceholderError: For placeholder(s) that are unknown to the fetcher.
             ImplementationError: For errors made by the inheriting implementation.
         """
-        if not self._allow_fetch_all:
-            raise exceptions.ForbiddenOperationError(_FETCH_ALL)
+        if not self.allow_fetch_all:
+            raise exceptions.ForbiddenOperationError(self.FETCH_ALL)
 
         required_placeholders = set(required_placeholders)
         required_placeholders.add("id")
@@ -242,8 +249,8 @@ def _ensure_with_id(
         ids = next(instr.ids for instr in filter(lambda instr: instr.source == source, ids_to_fetch))
         if ids is None:
             raise exceptions.ImplementationError(
-                f"Implementation {tname(impl)}: '{impl}' did not return IDs for {source=} during a {_FETCH_ALL} "
-                f"operation. Placeholders received: {list(placeholders_dict)}."
+                f"Implementation {tname(impl)}: '{impl}' did not return IDs for {source=} during a {Fetcher.FETCH_ALL}"
+                f" operation. Placeholders received: {list(placeholders_dict)}."
             )
         placeholders_dict["id"] = list(ids)
     return placeholders_dict

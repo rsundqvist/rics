@@ -1,10 +1,10 @@
 import logging
-from typing import Any, Iterable, List, Optional
+import warnings
+from dataclasses import dataclass
+from typing import Any, Dict, FrozenSet, Iterable, List, Optional
 from urllib.parse import quote_plus
 
-import pandas as pd
-
-from rics.translation.fetching import Fetcher
+from rics.translation.fetching import Fetcher, exceptions
 from rics.translation.fetching._fetch_instruction import FetchInstruction
 from rics.translation.offline.types import IdType, PlaceholdersDict
 from rics.utility.misc import read_env_or_literal, tname
@@ -17,6 +17,28 @@ try:
     _SQLALCHEMY_INSTALLED = True
 except ModuleNotFoundError:
     _SQLALCHEMY_INSTALLED = False
+
+
+@dataclass(frozen=True)
+class TableSummary:
+    """Brief description of a known table."""
+
+    name: str
+    size: int
+    columns: sqlalchemy.sql.base.ImmutableColumnCollection
+    fetch_all_permitted: bool
+    # id_columns: str  # TODO hämta mha overrides
+
+    def select_columns(self, required: Iterable[str], optional: Iterable[str]) -> List[str]:
+        """Return required and optional columns of the table."""
+        required_columns = set(required)
+        known_column_names = set(self.columns.keys())
+        missing = required_columns.difference(known_column_names)
+        if missing:
+            raise ValueError(f"Table '{self.name}' missing required columns {missing}.")
+
+        optional_columns = known_column_names.intersection(optional)
+        return list(required_columns.union(optional_columns))
 
 
 class SqlFetcher(Fetcher[str, IdType, str]):
@@ -56,11 +78,23 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         self._engine = sqlalchemy.create_engine(self.parse_connection_string(connection_string, password))
         self._sanitizer = sqlalchemy.String().literal_processor(dialect=self._engine.dialect)
 
-        if whitelist_tables:
-            self._sources = list(whitelist_tables)
-        elif blacklist_tables:
-            self._sources = []  # TODO
-            raise NotImplementedError("blacklist_tables not implemented yet")
+        self._whitelist = set(whitelist_tables or [])
+        self._blacklist = set(blacklist_tables or [])
+        self._table_ts_dict: Optional[Dict[str, TableSummary]] = None
+        self._in_limit = fetch_in_below
+        self._between_limit = fetch_between_over
+        self._between_overfetch_limit = fetch_between_max_overfetch_factor
+        self._fetch_all_limit = fetch_all_limit
+
+    @property
+    def _summaries(self) -> Dict[str, TableSummary]:
+        """Names and sizes of tables that the fetcher may interact with."""
+        if self._table_ts_dict is None:
+            ts_dict = self._get_summaries()
+            LOGGER.info("Table discovery found %d tables: %s", len(ts_dict), sorted(ts_dict))
+            self._table_ts_dict = ts_dict
+
+        return self._table_ts_dict
 
     def sanitize_id(self, arg: IdType) -> IdType:
         """Sanitize an input."""
@@ -81,9 +115,9 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
     def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholdersDict:
         """Fetch columns from a SQL database."""
-        self.assert_online()
         table = self.sanitize_table(instr.source)
-        return pd.read_sql_table(table, self._engine, columns=instr.required)
+        columns = self._summaries[table].select_columns(instr.required, instr.optional)
+        return pd.read_sql_table(table, self._engine, columns=columns)
 
     @property
     def online(self) -> bool:
@@ -93,7 +127,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
     @property
     def sources(self) -> List[str]:
         """Source names known to the fetcher, such as ``cities`` or ``languages``."""
-        return self._sources
+        return list(self._summaries)
 
     def __repr__(self) -> str:
         engine = self._engine
@@ -113,3 +147,34 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         if password:
             connection_string = connection_string.format(password=quote_plus(read_env_or_literal(password)))
         return connection_string
+
+    def _get_summaries(self) -> Dict[str, TableSummary]:
+        metadata = sqlalchemy.MetaData(self._engine)
+        metadata.reflect()
+        table_names = set(metadata.tables)
+
+        if self._whitelist:
+            tables = self._whitelist.intersection(table_names)
+        elif self._blacklist:
+            tables = set(table_names).difference(self._blacklist)
+        else:
+            tables = table_names
+
+        if not tables:  # pragma: no cover
+            if self._whitelist:
+                extra = f" whitelisted tables: {self._whitelist}"
+            elif self._whitelist:
+                extra = f" blacklisted tables: {self._whitelist}"
+            else:
+                extra = ""
+
+            warnings.warn(f"No tables found with{extra}. Available tables: {table_names}")
+            return {}
+
+        ans = {}
+        for name in tables:
+            size = next(self._engine.execute(sqlalchemy.select(sqlalchemy.text(f"count(*) AS count FROM {name}"))))[0]
+            columns = frozenset(column.key for column in metadata.tables[name].columns)
+            ans[name] = TableSummary(name, size, columns)
+
+        return ans
