@@ -59,10 +59,7 @@ flake8-logging-format = "^0.6.0"
 flake8-bugbear = "^22.1.11"
 flake8-annotations = "^2.6.2"
 flake8-docstrings = "^1.6.0"
-# 1.7.3 adds a new argument to BanditNodeVisitor, causing issues with flake8-bandit
-# https://github.com/tylerwince/flake8-bandit/issues/21
-flake8-bandit = "2.1.2"
-bandit = "1.7.2"
+flake8-bandit = ">=2.1.2"
 darglint = "^1.8.0"
 isort = "^5.9.3"
 black = { version = "^22", extras=["jupyter"] }
@@ -114,7 +111,7 @@ mccabe = ["+*"]
 darglint = ["+*"]
 
 flake8-annotations = ["+*",
-    "-ANN101", "-ANN102" # Typehint for self/csl
+    "-ANN101", "-ANN102" # Typehint for self/cls
 ]
 flake8-docstrings = ["+*",
     "-D105", # Missing docstring in magic method
@@ -125,7 +122,7 @@ flake8-darglint = ["+*",
     "-DAR402", # The docstring describes an exception not explicitly raised. - for delegates that raise
 ]
 flake8-logging-format = ["+*",
-    "-G004", # Logging statements should not use fstring. - I think this is fine IF guarded by enabledFor
+    "-G004", # Logging statements should not use fstring. - I think this is fine IFF under enabledFor-guard
 ]
 
 [tool.flakehell.exceptions."tests/"]
