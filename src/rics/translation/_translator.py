@@ -162,7 +162,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
         translation_map = self._to_translation_map(source_placeholders_dict)
         LOGGER.info("Store %s", translation_map)
-        if delete_fetcher:
+        if delete_fetcher:  # pragma: no cover
             self._fetcher.close()
             del self._fetcher
         self._cached_tmap = translation_map
@@ -231,7 +231,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                     found = True
                     break
             if not found:
-                raise AttributeError(  # pragma: no cover
+                raise AttributeError(
                     "Must pass 'names' since type "
                     f"'{type(translatable)}' has none of {_NAME_ATTRIBUTES} as and attribute."
                 )

@@ -66,6 +66,7 @@ def _translate(translator):
     "data,clazz,kwargs",
     [
         (object(), UntranslatableTypeError, {"names": 1}),
+        ((1, 2), AttributeError, {}),
         ((1, 2), NotInplaceTranslatableError, {"inplace": True, "names": "positive_numbers"}),
     ],
 )
