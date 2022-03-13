@@ -1,11 +1,12 @@
 import logging
 import warnings
 from dataclasses import dataclass
-from typing import Any, Dict, FrozenSet, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Set
 from urllib.parse import quote_plus
 
 from rics.translation.fetching import Fetcher, exceptions
 from rics.translation.fetching._fetch_instruction import FetchInstruction
+from rics.translation.offline import PlaceholderOverrides
 from rics.translation.offline.types import IdType, PlaceholdersDict
 from rics.utility.misc import read_env_or_literal, tname
 
@@ -27,7 +28,7 @@ class TableSummary:
     size: int
     columns: sqlalchemy.sql.base.ImmutableColumnCollection
     fetch_all_permitted: bool
-    # id_columns: str  # TODO hämta mha overrides
+    id_column: sqlalchemy.schema.Column
 
     def select_columns(self, required: Iterable[str], optional: Iterable[str]) -> List[str]:
         """Return required and optional columns of the table."""
@@ -53,6 +54,11 @@ class SqlFetcher(Fetcher[str, IdType, str]):
             be an environment variable just like `connection_string`.
         whitelist_tables: The only tables the fetcher may access.
         blacklist_tables: The only tables the fetcher may not access.
+        fetch_in_below: Always use ``IN``-clause when fetching less than `fetch_in_below` IDs.
+        fetch_between_over: Always use ``BETWEEN``-clause when fetching more than `fetch_between_over` IDs.
+        fetch_between_max_overfetch_factor: If number of IDs to fetch is between `fetch_in_below` and
+            `fetch_between_over`, use this factor to choose between ``IN`` and ``BETWEEN`` clause.
+        fetch_all_limit: Maximum size of table to allow a fetch all-operation. None=No limit, 0=never allow.
 
     Raises:
         ValueError: If both `blacklist` and `whitelist` are given.
@@ -65,6 +71,10 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         password: str = None,
         whitelist_tables: Iterable[str] = None,
         blacklist_tables: Iterable[str] = None,
+        fetch_in_below: int = 1200,
+        fetch_between_over: int = 10_000,
+        fetch_between_max_overfetch_factor: float = 2.5,
+        fetch_all_limit: Optional[int] = 100_000,
         **kwargs: Any,
     ) -> None:
         if not _SQLALCHEMY_INSTALLED:
@@ -115,9 +125,54 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
     def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholdersDict:
         """Fetch columns from a SQL database."""
-        table = self.sanitize_table(instr.source)
-        columns = self._summaries[table].select_columns(instr.required, instr.optional)
-        return pd.read_sql_table(table, self._engine, columns=columns)
+        ts = self._summaries[instr.source]
+        columns = ts.select_columns(instr.required, instr.optional)
+        select = sqlalchemy.select(map(ts.columns.get, columns))
+
+        if instr.ids is None and not ts.fetch_all_permitted:
+            raise exceptions.ForbiddenOperationError(self.FETCH_ALL, f"disabled for table '{ts.name}'.")
+
+        stmt = select if instr.ids is None else self._make_query(ts, select, set(instr.ids))
+        return self._execute(columns, stmt)
+
+    def _execute(self, columns: List[str], select: sqlalchemy.sql.Select) -> PlaceholdersDict:
+        # TODO This is very inefficient, change for PlaceholdersDict format?
+        ans: Dict[str, List[Any]] = {c: [] for c in columns}
+        for row in self._engine.execute(select):
+            for c, v in zip(columns, row):
+                ans[c].append(v)
+        # TODO remove this as well when fixing return format
+        return ans  # type: ignore
+
+    def _make_query(self, ts: TableSummary, select: sqlalchemy.sql.Select, ids: Set[IdType]) -> sqlalchemy.sql.Select:
+        num_ids = len(ids)
+
+        # Just fetch everything if we're getting "most of" the data anyway
+        if ts.size < 25 or num_ids / ts.size > 0.9:
+            if num_ids > ts.size:
+                warnings.warn(f"Fetching {num_ids} unique IDs from table '{ts.name}' which only has {ts.size} rows.")
+            return select
+
+        in_clause = select.where(ts.id_column.in_(ids))
+        if num_ids < self._in_limit:
+            return in_clause
+
+        min_id = min(ids)
+        max_id = max(ids)
+        between_clause = select.where(ts.id_column.between(min_id, max_id))
+        if isinstance(next(iter(ids)), str) or num_ids > self._between_limit:
+            return between_clause
+
+        try:
+            overfetch_factor = (max_id - min_id) / num_ids  # type: ignore
+        except TypeError:
+            return between_clause
+
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            s = "IN" if overfetch_factor > self._between_overfetch_limit else "BETWEEN"
+            LOGGER.debug(f"Overfetch factor is {overfetch_factor:.2%}: Use {s}-clause.")
+
+        return in_clause if overfetch_factor > self._between_overfetch_limit else between_clause
 
     @property
     def online(self) -> bool:
@@ -128,6 +183,11 @@ class SqlFetcher(Fetcher[str, IdType, str]):
     def sources(self) -> List[str]:
         """Source names known to the fetcher, such as ``cities`` or ``languages``."""
         return list(self._summaries)
+
+    @property
+    def allow_fetch_all(self) -> bool:
+        """Flag indicating whether the FETCH_ALL operation is permitted."""
+        return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
     def __repr__(self) -> str:
         engine = self._engine
@@ -174,7 +234,13 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         ans = {}
         for name in tables:
             size = next(self._engine.execute(sqlalchemy.select(sqlalchemy.text(f"count(*) AS count FROM {name}"))))[0]
-            columns = frozenset(column.key for column in metadata.tables[name].columns)
-            ans[name] = TableSummary(name, size, columns)
+            fetch_all_permitted = self._fetch_all_limit is None or size < self._fetch_all_limit
+            id_column_name = (
+                PlaceholderOverrides.get_mapped_value("id", self.placeholder_overrides.reverse()[name])
+                if self.placeholder_overrides
+                else "id"
+            )
+            id_column = metadata.tables[name].columns[id_column_name]
+            ans[name] = TableSummary(name, size, metadata.tables[name].columns, fetch_all_permitted, id_column)
 
         return ans
