@@ -84,7 +84,9 @@ optional = true
 jupyterlab = "^3"
 ipywidgets = "*"
 jupyterlab_execute_time = "*"
-tqdm = "^4.63.0"
+seaborn = "*"
+tqdm = "*"
+
 psycopg2-binary = "^2.9.3" # Postgre
 
 # [tool.poetry.group.all-dev-extras]
@@ -131,6 +133,10 @@ flake8-bandit = ["-S101", "-S301", "-S403"]
 flake8-docstrings = ["-D100", "-D101", "-D102", "-D103"]
 flake8-darglint = ["-DAR101"]
 flake8-annotations = ["-ANN001", "-ANN101", "-ANN102", "-ANN201", "-ANN202", "-ANN204"]
+
+[tool.flakehell.exceptions."jupyterlab/"]
+flake8-annotations = ["-*"]
+flake8-docstrings = ["-*"]
 
 [tool.flakehell.exceptions."src/rics/__init__"]
 pyflakes = ["-F401"]  # Module imported but unused - False positive for __version__; IDE solves for real positives

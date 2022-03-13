@@ -10,18 +10,27 @@ Set up Python logging with sane defaults and an informative logging format.
 .. automethod:: rics.utility.logs.basic_config
    :noindex:
 
-=============
-Get Type name
-=============
-Get the type name of a class, a class type, or method.
+================================
+Multivariate performance testing
+================================
+Run performance tests with multiple candidates data collections. Outputs a figure and a :class:`pandas.DataFrame` of
+long-format raw data. For an example, see the `Select IN vs BETWEEN`_ notebook.
 
-.. automethod:: rics.utility.misc.tname
+.. figure:: multivar-perftest.png
+
+   A performance summary figure.
+
+.. automethod:: rics.utility.perf.run_multivariate_test
    :noindex:
+
+.. warning::
+    By default, this function reports averages of all runs (repetitions), as opposed to the built-in :py:mod:`timeit`
+    module which reports only the best result (in non-verbose mode).
 
 =================================
 Fetching data from remote sources
 =================================
-Get data from a remote source, then cache it locally. Support postprocessing as well in which case both raw and
+Get data from a remote source, then cache it locally. Supports postprocessing as well in which case both raw and
 postprocessed data is stored.
 
 .. automethod:: rics.utility.misc.get_local_or_remote
@@ -100,3 +109,6 @@ time it is called. A refetch can be forced using ``force_remote=True``.
 
 .. _IMDb dataset:
     https://www.imdb.com/interfaces/
+
+.. _Select IN vs BETWEEN:
+    https://github.com/rsundqvist/rics/blob/master/jupyterlab/perf-test/sql/In-vs-Between.ipynb

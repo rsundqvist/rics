@@ -16,9 +16,8 @@ from rics.translation.offline.types import (
     SourcePlaceholdersDict,
     SourceType,
 )
-from rics.utility.misc import format_perf_counter, tname
-
-_FETCH_ALL = "FETCH_ALL"
+from rics.utility.misc import tname
+from rics.utility.perf import format_perf_counter
 
 LOGGER = logging.getLogger(__package__).getChild("Fetcher")
 
