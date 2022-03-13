@@ -12,6 +12,7 @@ omit =
     src/rics/translation/fetching/*
     src/rics/translation/dio/*
     src/rics/_internal*
+    src/rics/utility/perf/*
     */exceptions.py
 
 fail_under = 100
