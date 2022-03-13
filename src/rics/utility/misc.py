@@ -72,8 +72,8 @@ def get_local_or_remote(
     r"""Retrieve the path of a local file, downloading it if needed.
 
     If `file` is not available at the local root path, it will be downloaded using `requests.get`_. A postprocessor may
-    be given in which case the name of the final file will be ``<local_root>/<name-of-postprocessor>/file``. Removing
-    a raw local file will invalidate postprocessed files.
+    be given in which case the name of the final file will be ``local_root/<name-of-postprocessor>/file``. Removing
+    a raw local file (ie ``local_root/file``) will invalidate postprocessed files as well.
 
     Args:
         file: A file to retrieve or download.
@@ -90,10 +90,6 @@ def get_local_or_remote(
         ValueError: If local root path does not exist or is not a directory.
         ValueError: If the local file does not exist and ``remote==None``.
         ModuleNotFoundError: If the ``tqdm`` package is not installed but ``show_progress==True``.
-
-    Notes:
-        This function is meant for **manual** work. Downloads may fail and data may become corrupt. There is no handling
-        for this, so it does not belong in a pipeline.
 
     .. _requests.get:
         https://2.python-requests.org/en/master/api/#requests.get
