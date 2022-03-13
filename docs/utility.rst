@@ -27,6 +27,10 @@ postprocessed data is stored.
 .. automethod:: rics.utility.misc.get_local_or_remote
    :noindex:
 
+.. warning::
+
+    This function is meant for manual work. There is no automatic handling of failures of any kind.
+
 ========
 Examples
 ========

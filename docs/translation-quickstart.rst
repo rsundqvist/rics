@@ -75,33 +75,6 @@ If you do not want to keep the fetcher connected to the database, you can use th
 closed. A :class:`~rics.translation.offline.TranslationMap` will be stored for offline operation.
 Uses a lot of memory for large tables.
 
-==========================
-Translation format strings
-==========================
-The :class:`rics.translation.offline.Format` class defines the string format. These are simlar to regular fstrings, with
-two significant exceptions:
-
-    a. Keyword placeholders only: ``'{}'`` is not accepted, correct form is ``'{key-name}}'``.
-    b. Substrings surrounded by ``[]`` denote an optional element.
-
-Examples:
-    Importing the class and defining a string format with an optional element ``', nice={is_nice}'``:
-
-    >>> from rics.translation.offline import Format
-    >>> fmt = Format('{id}:{name}[, nice={is_nice}]')
-
-    Only required placeholders are used by default..
-
-    >>> fmt.fstring(), fmt.fstring().format(id=0, name='Tarzan')
-    ('{id}:{name}', '0:Tarzan')
-
-    ..but the `placeholders` attribute can be used to retrieve all placeholders, required and optional
-
-    >>> fmt.placeholders
-    ('id', 'name', 'is_nice')
-    >>> fmt.fstring(fmt.placeholders), fmt.fstring(fmt.placeholders).format(id=1, name='Morris', is_nice=True)
-    ('{id}:{name}, nice={is_nice}', '1:Morris, nice=True')
-
 .. _Translating with a SQL database:
     https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/SqlFetcher.ipynb
 .. _config.yaml:
