@@ -2,6 +2,7 @@ import pandas as pd
 import pytest as pytest
 
 from rics.translation.fetching import SqlFetcher
+from rics.translation.fetching._fetch_instruction import FetchInstruction
 
 
 def test_table_sizes(sql_fetcher):
@@ -22,9 +23,31 @@ def test_fetch_all(sql_fetcher, data, table_to_verify):
     assert actual == expected
 
 
+@pytest.mark.parametrize(
+    "ids_to_fetch, expected",
+    [
+        (range(600), range(600)),
+        (range(950), range(1000)),
+        (range(0, 1000, 5), range(0, 1000, 5)),
+        (range(800, 900, 5), range(800, 900, 5)),
+        (range(500, 1001, 2), range(500, 1000)),
+    ],
+    ids=[
+        "FETCH_BETWEEN_SHORT_CIRCUIT",
+        "FETCH_ALL_SHORT_CIRCUIT",
+        "FETCH_IN_HEURISTIC",
+        "FETCH_IN_SHORT_CIRCUIT",
+        "FETCH_BETWEEN_HEURISTIC",
+    ],
+)
+def test_heuristic(sql_fetcher, ids_to_fetch, expected):
+    ans = sql_fetcher.fetch_placeholders(FetchInstruction("huge_table", ids_to_fetch, ("id",), ()))["id"]
+    assert ans == list(expected)
+
+
 @pytest.fixture(scope="module")
 def sql_fetcher(connection_string):
-    yield SqlFetcher(connection_string)
+    yield SqlFetcher(connection_string, fetch_in_below=25, fetch_between_over=500, fetch_between_max_overfetch_factor=2)
 
 
 @pytest.fixture(scope="module")

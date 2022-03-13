@@ -38,6 +38,7 @@ fetcher:
     # variable by prefixing with '@', eg @TRANSLATION_DB_CONNECTION_STRING
     connection_string: "postgresql://postgres:{password}@localhost:5432/imdb"
     password: "your_password"
+    fetch_all_limit: null
 
 #_______________________________________________________________________________
 #                              Forwarded configs                               #

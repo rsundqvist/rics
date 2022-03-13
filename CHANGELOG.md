@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - SqlFetcher improvements
   - Database table discovery
   - Fix fetching only required placeholders (columns)
+  - Add selection logic (used to always fetch everything)
 
 ## [0.1.1] - 2022-03-12
 First release on PyPI
