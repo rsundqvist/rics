@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Set
 from urllib.parse import quote_plus
 
+import sqlalchemy
+
 from rics.translation.fetching import Fetcher, exceptions
 from rics.translation.fetching._fetch_instruction import FetchInstruction
 from rics.translation.offline import PlaceholderOverrides
@@ -11,13 +13,6 @@ from rics.translation.offline.types import IdType, PlaceholdersDict
 from rics.utility.misc import read_env_or_literal, tname
 
 LOGGER = logging.getLogger(__package__).getChild("SqlFetcher")
-
-try:
-    import sqlalchemy
-
-    _SQLALCHEMY_INSTALLED = True
-except ModuleNotFoundError:
-    _SQLALCHEMY_INSTALLED = False
 
 
 @dataclass(frozen=True)
@@ -62,7 +57,6 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
     Raises:
         ValueError: If both `blacklist` and `whitelist` are given.
-        ModuleNotFoundError: If SQLAlchemy is not installed.
     """
 
     def __init__(
@@ -77,9 +71,6 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         fetch_all_limit: Optional[int] = 100_000,
         **kwargs: Any,
     ) -> None:
-        if not _SQLALCHEMY_INSTALLED:
-            raise ModuleNotFoundError("Install SQLAlchemy and the extras for your SQL flavor to use SQL fetching.")
-
         super().__init__(**kwargs)
 
         if whitelist_tables and blacklist_tables:
