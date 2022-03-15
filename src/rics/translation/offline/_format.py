@@ -88,7 +88,7 @@ class Format:
         return tuple(e.name for e in filter(lambda e: e.required, self._named_elements))
 
     @property
-    def optional_placeholders(self) -> PlaceholdersTuple:
+    def optional_placeholders(self) -> PlaceholdersTuple:  # pragma: no cover
         """All optional placeholders in the order in which they appear."""
         return tuple(e.name for e in filter(lambda e: not e.required, self._named_elements))
 

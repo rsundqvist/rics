@@ -23,53 +23,49 @@ class PlaceholderOverrides(Generic[SourceType]):
         self,
         shared: Dict[str, str] = None,
         source_specific: Dict[SourceType, Dict[str, str]] = None,
-        reversed_direction: bool = False,
     ) -> None:
         self._shared = shared or {}
         self._specific: Dict[SourceType, Dict[str, str]] = source_specific or {}
-        self._rev = reversed_direction
-
-    @classmethod
-    def get_mapped_value(cls, key: T, mapping: Dict[T, T]) -> T:
-        """Get the value mapped to `key`.
-
-        If `key` is it not present in `mapping`, `key` is returned to the caller.
-
-        Args:
-            key: A value to convert.
-            mapping: The mapping to use.
-
-        Returns:
-            The original key or ``mapping[value]``.
-        """
-        return mapping.get(key) or key
+        self._is_reversed = False
+        self._reverse: Optional[PlaceholderOverrides] = None
 
     def __getitem__(self, source: SourceType) -> Dict[str, str]:
         specific = self._specific.get(source)
-        ans = self._shared if not specific else {**self._shared, **({} if specific is None else specific)}
-        if LOGGER.isEnabledFor(logging.DEBUG) and ans:
-            specific_overrides = "" if not specific else f"; specific for this source: {specific}"
-            LOGGER.debug(f"{self._reversed_str}Overrides for {source=}: {ans}{specific_overrides}.")
-        return ans
+        return self._shared if not specific else {**self._shared, **({} if specific is None else specific)}
+
+    def info_string(self, source: SourceType) -> str:  # pragma: no cover
+        """Get an override info string for `source`."""
+        specific = self._specific.get(source)
+        ans = self[source]
+        if specific:
+            specific_overrides = "; unique to source" if (ans == specific) else f"; specific to source: {specific}"
+        else:
+            specific_overrides = ""
+        return f"Overrides for {source=}: {ans}{specific_overrides}."
 
     def reverse(self) -> "PlaceholderOverrides":
         """Return a reversed copy of self, swapping `from_placeholder` <-> `to_placeholder`."""
-        return PlaceholderOverrides(
+        if self._reverse is None:
+            self._reverse = self._init_reverse()
+
+        return self._reverse
+
+    def _init_reverse(self) -> "PlaceholderOverrides":
+        reversed_overrides = PlaceholderOverrides(
             shared=self._reverse_mappings(self._shared),
             source_specific={source: self._reverse_mappings(mappings) for source, mappings in self._specific.items()},
-            reversed_direction=not self._rev,
         )
+        reversed_overrides._is_reversed = True
+        reversed_overrides._reverse = self
+        return reversed_overrides
 
     def __bool__(self) -> bool:
         return bool(self._shared or self._specific)
 
     def __repr__(self) -> str:
         shared = self._shared
-        return f"{tname(self)}({self._reversed_str}{shared=} + {len(self._specific)} source-specific)"
-
-    @property
-    def _reversed_str(self) -> str:
-        return "[REVERSED] " if self._rev else ""  # pragma: no cover
+        reversed_str = "[REVERSED] " if self._is_reversed else ""
+        return f"{tname(self)}({reversed_str}{shared=} + {len(self._specific)} source-specific)"
 
     @classmethod
     def from_dict(cls, mapping: PlaceholderOverridesDict) -> "PlaceholderOverrides":

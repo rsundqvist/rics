@@ -8,8 +8,7 @@ import sqlalchemy
 
 from rics.translation.fetching import Fetcher, exceptions
 from rics.translation.fetching._fetch_instruction import FetchInstruction
-from rics.translation.offline import PlaceholderOverrides
-from rics.translation.offline.types import IdType, PlaceholdersDict
+from rics.translation.offline.types import IdType, PlaceholderTranslations
 from rics.utility.misc import read_env_or_literal, tname
 
 LOGGER = logging.getLogger(__package__).getChild("SqlFetcher")
@@ -25,16 +24,10 @@ class TableSummary:
     fetch_all_permitted: bool
     id_column: sqlalchemy.schema.Column
 
-    def select_columns(self, required: Iterable[str], optional: Iterable[str]) -> List[str]:
+    def select_columns(self, instr: FetchInstruction) -> List[str]:
         """Return required and optional columns of the table."""
-        required_columns = set(required)
         known_column_names = set(self.columns.keys())
-        missing = required_columns.difference(known_column_names)
-        if missing:
-            raise ValueError(f"Table '{self.name}' missing required columns {missing}.")
-
-        optional_columns = known_column_names.intersection(optional)
-        return list(required_columns.union(optional_columns))
+        return Fetcher.select_placeholders(instr, known_column_names)
 
 
 class SqlFetcher(Fetcher[str, IdType, str]):
@@ -114,26 +107,17 @@ class SqlFetcher(Fetcher[str, IdType, str]):
             raise ValueError(f"Invalid table: {table}")
         return table
 
-    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholdersDict:
+    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
         """Fetch columns from a SQL database."""
         ts = self._summaries[instr.source]
-        columns = ts.select_columns(instr.required, instr.optional)
+        columns = ts.select_columns(instr)
         select = sqlalchemy.select(map(ts.columns.get, columns))
 
         if instr.ids is None and not ts.fetch_all_permitted:
             raise exceptions.ForbiddenOperationError(self.FETCH_ALL, f"disabled for table '{ts.name}'.")
 
         stmt = select if instr.ids is None else self._make_query(ts, select, set(instr.ids))
-        return self._execute(columns, stmt)
-
-    def _execute(self, columns: List[str], select: sqlalchemy.sql.Select) -> PlaceholdersDict:
-        # TODO This is very inefficient, change for PlaceholdersDict format?
-        ans: Dict[str, List[Any]] = {c: [] for c in columns}
-        for row in self._engine.execute(select):
-            for c, v in zip(columns, row):
-                ans[c].append(v)
-        # TODO remove this as well when fixing return format
-        return ans  # type: ignore
+        return PlaceholderTranslations(instr.source, tuple(columns), tuple(self._engine.execute(stmt)))
 
     def _make_query(self, ts: TableSummary, select: sqlalchemy.sql.Select, ids: Set[IdType]) -> sqlalchemy.sql.Select:
         num_ids = len(ids)
@@ -226,12 +210,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         for name in tables:
             size = next(self._engine.execute(sqlalchemy.select(sqlalchemy.text(f"count(*) AS count FROM {name}"))))[0]
             fetch_all_permitted = self._fetch_all_limit is None or size < self._fetch_all_limit
-            id_column_name = (
-                PlaceholderOverrides.get_mapped_value("id", self.placeholder_overrides.reverse()[name])
-                if self.placeholder_overrides
-                else "id"
-            )
-            id_column = metadata.tables[name].columns[id_column_name]
+            id_column = metadata.tables[name].columns[self.get_id_placeholder(name)]
             ans[name] = TableSummary(name, size, metadata.tables[name].columns, fetch_all_permitted, id_column)
 
         return ans

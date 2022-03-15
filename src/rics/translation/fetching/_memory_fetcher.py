@@ -2,18 +2,24 @@ from typing import Any, List
 
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching._fetch_instruction import FetchInstruction
-from rics.translation.offline.types import IdType, NameType, PlaceholdersDict, SourcePlaceholdersDict, SourceType
+from rics.translation.offline.types import (
+    IdType,
+    NameType,
+    PlaceholderTranslations,
+    SourcePlaceholderTranslations,
+    SourceType,
+)
 
 
 class MemoryFetcher(Fetcher[NameType, IdType, SourceType]):
     """Fetch from memory.
 
     Args:
-        data: A dict ``{source: {placeholder: [values..]}}`` to fetch from.
+        data: A dict {source: PlaceholderTranslations} to fetch from.
         **kwargs: Forwarded to the base fetcher.
     """
 
-    def __init__(self, data: SourcePlaceholdersDict, **kwargs: Any) -> None:
+    def __init__(self, data: SourcePlaceholderTranslations, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self._sources = list(data)
         self._data = data
@@ -23,6 +29,8 @@ class MemoryFetcher(Fetcher[NameType, IdType, SourceType]):
         """Get keys in `data` as a list."""
         return self._sources
 
-    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholdersDict:
+    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
         """Fetch columns from memory."""
-        return self._data[instr.source]
+        ans = self._data[instr.source]
+        Fetcher.verify_placeholders(instr, ans.placeholders)
+        return ans

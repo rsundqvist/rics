@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Set
 
 from rics.translation.fetching._ids_to_fetch import IdsToFetch
 from rics.translation.offline.types import IdType, PlaceholdersTuple, SourceType
@@ -11,9 +12,9 @@ class FetchInstruction(IdsToFetch[SourceType, IdType]):
     Tuples of this type are passed to the :meth:`_fetch_translations` method implemented by inheriting classes.
 
     Attributes:
-        required: Placeholders that must be included.
-        optional: Placeholders which should be included if possible.
+        placeholders: All desired placeholders in preferred order.
+        required: Placeholders that must be included in the response.
     """
 
-    required: PlaceholdersTuple
-    optional: PlaceholdersTuple
+    placeholders: PlaceholdersTuple
+    required: Set[str]
