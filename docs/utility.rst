@@ -1,3 +1,6 @@
+Utility functions
+=================
+
 There are many support functions contain in the rics package. A few of them are presented below.
 
 For all available methods, see the complete API reference: :mod:`rics.utility`.
