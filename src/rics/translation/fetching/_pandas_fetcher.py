@@ -7,7 +7,7 @@ import pandas as pd
 
 from rics.translation.fetching._fetch_instruction import FetchInstruction
 from rics.translation.fetching._fetcher import Fetcher
-from rics.translation.offline.types import IdType, NameType
+from rics.translation.offline.types import IdType, NameType, PlaceholderTranslations
 from rics.utility.misc import PathLikeType, tname
 
 LOGGER = logging.getLogger(__package__).getChild("PandasFetcher")
@@ -105,10 +105,12 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
 
         return self._sources
 
-    def fetch_placeholders(self, instr: FetchInstruction) -> pd.DataFrame:
+    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
         """Read columns from a serialized dataframe."""
         source_path = self._source_paths[instr.source]
-        return self.read(source_path)
+        df = self.read(source_path)
+
+        return Fetcher.make_and_verify(instr, tuple(df), df.to_records(index=False).to_list())
 
     def __repr__(self) -> str:
         return f"{tname(self)}(read_function={tname(self._read)})"

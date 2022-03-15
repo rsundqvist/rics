@@ -4,29 +4,15 @@ from rics._internal_support.types import NO_DEFAULT
 from rics.translation.offline import MagicDict
 from rics.translation.offline._format import Format, FormatType
 from rics.translation.offline._format_applier import DefaultFormatApplier, FormatApplier
-from rics.translation.offline.types import IdType, NameToSourceDict, NameType, SourcePlaceholdersDict, SourceType
+from rics.translation.offline.types import IdType, NameToSourceDict, NameType, SourcePlaceholderTranslations, SourceType
 from rics.utility.misc import tname
 
 
 class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
     """Storage class for fetched translations.
 
-    Examples:
-        >>> from rics.translation.offline import TranslationMap
-        >>> source_placeholders_dict = {
-        ...   'animals': {'id': [0, 1, 2], 'name': ['Tarzan', 'Morris', 'Simba'], 'is_nice': [False, True, True]},
-        ...   'people': {'id': [1991, 1999], 'name': ['Richard', 'Sofia'], 'gender': ['Male', 'Female']},
-        ... }
-        >>> tm = TranslationMap(source_placeholders_dict, fmt='{id}:{name}[, nice={is_nice}][:{gender}]')
-        >>> for t in tm.items(): print(*t)
-        animals {0: '0:Tarzan, nice=False', 1: '1:Morris, nice=True', 2: '2:Simba, nice=True'}
-        people {1991: '1991:Richard:Male', 1999: '1999:Sofia:Female'}
-
-        Note that the output includes ``is_nice`` for animals and ``gender`` for people. The ``TranslationMap`` uses as
-        many placeholders as possible by default.
-
     Args:
-        source_placeholders_dict: Pre-fetched translations ``{source: {placeholder: [values..]}}``.
+        source_placeholder_translations: Fetched translations ``{source: PlaceholderTranslations}``.
         name_to_source: Mappings ``{name: source}``, but may be overridden by the user.
         fmt: A translation format. Must be given to use as a mapping.
         default: Per-source default values.
@@ -36,7 +22,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
 
     def __init__(
         self,
-        source_placeholders_dict: SourcePlaceholdersDict,
+        source_placeholder_translations: SourcePlaceholderTranslations,
         name_to_source: NameToSourceDict = None,
         fmt: FormatType = None,
         default: Dict[SourceType, Dict[str, Any]] = None,
@@ -44,8 +30,8 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         default = default or {}
 
         self._source_formatters: Dict[SourceType, FormatApplier] = {
-            source: TranslationMap.FORMAT_APPLIER_TYPE(source, value, default.get(source, NO_DEFAULT))
-            for source, value in source_placeholders_dict.items()
+            source: self.FORMAT_APPLIER_TYPE(placeholder_translations, default.get(source, NO_DEFAULT))
+            for source, placeholder_translations in source_placeholder_translations.items()
         }
         self.name_to_source = name_to_source or {}
         self._fmt = None if fmt is None else Format.parse(fmt)

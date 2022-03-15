@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from time import perf_counter
-from typing import Collection, Dict, Generic, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Collection, Dict, Generic, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
 from rics.translation.fetching import exceptions
 from rics.translation.fetching._fetch_instruction import FetchInstruction
@@ -12,8 +12,9 @@ from rics.translation.offline.types import (
     IdType,
     NameType,
     PlaceholderOverridesDict,
-    PlaceholdersDict,
-    SourcePlaceholdersDict,
+    PlaceholdersTuple,
+    PlaceholderTranslations,
+    SourcePlaceholderTranslations,
     SourceType,
 )
 from rics.utility.misc import tname
@@ -76,10 +77,6 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         """Return the override."""
         return self._overrides
 
-    @placeholder_overrides.setter
-    def placeholder_overrides(self, overrides: PlaceholderOverrides = None) -> None:
-        self._overrides = overrides
-
     @property
     def allow_fetch_all(self) -> bool:
         """Flag indicating whether the FETCH_ALL operation is permitted."""
@@ -88,23 +85,23 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
     def fetch(
         self,
         ids_to_fetch: Iterable[IdsToFetch],
-        required_placeholders: Iterable[str],
-        optional_placeholders: Iterable[str],
-    ) -> SourcePlaceholdersDict:
+        placeholders: Iterable[str],
+        required: Iterable[str],
+    ) -> SourcePlaceholderTranslations:
         """Fetch translations.
 
         Args:
             ids_to_fetch: Tuples (source, ids) to fetch. If ``ids=None``, retrieve data for as many IDs as possible.
-            required_placeholders: Keys which must be present for every source.
-            optional_placeholders: Keys which should be added if possible.
+            placeholders: All desired placeholders in preferred order.
+            required: Placeholders that must be included in the response.
 
         Returns:
-            A mapping ``{source: {placeholder: [values..]}}`` for translation.
+            A mapping ``{source: PlaceholderTranslations}`` for translation.
 
         Raises:
             UnknownPlaceholderError: For placeholder(s) that are unknown to the fetcher.
             UnknownSourceError: For sources(s) that are unknown to the fetcher.
-            ForbiddenOperationError: If trying to fetch all IDs when when not possible or permitted.
+            ForbiddenOperationError: If trying to fetch all IDs when not possible or permitted.
             ImplementationError: For errors made by the inheriting implementation.
 
         Notes:
@@ -119,21 +116,21 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         if not self.allow_fetch_all and any(t.ids is None for t in ids_to_fetch):
             raise exceptions.ForbiddenOperationError(self.FETCH_ALL)
 
-        return self._fetch(ids_to_fetch, set(required_placeholders), set(optional_placeholders))
+        return self._fetch(ids_to_fetch, tuple(placeholders), set(required))
 
     def fetch_all(
         self,
-        required_placeholders: Iterable[str],
-        optional_placeholders: Iterable[str],
-    ) -> SourcePlaceholdersDict:
+        placeholders: Iterable[str],
+        required: Iterable[str],
+    ) -> SourcePlaceholderTranslations:
         """Fetch as much data as possible.
 
         Args:
-            required_placeholders: Placeholder keys that must be present.
-            optional_placeholders: Placeholder keys which should be added if possible.
+            placeholders: All desired placeholders in preferred order.
+            required: Placeholders that must be included in the response.
 
         Returns:
-            A mapping ``{source: {placeholder: [values..]}}`` for translation.
+            A mapping ``{source: PlaceholderTranslations}`` for translation.
 
         Raises:
             ForbiddenOperationError: If fetching all IDs is not possible or permitted.
@@ -143,91 +140,77 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         if not self.allow_fetch_all:
             raise exceptions.ForbiddenOperationError(self.FETCH_ALL)
 
-        required_placeholders = set(required_placeholders)
-        required_placeholders.add("id")
-
         ids_to_fetch = [IdsToFetch(source, None) for source in self.sources]
-        return self._fetch(ids_to_fetch, required_placeholders, set(optional_placeholders))
+        return self._fetch(ids_to_fetch, tuple(placeholders), set(required))
 
     def _fetch(
         self,
         ids_to_fetch: Iterable[IdsToFetch],
+        placeholders: PlaceholdersTuple,
         required_placeholders: Set[str],
-        optional_placeholders: Set[str],
-    ) -> SourcePlaceholdersDict:
+    ) -> SourcePlaceholderTranslations:
 
-        ans = {
-            source: _ensure_with_id(source, placeholders_dict, ids_to_fetch, self)
-            for source, placeholders_dict in self._fetch_translations(
-                ids_to_fetch, required_placeholders, optional_placeholders
+        return {
+            source: placeholder_translations
+            for source, placeholder_translations in self._fetch_translations(
+                ids_to_fetch, placeholders, required_placeholders
             )
         }
-
-        return ans
 
     def _fetch_translations(
         self,
         ids_to_fetch: Iterable[IdsToFetch],
-        required: Set[str],
-        optional: Set[str],
-    ) -> Iterable[Tuple[SourceType, PlaceholdersDict]]:
+        placeholders: PlaceholdersTuple,
+        required_placeholders: Set[str],
+    ) -> Iterable[Tuple[SourceType, PlaceholderTranslations]]:
         for itf in ids_to_fetch:
-            reverse_mappings, instr = self._make_fetch_instruction(itf, required, optional)
+            reverse_mappings, instr = self._make_fetch_instruction(itf, placeholders, required_placeholders)
 
             start = perf_counter()
-            placeholders_dict = self.fetch_placeholders(instr)
+            placeholder_translations = self.fetch_placeholders(instr)
             if LOGGER.isEnabledFor(logging.DEBUG):
-                _log_implementation_fetch_performance(itf, placeholders_dict, start)
+                _log_implementation_fetch_performance(placeholder_translations, start)
 
             if reverse_mappings is not None:
                 # The mapping is only in reverse from the Fetchers point-of-view; we're mapping back to "proper" values.
-                placeholders_dict = _remap_placeholders_dict(placeholders_dict, reverse_mappings)
+                _remap_placeholder_translations(placeholder_translations, reverse_mappings)
 
-            self._verify_placeholders(instr.source, placeholders_dict, required)
-            yield instr.source, placeholders_dict
+            placeholder_translations.id_pos = placeholder_translations.placeholders.index("id")
+            yield instr.source, placeholder_translations
 
     def _make_fetch_instruction(
-        self, itf: IdsToFetch, required: Set[str], optional: Set[str]
+        self,
+        itf: IdsToFetch,
+        placeholders: PlaceholdersTuple,
+        required_placeholders: Set[str],
     ) -> Tuple[Optional[Dict[str, str]], FetchInstruction]:
         if self._overrides:
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                LOGGER.debug(self._overrides.reverse().info_string(itf.source))
+
             for_source = self._overrides.reverse()[itf.source]
 
             def remap(placeholder):  # noqa
-                return PlaceholderOverrides.get_mapped_value(placeholder, for_source)
+                return for_source.get(placeholder, placeholder)
 
-            required = set(map(remap, required))
-            optional = set(map(remap, optional))
+            placeholders = tuple(map(remap, placeholders))
+            required_placeholders = set(map(remap, required_placeholders))
 
         return (
             None if not self._overrides else self._overrides[itf.source],
-            FetchInstruction(
-                itf.source,
-                None if not itf.ids else tuple(itf.ids),
-                tuple(required),
-                tuple(optional),
-            ),
+            FetchInstruction(itf.source, None if not itf.ids else tuple(itf.ids), placeholders, required_placeholders),
         )
 
-    @staticmethod
-    def _verify_placeholders(source: SourceType, actual: Collection[str], required: Set[str]) -> None:
-        unknown_required_placeholders = required.difference(actual)
-        unknown_required_placeholders.discard("id")
-        if unknown_required_placeholders:
-            raise exceptions.UnknownPlaceholderError(
-                f"Required placeholders {unknown_required_placeholders} not recognized."
-                f" For {source=}, known placeholders are: {list(actual)}."
-            )
-
     @abstractmethod
-    def fetch_placeholders(self, instruction: FetchInstruction) -> PlaceholdersDict:
+    def fetch_placeholders(self, instruction: FetchInstruction) -> PlaceholderTranslations:
         """Fetch translations.
 
         Args:
-            instruction: A tuple `(name, required_placeholders, optional_placeholders, ids)` to fetch. If ``ids=None``,
-                the fetcher should retrieve data for as many IDs as possible.
+            instruction: A single instruction for IDs to fetch. If IDs is None, the fetcher should retrieve data for as
+                many IDs as possible.
 
         Returns:
-            A dict ``{placeholder: [values..]}}``. The sequence should be ordered like `instruction.ids`.
+            Placeholder translation elements.
 
         Raises:
             UnknownPlaceholderError: If the placeholder is unknown to the fetcher.
@@ -237,31 +220,87 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
     def close(self) -> None:
         """Close the fetcher."""
 
+    def get_id_placeholder(self, source: SourceType) -> str:
+        """Get the ID placeholder name for `source`."""
+        if not self._overrides:
+            return "id"
 
-def _ensure_with_id(
-    source: SourceType,
-    placeholders_dict: PlaceholdersDict,
-    ids_to_fetch: Iterable[IdsToFetch],
-    impl: "Fetcher",
-) -> PlaceholdersDict:
-    if "id" not in placeholders_dict:
-        ids = next(instr.ids for instr in filter(lambda instr: instr.source == source, ids_to_fetch))
-        if ids is None:
-            raise exceptions.ImplementationError(
-                f"Implementation {tname(impl)}: '{impl}' did not return IDs for {source=} during a {Fetcher.FETCH_ALL}"
-                f" operation. Placeholders received: {list(placeholders_dict)}."
+        return self.placeholder_overrides.reverse()[source].get("id", "id") if self.placeholder_overrides else "id"
+
+    @classmethod
+    def make_and_verify(
+        cls, instr: FetchInstruction, known_placeholders: Collection[str], records: Sequence[Sequence[Any]]
+    ) -> PlaceholderTranslations:
+        """Make a :class:`~rics.translation.offline.types.PlaceholderTranslations` instance from records.
+
+        Convenience method meant for use by implementations.
+
+        Args:
+            instr: A fetch instruction.
+            known_placeholders: Known placeholders for the `instr.source`.
+            records: Records produced from the instruction.
+
+        Returns:
+            Placeholder translation elements.
+
+        Raises:
+            UnknownPlaceholderError: If required placeholders are missing.
+            ImplementationError: If the underlying fetcher does not return enough IDs.
+        """
+        if instr.ids is not None and len(records) < len(set(instr.ids)):
+            actual_len = len(records)
+            minimum = len(set(instr.ids))
+            raise exceptions.ImplementationError(f"Got {actual_len} records, expected at least {minimum}.")
+
+        cls.verify_placeholders(instr, known_placeholders)
+        return PlaceholderTranslations(
+            instr.source,
+            tuple(known_placeholders),
+            records,
+        )
+
+    @classmethod
+    def verify_placeholders(cls, instr: FetchInstruction, known_placeholders: Collection[str]) -> None:
+        """Verify required placeholders for a source.
+
+        Convenience method meant for use by implementations.
+
+        Args:
+            instr: A fetch instruction.
+            known_placeholders: Known placeholders for the `instr.source`.
+
+        Raises:
+            UnknownPlaceholderError: If required placeholders are missing.
+        """
+        missing = instr.required.difference(known_placeholders)
+        if missing:
+            source = instr.source
+            raise exceptions.UnknownPlaceholderError(
+                f"Required placeholders {missing} not recognized."
+                f" For {source=}', known placeholders are: {known_placeholders}."
             )
-        placeholders_dict["id"] = list(ids)
-    return placeholders_dict
+
+    @classmethod
+    def select_placeholders(cls, instr: FetchInstruction, known_placeholders: Collection[str]) -> List[str]:
+        """Select as many known, requested placeholders as possible.
+
+        Args:
+            instr: A fetch instruction.
+            known_placeholders: Known placeholders for the `instr.source`.
+
+        Returns:
+            Known placeholders in the desired order.
+
+        Raises:
+            UnknownPlaceholderError: If required placeholders are missing.
+        """
+        cls.verify_placeholders(instr, known_placeholders)
+        return list(filter(known_placeholders.__contains__, instr.placeholders))
 
 
-def _remap_placeholders_dict(placeholders_dict: PlaceholdersDict, overrides: Dict[str, str]) -> PlaceholdersDict:
+def _remap_placeholder_translations(pht: PlaceholderTranslations, overrides: Dict[str, str]) -> None:
     """Remap a dict of placeholders using `overrides`."""
-    tmp = {}
-    for name in placeholders_dict:
-        reversed_name = PlaceholderOverrides.get_mapped_value(name, overrides)
-        tmp[reversed_name] = placeholders_dict[name]
-    return tmp
+    pht.placeholders = tuple(overrides.get(name, name) for name in pht.placeholders)
 
 
 def _create_overrides(
@@ -276,11 +315,9 @@ def _create_overrides(
     if isinstance(overrides, dict):
         return PlaceholderOverrides.from_dict(overrides)
     else:
-        raise TypeError(f"{overrides} is not a a valid {tname(PlaceholderOverrides)}.")
+        raise TypeError(f"{overrides} is not a a valid {tname(PlaceholderOverrides)}-specification.")
 
 
-def _log_implementation_fetch_performance(itf: IdsToFetch, result: PlaceholdersDict, start: float) -> None:
-    placeholders = tuple(sorted(result))
+def _log_implementation_fetch_performance(pht: PlaceholderTranslations, start: float) -> None:
     elapsed = format_perf_counter(start)
-    count = len(result[placeholders[0]])
-    LOGGER.debug(f"Fetched placeholders: {placeholders} for {count} IDS from '{itf.source}' in {elapsed}.")
+    LOGGER.debug(f"Fetched {pht.placeholders} for {len(pht.records)} IDS from '{pht.source}' in {elapsed}.")

@@ -12,7 +12,7 @@ from rics.translation.fetching import Fetcher
 from rics.translation.fetching._ids_to_fetch import IdsToFetch
 from rics.translation.offline import Format, TranslationMap
 from rics.translation.offline.exceptions import OfflineError
-from rics.translation.offline.types import IdType, NameType, SourcePlaceholdersDict, SourceType
+from rics.translation.offline.types import IdType, NameType, SourcePlaceholderTranslations, SourceType
 from rics.utility.misc import tname
 
 _NAME_ATTRIBUTES = ("keys", "name", "names", "columns")
@@ -54,7 +54,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def __init__(
         self,
-        fetcher: Union[Fetcher, TranslationMap, SourcePlaceholdersDict],
+        fetcher: Union[Fetcher, TranslationMap, SourcePlaceholderTranslations],
         fmt: Union[str, Format] = "{id}:{name}",
         mapper: Mapper = None,
         default_translations: Dict[SourceType, Dict[str, Any]] = None,
@@ -122,10 +122,10 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
         # Get translations
         if self._cached_tmap is None:  # Fetch new data
-            source_placeholders_dict = self._fetch(
+            source_placeholder_translations = self._fetch(
                 self._get_ids_to_fetch(name_to_source, translatable, translatable_io)
             )
-            tmap = self._to_translation_map(source_placeholders_dict)
+            tmap = self._to_translation_map(source_placeholder_translations)
         else:  # Use cached
             tmap = self._cached_tmap
 
@@ -158,9 +158,9 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             :meth:`rics.translation.fetching.Fetcher.fetch_all`
             :class:`rics.translation.offline.TranslationMap`
         """
-        source_placeholders_dict: SourcePlaceholdersDict = self._fetch(None)
+        source_placeholder_translations: SourcePlaceholderTranslations = self._fetch(None)
 
-        translation_map = self._to_translation_map(source_placeholders_dict)
+        translation_map = self._to_translation_map(source_placeholder_translations)
         LOGGER.info("Store %s", translation_map)
         if delete_fetcher:  # pragma: no cover
             self._fetcher.close()
@@ -182,21 +182,21 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
         return [IdsToFetch(source, ids) for source, ids in source_to_ids.items()]
 
-    def _fetch(self, ids_to_fetch: Optional[List[IdsToFetch]]) -> SourcePlaceholdersDict:
+    def _fetch(self, ids_to_fetch: Optional[List[IdsToFetch]]) -> SourcePlaceholderTranslations:
         if not self.online:
             raise OfflineError("Cannot fetch new translations.")  # pragma: no cover
 
-        required_placeholders = self._fmt.required_placeholders
-        optional_placeholders = self._fmt.optional_placeholders
+        placeholders = self._fmt.placeholders
+        required = self._fmt.required_placeholders
         return (
-            self._fetcher.fetch_all(required_placeholders, optional_placeholders)
+            self._fetcher.fetch_all(placeholders, required)
             if ids_to_fetch is None
-            else self._fetcher.fetch(ids_to_fetch, required_placeholders, optional_placeholders)
+            else self._fetcher.fetch(ids_to_fetch, placeholders, required)
         )
 
-    def _to_translation_map(self, source_placeholders_dict: SourcePlaceholdersDict) -> TranslationMap:
+    def _to_translation_map(self, source_placeholder_translations: SourcePlaceholderTranslations) -> TranslationMap:
         return TranslationMap(
-            source_placeholders_dict,
+            source_placeholder_translations,
             None,
             self._fmt,
             self._default,
