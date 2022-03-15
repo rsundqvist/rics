@@ -4,14 +4,6 @@ rics.translation.offline package
 Submodules
 ----------
 
-rics.translation.offline.exceptions module
-------------------------------------------
-
-.. automodule:: rics.translation.offline.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 rics.translation.offline.types module
 -------------------------------------
 
