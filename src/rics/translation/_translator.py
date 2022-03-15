@@ -8,10 +8,10 @@ from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError
 from rics.translation._from_config import translator_from_yaml_config as _from_config
 from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_io
+from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching._ids_to_fetch import IdsToFetch
 from rics.translation.offline import Format, TranslationMap
-from rics.translation.offline.exceptions import OfflineError
 from rics.translation.offline.types import IdType, NameType, SourcePlaceholderTranslations, SourceType
 from rics.utility.misc import tname
 
