@@ -27,7 +27,7 @@ My personal little ML engineering library.
 * Multivariate performance testing - [with plots!](https://rics.readthedocs.io/en/latest/utility.html#multivariate-performance-testing)
 * An extensible [ID translation suite](https://rics.readthedocs.io/en/latest/translation-quickstart.html), including SQL integration for retrival of data
 * Various other utilities methods - 
-  from [logging configuration]((https://rics.readthedocs.io/en/latest/utility.html#logging-configuration))
+  from [logging configuration](https://rics.readthedocs.io/en/latest/utility.html#logging-configuration)
   to [fetching data from the web](https://rics.readthedocs.io/en/latest/utility.html#fetching-data-from-remote-sources)
 * Two-directional mapping implementation in `rics.mapping`
 
