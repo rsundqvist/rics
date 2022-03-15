@@ -6,23 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
-
 ### Changed
-- SqlFetcher improvements
-  - Database table discovery
-  - Fix fetching only required placeholders (columns)
-  - Add selection logic (used to always fetch everything)
-
-- Change Fetcher return format (performance optimization) from dict-of-lists to matrix
+- Update Fetcher return format from dict-of-lists to matrix (performance optimization)
 
 ### Added
+- Database table discovery (gathers metadata like size and columns) for SqlFetcher
+- Add selection logic (used to always fetch everything) for SqlFetcher
 - Implement translations of `pandas.Series`
 - The `rics.utility.perf` package for multivariate (`data` x `functions`) performance testing
 
-## [0.1.1] - 2022-03-12
-First release on PyPI
+### Fixed
+- Fix fetching only required placeholders in SqlFetcher
 
 ## [0.1.0] - 2022-03-12
+First release on PyPI!
+
 ### Added
 - The `rics.utility` package for various common operations
 - The `rics.translation` package suite for translating IDs into human-readable labels
