@@ -7,13 +7,9 @@ from rics.translation.exceptions import ConfigurationError
 
 
 @pytest.mark.skip
-def test_positional_args():
-    args = ("This is no good!", "We don't want positional arguments!", True)
-    with pytest.raises(AssertionError) as e:
-        Translator(*args)
-
-    for arg in args:
-        assert str(arg) in str(e.value)
+def test_translate_without_id(hex_fetcher):
+    # TODO: Formats without ID
+    Translator(hex_fetcher, fmt="{hex}[, positive={positive}]").translate(1, names="positive_numbers")
 
 
 def test_can_pickle(translator):
