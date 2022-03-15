@@ -25,7 +25,7 @@ My personal little ML engineering library.
 ## Features
 
 * Multivariate performance testing - [with plots!](https://rics.readthedocs.io/en/latest/utility.html#multivariate-performance-testing)
-* An extensible [ID translation suite](https://rics.readthedocs.io/en/latest/translation-quickstart.html)
+* An extensible [ID translation suite](https://rics.readthedocs.io/en/latest/translation-quickstart.html), including SQL integration for retrival of data
 * Various other utilities methods - 
   from [logging configuration]((https://rics.readthedocs.io/en/latest/utility.html#logging-configuration))
   to [fetching data from the web](https://rics.readthedocs.io/en/latest/utility.html#fetching-data-from-remote-sources)
