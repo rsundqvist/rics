@@ -2,4 +2,8 @@
 
 
 class ConfigurationError(ValueError):
-    """Base class for bad configuration."""
+    """Raised in case of bad configuration."""
+
+
+class OfflineError(ValueError):
+    """Raised for offline state errors."""

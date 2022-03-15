@@ -3,11 +3,11 @@ from abc import ABC, abstractmethod
 from time import perf_counter
 from typing import Any, Collection, Dict, Generic, Iterable, List, Optional, Sequence, Set, Tuple, Union
 
+from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import exceptions
 from rics.translation.fetching._fetch_instruction import FetchInstruction
 from rics.translation.fetching._ids_to_fetch import IdsToFetch
 from rics.translation.offline import PlaceholderOverrides
-from rics.translation.offline.exceptions import OfflineError
 from rics.translation.offline.types import (
     IdType,
     NameType,
@@ -253,11 +253,7 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             raise exceptions.ImplementationError(f"Got {actual_len} records, expected at least {minimum}.")
 
         cls.verify_placeholders(instr, known_placeholders)
-        return PlaceholderTranslations(
-            instr.source,
-            tuple(known_placeholders),
-            records,
-        )
+        return PlaceholderTranslations(instr.source, tuple(known_placeholders), records)
 
     @classmethod
     def verify_placeholders(cls, instr: FetchInstruction, known_placeholders: Collection[str]) -> None:
