@@ -8,7 +8,7 @@ from rics.translation.exceptions import ConfigurationError
 
 @pytest.mark.skip
 def test_translate_without_id(hex_fetcher):
-    # TODO: Formats without ID
+    # TODO: Formats without ID (#30)
     Translator(hex_fetcher, fmt="{hex}[, positive={positive}]").translate(1, names="positive_numbers")
 
 
