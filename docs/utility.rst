@@ -5,7 +5,6 @@ There are many support functions contain in the rics package. A few of them are 
 
 For all available methods, see the complete API reference: :mod:`rics.utility`.
 
-=====================
 Logging configuration
 =====================
 Set up Python logging with sane defaults and an informative logging format.
@@ -13,7 +12,6 @@ Set up Python logging with sane defaults and an informative logging format.
 .. automethod:: rics.utility.logs.basic_config
    :noindex:
 
-================================
 Multivariate performance testing
 ================================
 Run performance tests with multiple candidates data collections. Outputs a figure and a :class:`pandas.DataFrame` of
@@ -30,7 +28,6 @@ long-format raw data. For an example, see the `Select IN vs BETWEEN`_ notebook.
     By default, this function reports averages of all runs (repetitions), as opposed to the built-in :py:mod:`timeit`
     module which reports only the best result (in non-verbose mode).
 
-=================================
 Fetching data from remote sources
 =================================
 Get data from a remote source, then cache it locally. Supports postprocessing as well in which case both raw and
@@ -43,7 +40,6 @@ postprocessed data is stored.
 
     This function is meant for manual work. There is no automatic handling of failures of any kind.
 
-========
 Examples
 ========
 

@@ -1,5 +1,5 @@
 Rics
-===========================================================
+====
 My personal little ML engineering library.
 
 .. toctree::
@@ -12,7 +12,7 @@ My personal little ML engineering library.
 
 .. toctree::
    :caption: Utility functions
-   :maxdepth: 4
+   :maxdepth: 3
 
    utility
 
