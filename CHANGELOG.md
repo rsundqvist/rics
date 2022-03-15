@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fix fetching only required placeholders (columns)
   - Add selection logic (used to always fetch everything)
 
+- Change Fetcher return format (performance optimization) from dict-of-lists to matrix
+
+### Added
+- Implement translations of `pandas.Series`
+- The `rics.utility.perf` package for multivariate (`data` x `functions`) performance testing
+
 ## [0.1.1] - 2022-03-12
 First release on PyPI
 
