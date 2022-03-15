@@ -24,7 +24,6 @@ class PandasIO(DataStructureIO):
         if isinstance(translatable, pd.DataFrame):
             return translatable[names]
         else:
-            PandasIO._check_names(names, translatable)
             return translatable
 
     @staticmethod
@@ -39,14 +38,11 @@ class PandasIO(DataStructureIO):
             for name in names:
                 translatable[name] = translatable[name].map(tmap[name])
         else:
-            PandasIO._check_names(names, translatable)
-            return translatable
+            if len(names) == 1:
+                translated_ids = list(map(tmap[names[0]].get, translatable))
+            else:
+                translated_ids = [tmap[n].get(idx) for n, idx in zip(names, translatable)]
+
+            translatable.update(pd.Series(translated_ids, index=translatable.index))
 
         return translatable if copy else None
-
-    @staticmethod
-    def _check_names(names: Sequence[NameType], nd: T) -> None:
-        if len(names) > 1:
-            raise ValueError("Must have at most one name for Series types.")
-        if nd.name is not None and len(names) == 1 and nd.name != names[0]:
-            raise ValueError("Name mismatch.")
