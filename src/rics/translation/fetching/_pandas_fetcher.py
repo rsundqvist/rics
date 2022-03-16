@@ -17,11 +17,9 @@ PandasReadFunction = Callable[[PathLikeType, Any, Any], pd.DataFrame]
 class PandasFetcher(Fetcher[NameType, IdType, str]):
     """Fetcher using pandas DataFrames as the data format.
 
-    Fetch data from serialized DataFrames. How this is done is determined by `read_function`. This is typically a Pandas
-    function such as :func:`pandas.read_csv` or :func:`pandas.read_pickle`, but any function that accepts a string
-    `source` as the  first argument and returns a data frame can be used.
-
-    The read function is invoked for sources found in `sources` but not in `source_frames`.
+    Fetch data from serialized DataFrames. How this is done is determined by the `read_function`. This is typically a
+    Pandas function such as :func:`pandas.read_csv` or :func:`pandas.read_pickle`, but any function that accepts a
+    string `source` as the  first argument and returns a data frame can be used.
 
     Args:
         read_function: A Pandas `read`-function.
@@ -66,7 +64,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         """Search for source paths to pass to `read_function` using `read_path_format`.
 
         Returns:
-            A dict ``{source, path}``.
+            A dict {source, path}.
 
         Raises:
             IOError: If files cannot be read.
@@ -103,7 +101,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         return self._sources
 
     def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
-        """Read columns from a serialized dataframe."""
+        """Read data from disk."""
         source_path = self._source_paths[instr.source]
         df = self.read(source_path)
 

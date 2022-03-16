@@ -28,8 +28,8 @@ dialect may need to be installed separately.
 ==========================
 Fetching: Local files
 ==========================
-Implementation wrapping a pandas Read-function where file names are interpreted as `source` names. Most reader in
-`pandas.io <https://pandas.pydata.org/docs/reference/io.html>`_ readers should work, though additional dependencies may
+Implementation wrapping a pandas Read-function where file names are interpreted as `source` names. Most readers in
+`pandas.io <https://pandas.pydata.org/docs/reference/io.html>`_ should work, though additional dependencies may
 be required for some of them. Many of these functions do not actually require the file to be present on the local file
 system, allowing translation data to be shared if stored centrally.
 
@@ -40,8 +40,7 @@ system, allowing translation data to be shared if stored centrally.
 Fetching: User implementations
 ==============================
 The base class may be inherited by users to customize all aspects of the fetching process. You will find the
-API reference for this class below. Overriding the abstract methods in this class will produce a new and fully
-fetcher implementation.
+API reference for this class below.
 
 .. autoclass:: rics.translation.fetching.Fetcher
    :noindex:

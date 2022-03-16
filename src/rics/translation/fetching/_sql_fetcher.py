@@ -114,7 +114,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         select = sqlalchemy.select(map(ts.columns.get, columns))
 
         if instr.ids is None and not ts.fetch_all_permitted:
-            raise exceptions.ForbiddenOperationError(self.FETCH_ALL, f"disabled for table '{ts.name}'.")
+            raise exceptions.ForbiddenOperationError(self._FETCH_ALL, f"disabled for table '{ts.name}'.")
 
         stmt = select if instr.ids is None else self._make_query(ts, select, set(instr.ids))
         return PlaceholderTranslations(instr.source, tuple(columns), tuple(self._engine.execute(stmt)))
@@ -161,7 +161,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
     @property
     def allow_fetch_all(self) -> bool:
-        """Flag indicating whether the FETCH_ALL operation is permitted."""
+        """Flag indicating whether the :meth:`~rics.translation.fetching.Fetcher.fetch_all` operation is permitted."""
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
     def __repr__(self) -> str:

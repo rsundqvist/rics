@@ -42,7 +42,7 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         * :class:`rics.translation.Translator`, the main user interface for translation.
     """
 
-    FETCH_ALL: str = "FETCH_ALL"
+    _FETCH_ALL: str = "_FETCH_ALL"
 
     def __init__(
         self,
@@ -79,7 +79,7 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
 
     @property
     def allow_fetch_all(self) -> bool:
-        """Flag indicating whether the FETCH_ALL operation is permitted."""
+        """Flag indicating whether the :meth:`fetch_all` operation is permitted."""
         return self._allow_fetch_all
 
     def fetch(
@@ -114,7 +114,7 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             raise exceptions.UnknownSourceError(f"Sources {unknown_sources} not recognized: Known {sources=}.")
 
         if not self.allow_fetch_all and any(t.ids is None for t in ids_to_fetch):
-            raise exceptions.ForbiddenOperationError(self.FETCH_ALL)
+            raise exceptions.ForbiddenOperationError(self._FETCH_ALL)
 
         return self._fetch(ids_to_fetch, tuple(placeholders), set(required))
 
@@ -138,7 +138,7 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             ImplementationError: For errors made by the inheriting implementation.
         """
         if not self.allow_fetch_all:
-            raise exceptions.ForbiddenOperationError(self.FETCH_ALL)
+            raise exceptions.ForbiddenOperationError(self._FETCH_ALL)
 
         ids_to_fetch = [IdsToFetch(source, None) for source in self.sources]
         return self._fetch(ids_to_fetch, tuple(placeholders), set(required))
