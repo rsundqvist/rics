@@ -13,7 +13,7 @@ except ModuleNotFoundError:
 
 
 def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
-    """Create a DataFrame from a run result.
+    """Create a DataFrame from performance run output.
 
     Args:
         run_results: Output from :meth:`rics.utility.perf.MultiCaseTimer.run`.

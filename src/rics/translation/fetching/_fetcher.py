@@ -218,7 +218,7 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         raise NotImplementedError()
 
     def close(self) -> None:
-        """Close the fetcher."""
+        """Close the fetcher. Does nothing by default."""
 
     def get_id_placeholder(self, source: SourceType) -> str:
         """Get the ID placeholder name for `source`."""

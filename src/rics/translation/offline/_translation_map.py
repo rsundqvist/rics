@@ -19,6 +19,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
     """
 
     FORMAT_APPLIER_TYPE: Type[FormatApplier] = DefaultFormatApplier
+    """Format applicator implementation type."""
 
     def __init__(
         self,

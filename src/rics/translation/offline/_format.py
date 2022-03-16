@@ -23,6 +23,7 @@ class Format:
     """
 
     PLACEHOLDER_PATTERN: re.Pattern = re.compile(_OPTIONAL_ELEMENT_REGEX + "|" + _REQUIRED_ELEMENT_RE)
+    """Pattern which denotes placeholder elements in format strings."""
 
     def __init__(self, fmt: str) -> None:
         self._fmt = fmt

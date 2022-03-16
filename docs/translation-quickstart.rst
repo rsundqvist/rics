@@ -67,14 +67,6 @@ The example above could be solved using config options that :meth:`Translator.fr
 <rics.translation.Translator.from_config>` provides. The primary use case for importing and using these classes directly
 is writing a more advanced a ``score_function`` or fetcher than the implementations of this package provide.
 
-===================
-Offline translation
-===================
-If you do not want to keep the fetcher connected to the database, you can use the translator
-:meth:`~rics.translation.Translator.store`-method to fetch as much data as possible after which the fetcher will be
-closed. A :class:`~rics.translation.offline.TranslationMap` will be stored for offline operation.
-Uses a lot of memory for large tables.
-
 .. _Translating with a SQL database:
     https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/SqlFetcher.ipynb
 .. _config.yaml:

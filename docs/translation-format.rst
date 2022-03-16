@@ -1,11 +1,16 @@
 ==========================
 Translation format strings
 ==========================
-The :class:`rics.translation.offline.Format` class defines the string format. These are simlar to regular fstrings, with
-two significant exceptions:
+The :class:`rics.translation.offline.Format` class defines the string format. These are simlair to regular fstrings,
+with two significant exceptions:
 
-    a. Keyword placeholders only: ``'{}'`` is not accepted, correct form is ``'{key-name}'``.
-    b. Substrings surrounded by ``[]`` denote an optional element.
+1. Keyword placeholders only
+    Bare ``'{}'`` is not accepted, correct form is ``'{key-name}'``.
+
+2. Substrings surrounded by brackets are optional elements
+    Anything surrounded by ``[]`` denotes an optional element.
+
+The exact definition is given by the :attr:`~rics.translation.offline.Format.PLACEHOLDER_PATTERN` attribute.
 
 .. note::
 

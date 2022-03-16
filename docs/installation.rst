@@ -8,7 +8,7 @@ Installation
 Stable release
 --------------
 
-To install rics, run this command in your terminal:
+To install, run this command in your terminal:
 
 .. code-block:: console
 

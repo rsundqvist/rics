@@ -31,10 +31,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         read_function_kwargs: Additional keyword arguments for `read_function`.
 
     See Also:
-        Official `Pandas IO documentation`_.
-
-    .. _Pandas IO documentation:
-        https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html
+        The official `Pandas IO documentation <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`_
     """
 
     def __init__(

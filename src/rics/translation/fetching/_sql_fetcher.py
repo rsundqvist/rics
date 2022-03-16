@@ -49,7 +49,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         fetch_all_limit: Maximum size of table to allow a fetch all-operation. None=No limit, 0=never allow.
 
     Raises:
-        ValueError: If both `blacklist` and `whitelist` are given.
+        ValueError: If both `whitelist_tables` and `blacklist_tables` are given.
     """
 
     def __init__(

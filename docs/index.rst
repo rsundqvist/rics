@@ -3,6 +3,15 @@ Rics
 My personal little ML engineering library.
 
 .. toctree::
+   :caption: Utility functions
+   :maxdepth: 1
+
+   utility-logging
+   utility-perftest
+   utility-data-download
+   utility-more
+
+.. toctree::
    :caption: ID Translation
    :maxdepth: 4
 
@@ -11,16 +20,10 @@ My personal little ML engineering library.
    Translation API <translation-api>
 
 .. toctree::
-   :caption: Utility functions
-   :maxdepth: 3
-
-   utility
-
-.. toctree::
    :caption: Documentation
    :maxdepth: 2
 
-   Installing Rics <installation>
+   installation
    Change history <changelog>
    Readme <readme>
    License <license>
