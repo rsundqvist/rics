@@ -6,10 +6,16 @@ from rics.translation.dio.exceptions import NotInplaceTranslatableError, Untrans
 from rics.translation.exceptions import ConfigurationError
 
 
-@pytest.mark.skip
 def test_translate_without_id(hex_fetcher):
-    # TODO: Formats without ID (#30)
-    Translator(hex_fetcher, fmt="{hex}[, positive={positive}]").translate(1, names="positive_numbers")
+    without_id = "{hex}, positive={positive}"
+    ans = Translator(hex_fetcher, fmt=without_id).translate({"positive_numbers": list(range(-1, 2))})
+    assert ans == {
+        "positive_numbers": [
+            "-0x1, positive=False",
+            "0x0, positive=True",
+            "0x1, positive=True",
+        ]
+    }
 
 
 def test_can_pickle(translator):
