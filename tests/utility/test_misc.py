@@ -30,16 +30,17 @@ def test_get_local_or_remote():
     def my_postprocessor(p):
         return ["my-data", {"is": "amazing"}]
 
+    remote_root = "doesn't exist"
     with tempfile.TemporaryDirectory() as tmpdir:
         base_path = Path(tmpdir)
 
         with open(base_path.joinpath("foo.txt"), "w") as f:
             f.write("test")
 
-        path = misc.get_local_or_remote("foo.txt", tmpdir, show_progress=False)
+        path = misc.get_local_or_remote("foo.txt", remote_root, tmpdir)
         assert path == base_path.joinpath("foo.txt")
 
-        path = misc.get_local_or_remote("foo.txt", tmpdir, show_progress=False, postprocessor=my_postprocessor)
+        path = misc.get_local_or_remote("foo.txt", remote_root, tmpdir, postprocessor=my_postprocessor)
         assert path == base_path.joinpath("my_postprocessor/foo.pkl")
         with open(path, "rb") as f:
             import pickle
