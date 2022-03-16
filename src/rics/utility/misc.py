@@ -29,8 +29,8 @@ def tname(arg: Optional[Union[Type[Any], Any, Callable]]) -> str:
 
 def get_local_or_remote(
     file: PathLikeType,
-    local_root: PathLikeType,
-    remote_root: PathLikeType = None,
+    remote_root: PathLikeType,
+    local_root: PathLikeType = ".",
     force: bool = False,
     postprocessor: Callable[[str], Any] = None,
     show_progress: bool = local_or_remote.TQDM_INSTALLED,
@@ -43,8 +43,8 @@ def get_local_or_remote(
 
     Args:
         file: A file to retrieve or download.
-        local_root: Local directory where the file may be cached.
         remote_root: Remote URL where the data may be retrieved using ``requests.get``.
+        local_root: Local directory where the file may be cached.
         force: If True, always download and apply processing (if applicable). Existing files will be overwritten.
         postprocessor: A function which takes a single argument `input_path` and returns a pickleable type.
         show_progress: If True, show a progress bar. Requires the `tqdm`_ package.

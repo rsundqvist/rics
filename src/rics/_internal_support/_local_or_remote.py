@@ -21,8 +21,8 @@ _GLOR_LOGGER = LOGGER.getChild("get_local_or_remote")
 
 def get(
     file: PathLikeType,
+    remote_root: PathLikeType,
     local_root: PathLikeType,
-    remote_root: PathLikeType = None,
     force: bool = False,
     postprocessor: Callable[[str], Any] = None,
     show_progress: bool = TQDM_INSTALLED,
@@ -33,8 +33,8 @@ def get(
 
     return _get_file(
         file=str(file),
-        local_root=Path(str(local_root)).absolute(),
         remote_root=str(remote_root),
+        local_root=Path(str(local_root)).absolute(),
         force=force,
         postprocessor=postprocessor,
         show_progress=show_progress,
@@ -43,8 +43,8 @@ def get(
 
 def _get_file(
     file: str,
-    local_root: Path,
     remote_root: str,
+    local_root: Path,
     force: bool,
     postprocessor: Optional[Callable[[str], Any]],
     show_progress: bool,
