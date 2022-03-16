@@ -19,17 +19,17 @@ The `IMDb dataset`_ consists of multiple data collections. The following example
 >>> import pandas as pd
 >>>
 >>> file = "name.basics.tsv.gz"
->>> local_root = "my-data"
+>>> local_root = "my-data"  # default = "."
 >>> remote_root = "https://datasets.imdbws.com"
->>> path = get_local_or_remote(file, local_root, remote_root, show_progress=True) # doctest: +SKIP
+>>> path = get_local_or_remote(file, remote_root, local_root, show_progress=True) # doctest: +SKIP
 >>> pd.read_csv(path, sep="\t").shape # doctest: +SKIP
 https://datasets.imdbws.com/name.basics.tsv.gz: 100%|██████████| 214M/214M [00:05<00:00, 39.3MiB/s]
 (11453719, 6)
 
 We have download `name.basics.tsv.gz` the first time, but ``get_local_or_remote`` returns immediately the second
-time it is called. A refetch can be forced using ``force_remote=True``.
+time it is called. Fetching can be forced using ``force_remote=True``.
 
->>> path = get_local_or_remote(file, local_root, remote_root, show_progress=True) # doctest: +SKIP
+>>> path = get_local_or_remote(file, remote_root, local_root, show_progress=True) # doctest: +SKIP
 >>> pd.read_csv(path, sep="\t").shape # doctest: +SKIP
 (11453719, 6)
 
