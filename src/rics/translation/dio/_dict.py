@@ -21,11 +21,11 @@ class DictIO(DataStructureIO):
         return {name: translatable[name] for name in names}
 
     @staticmethod
-    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
+    def insert(translatable: T, tmap: TranslationMap, copy: bool) -> Optional[T]:
         """Insert translations into a dict."""
         translatable = dict(translatable) if copy else translatable  # type: ignore
 
-        for name in filter(translatable.__contains__, names):
+        for name in filter(translatable.__contains__, tmap.names):
             translatable[name] = type(translatable[name])(map(tmap[name].get, translatable[name]))
 
         return translatable if copy else None

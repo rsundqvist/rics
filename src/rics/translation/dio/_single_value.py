@@ -23,9 +23,9 @@ class SingleValueIO(DataStructureIO):
         return {names[0]: (translatable,)}
 
     @staticmethod
-    def insert(translatable: IdType, names: List[NameType], tmap: TranslationMap, copy: bool) -> str:
+    def insert(translatable: IdType, tmap: TranslationMap, copy: bool) -> str:
         """Return a translated value."""
         if not copy:
             raise NotInplaceTranslatableError(translatable)
 
-        return tmap[names[0]][translatable]
+        return tmap[tmap.names[0]][translatable]
