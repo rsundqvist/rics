@@ -27,13 +27,12 @@ class PandasIO(DataStructureIO):
             return translatable
 
     @staticmethod
-    def insert(translatable: T, tmap: TranslationMap, copy: bool) -> Optional[T]:
+    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
         """Insert translations into a Pandas type."""
         if not copy and isinstance(translatable, pd.Series):
             raise exceptions.NotInplaceTranslatableError(translatable)
 
         translatable = translatable.copy() if copy else translatable
-        names = tmap.names
 
         if isinstance(translatable, pd.DataFrame):
             for name in names:
