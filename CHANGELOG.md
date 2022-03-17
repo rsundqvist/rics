@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2022-03-17
+### Fixed
+- Readme links.
+
 ## [0.3.0] - 2022-03-17
 ### Changed
 - Update `get_local_or_remote` - remote root mandatory, default to cwd for local root
@@ -40,7 +44,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/rsundqvist/rics/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/rsundqvist/rics/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rsundqvist/rics/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rsundqvist/rics/compare/releases/tag/v0.1.0
