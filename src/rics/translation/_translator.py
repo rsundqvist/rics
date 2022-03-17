@@ -1,7 +1,7 @@
 import logging
 import warnings
 from collections import defaultdict
-from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Type, Union
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
@@ -18,6 +18,10 @@ from rics.utility.misc import tname
 _NAME_ATTRIBUTES = ("keys", "name", "names", "columns")
 
 LOGGER = logging.getLogger(__package__).getChild("Translator")
+
+NamesPredicate = Callable[[NameType], bool]
+NameTypes = Union[NameType, Iterable[NameType]]
+Names = Union[NameTypes, NamesPredicate]
 
 
 class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
@@ -73,16 +77,18 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     def translate(
         self,
         translatable: DefaultTranslatable,
-        names: Union[NameType, Iterable[NameType]] = None,
-        ignore_names: Union[NameType, Iterable[NameType]] = None,
+        names: Names = None,
+        ignore_names: Names = None,
         inplace: bool = False,
     ) -> Optional[DefaultTranslatable]:
         """Translate IDs to human-readable strings.
 
         Args:
             translatable: A data structure to translate.
-            names: Explicit names to translate. Will try to derive form `translatable` if not given.
-            ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived.
+            names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
+                predicate which indicates (returns True for) derived names to keep.
+            ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
+                also be a predicate which indicates (returns True for) names to ignore.
             inplace: If True, translation is performed in-place and this function returns None.
 
         Returns:
@@ -91,34 +97,13 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         Raises:
             UntranslatableTypeError: If `translatable` is not translatable using any standard IOs.
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
-            AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
         """
         translatable_io = resolve_io(translatable)  # Fail fast if untranslatable type
 
-        # Get names and figure out where to get them from
-        names, required = self._resolve_names(translatable, names, ignore_names)
-
-        if self.online:
-            sources = self._fetcher.sources
-        elif self._cached_tmap is not None:
-            sources = list(self._cached_tmap.keys())
-        else:
-            raise AssertionError("This should be impossible.")
-
-        self._mapper.candidates = set(sources)
-        name_to_source = self._mapper.apply(names)
-
-        # Fail if any of the explicitly given names fail to map to a source.
-        if required:
-            unmapped_required = set(names).difference(name_to_source.left)
-            if unmapped_required:
-                raise MappingError(f"Required names {unmapped_required} not mapped with {sources=}.")
-
-        if not name_to_source.left:
-            msg = f"None of {names=} could not be mapped with {sources=}."
-            warnings.warn(msg)
-            return None if inplace else translatable
+        name_to_source = self.map_to_sources(translatable, names, ignore_names)
+        if name_to_source is None:
+            return None if inplace else translatable  # pragma: no cover
 
         # Get translations
         if self._cached_tmap is None:  # Fetch new data
@@ -132,7 +117,56 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         # Update
         tmap.name_to_source = name_to_source.flatten()
 
-        return translatable_io.insert(translatable, names=names, tmap=tmap, copy=not inplace)
+        return translatable_io.insert(translatable, tmap=tmap, copy=not inplace)
+
+    def map_to_sources(
+        self,
+        translatable: DefaultTranslatable,
+        names: Names = None,
+        ignore_names: Names = None,
+    ) -> Optional[DirectionalMapping]:
+        """Map names to translation sources.
+
+        Args:
+            translatable: A data structure to map names for.
+            names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
+                predicate which indicates (returns True for) derived names to keep.
+            ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
+                also be a predicate which indicates (returns True for) names to ignore.
+
+        Returns:
+            A mapping of names to translation sources. Returns None if mapping failed but success was not required.
+
+        Raises:
+            AttributeError: If `names` are not given and cannot be derived from `translatable`.
+            MappingError: If required (explicitly given) names fail to map to a source.
+        """
+        # Get names and figure out where to get them from
+        names_to_translate = self._resolve_names(translatable, names, ignore_names)
+
+        if self.online:
+            sources = self._fetcher.sources
+        elif self._cached_tmap is not None:
+            sources = list(self._cached_tmap.keys())
+        else:
+            raise AssertionError("This should be impossible.")
+
+        self._mapper.candidates = set(sources)
+        name_to_source = self._mapper.apply(names_to_translate)
+
+        # Fail if any of the explicitly given (ie literal, not predicate) names fail to map to a source.
+        if isinstance(names, (str, Iterable)):
+            required = set(self._dont_ruin_string(names))
+            unmapped = required.difference(name_to_source.left)
+            if unmapped:
+                raise MappingError(f"Required names {unmapped} not mapped with {sources=} and {ignore_names=}.")
+
+        if not name_to_source.left:
+            msg = f"None of {names=} could not be mapped with {sources=}. Translation aborted"
+            warnings.warn(msg)
+            return None
+
+        return name_to_source
 
     @property
     def online(self) -> bool:
@@ -208,48 +242,63 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         online = self.online
         return f"{tname(self)}({online=}: {more})"
 
+    def _resolve_names(
+        self,
+        translatable: DefaultTranslatable,
+        names: Optional[Names],
+        ignored_names: Optional[Names],
+    ) -> List[NameType]:
+
+        found_names: NameTypes
+        if names is None or callable(names):
+            found_names = self._extract_from_attribute(translatable)
+            if callable(names):
+                keep_predicate: NamesPredicate = names
+                found_names = list(filter(keep_predicate, found_names))
+        else:
+            found_names = self._dont_ruin_string(names)
+
+        names_to_translate: List[NameType] = self._resolve_names_inner(
+            names=found_names,
+            ignored_names=ignored_names if callable(ignored_names) else set(self._dont_ruin_string(ignored_names)),
+        )
+        return names_to_translate
+
     @staticmethod
-    def _resolve_names_inner(names: List[NameType], ignored_names: Set[NameType]) -> List[NameType]:
-        names_to_translate = list(filter(lambda name: name not in ignored_names, names))
+    def _extract_from_attribute(translatable: DefaultTranslatable) -> List[NameType]:
+        for attr_name in _NAME_ATTRIBUTES:
+            if hasattr(translatable, attr_name):
+                attr = getattr(translatable, attr_name)
+                return list(attr() if callable(attr) else attr)
+
+        raise AttributeError(
+            "Must pass 'names' since type " f"'{type(translatable)}' has none of {_NAME_ATTRIBUTES} as and attribute."
+        )
+
+    @staticmethod
+    def _resolve_names_inner(
+        names: List[NameType], ignored_names: Union[NamesPredicate, Set[NameType]]
+    ) -> List[NameType]:
+        predicate = _IgnoredNamesPredicate(ignored_names).apply
+        names_to_translate = list(filter(predicate, names))
         if not names_to_translate and names:
             warnings.warn(f"No names left to translate. Ignored names: {ignored_names}, explicit names: {names}.")
         return names_to_translate
 
-    def _resolve_names(
-        self,
-        translatable: DefaultTranslatable,
-        names: Optional[Union[NameType, Iterable[NameType]]],
-        ignored_names: Optional[Union[NameType, Iterable[NameType]]],
-    ) -> Tuple[List[NameType], bool]:
-        found_names: Optional[Union[NameType, Iterable[NameType]]] = None
-        if names is None:
-            found = False
-            for attr_name in _NAME_ATTRIBUTES:
-                if hasattr(translatable, attr_name):
-                    attr = getattr(translatable, attr_name)
-                    found_names = list(attr() if callable(attr) else attr)
-                    found = True
-                    break
-            if not found:
-                raise AttributeError(
-                    "Must pass 'names' since type "
-                    f"'{type(translatable)}' has none of {_NAME_ATTRIBUTES} as and attribute."
-                )
-        else:
-            found_names = names
-
-        names_to_translate: List[NameType] = self._resolve_names_inner(
-            names=self._dont_ruin_string(found_names),
-            ignored_names=set(self._dont_ruin_string(ignored_names)),
-        )
-
-        required = names is not None
-        return names_to_translate, required
-
     @staticmethod
-    def _dont_ruin_string(arg: Optional[Union[NameType, Iterable[NameType]]]) -> List[NameType]:
+    def _dont_ruin_string(arg: Optional[NameTypes]) -> List[NameType]:
         if arg is None:
             return []
-        if isinstance(arg, (str, int)):
-            return [arg]
-        return list(arg)
+        if not isinstance(arg, str) and isinstance(arg, Iterable):
+            return list(arg)
+
+        # https://github.com/python/mypy/issues/10835
+        return [arg]  # type: ignore
+
+
+class _IgnoredNamesPredicate(Generic[NameType]):
+    def __init__(self, ignored_names: Union[NamesPredicate, Set[NameType]]) -> None:
+        self._func = ignored_names if callable(ignored_names) else ignored_names.__contains__
+
+    def apply(self, name: NameType) -> bool:
+        return not self._func(name)
