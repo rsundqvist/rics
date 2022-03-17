@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
-Update `get_local_or_remote` - remote root mandatory, default to cwd for local root
+- Update `get_local_or_remote` - remote root mandatory, default to cwd for local root
+
+### Added
+- Make it possible to use predicates for `names` and `ignore_name` in `Translator.translate`
+- Add `Translator.map_to_sources` to get name-to-source mapping without translating data
+
+### Fixed
+- Translation using formats which don't include the `id` placeholder
 
 ## [0.2.0] - 2022-03-15
 ### Changed
