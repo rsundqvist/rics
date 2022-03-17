@@ -1,22 +1,21 @@
-"""Functions which return a "likeness" score.
+"""Functions which return a "likeness" score."""
+from typing import Callable, Dict, Hashable, Iterable, Literal, Set, TypeVar
 
-All methods follow the same signature:
+H = TypeVar("H", bound=Hashable)
+NamesLiteral = Literal["heuristic", "equality", "like_database_table", "modified_hamming"]
+MappingScoreFunction = Callable[[H, Set[H]], Iterable[float]]
+"""Signature for a likeness score function.
 
 Args:
     name: An element to find matches for.
     candidates: Potential matches for `value`.
 
 Keyword Args:
-    Accepted only by some functions.
+    kwargs: Accepted only by some functions.
 
 Yields:
     A score for each candidate `c` in `candidates`.
 """
-from typing import Callable, Dict, Hashable, Iterable, Literal, Set, TypeVar
-
-H = TypeVar("H", bound=Hashable)
-MappingScoreFunction = Callable[[H, Set[H]], Iterable[float]]
-NamesLiteral = Literal["heuristic", "equality", "like_database_table", "modified_hamming"]
 
 
 def like_database_table(name: str, candidates: Iterable[str], apply_heuristics: bool = False) -> Iterable[float]:
