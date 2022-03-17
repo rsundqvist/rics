@@ -24,24 +24,13 @@ def test_offline(hex_fetcher):
     _translate(translator)
 
 
-def test_mapping_error(translator):
-    with pytest.raises(MappingError):
-        translator.translate(0, names="unknown")
-
-
 def test_online(translator):
     _translate(translator)
 
 
-@pytest.mark.filterwarnings("ignore: None of names")
-def test_mapping_nothing_to_translate(translator):
-    translator.translate({"strange-name": [1, 2, 3]})
-
-
-@pytest.mark.filterwarnings("ignore: No names left to translate")
-@pytest.mark.filterwarnings("ignore: None of names")
-def test_all_names_ignored(translator):
-    translator.translate(0, names="name", ignore_names="name")
+def test_mapping_error(translator):
+    with pytest.raises(MappingError):
+        translator.map_to_sources(0, names="unknown")
 
 
 def _translate(translator):
@@ -80,3 +69,44 @@ def test_unknown_keys():
         Translator.from_config("tests/translation/bad-config.yaml")
 
     assert "extra-key-that-should-not-exist" in str(e)
+
+
+@pytest.mark.parametrize(
+    "keep_predicate, reject_predicate, expected",
+    [
+        (lambda s: s.endswith("id"), None, ["ends_with_id", "also_ends_with_id"]),
+        (lambda s: "numeric" not in s, None, ["ends_with_id", "also_ends_with_id", "difficult"]),
+        (lambda s: "numeric" not in s, "difficult", ["ends_with_id", "also_ends_with_id"]),
+    ],
+    ids=["ENDS_WITH_ID", "NOT_NUMERIC", "NOT_NUMERIC_AND_WITHOUT_DIFFICULT"],
+)
+def test_name_predicates(translator, keep_predicate, reject_predicate, expected):
+    data = {
+        "ends_with_id": [1, 2, 3],
+        "is_numeric": [3.5, 0.8, 1.1],
+        "also_ends_with_id": [1, 2, 3],
+        "also_numeric": [3.5, 0.8, 1.1],
+        "difficult": [3.5, 0.8, 1.1],
+    }
+
+    names_to_translate = translator._resolve_names(data, keep_predicate, reject_predicate)
+
+    assert names_to_translate == expected
+
+
+@pytest.mark.filterwarnings("ignore: None of names")
+def test_mapping_nothing_to_translate(translator):
+    translator.map_to_sources({"strange-name": [1, 2, 3]})
+
+
+@pytest.mark.filterwarnings("ignore: No names left to translate")
+@pytest.mark.filterwarnings("ignore: None of names")
+def test_all_name_ignored(translator):
+    translator.map_to_sources({"name": []}, ignore_names="name")
+
+
+@pytest.mark.filterwarnings("ignore: No names left to translate")
+@pytest.mark.filterwarnings("ignore: None of names")
+def test_explicit_name_ignored(translator):
+    with pytest.raises(MappingError):
+        translator.map_to_sources(0, names=["explicit_name"], ignore_names="explicit_name")
