@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The `Translator.fetch` function for retrieving IDs
+
+### Fixed
+- Revert bad commit
+- Fix an issue in PandasFetcher
+- Some SqlFetcher warning messages
+
 ## [0.3.1] - 2022-03-17
 ### Fixed
 - Readme links.
