@@ -191,19 +191,19 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         if self._whitelist:
             tables = self._whitelist.intersection(table_names)
         elif self._blacklist:
-            tables = set(table_names).difference(self._blacklist)
+            tables = table_names.difference(self._blacklist)
         else:
             tables = table_names
 
         if not tables:  # pragma: no cover
             if self._whitelist:
-                extra = f" whitelisted tables: {self._whitelist}"
-            elif self._whitelist:
-                extra = f" blacklisted tables: {self._whitelist}"
+                extra = f" (whitelist: {self._whitelist})"
+            elif self._blacklist:
+                extra = f" (blacklist: {self._blacklist})"
             else:
                 extra = ""
 
-            warnings.warn(f"No tables found with{extra}. Available tables: {table_names}")
+            warnings.warn(f"No sources found{extra}. Available tables: {table_names}")
             return {}
 
         ans = {}
