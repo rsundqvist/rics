@@ -37,3 +37,10 @@ My personal little ML engineering library.
    rics.cardinality
    rics.mapping
    rics.translation
+
+.. toctree::
+   :caption: Cookbook
+   :glob:
+   :titlesonly:
+
+   cookbook/*
