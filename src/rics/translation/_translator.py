@@ -105,19 +105,15 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         if name_to_source is None:
             return None if inplace else translatable  # pragma: no cover
 
-        # Get translations
-        if self._cached_tmap is None:  # Fetch new data
-            source_placeholder_translations = self._fetch(
-                self._get_ids_to_fetch(name_to_source, translatable, translatable_io)
-            )
-            tmap = self._to_translation_map(source_placeholder_translations)
-        else:  # Use cached
-            tmap = self._cached_tmap
+        translation_map = (
+            self.fetch(translatable, name_to_source, translatable_io)
+            if self._cached_tmap is None
+            else self._cached_tmap
+        )
 
-        # Update
-        tmap.name_to_source = name_to_source.flatten()
-
-        return translatable_io.insert(translatable, tmap=tmap, copy=not inplace)
+        n2s_flat = name_to_source.flatten()
+        translation_map.name_to_source = n2s_flat  # Update
+        return translatable_io.insert(translatable, names=list(n2s_flat), tmap=translation_map, copy=not inplace)
 
     def map_to_sources(
         self,
@@ -167,6 +163,31 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             return None
 
         return name_to_source
+
+    def fetch(
+        self,
+        translatable: DefaultTranslatable,
+        name_to_source: DirectionalMapping[NameType, SourceType],
+        data_structure_io: Type[DataStructureIO] = None,
+    ) -> TranslationMap:
+        """Fetch translations.
+
+        Args:
+            translatable: A data structure to translate.
+            name_to_source: Mappings of names in `translatable` to translation sources known the fetcher.
+            data_structure_io: Static Data Structure IO class used to extract IDs from `translatable`. None=derive.
+
+        Returns:
+            A :class:`~rics.translation.offline._translation_map.TranslationMap`.
+
+        Raises:
+            OfflineError: If disconnected from the fetcher, ie not :attr:`online`.
+        """
+        ids_to_fetch = self._get_ids_to_fetch(
+            name_to_source, translatable, data_structure_io or resolve_io(translatable)
+        )
+        source_placeholder_translations = self._fetch(ids_to_fetch)
+        return self._to_translation_map(source_placeholder_translations)
 
     @property
     def online(self) -> bool:
