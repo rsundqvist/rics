@@ -27,10 +27,10 @@ class SequenceIO(DataStructureIO):
         return {names[0]: list(translatable)}
 
     @staticmethod
-    def insert(translatable: T, tmap: TranslationMap, copy: bool) -> T:
+    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> T:
         """Insert translations into an array."""
         if not copy:
             raise NotInplaceTranslatableError(translatable)
 
         clazz = np.array if isinstance(translatable, np.ndarray) else type(translatable)
-        return clazz(list(map(tmap[tmap.names[0]].__getitem__, translatable)))
+        return clazz(list(map(tmap[names[0]].__getitem__, translatable)))
