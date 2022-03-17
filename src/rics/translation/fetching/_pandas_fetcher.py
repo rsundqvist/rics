@@ -105,7 +105,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         source_path = self._source_paths[instr.source]
         df = self.read(source_path)
 
-        return Fetcher.make_and_verify(instr, tuple(df), df.to_records(index=False).to_list())
+        return Fetcher.make_and_verify(instr, tuple(df), list(df.to_records(index=False)))
 
     def __repr__(self) -> str:
         return f"{tname(self)}(read_function={tname(self._read)})"
