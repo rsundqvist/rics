@@ -184,6 +184,10 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         placeholders: PlaceholdersTuple,
         required_placeholders: Set[str],
     ) -> Tuple[Optional[Dict[str, str]], FetchInstruction]:
+        required_placeholders.add("id")
+        if "id" not in placeholders:
+            placeholders = ("id",) + placeholders
+
         if self._overrides:
             if LOGGER.isEnabledFor(logging.DEBUG):
                 LOGGER.debug(self._overrides.reverse().info_string(itf.source))
