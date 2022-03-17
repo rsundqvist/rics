@@ -42,6 +42,6 @@ def load_pickle(input_path):
 def load_imdb(dataset, postprocessor=clean_and_fix_ids, **kwargs):
     remote_root = "https://datasets.imdbws.com"
     file = f"{dataset}.tsv.gz"
-    path = get_local_or_remote(file, _LOCAL_ROOT, remote_root, postprocessor=postprocessor, **kwargs)
+    path = get_local_or_remote(file, remote_root, _LOCAL_ROOT, postprocessor=postprocessor, **kwargs)
     df = pd.read_pickle(path)
     return df, _get_id_columns(df)
