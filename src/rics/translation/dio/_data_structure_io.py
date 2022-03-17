@@ -30,12 +30,11 @@ class DataStructureIO:
 
     @staticmethod
     @abstractmethod
-    def insert(c: Any, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[Any]:
+    def insert(c: Any, tmap: TranslationMap, copy: bool) -> Optional[Any]:
         """Insert translations into `c`.
 
         Args:
             c: A collection apply translations for. Modified iff ``copy=False``.
-            names: Names in `t` to translate..
             tmap: Translations for IDs in `c`.
             copy: If True modify contents of the original collection `c`. Otherwise, return a copy.
 
