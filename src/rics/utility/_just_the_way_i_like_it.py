@@ -2,16 +2,14 @@ import logging
 from typing import Union
 
 
-def configure_stuff(
-    level: Union[int, str] = logging.INFO, matplotlib_log_level: Union[int, str] = logging.WARNING
-) -> None:
+def configure_stuff(level: Union[int, str] = logging.INFO, matplotlib_level: Union[int, str] = logging.WARNING) -> None:
     """Configure a bunch of stuff to match my personal preferences.
 
     Caveat Emptor: May do strange stuff 👻.
 
     Args:
         level: Root log level.
-        matplotlib_log_level: Matplotlib log level.
+        matplotlib_level: Matplotlib log level.
 
     See Also:
         Methods used:
@@ -22,5 +20,5 @@ def configure_stuff(
     from rics.utility.logs import basic_config
     from rics.utility.plotting import configure
 
-    basic_config(level=level, matplotlib_log_level=matplotlib_log_level)
+    basic_config(level=level, matplotlib_level=matplotlib_level)
     configure()

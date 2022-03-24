@@ -12,10 +12,10 @@ def test_set_levels():
 
     basic_config(
         level=logging.CRITICAL,
-        rics_log_level=logging.INFO,
-        rics_utility_log_level=logging.DEBUG,
-        foo_log_level=logging.WARNING,
-        foo_bar_log_level=logging.INFO,
+        rics_level=logging.INFO,
+        rics_utility_level=logging.DEBUG,
+        foo_level=logging.WARNING,
+        foo_bar_level=logging.INFO,
     )
 
     assert logging.getLogger().getEffectiveLevel() == logging.CRITICAL, "root"
