@@ -10,10 +10,10 @@ Turn meaningless IDs into human-readable labels.
 ======================
 The Configuration File
 ======================
-The recommended way of creating and configuring fetchers is the :meth:`rics.translation.Translator.from_config` method,
-which takes a YAML config-file and returns a ready-run-run :class:`~rics.translation.Translator`. The translator has a
-lot of configuration options, as does its components. See the `Translating with a SQL database`_ notebook and its
-associated `config.yaml`_ file for an example.
+The recommended way of creating and configuring fetchers is the :meth:`Translator.from_config()
+<rics.translation.Translator.from_config>` method, which takes a YAML config-file and returns a ready-to-run
+:class:`~rics.translation.Translator`. The translator has a lot of configuration options, as does its components. See
+the `Translating with a SQL database`_ notebook and its associated `config.yaml`_ file for an example.
 
 =============================
 Translating IDs in 30 seconds
