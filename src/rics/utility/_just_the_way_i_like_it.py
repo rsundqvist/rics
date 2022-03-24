@@ -7,7 +7,7 @@ def configure_stuff(
 ) -> None:
     """Configure a bunch of stuff to match my personal preferences.
 
-    Caveat Emptor: May do strange stuff :).
+    Caveat Emptor: May do strange stuff 👻.
 
     Args:
         level: Root log level.

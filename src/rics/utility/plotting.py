@@ -18,7 +18,7 @@ def configure() -> None:
 def configure_seaborn() -> None:
     """Configure Seaborn figure plotting.
 
-    Caveat Emptor: May do strange stuff :).
+    Caveat Emptor: May do strange stuff 👻.
 
     Raises:
         ModuleNotFoundError: If Seaborn is not installed.
@@ -34,7 +34,7 @@ def configure_seaborn() -> None:
 def configure_matplotlib() -> None:
     """Configure Matplotlib figure plotting.
 
-    Caveat Emptor: May do strange stuff :).
+    Caveat Emptor: May do strange stuff 👻.
 
     Raises:
         ModuleNotFoundError: If matplotlib is not installed.
