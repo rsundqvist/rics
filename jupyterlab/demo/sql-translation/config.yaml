@@ -70,7 +70,10 @@ placeholder-overrides:
       endYear: to
 
   shared:
-  # Nothing for this example.
+    # Included here as an example. Keys which appear here have lower priority
+    # than the source-specific overrides.
+    actual_name: wanted_name
+    some_other_strange_name: wanted_name
 
 # ------------------------------------------------------------------------------
 # Name-to-source mapping configuration. Optional.
