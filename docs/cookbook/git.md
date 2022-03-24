@@ -26,8 +26,10 @@ git log --before=2022-01 --until=2022-02 --name-only --pretty=format:"%hx09 -- %
 Recipes for [git rebase](https://git-scm.com/docs/git-rebase).
 
 ### Auto-fixup
-Mark commits at fixups (or squash; `--squash`) for a commit with hash `<hash>`.
+Mark the commit as a fixup (for squash, use `--squash`) of a commit with hash `<bad-commit-hash>`.
 ```bash
-git commit --fixup <hash>
-git rebase -i --autosquash
+git commit --fixup <ad-commit-hash>
+git rebase -i <from-hash> --autosquash
 ```
+This will create a message like `fixup! Bad-commit-subject-line`. When rebasing, all `!fixup`-commits will be moved and
+merged into their "parent" commits automatically, assuming they are located after `<from-hash>`.
