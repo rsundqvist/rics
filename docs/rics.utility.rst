@@ -1,6 +1,14 @@
 rics.utility package
 ====================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   rics.utility.perf
+
 Submodules
 ----------
 
@@ -16,6 +24,14 @@ rics.utility.misc module
 ------------------------
 
 .. automodule:: rics.utility.misc
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+rics.utility.plotting module
+----------------------------
+
+.. automodule:: rics.utility.plotting
    :members:
    :undoc-members:
    :show-inheritance:

@@ -13,6 +13,8 @@ omit =
     src/rics/translation/dio/*
     src/rics/_internal*
     src/rics/utility/perf/*
+    src/rics/utility/plotting.py
+    src/rics/utility/_just_the_way_i_like_it.py
     */exceptions.py
 
 fail_under = 100
