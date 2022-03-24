@@ -13,7 +13,7 @@ postprocessed data is stored.
 ------------------------------------------
 Example: Downloading data with local cache
 ------------------------------------------
-The `IMDb dataset`_ consists of multiple data collections. The following example retrieves Title Basics data.
+Fetch the Title Basics table (a CSV file) of the `IMDb dataset`_.
 
 >>> from rics.utility.misc import get_local_or_remote
 >>> import pandas as pd
@@ -26,7 +26,7 @@ The `IMDb dataset`_ consists of multiple data collections. The following example
 https://datasets.imdbws.com/name.basics.tsv.gz: 100%|██████████| 214M/214M [00:05<00:00, 39.3MiB/s]
 (11453719, 6)
 
-We have download `name.basics.tsv.gz` the first time, but ``get_local_or_remote`` returns immediately the second
+We had download `name.basics.tsv.gz` the first time, but ``get_local_or_remote`` returns immediately the second
 time it is called. Fetching can be forced using ``force_remote=True``.
 
 >>> path = get_local_or_remote(file, remote_root, local_root, show_progress=True) # doctest: +SKIP
