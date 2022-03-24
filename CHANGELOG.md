@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Changed
+- Replace suffix `_log_level -> `_level` in `basic_config`
+
 ### Added
 - Dict utility methods in `rics.utility.collections`
 
