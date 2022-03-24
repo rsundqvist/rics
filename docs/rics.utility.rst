@@ -12,6 +12,14 @@ Subpackages
 Submodules
 ----------
 
+rics.utility.collections module
+-------------------------------
+
+.. automodule:: rics.utility.collections
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 rics.utility.logs module
 ------------------------
 
