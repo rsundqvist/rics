@@ -1,5 +1,14 @@
 # Git
 
+## Git fetch
+Recipes for [git fetch](https://git-scm.com/docs/git-fetch).
+
+### Prune branches
+```bash
+git fetch -p
+```
+Before fetching, remove any remote-tracking references that no longer exist on the remote.
+
 ## Git log
 Recipes for [git log](https://git-scm.com/docs/git-log).
 
