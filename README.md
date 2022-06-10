@@ -43,22 +43,26 @@ poetry self update --preview 1.2.0a2
 
 ### Setting up for local development
 Assumes a "modern" version of Ubuntu (guide written under `Ubuntu 20.04.2 LTS`) with basic dev dependencies installed.
+
+This project uses groups for extras dependencies. If installation fails, make sure that output from `poetry --version` 
+is `1.2.0` or greater.
+
 To get started, run the following commands:
 
-Installing the latest version of Poetry
-```bash
-curl -sSL https://install.python-poetry.org/ | python -
-```
-This is the way recommended by the Poetry project.
+1. Installing the latest version of Poetry
+   ```bash
+   curl -sSL https://install.python-poetry.org/ | python -
+   ```
 
-```bash
-git clone git@github.com:rsundqvist/rics.git
-cd rics
-poetry install
-inv install-hooks
-```
-This project uses groups for extras dependencies. If installation fails, make sure that output from
-`poetry --version` is `1.2.0` or greater.
+2. Installing the project
+   ```bash
+   git clone git@github.com:rsundqvist/rics.git
+   cd rics
+   poetry install --with dev-extras
+   inv install-hooks
+   ./run-invocations
+   ```
+   The last step is optional, but serves to verify that the project is ready-to-run.
 
 ### Registering the project on Codecov
 
