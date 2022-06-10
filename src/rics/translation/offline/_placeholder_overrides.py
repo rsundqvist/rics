@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Generic, Hashable, Optional, TypeVar
+from typing import Any, Dict, Generic, Optional
 
 from rics.translation.offline.types import PlaceholderOverridesDict, SourceType
 from rics.utility.misc import tname
@@ -16,7 +16,6 @@ class PlaceholderOverrides(Generic[SourceType]):
     Args:
         shared: Mappings shared by all sources.
         source_specific: Source-specific mappings, backed by shared mappings.
-        reversed_direction: Indicates reversal, ie format has become ``<what-it-is> <= <what-it-should-be>``.
     """
 
     def __init__(
