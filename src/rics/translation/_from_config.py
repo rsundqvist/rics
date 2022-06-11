@@ -42,6 +42,7 @@ def _parse(config: Dict[str, Any]) -> "Translator":
     fetcher = config.pop("fetcher")
     mapper = _make_mapper(**config.pop("name-to-source-mapping", {}))
     placeholder_overrides = PlaceholderOverrides.from_dict(config.pop("placeholder-overrides", {}))
+    default_translations = config.pop("default-translations", None)
 
     if config:
         raise ConfigurationError(f"Invalid configuration. Unknown keys: {list(config)}")
@@ -50,13 +51,14 @@ def _parse(config: Dict[str, Any]) -> "Translator":
 
     from rics.translation._translator import Translator
 
-    return Translator(fetcher, **main, mapper=mapper)
+    return Translator(fetcher, **main, mapper=mapper, default_translations=default_translations)
 
 
 def _make_mapper(**config: Any) -> Mapper:
     if "score-function" in config:  # pragma: no cover
-        config["score_function_kwargs"] = config.pop("score-function")
-        config["score_function"] = config["score_function_kwargs"].pop("name")
+        score_function = config.pop("score-function")
+        config["score_function"] = score_function.pop("name")
+        config.update(**score_function)
 
     return Mapper.from_dict(config)
 

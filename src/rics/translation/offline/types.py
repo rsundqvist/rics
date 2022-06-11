@@ -11,6 +11,7 @@ NameToSourceDict = Dict[NameType, SourceType]  # {name: source}
 TranslatedIds = Dict[IdType, str]  # {id: translation}
 # {"shared": {from_placeholder: to_placeholder}, "source-specific": {source: {from_placeholder: to_placeholder}}
 PlaceholderOverridesDict = Dict[str, Union[Dict[str, str], Dict[str, Dict[str, str]]]]
+DefaultTranslationsDict = Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]]]]
 
 
 @dataclass

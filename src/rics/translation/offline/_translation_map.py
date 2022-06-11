@@ -1,7 +1,7 @@
-from typing import Any, Dict, Generic, Iterator, List, Mapping, Tuple, Type, Union
+from typing import Dict, Generic, Iterator, List, Mapping, Optional, Tuple, Type, Union
 
 from rics._internal_support.types import NO_DEFAULT
-from rics.translation.offline import MagicDict
+from rics.translation.offline import DefaultTranslations, MagicDict
 from rics.translation.offline._format import Format, FormatType
 from rics.translation.offline._format_applier import DefaultFormatApplier, FormatApplier
 from rics.translation.offline.types import IdType, NameToSourceDict, NameType, SourcePlaceholderTranslations, SourceType
@@ -16,6 +16,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         name_to_source: Mappings ``{name: source}``, but may be overridden by the user.
         fmt: A translation format. Must be given to use as a mapping.
         default: Per-source default values.
+        default_fmt: Optional format specification to use instead of `fmt` for fallback translation. None=use `fmt`.
     """
 
     FORMAT_APPLIER_TYPE: Type[FormatApplier] = DefaultFormatApplier
@@ -26,23 +27,44 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         source_placeholder_translations: SourcePlaceholderTranslations,
         name_to_source: NameToSourceDict = None,
         fmt: FormatType = None,
-        default: Dict[SourceType, Dict[str, Any]] = None,
+        default: DefaultTranslations[SourceType] = None,
+        default_fmt: FormatType = None,
     ) -> None:
-        default = default or {}
+        default_fmt = None if default_fmt is None else Format.parse(default_fmt)
+        self._source_formatters: Dict[SourceType, FormatApplier] = self._make_formatters(
+            source_placeholder_translations, default_fmt=default_fmt, default=default
+        )
+        self._default_fmt: Optional[Format] = default_fmt
 
-        self._source_formatters: Dict[SourceType, FormatApplier] = {
-            source: self.FORMAT_APPLIER_TYPE(placeholder_translations, default.get(source, NO_DEFAULT))
-            for source, placeholder_translations in source_placeholder_translations.items()
-        }
         self.name_to_source = name_to_source or {}
         self._fmt = None if fmt is None else Format.parse(fmt)
 
-    def apply(self, name: NameType, fmt: FormatType = None) -> MagicDict[IdType]:
+    @staticmethod
+    def _make_formatters(
+        source_placeholder_translations: SourcePlaceholderTranslations,
+        default_fmt: Optional[Format],
+        default: Optional[DefaultTranslations[SourceType]],
+    ) -> Dict[SourceType, FormatApplier]:
+        default = default or {}
+
+        if default_fmt is not None:
+            # Ensure default translations are populated with something
+            for source in source_placeholder_translations:
+                if source not in default:
+                    default[source] = {}
+
+        return {
+            source: TranslationMap.FORMAT_APPLIER_TYPE(placeholder_translations, default.get(source, NO_DEFAULT))
+            for source, placeholder_translations in source_placeholder_translations.items()
+        }
+
+    def apply(self, name: NameType, fmt: FormatType = None, default_fmt: FormatType = None) -> MagicDict[IdType]:
         """Create translations for names. Note: ``__getitem__`` delegates to this method.
 
         Args:
             name: A name to translate.
             fmt: Format to use. If None, fall back to init format.
+            default_fmt: Alternative format for default translation. Resolution: Arg -> init arg, fmt arg, init fmt arg
 
         Returns:
             Translations for `name` as a dict ``{id: translation}``.
@@ -58,8 +80,9 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
                 fmt = self._fmt
 
         fmt = Format.parse(fmt)
+        default_fmt = self._default_fmt if default_fmt is None else Format.parse(default_fmt)
         source = self.name_to_source[name]
-        return self._source_formatters[source](fmt)
+        return self._source_formatters[source](fmt, default_fmt=default_fmt)
 
     @property
     def names(self) -> List[NameType]:
