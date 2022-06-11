@@ -11,8 +11,14 @@ from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_i
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching._ids_to_fetch import IdsToFetch
-from rics.translation.offline import Format, TranslationMap
-from rics.translation.offline.types import IdType, NameType, SourcePlaceholderTranslations, SourceType
+from rics.translation.offline import DefaultTranslations, Format, TranslationMap
+from rics.translation.offline.types import (
+    DefaultTranslationsDict,
+    IdType,
+    NameType,
+    SourcePlaceholderTranslations,
+    SourceType,
+)
 from rics.utility.misc import tname
 
 _NAME_ATTRIBUTES = ("keys", "name", "names", "columns")
@@ -61,11 +67,11 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         fetcher: Union[Fetcher, TranslationMap, SourcePlaceholderTranslations],
         fmt: Union[str, Format] = "{id}:{name}",
         mapper: Mapper = None,
-        default_translations: Dict[SourceType, Dict[str, Any]] = None,
+        default_translations: Union[DefaultTranslations, DefaultTranslationsDict] = None,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
         self._mapper = mapper or Mapper()
-        self._default: Optional[Dict[SourceType, Dict[str, Any]]] = default_translations
+        self._default: Optional[DefaultTranslations] = _handle_default_translations(default_translations)
 
         self._cached_tmap: Optional[TranslationMap]
         if isinstance(fetcher, Fetcher):
@@ -323,3 +329,15 @@ class _IgnoredNamesPredicate(Generic[NameType]):
 
     def apply(self, name: NameType) -> bool:
         return not self._func(name)
+
+
+def _handle_default_translations(
+    arg: Optional[Union[DefaultTranslations, DefaultTranslationsDict]]
+) -> Optional[DefaultTranslations]:
+    if arg is None:
+        return None
+
+    if isinstance(arg, DefaultTranslations):
+        return arg
+
+    return DefaultTranslations.from_dict(arg)

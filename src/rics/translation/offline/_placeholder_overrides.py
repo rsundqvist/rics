@@ -4,7 +4,6 @@ from typing import Any, Dict, Generic, Optional
 from rics.translation.offline.types import PlaceholderOverridesDict, SourceType
 from rics.utility.misc import tname
 
-T = TypeVar("T", bound=Hashable)
 LOGGER = logging.getLogger(__package__).getChild("PlaceholderOverrides")
 
 

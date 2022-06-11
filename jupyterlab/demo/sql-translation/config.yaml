@@ -6,16 +6,6 @@
 ################################################################################
 translator:
   fmt: "{id}:{name}[ (original: {original_name})] *{from}†{to}"
-  default_translations:
-    name_basics:
-      name: Name unknown
-      from: "?"
-      to: "?"
-    title_basics:
-      name: Title unknown
-      original_name: Original title unknown
-      from: "?"
-      to: "?"
 
 ################################################################################
 # Fetcher configuration:
@@ -48,6 +38,22 @@ fetcher:
 # be used instead. Not recommended as some tweaking is often needed.           #
 #-------------------------------------------------------------------------------
 
+# ------------------------------------------------------------------------------
+# Default translations for unknown IDs. Optional.
+#
+# TODO: Skriv klart
+# ------------------------------------------------------------------------------
+default-translations:
+  source-specific:
+    name_basics:
+      name: Name unknown
+    title_basics:
+      name: Title unknown
+      original_name: Original title unknown
+
+  shared:
+    from: "?"
+    to: "?"
 # ------------------------------------------------------------------------------
 # Placeholder override configuration. Optional.
 #
