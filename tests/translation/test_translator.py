@@ -118,10 +118,10 @@ def test_explicit_name_ignored(translator):
         translator.map_to_sources(0, names=["explicit_name"], ignore_names="explicit_name")
 
 
-def test_default(hex_fetcher):
+def test_complex_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
-    default_fmt = "{id} is not known, and {positive}!"
-    default_translations = {"shared": {"positive": "may be positive or negative"}}
+    default_fmt = "{id} - {hex} - {positive}"
+    default_translations = {"shared": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
     t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_translations=default_translations)
     t.store()
 
@@ -137,10 +137,53 @@ def test_default(hex_fetcher):
     out_of_range = t.translate({"positive_numbers": [-5000, 10000]})
     assert out_of_range == {
         "positive_numbers": [
-            "-5000 is not known, and may be positive or negative!",
-            "10000 is not known, and may be positive or negative!",
+            "-5000 - HEX - POSITIVE/NEGATIVE",
+            "10000 - HEX - POSITIVE/NEGATIVE",
         ]
     }
+
+
+def test_id_only_default(hex_fetcher):
+    fmt = "{id}:{hex}[, positive={positive}]"
+    default_fmt = "{id} is not known"
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt)
+    t.store()
+
+    in_range = t.translate({"positive_numbers": list(range(-1, 2))})
+    assert in_range == {
+        "positive_numbers": [
+            "-1:-0x1, positive=False",
+            "0:0x0, positive=True",
+            "1:0x1, positive=True",
+        ]
+    }
+
+    out_of_range = t.translate({"positive_numbers": [-5000, 10000]})
+    assert out_of_range == {
+        "positive_numbers": [
+            "-5000 is not known",
+            "10000 is not known",
+        ]
+    }
+
+
+def test_plain_default(hex_fetcher):
+    fmt = "{id}:{hex}[, positive={positive}]"
+    default_fmt = "UNKNOWN"
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt)
+    t.store()
+
+    in_range = t.translate({"positive_numbers": list(range(-1, 2))})
+    assert in_range == {
+        "positive_numbers": [
+            "-1:-0x1, positive=False",
+            "0:0x0, positive=True",
+            "1:0x1, positive=True",
+        ]
+    }
+
+    out_of_range = t.translate({"positive_numbers": [-5000, 10000]})
+    assert out_of_range == {"positive_numbers": ["UNKNOWN", "positive_numbers"]}
 
 
 def test_no_default(hex_fetcher):
