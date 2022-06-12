@@ -97,7 +97,7 @@ def read_env_or_literal(
         return arg
 
     env_var_name = without_prefix(arg, env_marker)
-    return os.environ[env_var_name] if default == NO_DEFAULT else os.environ.get(env_var_name, default)
+    return os.environ[env_var_name] if default is NO_DEFAULT else os.environ.get(env_var_name, default)
 
 
 def serializable(obj: Any) -> bool:

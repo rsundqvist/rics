@@ -77,6 +77,5 @@ def _make_fetcher(base_config: Dict[str, Any], placeholder_overrides: Placeholde
     if clazz is None:
         raise ValueError(f"Could not find a fetcher class with {name=}.")  # pragma: no cover
 
-    cass_specific_kwargs = base_config.pop("class-specific-kwargs", {})
-
-    return clazz(**base_config, **cass_specific_kwargs, placeholder_overrides=placeholder_overrides)
+    class_specific_kwargs = base_config.pop("class-specific-kwargs", {})
+    return clazz(**base_config, **class_specific_kwargs, placeholder_overrides=placeholder_overrides)

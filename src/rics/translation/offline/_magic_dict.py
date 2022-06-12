@@ -11,7 +11,7 @@ class MagicDict(Mapping[IdType, str]):
     not in `translated_ids`.
 
     Should the `add_id` flag also be set, it will be converted into a callable that includes the ID requested in the
-    returned value. In this case `default_value` must include exactly one positional placeholder.
+    returned value. In this case, the `default_value` must include exactly one positional placeholder.
 
     If `has_placeholder` is not set, there should not be any placeholders in `default_value` at all.
 
@@ -33,7 +33,7 @@ class MagicDict(Mapping[IdType, str]):
         """Create a new instance.
 
         Args:
-            real_translations: A backing dict to get keys from.
+            real_translations: A dict holding real translations.
             fstring: A positional format string to create a default return value from.
             placeholders: Names of placeholders in `fstring`, in order.
             default: A dict of default values for placeholders in `fstring`.
@@ -41,7 +41,7 @@ class MagicDict(Mapping[IdType, str]):
         Returns:
             A new MagicDict.
         """
-        if default == NO_DEFAULT or default is None:
+        if default is NO_DEFAULT or default is None:
             return MagicDict(real_translations)
 
         return (
