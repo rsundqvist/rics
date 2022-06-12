@@ -21,7 +21,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
     Args:
         placeholder_translations: Matrix of ID translation components returned by fetchers.
         default: Default values for each key in `placeholders`.
-        required_placeholders_for_default: Placeholder names which must be present in `default`. None=all.
+        required_placeholders: Placeholder names which must be present in `default`. None=all.
 
     Raises:
         ValueError: If `default` is given and any placeholder names are missing.
@@ -34,14 +34,16 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         self,
         placeholder_translations: PlaceholderTranslations,
         default: Union[NoDefault, Dict[str, Any]] = NO_DEFAULT,
-        required_placeholders_for_default: Collection[str] = (),
+        required_placeholders: Collection[str] = None,
     ) -> None:
         self._source = placeholder_translations.source
         self._placeholder_names = placeholder_translations.placeholders
 
         if default is not NO_DEFAULT:
-            required_defaults = set(required_placeholders_for_default or placeholder_translations.placeholders)
-            required_defaults.remove("id")
+            required_defaults = set(
+                placeholder_translations.placeholders if required_placeholders is None else required_placeholders
+            )
+            required_defaults.discard("id")
             missing = required_defaults.difference(default)
             if missing:
                 raise ValueError(f"Placeholder names {sorted(missing)} not present in {default=}.")
@@ -122,9 +124,9 @@ class DefaultFormatApplier(FormatApplier):
         self,
         placeholder_translations: PlaceholderTranslations,
         default: Union[NoDefault, Dict[str, Any]] = NO_DEFAULT,
-        required_placeholders_for_default: Collection[str] = (),
+        required_placeholders: Collection[str] = None,
     ) -> None:
-        super().__init__(placeholder_translations, default, required_placeholders_for_default)
+        super().__init__(placeholder_translations, default, required_placeholders)
         self._pht = placeholder_translations
 
     def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds:

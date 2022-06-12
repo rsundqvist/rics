@@ -183,7 +183,7 @@ def test_plain_default(hex_fetcher):
     }
 
     out_of_range = t.translate({"positive_numbers": [-5000, 10000]})
-    assert out_of_range == {"positive_numbers": ["UNKNOWN", "positive_numbers"]}
+    assert out_of_range == {"positive_numbers": ["UNKNOWN", "UNKNOWN"]}
 
 
 def test_no_default(hex_fetcher):

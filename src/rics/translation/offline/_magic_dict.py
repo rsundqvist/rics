@@ -28,7 +28,7 @@ class MagicDict(Mapping[IdType, str]):
         real_translations: TranslatedIds,
         fstring: str,
         placeholders: PlaceholdersTuple,
-        default: Optional[Union[NoDefault, Dict[str, Any]]] = NO_DEFAULT,
+        default: Union[NoDefault, Dict[str, Any]] = NO_DEFAULT,
     ) -> "MagicDict[IdType]":
         """Create a new instance.
 
@@ -41,7 +41,7 @@ class MagicDict(Mapping[IdType, str]):
         Returns:
             A new MagicDict.
         """
-        if default is NO_DEFAULT or default is None:
+        if default is NO_DEFAULT:
             return MagicDict(real_translations)
 
         return (

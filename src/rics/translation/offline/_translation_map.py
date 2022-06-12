@@ -47,21 +47,13 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
     ) -> Dict[SourceType, FormatApplier]:
         dt: DefaultTranslations = default or DefaultTranslations()
 
-        """if default_fmt is not None:
-            # Ensure default translations are populated with something
-            for source in source_placeholder_translations:
-                if source not in dt:
-                    dt[source] = {}"""
-
         return {
             source: TranslationMap.FORMAT_APPLIER_TYPE(
-                placeholder_translations=pht,
-                default=dt.get(source, NO_DEFAULT),
-                required_placeholders_for_default=pht.placeholders
-                if default_fmt is None
-                else default_fmt.required_placeholders,
+                placeholder_translations=placeholder_translations,
+                default=dt.get(source, NO_DEFAULT if default_fmt is None else {}),
+                required_placeholders=None if default_fmt is None else default_fmt.required_placeholders,
             )
-            for source, pht in source_placeholder_translations.items()
+            for source, placeholder_translations in source_placeholder_translations.items()
         }
 
     def apply(self, name: NameType, fmt: FormatType = None, default_fmt: FormatType = None) -> MagicDict[IdType]:
