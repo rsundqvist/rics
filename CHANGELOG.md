@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Implement alternative format for unknown IDs
+- Implement shared default translations (#31)
 - Replace suffix `_log_level -> `_level` in `basic_config`
 
 ### Added

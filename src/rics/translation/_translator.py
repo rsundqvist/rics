@@ -1,7 +1,7 @@
 import logging
 import warnings
 from collections import defaultdict
-from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Type, Union
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
@@ -12,6 +12,7 @@ from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching._ids_to_fetch import IdsToFetch
 from rics.translation.offline import DefaultTranslations, Format, TranslationMap
+from rics.translation.offline._format import FormatType
 from rics.translation.offline.types import (
     DefaultTranslationsDict,
     IdType,
@@ -33,11 +34,14 @@ Names = Union[NameTypes, NamesPredicate]
 class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     """Translate IDs to human-readable labels.
 
+    Untranslatable IDs will be None by default if neither `default_fmt` nor `default_translations` is given.
+
     Args:
         fetcher: A :class:`~rics.translation.fetching.Fetcher` or ready-to-use translations.
-        fmt: String :class:`~rics.translation.offline.Format` for translations.
+        fmt: String :class:`~rics.translation.offline.Format` specification for translations.
         mapper: A :class:`~rics.mapping.Mapper` instance for binding names to sources.
-        default_translations: Shared and/or source-specific default placeholder values.
+        default_fmt: Alternative format specification to use instead of `fmt` for fallback translation of unknown IDs.
+        default_translations: Shared and/or source-specific default placeholder values for unknown IDs.
 
     See Also:
         Related classes:
@@ -65,13 +69,14 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     def __init__(
         self,
         fetcher: Union[Fetcher, TranslationMap, SourcePlaceholderTranslations],
-        fmt: Union[str, Format] = "{id}:{name}",
+        fmt: FormatType = "{id}:{name}",
         mapper: Mapper = None,
+        default_fmt: FormatType = None,
         default_translations: Union[DefaultTranslations, DefaultTranslationsDict] = None,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
         self._mapper = mapper or Mapper()
-        self._default: Optional[DefaultTranslations] = _handle_default_translations(default_translations)
+        self._default, self._default_fmt = _handle_default(self._fmt, default_fmt, default_translations)
 
         self._cached_tmap: Optional[TranslationMap]
         if isinstance(fetcher, Fetcher):
@@ -120,6 +125,18 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         n2s_flat = name_to_source.flatten()
         translation_map.name_to_source = n2s_flat  # Update
         return translatable_io.insert(translatable, names=list(n2s_flat), tmap=translation_map, copy=not inplace)
+
+    def __call__(
+        self,
+        translatable: DefaultTranslatable,
+        names: Names = None,
+        ignore_names: Names = None,
+        inplace: bool = False,
+    ) -> Optional[DefaultTranslatable]:
+        """Inherits docstring from self.translate."""
+        return self.translate(translatable, names, ignore_names, inplace)  # pragma: no cover
+
+    __call__.__doc__ = translate.__doc__
 
     def map_to_sources(
         self,
@@ -258,9 +275,9 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     def _to_translation_map(self, source_placeholder_translations: SourcePlaceholderTranslations) -> TranslationMap:
         return TranslationMap(
             source_placeholder_translations,
-            None,
-            self._fmt,
-            self._default,
+            fmt=self._fmt,
+            default=self._default,
+            default_fmt=self._default_fmt,
         )
 
     def __repr__(self) -> str:
@@ -331,13 +348,42 @@ class _IgnoredNamesPredicate(Generic[NameType]):
         return not self._func(name)
 
 
-def _handle_default_translations(
-    arg: Optional[Union[DefaultTranslations, DefaultTranslationsDict]]
-) -> Optional[DefaultTranslations]:
-    if arg is None:
-        return None
+def _handle_default(
+    fmt: Format,
+    default_fmt: Optional[FormatType],
+    default_translations: Optional[Union[DefaultTranslations, DefaultTranslationsDict]],
+) -> Tuple[Optional[DefaultTranslations], Optional[Format]]:  # pragma: no cover
+    if default_fmt is None and default_translations is None:
+        return None, None
 
-    if isinstance(arg, DefaultTranslations):
-        return arg
+    dt: Optional[DefaultTranslations] = None
 
-    return DefaultTranslations.from_dict(arg)
+    if isinstance(default_translations, DefaultTranslations):
+        dt = default_translations
+    elif isinstance(default_translations, dict):
+        dt = DefaultTranslations.from_dict(default_translations)
+
+    dfmt: Optional[Format]
+    if default_fmt is None:
+        dfmt = None
+    elif isinstance(default_fmt, str):
+        dfmt = Format(default_fmt)
+    else:
+        dfmt = default_fmt
+
+    if dt is not None and dfmt is None:
+        # Force a default format if default translations are given
+        dfmt = fmt
+
+    if dfmt is not None:
+        dt = dt or DefaultTranslations()
+
+    if dfmt is not None:
+        extra = set(dfmt.placeholders).difference(fmt.placeholders)
+        if extra:
+            raise ValueError(
+                f"The given fallback translation format {repr(default_fmt)} uses placeholders "
+                f"{sorted(extra)} which are not in the main format, which is not supported."
+            )
+
+    return dt, dfmt

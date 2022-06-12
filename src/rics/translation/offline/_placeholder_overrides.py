@@ -65,6 +65,12 @@ class PlaceholderOverrides(Generic[SourceType]):
         reversed_str = "[REVERSED] " if self._is_reversed else ""
         return f"{tname(self)}({reversed_str}{shared=} + {len(self._specific)} source-specific)"
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, PlaceholderOverrides):
+            return False
+
+        return self._shared == other._shared and self._specific == other._specific  # pragma: no cover
+
     @classmethod
     def from_dict(cls, mapping: PlaceholderOverridesDict) -> "PlaceholderOverrides":
         """Create instance from a mapping.
