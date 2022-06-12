@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Generic, List, Union
+from typing import Any, Collection, Dict, Generic, List, Union
 
 from rics._internal_support.types import NO_DEFAULT, NoDefault
 from rics.translation.offline._format import Format
@@ -21,6 +21,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
     Args:
         placeholder_translations: Matrix of ID translation components returned by fetchers.
         default: Default values for each key in `placeholders`.
+        required_placeholders_for_default: Placeholder names which must be present in `default`. None=all.
 
     Raises:
         ValueError: If `default` is given and any placeholder names are missing.
@@ -33,24 +34,30 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         self,
         placeholder_translations: PlaceholderTranslations,
         default: Union[NoDefault, Dict[str, Any]] = NO_DEFAULT,
+        required_placeholders_for_default: Collection[str] = (),
     ) -> None:
         self._source = placeholder_translations.source
         self._placeholder_names = placeholder_translations.placeholders
 
-        if default != NO_DEFAULT:
-            for name in placeholder_translations.placeholders:
-                if name != "id" and name not in default:
-                    raise ValueError(f"Placeholder {name=} not present in {default=}.")
+        if default is not NO_DEFAULT:
+            required_defaults = set(required_placeholders_for_default or placeholder_translations.placeholders)
+            required_defaults.remove("id")
+            missing = required_defaults.difference(default)
+            if missing:
+                raise ValueError(f"Placeholder names {sorted(missing)} not present in {default=}.")
 
         self._default = default
         self._n_ids = len(placeholder_translations.records)
 
-    def __call__(self, fmt: Format, placeholders: PlaceholdersTuple = None) -> MagicDict[IdType]:
+    def __call__(
+        self, fmt: Format, placeholders: PlaceholdersTuple = None, default_fmt: Format = None
+    ) -> MagicDict[IdType]:
         """Translate IDs.
 
         Args:
             fmt: Translation format to use.
             placeholders: Placeholders to include in the formatted output. None=as many as possible.
+            default_fmt: Alternative format for default translation.
 
         Returns:
             A dict ``{idx: translated_id}``.
@@ -59,9 +66,16 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
             # Use as many placeholders as possible.
             placeholders = tuple(filter(self._placeholder_names.__contains__, fmt.placeholders))
 
-        fstring = fmt.fstring(placeholders, positional=self.positional)
+        fstring = fmt.fstring(placeholders, self.positional)
+        real_translations = self._apply(fstring, placeholders)
 
-        return MagicDict.make(self._apply(fstring, placeholders), fstring, placeholders, self._default)
+        if default_fmt is None:
+            default_fstring = fstring
+        else:
+            default_fstring = default_fmt.fstring(placeholders, self.positional)
+            placeholders = default_fmt.placeholders
+
+        return MagicDict.make(real_translations, default_fstring, placeholders, self._default)
 
     @abstractmethod
     def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds:
@@ -108,8 +122,9 @@ class DefaultFormatApplier(FormatApplier):
         self,
         placeholder_translations: PlaceholderTranslations,
         default: Union[NoDefault, Dict[str, Any]] = NO_DEFAULT,
+        required_placeholders_for_default: Collection[str] = (),
     ) -> None:
-        super().__init__(placeholder_translations, default)
+        super().__init__(placeholder_translations, default, required_placeholders_for_default)
         self._pht = placeholder_translations
 
     def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds:

@@ -8,13 +8,11 @@ LOGGER = logging.getLogger(__package__).getChild("DefaultTranslations")
 
 
 class DefaultTranslations(Mapping[SourceType, Dict[str, Any]]):
-    """Remapping from non-compliant to compliant placeholder names.
-
-    Format is ``<what-it-is> => <what-it-should-be>``.
+    """Default placeholder translations for unknown IDs.
 
     Args:
-        shared: Mappings shared by all sources.
-        source_specific: Source-specific mappings, backed by shared mappings.
+        shared: Translations shared by all sources.
+        source_specific: Source-specific translations, backed by shared mappings.
     """
 
     def __init__(
@@ -26,17 +24,20 @@ class DefaultTranslations(Mapping[SourceType, Dict[str, Any]]):
         self._specific: Dict[SourceType, Dict[str, Any]] = source_specific or {}
 
     def __getitem__(self, source: SourceType) -> Dict[str, Any]:
+        if not self:
+            raise KeyError(source)
+
         specific = self._specific.get(source) or {}
         return {**self._shared, **specific}
 
     def __setitem__(self, source: SourceType, value: Dict[str, Any]) -> None:
-        self._specific[source] = value
+        self._specific[source] = value  # pragma: no cover
 
     def __len__(self) -> int:
-        return len(self._specific)
+        return len(self._specific)  # pragma: no cover
 
     def __iter__(self) -> Iterator[SourceType]:
-        yield from self._specific
+        yield from self._specific  # pragma: no cover
 
     def __repr__(self) -> str:
         shared = self._shared
@@ -47,7 +48,10 @@ class DefaultTranslations(Mapping[SourceType, Dict[str, Any]]):
         if not isinstance(other, DefaultTranslations):
             return False
 
-        return self._shared == other._shared and self._specific == other._specific
+        return self._shared == other._shared and self._specific == other._specific  # pragma: no cover
+
+    def __bool__(self) -> bool:
+        return bool(self._shared or self._specific)
 
     @classmethod
     def from_dict(cls, mapping: DefaultTranslationsDict) -> "DefaultTranslations":
@@ -79,7 +83,7 @@ class DefaultTranslations(Mapping[SourceType, Dict[str, Any]]):
         shared: Optional[Dict[str, Any]] = mapping.pop("shared", None)
         source_specific: Optional[Dict[str, Any]] = mapping.pop("source-specific", None)
 
-        if mapping:
-            raise ValueError(f"Invalid remapping dict. Unknown keys: {list(mapping)}")
+        if mapping:  # pragma: no cover
+            raise ValueError(f"Invalid default translations dict. Unknown keys: {list(mapping)}")
 
         return DefaultTranslations(shared, source_specific)

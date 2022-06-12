@@ -10,11 +10,29 @@ The ``Translator`` is the main entry point for all translation tasks. For a simp
 To actually get the translations, a :class:`~rics.translation.fetching.Fetcher` implementation is needed.
 
 ====================
-Default translations
+Handling unknown IDs
 ====================
-Default translations use a simple ``{source: {key: value}}`` format. For example, ``{"animals": {"can_fly": False}`` sets
-the default value to False for any animal which is not present in the `animals` source. Shared translations are not
-possible (yet, see `#31 <https://github.com/rsundqvist/rics/issues/31>`_).
+Untranslatable IDs are will be `None` by default. Both and alternative alternative translation format and default values
+may be specified to handle IDs which weren't returned by the underlying fetcher. Alternative formats work just like
+regular formats, but if any placeholders other than `id` are specified, these must be included in the default
+translations. As an example, by copying the ``default_fmt`` and ``default-translations`` sections from `config.yaml`_,
+we see that the output for an unknown title with ID `"tt0043440"` is translated the way we specified it.
+
+.. list-table::
+   :widths: 20 70
+   :header-rows: 1
+
+   * - Actor
+     - Debut Title
+   * - nm0038172:Peter Aryans \*1918†2001
+     - tt0063897:Floris (original: Floris) \*1969†1969
+   * - nm0040962:Ugo Attanasio \*1887†1969
+     - tt0043440:Title unknown (original: Original title unknown) \*?†?
+
+.. hint::
+    A simple `default_fmt` such as ``"{id} not translated"`` or just ``"unknown"`` may be enough, and will only
+    fail if the fetcher is configured to fail for unknown IDs. Using one of these we could've skipped the
+    ``default-translations`` section entirely in the example above.
 
 ======================
 Fetching: SQL database
@@ -25,9 +43,9 @@ dialect may need to be installed separately.
 .. autoclass:: rics.translation.fetching.SqlFetcher
    :noindex:
 
-==========================
+=====================
 Fetching: Local files
-==========================
+=====================
 Implementation wrapping a pandas Read-function where file names are interpreted as `source` names. Most readers in
 `pandas.io <https://pandas.pydata.org/docs/reference/io.html>`_ should work, though additional dependencies may
 be required for some of them. Many of these functions do not actually require the file to be present on the local file
@@ -52,3 +70,6 @@ If you do not want to keep the fetcher connected to a database or the file syste
 :meth:`~rics.translation.Translator.store`-method to fetch as much data as possible after which the fetcher will be
 disconnected and discarded. Alternatively, you may supply a :class:`~rics.translation.offline.TranslationMap` as the
 fetcher instance when initializing the translator. May cause high memory consumption.
+
+.. _config.yaml:
+    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.yaml

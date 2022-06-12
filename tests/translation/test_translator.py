@@ -116,3 +116,47 @@ def test_all_name_ignored(translator):
 def test_explicit_name_ignored(translator):
     with pytest.raises(MappingError):
         translator.map_to_sources(0, names=["explicit_name"], ignore_names="explicit_name")
+
+
+def test_default(hex_fetcher):
+    fmt = "{id}:{hex}[, positive={positive}]"
+    default_fmt = "{id} is not known, and {positive}!"
+    default_translations = {"shared": {"positive": "may be positive or negative"}}
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_translations=default_translations)
+    t.store()
+
+    in_range = t.translate({"positive_numbers": list(range(-1, 2))})
+    assert in_range == {
+        "positive_numbers": [
+            "-1:-0x1, positive=False",
+            "0:0x0, positive=True",
+            "1:0x1, positive=True",
+        ]
+    }
+
+    out_of_range = t.translate({"positive_numbers": [-5000, 10000]})
+    assert out_of_range == {
+        "positive_numbers": [
+            "-5000 is not known, and may be positive or negative!",
+            "10000 is not known, and may be positive or negative!",
+        ]
+    }
+
+
+def test_no_default(hex_fetcher):
+    fmt = "{id}:{hex}[, positive={positive}]"
+    t = Translator(hex_fetcher, fmt=fmt)
+    t.store()
+    in_range = t.translate({"positive_numbers": list(range(-1, 2))})
+    assert in_range == {
+        "positive_numbers": [
+            "-1:-0x1, positive=False",
+            "0:0x0, positive=True",
+            "1:0x1, positive=True",
+        ]
+    }
+
+    out_of_range = t.translate({"positive_numbers": [-5000, 10000]})
+    assert out_of_range == {
+        "positive_numbers": [None, None],
+    }
