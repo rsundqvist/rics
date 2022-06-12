@@ -36,7 +36,7 @@ class PandasIO(DataStructureIO):
 
         if isinstance(translatable, pd.DataFrame):
             for name in names:
-                translatable[name] = translatable[name].map(tmap[name])
+                translatable[name] = translatable[name].map(tmap[name].get)
         else:
             if len(names) == 1:
                 translated_ids = list(map(tmap[names[0]].get, translatable))
