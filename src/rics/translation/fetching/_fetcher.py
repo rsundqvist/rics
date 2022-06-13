@@ -285,7 +285,7 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             source = instr.source
             raise exceptions.UnknownPlaceholderError(
                 f"Required placeholders {missing} not recognized."
-                f" For {source=}', known placeholders are: {known_placeholders}."
+                f" For {source=}, known placeholders are: {known_placeholders}."
             )
 
     @classmethod

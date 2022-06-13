@@ -233,3 +233,7 @@ def test_no_default(hex_fetcher):
     assert out_of_range == {
         "positive_numbers": [None, None],
     }
+
+
+def test_imdb_discovery(imdb_translator):
+    assert sorted(imdb_translator._fetcher.sources) == ["name_basics", "title_basics"]
