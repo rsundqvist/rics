@@ -219,9 +219,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         """Retrieve and store translations in a local cache.
 
         Args:
-            translatable: Data from which IDs to fetch will be extracted. Not that, unlike when calling `store` with
-                data, only placeholders which match the current format will be retrieved. None=fetch all IDs and
-                placeholders.
+            translatable: Data from which IDs to fetch will be extracted. None=fetch all IDs.
             names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
                 predicate which indicates (returns True for) derived names to keep.
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May

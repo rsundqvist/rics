@@ -14,7 +14,9 @@ class FetchInstruction(IdsToFetch[SourceType, IdType]):
     Attributes:
         placeholders: All desired placeholders in preferred order.
         required: Placeholders that must be included in the response.
+        all_placeholders: Flag indicated whether to retrieve as many placeholders as possible.
     """
 
     placeholders: PlaceholdersTuple
     required: Set[str]
+    all_placeholders: bool

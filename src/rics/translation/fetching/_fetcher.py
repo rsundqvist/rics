@@ -85,8 +85,8 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
     def fetch(
         self,
         ids_to_fetch: Iterable[IdsToFetch],
-        placeholders: Iterable[str],
-        required: Iterable[str],
+        placeholders: Iterable[str] = (),
+        required: Iterable[str] = (),
     ) -> SourcePlaceholderTranslations:
         """Fetch translations.
 
@@ -120,8 +120,8 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
 
     def fetch_all(
         self,
-        placeholders: Iterable[str],
-        required: Iterable[str],
+        placeholders: Iterable[str] = (),
+        required: Iterable[str] = (),
     ) -> SourcePlaceholderTranslations:
         """Fetch as much data as possible.
 
@@ -184,6 +184,8 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         placeholders: PlaceholdersTuple,
         required_placeholders: Set[str],
     ) -> Tuple[Optional[Dict[str, str]], FetchInstruction]:
+        fetch_all_placeholders = not placeholders
+
         required_placeholders.add("id")
         if "id" not in placeholders:
             placeholders = ("id",) + placeholders
@@ -202,7 +204,13 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
 
         return (
             None if not self._overrides else self._overrides[itf.source],
-            FetchInstruction(itf.source, None if not itf.ids else tuple(itf.ids), placeholders, required_placeholders),
+            FetchInstruction(
+                source=itf.source,
+                ids=None if not itf.ids else tuple(itf.ids),
+                placeholders=placeholders,
+                required=required_placeholders,
+                all_placeholders=fetch_all_placeholders,
+            ),
         )
 
     @abstractmethod
@@ -295,7 +303,11 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             UnknownPlaceholderError: If required placeholders are missing.
         """
         cls.verify_placeholders(instr, known_placeholders)
-        return list(filter(known_placeholders.__contains__, instr.placeholders))
+        return list(
+            known_placeholders
+            if instr.all_placeholders
+            else filter(known_placeholders.__contains__, instr.placeholders)
+        )
 
 
 def _remap_placeholder_translations(pht: PlaceholderTranslations, overrides: Dict[str, str]) -> None:
