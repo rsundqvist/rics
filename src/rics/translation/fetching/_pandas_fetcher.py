@@ -34,14 +34,14 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
 
     def __init__(
         self,
-        read_function: PandasReadFunction = pd.read_pickle,
+        read_function: Union[PandasReadFunction, str] = pd.read_pickle,
         read_path_format: Optional[Union[str, Callable[[str], str]]] = "data/{}.pkl",
         read_function_args: Iterable[Any] = None,
         read_function_kwargs: Mapping[str, Any] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self._read = read_function
+        self._read = getattr(pd, read_function) if isinstance(read_function, str) else read_function
         self._format_source: Callable[[str], str] = _make_format_fn(read_path_format)
         self._args = read_function_args or ()
         self._kwargs = read_function_kwargs or {}
