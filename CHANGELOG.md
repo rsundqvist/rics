@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Add an option to run Translator.store with explicit data to cache
 - SqlFetcher: Break out potentially expensive operations into overridable methods, add perf logging
 - Implement alternative format for unknown IDs
 - Implement shared default translations (#31)

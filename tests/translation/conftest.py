@@ -11,9 +11,12 @@ from rics.translation.offline.types import PlaceholderTranslations
 
 class HexFetcher(Fetcher[str, int, str]):
     def __init__(self) -> None:
+        self.num_fetches = 0
         super().__init__()
 
     def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
+        self.num_fetches += 1
+
         placeholders = Fetcher.select_placeholders(instr, ["id", "hex", "positive"])
 
         return Fetcher.make_and_verify(

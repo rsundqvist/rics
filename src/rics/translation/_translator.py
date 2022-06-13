@@ -110,21 +110,13 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
         """
-        translatable_io = resolve_io(translatable)  # Fail fast if untranslatable type
-
-        name_to_source = self.map_to_sources(translatable, names, ignore_names)
-        if name_to_source is None:
+        translation_map = self._get_updated_tmap(translatable, names, ignore_names=ignore_names)
+        if translation_map is None:
             return None if inplace else translatable  # pragma: no cover
 
-        translation_map = (
-            self.fetch(translatable, name_to_source, translatable_io)
-            if self._cached_tmap is None
-            else self._cached_tmap
+        return resolve_io(translatable).insert(
+            translatable, names=list(translation_map.name_to_source), tmap=translation_map, copy=not inplace
         )
-
-        n2s_flat = name_to_source.flatten()
-        translation_map.name_to_source = n2s_flat  # Update
-        return translatable_io.insert(translatable, names=list(n2s_flat), tmap=translation_map, copy=not inplace)
 
     def __call__(
         self,
@@ -217,33 +209,90 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         """Return connectivity status. If False, no new translations may be fetched."""
         return hasattr(self, "_fetcher")
 
-    def store(self, delete_fetcher: bool = True) -> TranslationMap:
-        """Retrieve and store as many translations as possible.
+    def store(
+        self,
+        translatable: DefaultTranslatable = None,
+        names: Names = None,
+        ignore_names: Names = None,
+        delete_fetcher: bool = True,
+    ) -> "Translator":
+        """Retrieve and store translations in a local cache.
 
         Args:
+            translatable: Data from which IDs to fetch will be extracted. Not that, unlike when calling `store` with
+                data, only placeholders which match the current format will be retrieved. None=fetch all IDs and
+                placeholders.
+            names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
+                predicate which indicates (returns True for) derived names to keep.
+            ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
+                also be a predicate which indicates (returns True for) names to ignore.
             delete_fetcher: If True, go offline after retrieving data. The translation will still function, but some
                 methods may raise exceptions and new data cannot be retrieved. Deleting allows the fetcher to close
                 files and connections. If the fetcher has a ``close()``-method, it will be called before deletion.
 
         Returns:
-            A mapping for translation. This instance is kept by the translator to continue operation offline, and the
-            map may be modified by this process. use ``copy()`` on the map to ensure immutability.
+            Self, for chained assignment.
 
         Raises:
-            ForbiddenOperationError: If the fetcher does not permit this operation.
+            ForbiddenOperationError: If the fetcher does not permit the FETCH_ALL operation (only when `translatable` is
+                None).
+            MappingError: If a `translatable` is given, but no names to translate could be extracted.
 
         See Also:
             :meth:`rics.translation.fetching.Fetcher.fetch_all`
             :class:`rics.translation.offline.TranslationMap`
         """
-        source_placeholder_translations: SourcePlaceholderTranslations = self._fetch(None)
+        if translatable is None:
+            source_placeholder_translations: SourcePlaceholderTranslations = self._fetch(None)
+            translation_map = self._to_translation_map(source_placeholder_translations)
+        else:
+            maybe_none = self._get_updated_tmap(translatable, names, ignore_names=ignore_names, force_fetch=True)
+            if maybe_none is None:
+                raise MappingError("No values in the translatable were mapped. Cannot store translations.")
+            translation_map = maybe_none  # mypy, would be cleaner to just use translation map..
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                not_fetched = sorted(set(self._fetcher.sources).difference(translation_map.sources))
+                LOGGER.debug(f"Available sources {not_fetched} were not fetched.")
 
-        translation_map = self._to_translation_map(source_placeholder_translations)
-        LOGGER.info("Store %s", translation_map)
         if delete_fetcher:  # pragma: no cover
             self._fetcher.close()
             del self._fetcher
+
+        LOGGER.info("Store %s", translation_map)
         self._cached_tmap = translation_map
+        return self
+
+    def _get_updated_tmap(
+        self,
+        translatable: DefaultTranslatable,
+        names: Names = None,
+        ignore_names: Names = None,
+        force_fetch: bool = False,
+    ) -> Optional[TranslationMap]:
+        """Get an updated translation map.  # noqa
+
+        Setting force_fetch=True will ignore the cached translation if there is one.
+
+        Steps:
+            1. Resolve which data structure IO to use, fail if not found.
+            2. Resolve name-to-source mappings. If none are found, return None.
+            3. Create a new translation map, or update the cached one.
+
+        See the translate-method for more detailed documentation.
+        """
+        translatable_io = resolve_io(translatable)  # Fail fast if untranslatable type
+
+        name_to_source = self.map_to_sources(translatable, names, ignore_names)
+        if name_to_source is None:
+            # Nothing to translate.
+            return None  # pragma: no cover
+
+        translation_map = (
+            self.fetch(translatable, name_to_source, translatable_io)
+            if force_fetch or self._cached_tmap is None
+            else self._cached_tmap
+        )
+        translation_map.name_to_source = name_to_source.flatten()  # Update
         return translation_map
 
     @staticmethod

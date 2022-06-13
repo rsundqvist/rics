@@ -1,5 +1,6 @@
 import pytest
 
+from rics.mapping import Mapper
 from rics.mapping.exceptions import MappingError
 from rics.translation import Translator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
@@ -75,6 +76,39 @@ def test_unknown_keys():
         Translator.from_config("tests/translation/bad-config.yaml")
 
     assert "extra-key-that-should-not-exist" in str(e)
+
+
+def test_store_with_explicit_values(hex_fetcher):
+    data = {
+        "positive_numbers": list(range(0, 5)),
+        "negative_numbers": list(range(-5, -1)),
+    }
+    translator = Translator(
+        hex_fetcher, fmt="{hex}", default_fmt="{id} not known", mapper=Mapper(unmapped_values_action="ignore")
+    )
+
+    with pytest.raises(MappingError) as e:
+        translator.store(data, ignore_names=data, delete_fetcher=False)
+        assert "not store" in str(e)
+
+    translator.store(data)
+    expected_num_fetches = hex_fetcher.num_fetches
+    assert sorted(translator._cached_tmap.sources) == sorted(data)
+    actual = translator.translate(data)
+    assert hex_fetcher.num_fetches == expected_num_fetches
+    assert actual == {
+        "positive_numbers": list(map(hex, range(0, 5))),
+        "negative_numbers": list(map(hex, range(-5, -1))),
+    }
+
+    unknown_data = {
+        "positive_numbers": [5, 6],
+        "negative_numbers": [-100, -6],
+    }
+    assert translator.translate(unknown_data) == {
+        "positive_numbers": ["5 not known", "6 not known"],
+        "negative_numbers": ["-100 not known", "-6 not known"],
+    }
 
 
 @pytest.mark.parametrize(
