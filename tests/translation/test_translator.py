@@ -122,8 +122,7 @@ def test_complex_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} - {hex} - {positive}"
     default_translations = {"shared": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
-    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_translations=default_translations)
-    t.store()
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_translations=default_translations).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -146,8 +145,7 @@ def test_complex_default(hex_fetcher):
 def test_id_only_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} is not known"
-    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt)
-    t.store()
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -170,8 +168,7 @@ def test_id_only_default(hex_fetcher):
 def test_plain_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "UNKNOWN"
-    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt)
-    t.store()
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -188,8 +185,7 @@ def test_plain_default(hex_fetcher):
 
 def test_no_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
-    t = Translator(hex_fetcher, fmt=fmt)
-    t.store()
+    t = Translator(hex_fetcher, fmt=fmt).store()
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
         "positive_numbers": [
