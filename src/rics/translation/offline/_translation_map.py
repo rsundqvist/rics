@@ -16,7 +16,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         name_to_source: Mappings ``{name: source}``, but may be overridden by the user.
         fmt: A translation format. Must be given to use as a mapping.
         default: Per-source default values.
-        default_fmt: Optional format specification to use instead of `fmt` for fallback translation. None=use `fmt`.
+        default_fmt: Alternative format specification to use instead of `fmt` for fallback translation.
     """
 
     FORMAT_APPLIER_TYPE: Type[FormatApplier] = DefaultFormatApplier

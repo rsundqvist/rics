@@ -74,8 +74,8 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         if default_fmt is None:
             default_fstring = fstring
         else:
+            placeholders = tuple(filter(self._placeholder_names.__contains__, default_fmt.placeholders))
             default_fstring = default_fmt.fstring(placeholders, self.positional)
-            placeholders = default_fmt.placeholders
 
         return MagicDict.make(real_translations, default_fstring, placeholders, self._default)
 
