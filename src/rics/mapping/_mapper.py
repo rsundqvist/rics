@@ -27,6 +27,7 @@ class Mapper(Generic[ValueType, CandidateType]):
             score ``s_i`` for each candidate `c_i` in `c`. Default: ``s_i = float(k == c_i)``. Higher=better match.
         min_score: Minimum score `s_i`, as given by ``score(k, c_i)``, to consider `k` a match for `c_i`.
         overrides: User-defined 1:1 mappings which (`value` to `candidate`) override the scoring logic.
+        unmapped_values_action: Action to take if mapping fails.
         cardinality: Desired cardinality for mapped values. None=derive.
     """
 

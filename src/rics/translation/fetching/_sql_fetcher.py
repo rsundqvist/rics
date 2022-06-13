@@ -1,6 +1,7 @@
 import logging
 import warnings
 from dataclasses import dataclass
+from time import perf_counter
 from typing import Any, Dict, Iterable, List, Optional, Set
 from urllib.parse import quote_plus
 
@@ -10,13 +11,22 @@ from rics.translation.fetching import Fetcher, exceptions
 from rics.translation.fetching._fetch_instruction import FetchInstruction
 from rics.translation.offline.types import IdType, PlaceholderTranslations
 from rics.utility.misc import read_env_or_literal, tname
+from rics.utility.perf import format_perf_counter
 
 LOGGER = logging.getLogger(__package__).getChild("SqlFetcher")
 
 
 @dataclass(frozen=True)
 class TableSummary:
-    """Brief description of a known table."""
+    """Brief description of a known table.
+
+    Args:
+        name: Name of the table.
+        size: Approximate size of the table.
+        columns: Columns in the table.
+        fetch_all_permitted: A flag indicating that the FETCH_ALL-operation is permitted for this table.
+        id_column: The ID column of the table.
+    """
 
     name: str
     size: int
@@ -42,6 +52,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
             be an environment variable just like `connection_string`.
         whitelist_tables: The only tables the fetcher may access.
         blacklist_tables: The only tables the fetcher may not access.
+        include_views: If True, discover views as well.
         fetch_in_below: Always use ``IN``-clause when fetching less than `fetch_in_below` IDs.
         fetch_between_over: Always use ``BETWEEN``-clause when fetching more than `fetch_between_over` IDs.
         fetch_between_max_overfetch_factor: If number of IDs to fetch is between `fetch_in_below` and
@@ -58,6 +69,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         password: str = None,
         whitelist_tables: Iterable[str] = None,
         blacklist_tables: Iterable[str] = None,
+        include_views: bool = True,
         fetch_in_below: int = 1200,
         fetch_between_over: int = 10_000,
         fetch_between_max_overfetch_factor: float = 2.5,
@@ -75,6 +87,8 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         self._whitelist = set(whitelist_tables or [])
         self._blacklist = set(blacklist_tables or [])
         self._table_ts_dict: Optional[Dict[str, TableSummary]] = None
+        self._reflect_views = include_views
+
         self._in_limit = fetch_in_below
         self._between_limit = fetch_between_over
         self._between_overfetch_limit = fetch_between_max_overfetch_factor
@@ -84,8 +98,10 @@ class SqlFetcher(Fetcher[str, IdType, str]):
     def _summaries(self) -> Dict[str, TableSummary]:
         """Names and sizes of tables that the fetcher may interact with."""
         if self._table_ts_dict is None:
+            start = perf_counter()
             ts_dict = self._get_summaries()
-            LOGGER.info("Table discovery found %d tables: %s", len(ts_dict), sorted(ts_dict))
+            if LOGGER.isEnabledFor(logging.INFO):
+                LOGGER.info(f"Found {len(ts_dict)} tables in {format_perf_counter(start)}: {sorted(ts_dict)}")
             self._table_ts_dict = ts_dict
 
         return self._table_ts_dict
@@ -171,7 +187,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
     def close(self) -> None:
         """Close database connection."""
-        LOGGER.debug(f"Deleting {self._engine}")
+        LOGGER.info("Deleting %s", self._engine)
         del self._engine
         self._engine = None
 
@@ -184,33 +200,55 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         return connection_string
 
     def _get_summaries(self) -> Dict[str, TableSummary]:
-        metadata = sqlalchemy.MetaData(self._engine)
-        metadata.reflect()
-        table_names = set(metadata.tables)
+        start = perf_counter()
+        metadata = self.get_metadata()
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(f"Metadata created in {format_perf_counter(start)}.")
 
-        if self._whitelist:
-            tables = self._whitelist.intersection(table_names)
-        elif self._blacklist:
-            tables = table_names.difference(self._blacklist)
-        else:
-            tables = table_names
+        table_names = set(metadata.tables)
+        tables = table_names.difference(self._blacklist) if self._blacklist else table_names
 
         if not tables:  # pragma: no cover
             if self._whitelist:
-                extra = f" (whitelist: {self._whitelist})"
+                extra = " (whitelist)"
             elif self._blacklist:
                 extra = f" (blacklist: {self._blacklist})"
             else:
                 extra = ""
 
-            warnings.warn(f"No sources found{extra}. Available tables: {table_names}")
-            return {}
+            raise ValueError(f"No sources found{extra}. Available tables: {table_names}")
 
-        ans = {}
-        for name in tables:
-            size = next(self._engine.execute(sqlalchemy.select(sqlalchemy.text(f"count(*) AS count FROM {name}"))))[0]
-            fetch_all_permitted = self._fetch_all_limit is None or size < self._fetch_all_limit
-            id_column = metadata.tables[name].columns[self.get_id_placeholder(name)]
-            ans[name] = TableSummary(name, size, metadata.tables[name].columns, fetch_all_permitted, id_column)
+        return {name: self.make_table_summary(metadata.tables[name]) for name in tables}
 
-        return ans
+    def make_table_summary(self, table: sqlalchemy.sql.schema.Table) -> TableSummary:
+        """Create a table summary."""
+        id_column = table.columns[self.get_id_placeholder(table.name)]
+
+        start = perf_counter()
+        size = self.get_approximate_table_size(table)
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(f"Size of {table.name}={size} resolved in {format_perf_counter(start)}.")
+
+        fetch_all_permitted = self._fetch_all_limit is None or size < self._fetch_all_limit
+        return TableSummary(table.name, size, table.columns, fetch_all_permitted, id_column)
+
+    def get_approximate_table_size(self, table: sqlalchemy.sql.schema.Table) -> int:
+        """Return the approximate size of a table.
+
+        Called only by the :meth:`make_table_summary` method during discovery. The default implementation performs a
+        count on the ID column, which may be expensive.
+
+        Args:
+            table: A table object.
+
+        Returns:
+            An approximate size for `table`.
+        """
+        id_column = table.columns[self.get_id_placeholder(table.name)]
+        return self._engine.execute(sqlalchemy.func.count(id_column)).scalar()
+
+    def get_metadata(self) -> sqlalchemy.MetaData:
+        """Create a populated metadata object."""
+        metadata = sqlalchemy.MetaData(self._engine)
+        metadata.reflect(only=self._whitelist or None, views=self._reflect_views)
+        return metadata
