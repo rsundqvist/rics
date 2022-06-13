@@ -110,12 +110,12 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
         """
-        translation_map = self._get_updated_tmap(translatable, names, ignore_names=ignore_names)
+        translation_map, names_to_translate = self._get_updated_tmap(translatable, names, ignore_names=ignore_names)
         if translation_map is None:
             return None if inplace else translatable  # pragma: no cover
 
         return resolve_io(translatable).insert(
-            translatable, names=list(translation_map.name_to_source), tmap=translation_map, copy=not inplace
+            translatable, names=names_to_translate, tmap=translation_map, copy=not inplace
         )
 
     def __call__(
@@ -246,7 +246,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             source_placeholder_translations: SourcePlaceholderTranslations = self._fetch(None)
             translation_map = self._to_translation_map(source_placeholder_translations)
         else:
-            maybe_none = self._get_updated_tmap(translatable, names, ignore_names=ignore_names, force_fetch=True)
+            maybe_none, _ = self._get_updated_tmap(translatable, names, ignore_names=ignore_names, force_fetch=True)
             if maybe_none is None:
                 raise MappingError("No values in the translatable were mapped. Cannot store translations.")
             translation_map = maybe_none  # mypy, would be cleaner to just use translation map..
@@ -268,7 +268,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         names: Names = None,
         ignore_names: Names = None,
         force_fetch: bool = False,
-    ) -> Optional[TranslationMap]:
+    ) -> Tuple[Optional[TranslationMap], List[NameType]]:
         """Get an updated translation map.  # noqa
 
         Setting force_fetch=True will ignore the cached translation if there is one.
@@ -285,15 +285,17 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         name_to_source = self.map_to_sources(translatable, names, ignore_names)
         if name_to_source is None:
             # Nothing to translate.
-            return None  # pragma: no cover
+            return None, []  # pragma: no cover
 
         translation_map = (
             self.fetch(translatable, name_to_source, translatable_io)
             if force_fetch or self._cached_tmap is None
             else self._cached_tmap
         )
-        translation_map.name_to_source = name_to_source.flatten()  # Update
-        return translation_map
+
+        n2s = name_to_source.flatten()
+        translation_map.name_to_source = n2s  # Update
+        return translation_map, list(n2s)
 
     @staticmethod
     def _get_ids_to_fetch(
