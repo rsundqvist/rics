@@ -5,7 +5,7 @@
 # Some values are forwarded. See 'Forwarded configs' section.                  #
 ################################################################################
 translator:
-  fmt: "{id}:{name}[ (original: {original_name})] *{from}†{to}"
+  fmt: "{id}:{name}[ (original: {original_name})] from: {from}, to: {to}"
   default_fmt: "{id} not translated; default name={name}"
 
 ################################################################################
