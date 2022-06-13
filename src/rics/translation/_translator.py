@@ -315,6 +315,12 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
         placeholders = self._fmt.placeholders
         required = self._fmt.required_placeholders
+
+        if self._default_fmt and "id" in self._default_fmt.placeholders and "id" not in placeholders:
+            # Ensure that default translations can always use the ID
+            placeholders = placeholders + ("id",)
+            required = required + ("id",)
+
         return (
             self._fetcher.fetch_all(placeholders, required)
             if ids_to_fetch is None
@@ -429,6 +435,7 @@ def _handle_default(
 
     if dfmt is not None:
         extra = set(dfmt.placeholders).difference(fmt.placeholders)
+        extra.discard("id")
         if extra:
             raise ValueError(
                 f"The given fallback translation format {repr(default_fmt)} uses placeholders "
