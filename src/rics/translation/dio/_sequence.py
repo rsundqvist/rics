@@ -29,19 +29,27 @@ class SequenceIO(DataStructureIO):
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
         """Insert translations into an array."""
-        clazz = np.array if isinstance(translatable, np.ndarray) else type(translatable)
-
-        if len(names) == 1:
-            copied = clazz(list(map(tmap[names[0]].__getitem__, translatable)))
-        else:
-            # TODO
-            copied = clazz(list(map(tmap[names[0]].__getitem__, translatable)))
+        t = translate_sequence(translatable, names, tmap)
 
         if copy:
-            return copied
+            clazz = np.array if isinstance(translatable, np.ndarray) else type(translatable)
+            return clazz(t)
 
         try:
-            translatable[:] = copied[:]  # type: ignore
+            translatable[:] = t[:]  # type: ignore
             return None
         except TypeError as e:
             raise NotInplaceTranslatableError(translatable) from e
+
+
+def translate_sequence(s: T, names: List[NameType], tmap: TranslationMap) -> List[Optional[str]]:
+    """Return a translated copy of the sequence `s`."""
+    if len(names) == 1:
+        return list(map(tmap[names[0]].get, s))
+    elif len(names) == len(s):
+        return [tmap[n].get(idx) for n, idx in zip(names, s)]
+    else:
+        raise ValueError(
+            f"Number of names {len(names)} must be one or equal to the length of the data {len(s)} to "
+            f"translate, but got {names=}."
+        )

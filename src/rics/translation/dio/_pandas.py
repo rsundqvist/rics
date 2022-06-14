@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Sequence, TypeVar
 import pandas as pd
 
 from rics.translation.dio._data_structure_io import DataStructureIO
+from rics.translation.dio._sequence import translate_sequence
 from rics.translation.offline import TranslationMap
 from rics.translation.offline.types import IdType, NameType
 
@@ -34,11 +35,6 @@ class PandasIO(DataStructureIO):
             for name in names:
                 translatable[name] = translatable[name].map(tmap[name].get)
         else:
-            if len(names) == 1:
-                translated_ids = list(map(tmap[names[0]].get, translatable))
-            else:
-                translated_ids = [tmap[n].get(idx) for n, idx in zip(names, translatable)]
-
-            translatable.update(pd.Series(translated_ids, index=translatable.index))
+            translatable.update(pd.Series(translate_sequence(translatable, names, tmap), index=translatable.index))
 
         return translatable if copy else None
