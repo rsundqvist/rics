@@ -23,10 +23,10 @@ def test_from_data_frame(source):
 
 @pytest.mark.parametrize("source", OPTIONS)
 def test_dict_df_equal(source):
-    from_df = PlaceholderTranslations.from_dataframe(source, pd.read_json(PATH.format(source), orient="list"))
+    from_df = PlaceholderTranslations.make(source, pd.read_json(PATH.format(source), orient="list"))
 
     with open(PATH.format(source)) as f:
-        from_dict = PlaceholderTranslations.from_dict(source, json.load(f))
+        from_dict = PlaceholderTranslations.make(source, json.load(f))
 
     assert from_df == from_dict
 

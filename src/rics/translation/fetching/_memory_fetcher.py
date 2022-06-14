@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import Any, Dict, List, Union
 
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching._fetch_instruction import FetchInstruction
@@ -19,10 +19,16 @@ class MemoryFetcher(Fetcher[NameType, IdType, SourceType]):
         **kwargs: Forwarded to the base fetcher.
     """
 
-    def __init__(self, data: SourcePlaceholderTranslations, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        data: Union[SourcePlaceholderTranslations, Dict[SourceType, PlaceholderTranslations.MakeTypes]],
+        **kwargs: Any,
+    ) -> None:
         super().__init__(**kwargs)
         self._sources = list(data)
-        self._data = data
+        self._data: SourcePlaceholderTranslations = {
+            source: PlaceholderTranslations.make(source, pht) for source, pht in data.items()
+        }
 
     @property
     def sources(self) -> List[SourceType]:

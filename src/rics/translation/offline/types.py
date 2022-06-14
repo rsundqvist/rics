@@ -14,6 +14,7 @@ TranslatedIds = Dict[IdType, str]  # {id: translation}
 # {"shared": {from_placeholder: to_placeholder}, "source-specific": {source: {from_placeholder: to_placeholder}}
 PlaceholderOverridesDict = Dict[str, Union[Dict[str, str], Dict[str, Dict[str, str]]]]
 DefaultTranslationsDict = Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]]]]
+SourcePlaceholderTranslations = Dict[SourceType, "PlaceholderTranslations"]  # {source: PlaceholderTranslations}
 
 
 @dataclass
@@ -28,10 +29,36 @@ class PlaceholderTranslations(Generic[SourceType]):
         id_pos: Position if the `"id"` placeholder in `placeholders`.
     """
 
+    MakeTypes = Union["PlaceholderTranslations", pd.DataFrame, Dict[str, Sequence[Any]]]
+
     source: SourceType
     placeholders: PlaceholdersTuple
     records: Sequence[Sequence[Any]]
     id_pos: int = -1
+
+    @classmethod
+    def make(cls, source: SourceType, data: MakeTypes) -> "PlaceholderTranslations":
+        """Try to make in instance from arbitrary input data.
+
+        Args:
+            source: Source label for the translations.
+            data: Some data to convert to a PlaceholderTranslations instance.
+
+        Returns:
+            A new PlaceholderTranslations instance.
+
+        Raises:
+            TypeError: If `data` cannot be converted.
+        """
+        if isinstance(data, PlaceholderTranslations):  # pragma: no cover
+            return data
+
+        if isinstance(data, pd.DataFrame):
+            return cls.from_dataframe(source, data)
+        if isinstance(data, dict):
+            return cls.from_dict(source, data)
+
+        raise TypeError(data)  # pragma: no cover
 
     def to_dict(self, max_rows: int = 0) -> Dict[str, Sequence[Any]]:
         """Create a dict representation of the translations."""
@@ -40,7 +67,7 @@ class PlaceholderTranslations(Generic[SourceType]):
 
     @staticmethod
     def to_dicts(
-        source_placeholder_translations: "SourcePlaceholderTranslations[SourceType]",
+        source_placeholder_translations: "SourcePlaceholderTranslations",
         max_rows: int = 0,
     ) -> Dict[SourceType, Dict[str, Sequence[Any]]]:
         """Create a nested dict representation of the translations."""
@@ -49,20 +76,17 @@ class PlaceholderTranslations(Generic[SourceType]):
             for source, placeholder_translations in source_placeholder_translations.items()
         }
 
-    @staticmethod
-    def from_dataframe(source: SourceType, data: pd.DataFrame) -> "PlaceholderTranslations":
+    @classmethod
+    def from_dataframe(cls, source: SourceType, data: pd.DataFrame) -> "PlaceholderTranslations":
         """Create instance from a pandas DataFrame."""
-        return PlaceholderTranslations(
+        return cls(
             source,
             placeholders=tuple(data),
             records=list(map(list, data.to_records(index=False))),
             id_pos=data.columns.get_loc("id") if "id" in data else -1,
         )
 
-    @staticmethod
-    def from_dict(source: SourceType, data: Dict[str, Sequence[Any]]) -> "PlaceholderTranslations":
+    @classmethod
+    def from_dict(cls, source: SourceType, data: Dict[str, Sequence[Any]]) -> "PlaceholderTranslations":
         """Create instance from a dict."""
-        return PlaceholderTranslations.from_dataframe(source, pd.DataFrame.from_dict(data))
-
-
-SourcePlaceholderTranslations = Dict[SourceType, PlaceholderTranslations]  # {source: PlaceholderTranslations}
+        return cls.from_dataframe(source, pd.DataFrame.from_dict(data))

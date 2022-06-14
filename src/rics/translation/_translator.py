@@ -17,6 +17,7 @@ from rics.translation.offline.types import (
     DefaultTranslationsDict,
     IdType,
     NameType,
+    PlaceholderTranslations,
     SourcePlaceholderTranslations,
     SourceType,
 )
@@ -68,7 +69,9 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def __init__(
         self,
-        fetcher: Union[Fetcher, TranslationMap, SourcePlaceholderTranslations],
+        fetcher: Union[
+            Fetcher, TranslationMap, SourcePlaceholderTranslations, Dict[SourceType, PlaceholderTranslations.MakeTypes]
+        ],
         fmt: FormatType = "{id}:{name}",
         mapper: Mapper = None,
         default_fmt: FormatType = None,
@@ -83,7 +86,13 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             self._fetcher = fetcher
             self._cached_tmap = None
         else:  # pragma: no cover
-            self._cached_tmap = self._to_translation_map(fetcher) if isinstance(fetcher, dict) else fetcher
+            self._cached_tmap = (
+                self._to_translation_map(
+                    {source: PlaceholderTranslations.make(source, pht) for source, pht in fetcher.items()}
+                )
+                if isinstance(fetcher, dict)
+                else fetcher
+            )
 
     def translate(
         self,

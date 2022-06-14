@@ -12,6 +12,7 @@ from rics.utility.misc import PathLikeType, tname
 
 LOGGER = logging.getLogger(__package__).getChild("PandasFetcher")
 PandasReadFunction = Callable[[PathLikeType, Any, Any], pd.DataFrame]
+FormatFn = Callable[[PathLikeType], str]
 
 
 class PandasFetcher(Fetcher[NameType, IdType, str]):
@@ -35,14 +36,14 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
     def __init__(
         self,
         read_function: Union[PandasReadFunction, str] = pd.read_pickle,
-        read_path_format: Optional[Union[str, Callable[[str], str]]] = "data/{}.pkl",
+        read_path_format: Optional[Union[str, FormatFn]] = "data/{}.pkl",
         read_function_args: Iterable[Any] = None,
         read_function_kwargs: Mapping[str, Any] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self._read = getattr(pd, read_function) if isinstance(read_function, str) else read_function
-        self._format_source: Callable[[str], str] = _make_format_fn(read_path_format)
+        self._format_source: FormatFn = _make_format_fn(read_path_format)
         self._args = read_function_args or ()
         self._kwargs = read_function_kwargs or {}
 
@@ -111,7 +112,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         return f"{tname(self)}(read_function={tname(self._read)})"
 
 
-def _make_format_fn(read_path_format: Optional[Union[str, Callable[[str], str]]]) -> Callable[[str], str]:
+def _make_format_fn(read_path_format: Optional[Union[str, FormatFn]]) -> FormatFn:
     if callable(read_path_format):
         return read_path_format
 
