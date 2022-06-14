@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [0.5.0] - 2022-06-14
 A large number of changes, bugfixes and stability improvements. Only the most important ones are listed here.
 
 ### Added
@@ -75,7 +77,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/rsundqvist/rics/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/rsundqvist/rics/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/rsundqvist/rics/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/rsundqvist/rics/compare/v0.3.0...v0.3.1
