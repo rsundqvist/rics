@@ -22,7 +22,7 @@ from rics.translation.offline.types import (
 )
 from rics.utility.misc import tname
 
-_NAME_ATTRIBUTES = ("keys", "name", "names", "columns")
+_NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
 
 LOGGER = logging.getLogger(__package__).getChild("Translator")
 
@@ -363,20 +363,27 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         )
         return names_to_translate
 
-    @staticmethod
-    def _extract_from_attribute(translatable: DefaultTranslatable) -> List[NameType]:
+    @classmethod
+    def _extract_from_attribute(cls, translatable: DefaultTranslatable) -> List[NameType]:
+        no_use_keys = False
         for attr_name in _NAME_ATTRIBUTES:
+            if attr_name == "keys" and no_use_keys:
+                continue  # Pandas Series have keys, but should not be used.
+
             if hasattr(translatable, attr_name):
                 attr = getattr(translatable, attr_name)
-                return list(attr() if callable(attr) else attr)
+                if attr is None:
+                    no_use_keys = True
+                else:
+                    return cls._dont_ruin_string(attr() if callable(attr) else attr)
 
         raise AttributeError(
             "Must pass 'names' since type " f"'{type(translatable)}' has none of {_NAME_ATTRIBUTES} as and attribute."
         )
 
-    @staticmethod
+    @classmethod
     def _resolve_names_inner(
-        names: List[NameType], ignored_names: Union[NamesPredicate, Set[NameType]]
+        cls, names: List[NameType], ignored_names: Union[NamesPredicate, Set[NameType]]
     ) -> List[NameType]:
         predicate = _IgnoredNamesPredicate(ignored_names).apply
         names_to_translate = list(filter(predicate, names))
@@ -384,8 +391,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             warnings.warn(f"No names left to translate. Ignored names: {ignored_names}, explicit names: {names}.")
         return names_to_translate
 
-    @staticmethod
-    def _dont_ruin_string(arg: Optional[NameTypes]) -> List[NameType]:
+    @classmethod
+    def _dont_ruin_string(cls, arg: Optional[NameTypes]) -> List[NameType]:
         if arg is None:
             return []
         if not isinstance(arg, str) and isinstance(arg, Iterable):

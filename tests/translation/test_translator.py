@@ -1,3 +1,4 @@
+import pandas as pd
 import pytest
 
 from rics.mapping import Mapper
@@ -237,3 +238,8 @@ def test_no_default(hex_fetcher):
 
 def test_imdb_discovery(imdb_translator):
     assert sorted(imdb_translator._fetcher.sources) == ["name_basics", "title_basics"]
+
+
+def test_no_names(translator):
+    with pytest.raises(AttributeError):
+        translator.translate(pd.Series(range(3)))
