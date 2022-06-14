@@ -6,15 +6,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
-### Changed
-- Fix name extraction for pandas Series
+A large number of changes, bugfixes and stability improvements. Only the most important ones are listed here.
+
+### Added
+- Implement shared default translations (#31)
 - Implement in-place translation for sequences (list, pandas Series, array)
 - Allow alternative use of translation format with an ID placeholder, even if the main doesn't include it
 - Add an option to run Translator.store with explicit data to cache
-- SqlFetcher: Break out potentially expensive operations into overridable methods, add perf logging
 - Implement alternative format for unknown IDs
-- Implement shared default translations (#31)
+
+### Changed
+- SqlFetcher: Break out potentially expensive operations into overridable methods, add perf logging
 - Replace suffix `_log_level -> `_level` in `basic_config`
+
+### Fixed
+- Fix name extraction for pandas Series
 
 ### Added
 - Dict utility methods in `rics.utility.collections`
