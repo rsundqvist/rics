@@ -24,17 +24,16 @@ My personal little ML engineering library.
 
 ## Features
 
-* Multivariate performance testing - [with plots!](https://rics.readthedocs.io/en/latest/utility-perftest.html)
 * An extensible [ID translation suite](https://rics.readthedocs.io/en/latest/translation-quickstart.html), including SQL integration for retrival of data
+* Multivariate performance testing - [with plots!](https://rics.readthedocs.io/en/latest/utility-perftest.html)
 * Various other utilities methods - 
   from [logging configuration](https://rics.readthedocs.io/en/latest/utility-logging.html)
   to [fetching data from the web](https://rics.readthedocs.io/en/latest/utility-data-download.html)
-* Two-directional mapping implementation in `rics.mapping`
 
 ## Quickstart for development
 
 ### Notice
-This project uses groups for extras dependencies, which is currently a **PRERELEASE** feature (slated for `1.2`). Assuming
+This project uses groups for extras dependencies, which is currently a **_PRERELEASE_** feature (slated for `1.2`). Assuming
 poetry was installed the recommended way (see below), this can be done using:
 ```bash
 curl -sSL https://install.python-poetry.org/ | python -

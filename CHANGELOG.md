@@ -12,17 +12,17 @@ A large number of changes, bugfixes and stability improvements. Only the most im
 
 ### Added
 - Implement shared default translations (#31)
-- Implement in-place translation for sequences (list, pandas Series, array)
+- Implement in-place translation for sequences (`list`, `pandas.Series`, `numpy.array`)
 - Allow alternative use of translation format with an ID placeholder, even if the main doesn't include it
-- Add an option to run Translator.store with explicit data to cache
+- Add an option to run `Translator.store` with explicit data to cache
 - Implement alternative format for unknown IDs
 
 ### Changed
-- SqlFetcher: Break out potentially expensive operations into overridable methods, add perf logging
-- Replace suffix `_log_level -> `_level` in `basic_config`
+- SqlFetcher: Break out potentially expensive operations into overridable methods
+- Replace suffix `_log_level` -> `_level` in `basic_config`
 
 ### Fixed
-- Fix name extraction for pandas Series
+- Fix name extraction for `pandas.Series`
 
 ### Added
 - Dict utility methods in `rics.utility.collections`
@@ -37,8 +37,8 @@ A large number of changes, bugfixes and stability improvements. Only the most im
 
 ### Fixed
 - Revert bad commit
-- Fix an issue in PandasFetcher
-- Some SqlFetcher warning messages
+- Fix an issue in `PandasFetcher`
+- Some `SqlFetcher` warning messages
 
 ## [0.3.1] - 2022-03-17
 ### Fixed
@@ -57,16 +57,16 @@ A large number of changes, bugfixes and stability improvements. Only the most im
 
 ## [0.2.0] - 2022-03-15
 ### Changed
-- Update Fetcher return format from dict-of-lists to matrix (performance optimization)
+- Update `Fetcher` return format from dict-of-lists to matrix (performance optimization)
 
 ### Added
-- Database table discovery (gathers metadata like size and columns) for SqlFetcher
-- Add selection logic (used to always fetch everything) for SqlFetcher
+- Database table discovery (gathers metadata like size and columns) for `SqlFetcher`
+- Add selection logic (used to always fetch everything) for `SqlFetcher`
 - Implement translations of `pandas.Series`
 - The `rics.utility.perf` package for multivariate (`data` x `functions`) performance testing
 
 ### Fixed
-- Fix fetching only required placeholders in SqlFetcher
+- Fix fetching only required placeholders in `SqlFetcher`
 
 ## [0.1.0] - 2022-03-12
 First release on PyPI!
