@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Sequence, TypeVar
+from typing import Any, Dict, List, Optional, Sequence, TypeVar
 
 import numpy as np
 
@@ -27,10 +27,21 @@ class SequenceIO(DataStructureIO):
         return {names[0]: list(translatable)}
 
     @staticmethod
-    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> T:
+    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
         """Insert translations into an array."""
-        if not copy:
-            raise NotInplaceTranslatableError(translatable)
-
         clazz = np.array if isinstance(translatable, np.ndarray) else type(translatable)
-        return clazz(list(map(tmap[names[0]].__getitem__, translatable)))
+
+        if len(names) == 1:
+            copied = clazz(list(map(tmap[names[0]].__getitem__, translatable)))
+        else:
+            # TODO
+            copied = clazz(list(map(tmap[names[0]].__getitem__, translatable)))
+
+        if copy:
+            return copied
+
+        try:
+            translatable[:] = copied[:]  # type: ignore
+            return None
+        except TypeError as e:
+            raise NotInplaceTranslatableError(translatable) from e

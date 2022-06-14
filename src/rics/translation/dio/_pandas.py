@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional, Sequence, TypeVar
 
 import pandas as pd
 
-from rics.translation.dio import exceptions
 from rics.translation.dio._data_structure_io import DataStructureIO
 from rics.translation.offline import TranslationMap
 from rics.translation.offline.types import IdType, NameType
@@ -29,9 +28,6 @@ class PandasIO(DataStructureIO):
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
         """Insert translations into a Pandas type."""
-        if not copy and isinstance(translatable, pd.Series):
-            raise exceptions.NotInplaceTranslatableError(translatable)
-
         translatable = translatable.copy() if copy else translatable
 
         if isinstance(translatable, pd.DataFrame):

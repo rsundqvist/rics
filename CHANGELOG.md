@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Changed
+- Fix name extraction for pandas Series
+- Implement in-place translation for sequences (list, pandas Series, array)
 - Allow alternative use of translation format with an ID placeholder, even if the main doesn't include it
 - Add an option to run Translator.store with explicit data to cache
 - SqlFetcher: Break out potentially expensive operations into overridable methods, add perf logging
