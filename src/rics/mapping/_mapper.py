@@ -135,3 +135,15 @@ class Mapper(Generic[ValueType, CandidateType]):
     def __repr__(self) -> str:
         candidates = self._candidates
         return f"{tname(self)}(score={self._score} >= {self._min_score}, {candidates=})"
+
+    def copy(self) -> "Mapper":
+        """Make a copy of this Mapper."""
+        return Mapper(
+            candidates=self.candidates,
+            score_function=self._score,
+            min_score=self._min_score,
+            overrides=self._fixed.copy(),
+            unmapped_values_action=self._unmapped_action,
+            cardinality=self._cardinality,
+            **self._score_kwargs,
+        )

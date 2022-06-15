@@ -93,6 +93,33 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                 if isinstance(fetcher, dict)
                 else fetcher
             )
+        self._inherited_fetcher = False
+
+    def copy(self, **overrides: Any) -> "Translator":
+        """Make a copy of this translator.
+
+        Args:
+            overrides: Keyword arguments to use when instantiating the copy. Options that aren't given will be taken
+                from the current instance. See class documentation for possible choices.
+
+        Returns:
+            A copy of this translator with `overrides` applied.
+        """
+        kwargs: Dict[str, Any] = {
+            "fmt": self._fmt,
+            "default_fmt": self._default_fmt,
+            **overrides,
+        }
+
+        if "mapper" not in kwargs:  # pragma: no cover
+            kwargs["mapper"] = self._mapper.copy()
+
+        if "fetcher" not in kwargs:  # pragma: no cover
+            kwargs["fetcher"] = self._fetcher if self.online else self._cached_tmap.copy()  # type: ignore
+
+        copied = Translator(**kwargs)
+        copied._inherited_fetcher = "fetcher" not in overrides
+        return copied
 
     def translate(
         self,
@@ -262,8 +289,11 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                 LOGGER.debug(f"Available sources {not_fetched} were not fetched.")
 
         if delete_fetcher:  # pragma: no cover
-            self._fetcher.close()
-            del self._fetcher
+            if self._inherited_fetcher:
+                LOGGER.debug("Cannot delete inherited fetcher.")
+            else:
+                self._fetcher.close()
+                del self._fetcher
 
         LOGGER.info("Store %s", translation_map)
         self._cached_tmap = translation_map

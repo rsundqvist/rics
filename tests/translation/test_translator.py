@@ -20,20 +20,24 @@ def test_translate_without_id(hex_fetcher):
     }
 
 
-def test_can_pickle(translator):
+@pytest.mark.parametrize("copy", [False, True])
+def test_can_pickle(translator, copy):
     from rics.utility.misc import serializable
 
-    assert serializable(translator)
+    assert serializable(translator.copy() if copy else translator)
 
 
-def test_offline(hex_fetcher):
-    translator = Translator(hex_fetcher, fmt="{id}:{hex}[, positive={positive}]")
-    translator.store()
+@pytest.mark.parametrize("copy", [False, True])
+def test_offline(hex_fetcher, copy):
+    translator = Translator(hex_fetcher, fmt="{id}:{hex}[, positive={positive}]").store()
+    if copy:
+        translator = translator.copy()
     _translate(translator)
 
 
-def test_online(translator):
-    _translate(translator)
+@pytest.mark.parametrize("copy", [False, True])
+def test_online(translator, copy):
+    _translate(translator.copy() if copy else translator)
 
 
 def test_mapping_error(translator):

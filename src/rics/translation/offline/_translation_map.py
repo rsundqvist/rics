@@ -1,3 +1,4 @@
+from copy import copy
 from typing import Dict, Generic, Iterator, List, Mapping, Optional, Tuple, Type, Union
 
 from rics._internal_support.types import NO_DEFAULT
@@ -102,6 +103,10 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         """Update bindings. Mappings name->source are always added, but may be overridden by the user."""
         source_to_source = {source: source for source in self.sources}
         self._name_to_source: NameToSourceDict = {**source_to_source, **value}
+
+    def copy(self) -> "TranslationMap":
+        """Make a copy of this TranslationMap."""
+        return copy(self)
 
     def __getitem__(self, item: Union[NameType, Tuple[NameType, FormatType]]) -> MagicDict:
         name, fmt = item if isinstance(item, tuple) else (item, self._fmt)
