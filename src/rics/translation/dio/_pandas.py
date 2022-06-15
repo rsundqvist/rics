@@ -24,7 +24,7 @@ class PandasIO(DataStructureIO):
         if isinstance(translatable, pd.DataFrame):
             return translatable[names]
         else:
-            return translatable
+            return {names[0]: translatable}
 
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
