@@ -15,6 +15,7 @@ omit =
     src/rics/utility/perf/*
     src/rics/utility/plotting.py
     src/rics/utility/_just_the_way_i_like_it.py
+    src/rics/translation/_from_config.py
     */exceptions.py
 
 fail_under = 100

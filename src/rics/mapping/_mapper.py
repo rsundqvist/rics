@@ -51,18 +51,6 @@ class Mapper(Generic[ValueType, CandidateType]):
         self._cardinality = None if cardinality is None else Cardinality.parse(cardinality, strict=True)
         self._score_kwargs = score_function_kwargs
 
-    @classmethod
-    def from_dict(cls, config: Dict[str, Any]) -> "Mapper":
-        """Create instance from a dict.
-
-        Args:
-            config: Dict configuration.
-
-        Returns:
-            A new instance.
-        """
-        return Mapper(**config)
-
     @property
     def candidates(self) -> Set[CandidateType]:
         """Candidates to match with when `apply` is called."""
