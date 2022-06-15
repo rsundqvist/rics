@@ -130,7 +130,7 @@ class Mapper(Generic[ValueType, CandidateType]):
             candidates=self.candidates,
             score_function=self._score,
             min_score=self._min_score,
-            overrides=self._fixed.copy(),
+            overrides=None if self._fixed is None else {k: v[0] for k, v in self._fixed.items()},
             unmapped_values_action=self._unmapped_action,
             cardinality=self._cardinality,
             **self._score_kwargs,

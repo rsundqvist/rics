@@ -119,6 +119,9 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         if "fetcher" not in kwargs:  # pragma: no cover
             kwargs["fetcher"] = self._fetcher if self.online else self._cached_tmap.copy()  # type: ignore
 
+        if "default_translations" not in kwargs:  # pragma: no cover
+            kwargs["default_translations"] = self._default
+
         copied = Translator(**kwargs)
         copied._inherited_fetcher = "fetcher" not in overrides
         return copied

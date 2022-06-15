@@ -242,6 +242,16 @@ def test_imdb_discovery(imdb_translator):
     assert sorted(imdb_translator._fetcher.sources) == ["name_basics", "title_basics"]
 
 
+def test_copy_with_override(imdb_translator):
+    data = {"nconst": [1, 15]}
+
+    copy0 = imdb_translator.copy(fmt="Number {id} is {name}")
+    assert copy0.translate(data) == {"nconst": ["Number 1 is Fred Astaire", "Number 15 is James Dean"]}
+
+    copy1 = imdb_translator.copy(fmt="{name}")
+    assert copy1.translate(data) == {"nconst": ["Fred Astaire", "James Dean"]}
+
+
 def test_no_names(translator):
     with pytest.raises(AttributeError):
         translator.translate(pd.Series(range(3)))
