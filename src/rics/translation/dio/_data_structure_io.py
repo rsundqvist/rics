@@ -26,7 +26,6 @@ class DataStructureIO:
         Returns:
             A dict ``{name, ids}``.
         """
-        raise NotImplementedError
 
     @staticmethod
     @abstractmethod
@@ -45,4 +44,3 @@ class DataStructureIO:
         Raises:
             NotInplaceTranslatableError: If ``copy=False`` for a type which is not translatable in-place.
         """
-        raise NotImplementedError

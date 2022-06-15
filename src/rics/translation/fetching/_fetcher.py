@@ -70,7 +70,6 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
     @abstractmethod
     def sources(self) -> List[SourceType]:
         """Source names known to the fetcher, such as ``cities`` or ``languages``."""
-        raise NotImplementedError()
 
     @property
     def placeholder_overrides(self) -> Optional[PlaceholderOverrides]:
@@ -227,7 +226,6 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         Raises:
             UnknownPlaceholderError: If the placeholder is unknown to the fetcher.
         """
-        raise NotImplementedError()
 
     def close(self) -> None:
         """Close the fetcher. Does nothing by default."""
