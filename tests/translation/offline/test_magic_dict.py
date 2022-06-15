@@ -1,6 +1,5 @@
 import pytest
 
-from rics._internal_support.types import NO_DEFAULT
 from rics.translation.offline import MagicDict
 
 FSTRING = "My name is {} and my number is {}."
@@ -13,14 +12,17 @@ REAL_TRANSLATIONS = {
 
 
 @pytest.mark.parametrize(
-    "default_value, id_in_placeholders, expected",
+    "default_value, expected",
     [
-        ("[UNKNOWN NAME]", True, "My name is [UNKNOWN NAME] and my number is -1."),
-        ("[UNKNOWN NAME]", False, "My name is [UNKNOWN NAME]."),
+        ("{}", "-1"),
+        ("", ""),
+        ("longer string", "longer string"),
+        ("{} not known", "-1 not known"),
+        ("no {} in real", "no -1 in real"),
     ],
 )
-def test_with_default(default_value, id_in_placeholders, expected):
-    subject = make_with_default(default_value, id_in_placeholders)
+def test_with_default(default_value, expected):
+    subject = MagicDict(REAL_TRANSLATIONS, default_value)
 
     assert -1 in subject
     assert -321321 in subject
@@ -35,7 +37,7 @@ def test_with_default(default_value, id_in_placeholders, expected):
 
 
 def test_no_default():
-    subject = MagicDict.make(REAL_TRANSLATIONS, FSTRING, PLACEHOLDERS)
+    subject = MagicDict(REAL_TRANSLATIONS)
 
     assert -1 not in subject
     assert -321321 not in subject
@@ -48,12 +50,3 @@ def test_no_default():
     assert subject[1999] == "My name is Sofia and my number is 1999."
     with pytest.raises(KeyError):
         subject[-1]
-
-
-def make_with_default(default_value, id_in_placeholders) -> MagicDict:
-    return MagicDict.make(
-        REAL_TRANSLATIONS,
-        FSTRING if id_in_placeholders else "My name is {}.",
-        PLACEHOLDERS if id_in_placeholders else ("name",),
-        {"name": default_value} if default_value else NO_DEFAULT,
-    )

@@ -71,13 +71,18 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         fstring = fmt.fstring(placeholders, self.positional)
         real_translations = self._apply(fstring, placeholders)
 
-        if default_fmt is None:
-            default_fstring = fstring
+        if self._default is NO_DEFAULT:
+            default_fstring = None
         else:
+            default_fmt = default_fmt or fmt
             placeholders = tuple(filter(self._placeholder_names.__contains__, default_fmt.placeholders))
-            default_fstring = default_fmt.fstring(placeholders, self.positional)
+            m = {**self._default, "id": "{}"} if "id" in placeholders else self._default
+            default_fstring = default_fmt.fstring(placeholders).format(**m)
 
-        return MagicDict.make(real_translations, default_fstring, placeholders, self._default)
+        return MagicDict(
+            real_translations,
+            default_fstring,
+        )
 
     @abstractmethod
     def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds:
