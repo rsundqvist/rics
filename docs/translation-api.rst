@@ -15,7 +15,7 @@ Handling unknown IDs
 Untranslatable IDs are will be `None` by default. Both and alternative alternative translation format and default values
 may be specified to handle IDs which weren't returned by the underlying fetcher. Alternative formats work just like
 regular formats, but if any placeholders other than `id` are specified, these must be included in the default
-translations. As an example, by copying the ``default_fmt`` and ``default-translations`` sections from `config.yaml`_,
+translations. As an example, by copying the ``default_fmt`` and ``default-translations`` sections from `config.toml`_,
 we see that the output for an unknown title with ID `"tt0043440"` is translated the way we specified it.
 
 .. list-table::
@@ -71,5 +71,5 @@ If you do not want to keep the fetcher connected to a database or the file syste
 disconnected and discarded. Alternatively, you may supply a :class:`~rics.translation.offline.TranslationMap` as the
 fetcher instance when initializing the translator. May cause high memory consumption.
 
-.. _config.yaml:
-    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.yaml
+.. _config.toml:
+    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.toml

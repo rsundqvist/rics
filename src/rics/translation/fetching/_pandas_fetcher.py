@@ -7,7 +7,8 @@ import pandas as pd
 
 from rics.translation.fetching._fetch_instruction import FetchInstruction
 from rics.translation.fetching._fetcher import Fetcher
-from rics.translation.offline.types import IdType, NameType, PlaceholderTranslations
+from rics.translation.offline import PlaceholderOverrides
+from rics.translation.offline.types import IdType, NameType, PlaceholderOverridesDict, PlaceholderTranslations
 from rics.utility.misc import PathLikeType, tname
 
 LOGGER = logging.getLogger(__package__).getChild("PandasFetcher")
@@ -28,6 +29,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
             Must contain a `source` as its only placeholder. Example: ``data/{source}.pkl``. None=leave as-is.
         read_function_args: Additional positional arguments for `read_function`.
         read_function_kwargs: Additional keyword arguments for `read_function`.
+        placeholder_overrides: Placeholder name overrides. Used to adapt placeholder names in sources to wanted names.
 
     See Also:
         The official `Pandas IO documentation <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`_
@@ -39,9 +41,9 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         read_path_format: Optional[Union[str, FormatFn]] = "data/{}.pkl",
         read_function_args: Iterable[Any] = None,
         read_function_kwargs: Mapping[str, Any] = None,
-        **kwargs: Any,
+        placeholder_overrides: Union[PlaceholderOverrides, PlaceholderOverridesDict] = None,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(placeholder_overrides=placeholder_overrides)
         self._read = getattr(pd, read_function) if isinstance(read_function, str) else read_function
         self._format_source: FormatFn = _make_format_fn(read_path_format)
         self._args = read_function_args or ()

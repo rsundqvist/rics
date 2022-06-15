@@ -57,7 +57,7 @@ def translator(hex_fetcher):
 
 @pytest.fixture(scope="session")
 def imdb_translator():
-    yield Translator.from_config("tests/translation/config.imdb.yaml")
+    yield Translator.from_config("tests/translation/config.imdb.toml")
 
 
 @pytest.fixture(scope="module")

@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Copy method for `Translator` and related classes. Also `Translator.copy_with_overrides`.
+- Copy method for `Translator.copy(**overrides)`.
+
+### Changed
+- Switch from YAML to TOML for `Translator.config`.
 
 ## [0.5.0] - 2022-06-14
 A large number of changes, bugfixes and stability improvements. Only the most important ones are listed here.

@@ -6,7 +6,8 @@ from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError
-from rics.translation._from_config import translator_from_yaml_config as _from_config
+from rics.translation._from_config import FetcherFactory
+from rics.translation._from_config import translator_from_toml_config as _from_config
 from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_io
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import Fetcher
@@ -53,11 +54,12 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     """
 
     @classmethod
-    def from_config(cls, path: Union[PathLikeType, Dict[str, Any]]) -> "Translator":
-        """Create a translator from a YAML file.
+    def from_config(cls, path: PathLikeType, fetcher_factory: FetcherFactory = None) -> "Translator":
+        """Create a translator from a TOML file.
 
         Args:
-            path: Path to a YAML file, or a pre-parsed dict.
+            path: Path to a TOML file, or a pre-parsed dict.
+            fetcher_factory: A method which takes a class name and keyword arguments, returning a Fetcher. None=builtin.
 
         Returns:
             A Translator object.
@@ -65,7 +67,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         Raises:
             ConfigurationError: If the config is invalid.
         """
-        return _from_config(path)
+        return _from_config(str(path), fetcher_factory)
 
     def __init__(
         self,

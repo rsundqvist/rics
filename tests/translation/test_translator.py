@@ -5,7 +5,6 @@ from rics.mapping import Mapper
 from rics.mapping.exceptions import MappingError
 from rics.translation import Translator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
-from rics.translation.exceptions import ConfigurationError
 
 
 def test_translate_without_id(hex_fetcher):
@@ -73,14 +72,12 @@ def test_bad_translatable(translator, data, clazz, kwargs):
 
 
 def test_from_config():
-    Translator.from_config("tests/translation/config.yaml")
+    Translator.from_config("tests/translation/config.toml")
 
 
-def test_unknown_keys():
-    with pytest.raises(ConfigurationError) as e:
-        Translator.from_config("tests/translation/bad-config.yaml")
-
-    assert "extra-key-that-should-not-exist" in str(e)
+def test_missing_config():
+    with pytest.raises(KeyError):
+        Translator.from_config("tests/translation/bad-config.toml")
 
 
 def test_store_with_explicit_values(hex_fetcher):

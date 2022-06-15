@@ -72,7 +72,7 @@ def _get_file(
         need_postprocessing = need_postprocessing or not local_processed_file_path.exists()
         if force or need_postprocessing:
             local_processed_file_path.parent.mkdir(parents=True, exist_ok=True)
-            _GLOR_LOGGER.info(f"Running {postprocessor}..")
+            _GLOR_LOGGER.info(f"Running {postprocessor.__name__}..")
             result = postprocessor(str(local_file_path))
             _GLOR_LOGGER.info(f"Serializing processed data to '{local_processed_file_path}'..")
             with open(local_processed_file_path, "wb") as f:

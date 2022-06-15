@@ -11,9 +11,9 @@ Turn meaningless IDs into human-readable labels.
 The Configuration File
 ======================
 The recommended way of creating and configuring fetchers is the :meth:`Translator.from_config()
-<rics.translation.Translator.from_config>` method, which takes a YAML config-file and returns a ready-to-run
+<rics.translation.Translator.from_config>` method, which takes a TOML config-file and returns a ready-to-run
 :class:`~rics.translation.Translator`. The translator has a lot of configuration options, as does its components. See
-the `Translating with a SQL database`_ notebook and its associated `config.yaml`_ file for an example.
+the `Translating with a SQL database`_ notebook and its associated `config.toml`_ file for an example.
 
 =============================
 Translating IDs in 30 seconds
@@ -74,7 +74,7 @@ is writing a more advanced a ``score_function`` or fetcher than the implementati
 
 .. _Translating with a SQL database:
     https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/SqlFetcher.ipynb
-.. _config.yaml:
-    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.yaml
+.. _config.toml:
+    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.toml
 .. _Covid cases:
     https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide

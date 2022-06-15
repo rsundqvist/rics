@@ -1,10 +1,12 @@
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching._fetch_instruction import FetchInstruction
+from rics.translation.offline import PlaceholderOverrides
 from rics.translation.offline.types import (
     IdType,
     NameType,
+    PlaceholderOverridesDict,
     PlaceholderTranslations,
     SourcePlaceholderTranslations,
     SourceType,
@@ -16,15 +18,15 @@ class MemoryFetcher(Fetcher[NameType, IdType, SourceType]):
 
     Args:
         data: A dict {source: PlaceholderTranslations} to fetch from.
-        **kwargs: Forwarded to the base fetcher.
+        placeholder_overrides: Placeholder name overrides. Used to adapt placeholder names in sources to wanted names.
     """
 
     def __init__(
         self,
         data: Union[SourcePlaceholderTranslations, Dict[SourceType, PlaceholderTranslations.MakeTypes]],
-        **kwargs: Any,
+        placeholder_overrides: Union[PlaceholderOverrides, PlaceholderOverridesDict] = None,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(placeholder_overrides=placeholder_overrides)
         self._sources = list(data)
         self._data: SourcePlaceholderTranslations = {
             source: PlaceholderTranslations.make(source, pht) for source, pht in data.items()
