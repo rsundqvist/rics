@@ -1,7 +1,7 @@
 ==========================
 Translation format strings
 ==========================
-The :class:`rics.translation.offline.Format` class defines the string format. These are simlair to regular fstrings,
+The :class:`rics.translation.offline.Format` class defines the string format. These are similar to regular fstrings,
 with two significant exceptions:
 
 1. Keyword placeholders only

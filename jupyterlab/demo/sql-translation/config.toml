@@ -19,7 +19,7 @@ nconst = "name_basics"
 tconst = "title_basics"
 
 # ------------------------------------------------------------------------------
-# Handling for unknown IDs.
+# Handling of unknown IDs.
 [unknown_ids]
 fmt = "{id} not translated; default name={name}"
 
