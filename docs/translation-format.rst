@@ -12,6 +12,10 @@ with two significant exceptions:
 
 The exact definition is given by the :attr:`~rics.translation.offline.Format.PLACEHOLDER_PATTERN` attribute.
 
+.. warning::
+
+   The regex is broken for complex nested patterns, see issue: `Fix Format regex (#52) <https://github.com/rsundqvist/rics/issues/52/>`_.
+
 .. note::
 
    Most users will have little reason to use ``Format`` instances directly, but a basic understanding of the format is
