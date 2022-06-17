@@ -30,10 +30,6 @@ def test_reverse_dict():
     assert reversed_d == {"a": "A", "b": "B"}
     assert id(reversed_d) != d_id
 
-    ans = reverse_dict(d, inplace=True)
-    assert ans is None
-    assert reversed_d == {"a": "A", "b": "B"}
-
 
 def test_flatten_dict(nested_dict):
     actual = flatten_dict(nested_dict)

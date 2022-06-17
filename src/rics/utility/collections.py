@@ -23,15 +23,14 @@ def compute_if_absent(d: Dict[_KT, _VT], key: _KT, func: Callable[[_KT], _VT] = 
     return d[key]
 
 
-def reverse_dict(d: Dict[_KT, _HVT], inplace: bool = False) -> Optional[Dict[_HVT, _KT]]:
+def reverse_dict(d: Dict[_KT, _HVT]) -> Optional[Dict[_HVT, _KT]]:
     """Swap keys and values.
 
     Args:
         d: A dict to reverse.
-        inplace: If True, perform the reversal inplace.
 
     Returns:
-        A reversed version of `d`, or None if inplace is True.
+        A reversed copy of `d`.
 
     Examples:
         Reversing a dict with two elements.
@@ -40,16 +39,7 @@ def reverse_dict(d: Dict[_KT, _HVT], inplace: bool = False) -> Optional[Dict[_HV
         >>> reverse_dict({"A": 0, "B": 1})
         {0: 'A', 1: 'B'}
     """
-    ans = {}
-    for key, value in d.items():
-        ans[value] = key
-
-    if inplace:
-        d.clear()
-        d.update(ans)
-        return None
-    else:
-        return ans
+    return {value: key for key, value in d.items()}
 
 
 def flatten_dict(
