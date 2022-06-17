@@ -1,6 +1,10 @@
 """Plotting utility methods."""
 
 import functools
+from typing import Literal, Optional, Protocol, Union
+
+from matplotlib.axis import Axis, XAxis  # type: ignore
+from matplotlib.ticker import FuncFormatter, IndexLocator  # type: ignore
 
 ERROR_BAR_CAPSIZE: float = 0.1
 
@@ -47,3 +51,62 @@ def configure_matplotlib() -> None:
     plt.subplots = functools.partial(plt.subplots, tight_layout=True)
 
     mtick.PercentFormatter = functools.partial(mtick.PercentFormatter, xmax=1)
+
+
+class _HasXAxis(Protocol):
+    xaxis: XAxis
+
+
+def pi_ticks(ax: Union[Axis, _HasXAxis], half_rep: Literal["frac", "dec"] = None) -> None:
+    """Decorate an axis by setting the labels to multiples of pi.
+
+    The `half_rep` must be one of:
+
+        * `'frac'`: output `0/2π, 1/2π, 2/2π, 3/2π..`
+        * `'dec'`: output `0.0π, 0.5π, 1.0π, 1.5π..`
+        * None: output `0, π, 2π, 3π..`
+
+    Args:
+        ax: An axis to decorate, or an object with an `xaxis` attribute.
+        half_rep: Controls how fractions of pi are represented on the x-axis.
+
+    """
+    axis: Axis = ax.xaxis if hasattr(ax, "xaxis") else ax
+
+    start = axis.get_data_interval()[0]
+    helper = _PiTickHelper(half_rep, start)
+
+    axis.set_major_locator(helper.locator)
+    axis.set_major_formatter(helper.formatter)
+
+
+class _PiTickHelper:
+    PI: float = 3.14159265359
+    HALF_PI = PI / 2
+
+    def __init__(self, half: Optional[Literal["frac", "dec"]], start: float) -> None:
+        if half not in (None, "frac", "dec"):
+            raise ValueError(f"Argument {half=} not in ('frac', 'dec', None).")
+
+        self.half = half
+        r = self.HALF_PI if half else self.PI
+        self.offset = r * round(start / r) - start  # Offset from nearest (half) multiple of pi.
+
+        self.locator = IndexLocator(base=self.HALF_PI if self.half else self.PI, offset=self.offset)
+        self.formatter = FuncFormatter(self._format)
+
+    def _format(self, x: float, _pos: int) -> str:
+        n = round(x / self.PI, 1)
+
+        if self.half is None:
+            if x == 0:
+                return "0"
+            if x == self.PI:
+                return "π"
+
+            return f"{int(n)}π"
+
+        if self.half == "dec":
+            return f"{n}π"
+
+        return f"{int(n * 2)}/2π"
