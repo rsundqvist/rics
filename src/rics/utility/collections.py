@@ -1,8 +1,29 @@
 """Miscellaneous utility methods for Python collections."""
-from typing import Any, Callable, Dict, Hashable, List, Optional
+from typing import Any, Callable, Dict, Hashable, List, Optional, TypeVar
+
+_KT = TypeVar("_KT", bound=Hashable)
+_HVT = TypeVar("_HVT", bound=Hashable)
+_VT = TypeVar("_VT")
 
 
-def reverse_dict(d: Dict[Hashable, Hashable], inplace: bool = False) -> Optional[Dict[Hashable, Hashable]]:
+def compute_if_absent(d: Dict[_KT, _VT], key: _KT, func: Callable[[_KT], _VT] = None) -> _VT:
+    """Compute and store `key` using `func` if `key` is not in the dict.
+
+    Args:
+        d: A dict.
+        key: The key to get.
+        func: A function to call for missing keys. None=perform regular __getitem__ class.
+
+    Returns:
+        The value of `k` in `d`.
+    """
+    if not (func is None or key in d):
+        d[key] = func(key)
+
+    return d[key]
+
+
+def reverse_dict(d: Dict[_KT, _HVT], inplace: bool = False) -> Optional[Dict[_HVT, _KT]]:
     """Swap keys and values.
 
     Args:
@@ -39,7 +60,7 @@ def flatten_dict(
     """Flatten a nested dictionary.
 
     Args:
-        d: A dict to flatten.
+        d: A dict to flatten. Keys must be strings.
         join_string: Joiner for nested keys.
         filter_predicate: A callable which takes a key and value, returning True if the entry should be kept.
 

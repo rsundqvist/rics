@@ -1,4 +1,25 @@
-from rics.utility.collections import flatten_dict, reverse_dict
+import pytest
+
+from rics.utility.collections import compute_if_absent, flatten_dict, reverse_dict
+
+
+def test_compute_if_absent():
+    d = {"bar": "real-bar"}
+
+    with pytest.raises(KeyError):
+        compute_if_absent(d, "foo")
+    assert "foo" not in d
+
+    assert compute_if_absent(d, "foo", "{}bar".format) == "foobar"
+    assert d["foo"] == "foobar"
+
+    assert compute_if_absent(d, "bar", lambda s: "backup-bar") == "real-bar"
+    assert d["bar"] == "real-bar"
+
+    assert d == {
+        "bar": "real-bar",
+        "foo": "foobar",
+    }
 
 
 def test_reverse_dict():
@@ -14,8 +35,8 @@ def test_reverse_dict():
     assert reversed_d == {"a": "A", "b": "B"}
 
 
-def test_flatten_dict():
-    actual = flatten_dict(make_nested_dict())
+def test_flatten_dict(nested_dict):
+    actual = flatten_dict(nested_dict)
 
     expected = {
         "top-key0.mid-key0": True,
@@ -34,8 +55,8 @@ def test_flatten_dict():
     assert actual == expected
 
 
-def test_flatten_dict_false_values_only():
-    actual = flatten_dict(make_nested_dict(), filter_predicate=lambda key, value: isinstance(value, dict) or not value)
+def test_flatten_dict_false_values_only(nested_dict):
+    actual = flatten_dict(nested_dict, filter_predicate=lambda key, value: isinstance(value, dict) or not value)
 
     expected = {
         "top-key0.mid-key1.bot-key1": False,
@@ -45,7 +66,8 @@ def test_flatten_dict_false_values_only():
     assert actual == expected
 
 
-def make_nested_dict():
+@pytest.fixture
+def nested_dict():
     return {
         "top-key0": {"mid-key0": True, "mid-key1": {"bot-key0": True, "bot-key1": False}},
         "top-key1": {"mid-key0": True, "mid-key1": True},
