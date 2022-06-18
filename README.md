@@ -37,7 +37,7 @@ This project uses groups for extras dependencies, which is currently a **_PREREL
 poetry was installed the recommended way (see below), this can be done using:
 ```bash
 curl -sSL https://install.python-poetry.org/ | python -
-poetry self update --preview 1.2.0a2
+poetry self update --preview 1.2.0b2
 ```
 
 ### Setting up for local development

@@ -19,7 +19,7 @@ jobs:
       - name: Install system deps
         shell: bash
         run: |
-          pip install poetry==1.2.0a2
+          pip install poetry==1.2.0b2
 
       - name: Build package
         run: |

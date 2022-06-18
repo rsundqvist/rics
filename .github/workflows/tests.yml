@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           pip install nox
-          pip install poetry==1.2.0a2
+          pip install poetry==1.2.0b2
 
       - name: Run mypy with nox
         shell: bash
@@ -90,7 +90,7 @@ jobs:
         shell: bash
         run: |
           pip install nox
-          pip install poetry==1.2.0a2
+          pip install poetry==1.2.0b2
 
       - name: Download coverage data
         uses: actions/download-artifact@v3
