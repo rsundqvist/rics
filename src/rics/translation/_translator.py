@@ -95,18 +95,24 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                 if isinstance(fetcher, dict)
                 else fetcher
             )
-        self._inherited_fetcher = False
 
-    def copy(self, **overrides: Any) -> "Translator":
+    def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator":
         """Make a copy of this translator.
 
         Args:
+            share_fetcher: If True, the returned translator will share the current translator's fetcher.
             overrides: Keyword arguments to use when instantiating the copy. Options that aren't given will be taken
                 from the current instance. See class documentation for possible choices.
 
         Returns:
             A copy of this translator with `overrides` applied.
+
+        Raises:
+            NotImplementedError: If share_fetcher=False.
         """
+        if not share_fetcher:
+            raise NotImplementedError("Fetcher clone not implemented.")
+
         kwargs: Dict[str, Any] = {
             "fmt": self._fmt,
             "default_fmt": self._default_fmt,
@@ -122,9 +128,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         if "default_translations" not in kwargs:  # pragma: no cover
             kwargs["default_translations"] = self._default
 
-        copied = Translator(**kwargs)
-        copied._inherited_fetcher = "fetcher" not in overrides
-        return copied
+        return Translator(**kwargs)
 
     def translate(
         self,
@@ -294,11 +298,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                 LOGGER.debug(f"Available sources {not_fetched} were not fetched.")
 
         if delete_fetcher:  # pragma: no cover
-            if self._inherited_fetcher:
-                LOGGER.debug("Cannot delete inherited fetcher.")
-            else:
-                self._fetcher.close()
-                del self._fetcher
+            self._fetcher.close()
+            del self._fetcher
 
         LOGGER.info("Store %s", translation_map)
         self._cached_tmap = translation_map
