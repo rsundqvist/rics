@@ -8,6 +8,7 @@ from nox.sessions import Session
 
 nox.options.sessions = ["tests", "mypy"]
 python_versions = ["3.8", "3.9", "3.10"]
+extras = ["translation", "plotting"]
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
@@ -31,17 +32,23 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
             "export",
             "--dev",
             "--without-hashes",
-            "--format=requirements.txt",
             f"--output={requirements.name}",
             external=True,
         )
         session.install(f"--constraint={requirements.name}", *args, **kwargs)
 
 
+def install_with_project_extras(session: Session) -> None:
+    """Install the project using poetry."""
+    only = [f"--only={e}" for e in extras]
+    session.run_always("poetry", "install", "--no-interaction", *only, external=True)
+    session.install(".")
+
+
 @nox.session(python=python_versions)
 def tests(session: Session) -> None:
     """Run the test suite."""
-    session.install(".")
+    install_with_project_extras(session)
     install_with_constraints(session, "invoke", "pytest", "xdoctest", "coverage", "pytest-cov")
     try:
         session.run(
@@ -67,7 +74,7 @@ def coverage(session: Session) -> None:
 @nox.session(python=python_versions)
 def mypy(session: Session) -> None:
     """Type-check using mypy."""
-    session.install(".")
+    install_with_project_extras(session)
     install_with_constraints(session, "invoke", "mypy")
     session.run("inv", "mypy")
 

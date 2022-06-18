@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import Any, Union
 
 
@@ -21,7 +22,12 @@ def configure_stuff(
             * :meth:`rics.utility.plotting.configure`
     """
     from rics.utility.logs import basic_config
-    from rics.utility.plotting import configure
 
     basic_config(level=level, matplotlib_level=matplotlib_level, **kwargs)
-    configure()
+
+    try:
+        from rics.utility.plotting import configure
+
+        configure()
+    except ModuleNotFoundError as e:
+        warnings.warn(f"Plotting configuration not done: {e}")

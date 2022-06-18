@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Changed
+- More plotting functions
+- Improved dependency management. Added new dependency groups `translation` and `plotting` to be installed as extras
 
 ## [0.6.0] - 2022-06-17
 ### Added

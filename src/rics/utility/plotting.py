@@ -3,8 +3,11 @@
 import functools
 from typing import Literal, Optional, Protocol, Union
 
-from matplotlib.axis import Axis, XAxis  # type: ignore
-from matplotlib.ticker import FuncFormatter, IndexLocator  # type: ignore
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+import seaborn as sns
+from matplotlib.axis import Axis, XAxis
+from matplotlib.ticker import FuncFormatter, IndexLocator
 
 ERROR_BAR_CAPSIZE: float = 0.1
 
@@ -27,8 +30,6 @@ def configure_seaborn() -> None:
     Raises:
         ModuleNotFoundError: If Seaborn is not installed.
     """
-    import seaborn as sns  # type: ignore
-
     sns.set_theme(context="talk")
 
     sns.barplot = functools.partial(sns.barplot, capsize=ERROR_BAR_CAPSIZE)
@@ -43,9 +44,6 @@ def configure_matplotlib() -> None:
     Raises:
         ModuleNotFoundError: If matplotlib is not installed.
     """
-    import matplotlib.pyplot as plt  # type: ignore
-    import matplotlib.ticker as mtick  # type: ignore
-
     plt.rcParams["figure.figsize"] = (20, 5)
     # plt.rcParams["figure.tight_layout"] = True # Doesn't exist -- must call afterwards if figure is created for you
     plt.subplots = functools.partial(plt.subplots, tight_layout=True)

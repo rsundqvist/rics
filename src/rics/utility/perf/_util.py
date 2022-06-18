@@ -4,13 +4,6 @@ import pandas as pd
 
 from rics.utility.perf._multi_case_timer import ResultsDict
 
-try:
-    import seaborn as sns  # type: ignore
-
-    _SEABORN_INSTALLED = True
-except ModuleNotFoundError:
-    _SEABORN_INSTALLED = False
-
 
 def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
     """Create a DataFrame from performance run output.
@@ -59,8 +52,7 @@ def plot_run(
         ModuleNotFoundError: If Seaborn isn't installed.
         ValueError: For unknown `unit` arguments.
     """
-    if not _SEABORN_INSTALLED:
-        raise ModuleNotFoundError("Install Seaborn to use this method.")
+    from seaborn import barplot  # type: ignore
 
     data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results
 
@@ -73,7 +65,7 @@ def plot_run(
     if y not in data:
         raise ValueError(f"Bad {unit=}; column '{y}' not present in data.")
 
-    sns.barplot(data=data, x=x_arg, y=y, hue=hue, **figure_kwargs)
+    barplot(data=data, x=x_arg, y=y, hue=hue, **figure_kwargs)
 
 
 def _smaller_as_hue(data: pd.DataFrame) -> Tuple[str, str]:

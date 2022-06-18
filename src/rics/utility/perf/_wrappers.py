@@ -3,7 +3,7 @@ from typing import Any, Collection, Dict, Union
 import pandas as pd
 
 from rics.utility.perf._multi_case_timer import CandFunc, MultiCaseTimer
-from rics.utility.perf._util import _SEABORN_INSTALLED, plot_run, to_dataframe
+from rics.utility.perf._util import plot_run, to_dataframe
 
 
 def run_multivariate_test(
@@ -32,9 +32,6 @@ def run_multivariate_test(
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed and plot=True.
     """
-    if plot and not _SEABORN_INSTALLED:
-        raise ModuleNotFoundError("Install Seaborn to plot results.")
-
     run_results = MultiCaseTimer(candidate_method, test_data).run(time_per_candidate=time_per_candidate)
 
     data = to_dataframe(run_results)
