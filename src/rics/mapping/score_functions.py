@@ -18,18 +18,21 @@ Yields:
 """
 
 
-def like_database_table(name: str, candidates: Iterable[str], apply_heuristics: bool = False) -> Iterable[float]:
+def like_database_table(name: str, candidates: Iterable[str]) -> Iterable[float]:
     """Try to make `value` look like the name of a database table."""
-    if apply_heuristics:
-        name = name.lower().replace("_", "").replace(".", "")
-        if name.endswith("id"):
-            name = name[:-2]
-        if not name.endswith("s"):
-            name += "s"
 
-        candidates = list(map(str.lower, candidates))
+    def apply(s: str) -> str:
+        s = s.lower().replace("_", "").replace(".", "")
+        return s if s.endswith("s") else s + "s"
 
-    yield from modified_hamming(name, candidates)
+    if name.endswith("id"):
+        name = name[:-2]
+    name = apply(name)
+
+    yield from modified_hamming(
+        name=name,
+        candidates=list(map(apply, candidates)),
+    )
 
 
 def modified_hamming(name: str, candidates: Iterable[str]) -> Iterable[float]:

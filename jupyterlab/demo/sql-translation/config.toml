@@ -11,7 +11,6 @@ fmt = "{id}:{name}[ (original: {original_name})] *{from}†{to}"
 unmapped_values_action = "raise"
 
 [translator.mapping.score_function.like_database_table]
-apply_heuristics = true
 
 [translator.mapping.overrides]
 firstTitle = "title_basics"

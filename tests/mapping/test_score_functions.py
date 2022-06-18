@@ -18,7 +18,7 @@ def test_like_database_table(value, expected_max_table):
     candidate_tables = ["humans", "animals"]
     score = score_functions.get("like_database_table")
 
-    s = pd.Series(score(value, candidate_tables, True), index=candidate_tables)
+    s = pd.Series(score(value, candidate_tables), index=candidate_tables)
     assert s.idxmax() == expected_max_table, s.values
 
 
