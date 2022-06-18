@@ -206,7 +206,10 @@ class SqlFetcher(Fetcher[str, IdType, str]):
             LOGGER.debug(f"Metadata created in {format_perf_counter(start)}.")
 
         table_names = set(metadata.tables)
-        tables = table_names.difference(self._blacklist) if self._blacklist else table_names
+        if self._whitelist:
+            tables = self._whitelist
+        else:
+            tables = table_names.difference(self._blacklist) if self._blacklist else table_names
 
         if not tables:  # pragma: no cover
             if self._whitelist:
@@ -222,7 +225,14 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
     def make_table_summary(self, table: sqlalchemy.sql.schema.Table) -> TableSummary:
         """Create a table summary."""
-        id_column = table.columns[self.get_id_placeholder(table.name)]
+        id_column_name = self.get_id_placeholder(table.name)
+        if id_column_name not in table.columns:
+            raise ValueError(
+                f"The ID column '{id_column_name}' is not present in table '{table.name}'. "
+                "Blacklist this table or add a placeholder mapping for the table."
+            )
+
+        id_column = table.columns[id_column_name]
 
         start = perf_counter()
         size = self.get_approximate_table_size(table)

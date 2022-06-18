@@ -1,0 +1,43 @@
+################################################################################
+# For help, see https=//rics.readthedocs.io                                    #
+################################################################################
+[translator]
+fmt = "{id}:{name}[ {last_name}]"
+
+# ------------------------------------------------------------------------------
+# Name-to-source mapping configuration. Binds names to source, eg 'cute_animals'
+# -> 'my_database.animals'. Overrides take precedence over scoring logic.
+[translator.mapping]
+unmapped_values_action = "raise"
+score_function = "like_database_table"  # We don't need any kwargs for this function; no need to use a section
+
+[[translator.mapping.filter_functions]]
+function = "banned_substring_in_name"
+substrings = ["date"]
+[[translator.mapping.filter_functions]]
+function = "require_suffix"
+suffix = "_id"
+where = "name"
+
+
+################################################################################
+# Fetching configuration.
+################################################################################
+[fetching.SqlFetcher]
+connection_string = "postgresql+pg8000://postgres@localhost:5001/dvdrental"
+whitelist_tables = ["customer", "film", "staff", "store"]
+
+# ------------------------------------------------------------------------------
+# Placeholder mapping configuration. Binds actual names in sources (such as
+# column names in an SQL table) to wanted names, eg 'animal_id' -> 'id'.
+[fetching.mapping.overrides.customer]
+customer_id = "id"
+first_name = "name"
+[fetching.mapping.overrides.film]
+film_id = "id"
+title = "name"
+[fetching.mapping.overrides.staff]
+staff_id = "id"
+first_name = "name"
+[fetching.mapping.overrides.store]
+store_id = "id"

@@ -52,14 +52,22 @@ def _make_default_translations(**config: Any) -> Tuple[str, Optional[DefaultTran
 
 
 def _make_mapper(**config: Any) -> Mapper:
+    if not config:
+        return Mapper()
+
     _check_forbidden_keys(["candidates", "cardinality"], config, "fetcher.mapping")
 
-    score_function = config.pop("score_function", {})
-    if len(score_function) > 1:
-        raise ConfigurationError(f"At most one score function may be specified, but got: {sorted(score_function)}")
-    score_function_name, score_function_kwargs = next(iter(score_function.items()))
+    if "score_function" in config:
+        score_function = config.pop("score_function")
 
-    return Mapper(score_function=score_function_name, **score_function_kwargs, **config)
+        if len(score_function) > 1:
+            raise ConfigurationError(f"At most one score function may be specified, but got: {sorted(score_function)}")
+
+        score_function, score_function_kwargs = next(iter(score_function.items()))
+        config["score_function"] = score_function
+        config.update(score_function_kwargs)
+
+    return Mapper(**config)
 
 
 def _make_fetcher(factory: FetcherFactory, **config: Any) -> fetching.Fetcher:

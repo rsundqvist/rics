@@ -72,6 +72,58 @@ The example above could be solved using config options that :meth:`Translator.fr
 <rics.translation.Translator.from_config>` provides. The primary use case for importing and using these classes directly
 is writing a more advanced a ``score_function`` or fetcher than the implementations of this package provide.
 
+=====================================
+Advanced example: DVD Rental Database
+=====================================
+This examples translates a query from the `DVD Rental Sample Database`_. It covers most of the more advanced features
+that have been implemented. Using Docker, this database can be obtained by running:
+
+.. code-block::
+
+   docker run -p 5001:5432 moertel/postgresql-sample-dvdrental@sha256:e35f8dc4011d053777631208c85e3976a422b65e12383579d8a856a7849082c5
+
+from the terminal. To describe the database, run
+
+.. code-block::
+
+   psql -h localhost -p 5001 -U postgres -d dvdrental -c "\d+"
+
+from a separate terminal window. Leave out the last part (``-c "\d+"``) to query the database manually. We will use a
+small query to describe rental transactions in the database:
+
+.. literalinclude:: ../tests/translation/dvdrental/query.sql
+   :language: sql
+   :caption: Query returning DVD rental transactions.
+   :linenos:
+
+The query above shows who rented what and when, what store they rented from and from whom.
+
+.. csv-table:: Randomly sampled rows from the query. The first column is the record index in the query.
+   :file: dvdrental.csv
+   :header-rows: 1
+
+The database has a few quirks, which are taken care of by the following config file:
+
+.. literalinclude:: ../tests/translation/dvdrental/config.toml
+   :language: toml
+   :caption: Configuration for translating data in the database.
+   :linenos:
+
+Translating now becomes a simple matter. The following snipped is a test case which demonstrates how translate all of
+the ~16000 rows returned by the query, verifying a random sample of 5 rows.
+
+.. literalinclude:: ../tests/translation/dvdrental/test_dvdrental.py
+   :language: python
+   :linenos:
+
+The rows once translated become:
+
+.. csv-table:: The rows translated. Dates are not translated, nor is the first (row number/index) column.
+   :file: ../tests/translation/dvdrental/translated.csv
+   :header-rows: 1
+
+.. _DVD Rental Sample Database:
+    https://www.postgresqltutorial.com/postgresql-getting-started/postgresql-sample-database/
 .. _Translating with a SQL database:
     https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/SqlFetcher.ipynb
 .. _config.toml:
