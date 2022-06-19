@@ -2,6 +2,8 @@ import logging
 import warnings
 from typing import Any, Union
 
+import pandas as pd
+
 
 def configure_stuff(
     level: Union[int, str] = logging.INFO, matplotlib_level: Union[int, str] = logging.WARNING, **kwargs: Any
@@ -22,6 +24,10 @@ def configure_stuff(
             * :meth:`rics.utility.plotting.configure`
     """
     from rics.utility.logs import basic_config
+
+    pd.options.display.max_columns = 50
+    pd.options.display.max_colwidth = 150
+    pd.options.display.width = 0
 
     basic_config(level=level, matplotlib_level=matplotlib_level, **kwargs)
 
