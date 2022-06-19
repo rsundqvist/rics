@@ -5,6 +5,7 @@ from rics.mapping import Mapper
 from rics.mapping.exceptions import MappingError
 from rics.translation import Translator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
+from rics.translation.exceptions import ConfigurationError
 
 
 def test_translate_without_id(hex_fetcher):
@@ -76,7 +77,7 @@ def test_from_config():
 
 
 def test_missing_config():
-    with pytest.raises(KeyError):
+    with pytest.raises(ConfigurationError):
         Translator.from_config("tests/translation/bad-config.toml")
 
 

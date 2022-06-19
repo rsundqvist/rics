@@ -1,3 +1,4 @@
+import warnings
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple, Type, TypeVar, Union
 
 import toml
@@ -11,11 +12,15 @@ if TYPE_CHECKING:
     from rics.translation._translator import Translator  # pragma: no cover
 
 FetcherFactory = Callable[[str, Dict[str, Any]], fetching.Fetcher]
+MakeFetcherType = Union[fetching.Fetcher, FetcherFactory]
+MapperFactory = Callable[[Dict[str, Any]], Mapper]
+MakeMapperType = Union[Mapper, MapperFactory]
 
 T = TypeVar("T", DefaultTranslations, PlaceholderOverrides)
 
 
-def _default_factory(name: str, kwargs: Dict[str, Any]) -> fetching.Fetcher:
+def default_fetcher_factory(name: str, kwargs: Dict[str, Any]) -> fetching.Fetcher:
+    """Create a Fetcher from a dict config."""
     fetcher_clazz = getattr(fetching, name, None)
     if fetcher_clazz is None:
         raise ValueError(f"Fetcher class '{name}' not known. Consider using the 'fetcher_factory' argument.")
@@ -25,33 +30,8 @@ def _default_factory(name: str, kwargs: Dict[str, Any]) -> fetching.Fetcher:
     return fetcher
 
 
-def translator_from_toml_config(f: str, fetcher_factory: FetcherFactory = None) -> "Translator":
-    """Create a Translator from TOML specification."""
-    dict_config: Dict[str, Any] = toml.load(f)
-
-    _check_allowed_keys(["translator", "mapping", "fetching", "unknown_ids"], dict_config, "<root>")
-
-    translator_config = dict_config.pop("translator", {})
-    fetcher = _make_fetcher(fetcher_factory or _default_factory, **dict_config.pop("fetching"))
-    mapper = _make_mapper(**translator_config.pop("mapping", {}))
-    default_fmt, default_translations = _make_default_translations(**dict_config.pop("unknown_ids", {}))
-
-    from rics.translation import Translator
-
-    return Translator(
-        fetcher, mapper=mapper, default_translations=default_translations, default_fmt=default_fmt, **translator_config
-    )
-
-
-def _make_default_translations(**config: Any) -> Tuple[str, Optional[DefaultTranslations]]:
-    _check_allowed_keys(["fmt", "overrides"], config, toml_path="translator.unknown_ids")
-    return (
-        config.pop("fmt", None),
-        _create_overrides(config["overrides"], DefaultTranslations) if "overrides" in config else None,
-    )
-
-
-def _make_mapper(**config: Any) -> Mapper:
+def default_mapper_factory(config: Dict[str, Any]) -> Mapper:
+    """Create a Mapper from a dict config."""
     if not config:
         return Mapper()
 
@@ -70,7 +50,71 @@ def _make_mapper(**config: Any) -> Mapper:
     return Mapper(**config)
 
 
-def _make_fetcher(factory: FetcherFactory, **config: Any) -> fetching.Fetcher:
+def translator_from_toml_config(
+    file: str,
+    fetcher_factory: MakeFetcherType = default_fetcher_factory,
+    mapper_factory: MakeMapperType = default_mapper_factory,
+) -> "Translator":
+    """Create a translator from a TOML file.
+
+    Args:
+        file: Path to a TOML file, or a pre-parsed dict.
+        fetcher_factory: A pre-initialized Fetcher, or a callable taking (name, kwargs) which returns a Fetcher.
+        mapper_factory: A pre-initialized Mapper, or a callable taking (kwargs) which returns a Mapper.
+
+    Returns:
+        A Translator object.
+
+    Raises:
+        ConfigurationError: If the config is invalid.
+
+    Warnings:
+        UserWarning: If the user may be doing something they didn't intend to.
+    """
+    config: Dict[str, Any] = toml.load(file)
+
+    _check_allowed_keys(["translator", "mapping", "fetching", "unknown_ids"], config, "<root>")
+
+    translator_config = config.pop("translator", {})
+    fetcher = _make_fetcher(fetcher_factory, **config.pop("fetching", {}))
+    mapper = _make_mapper(mapper_factory, translator_config)
+    default_fmt, default_translations = _make_default_translations(**config.pop("unknown_ids", {}))
+
+    from rics.translation import Translator
+
+    return Translator(
+        fetcher, mapper=mapper, default_translations=default_translations, default_fmt=default_fmt, **translator_config
+    )
+
+
+def _make_default_translations(**config: Any) -> Tuple[str, Optional[DefaultTranslations]]:
+    _check_allowed_keys(["fmt", "overrides"], config, toml_path="translator.unknown_ids")
+    return (
+        config.pop("fmt", None),
+        _create_overrides(config["overrides"], DefaultTranslations) if "overrides" in config else None,
+    )
+
+
+def _make_mapper(mapper_factory: MakeMapperType, config: Dict[str, Any]) -> Optional[Mapper]:
+    if isinstance(mapper_factory, Mapper):
+        if "mapping" in config and mapper_factory != default_mapper_factory:
+            warnings.warn(
+                "Section [translator.mapping] in the configuration is ignored since a pre-initialized Mapper was given."
+            )
+        return mapper_factory
+
+    if "mapping" not in config:
+        return None
+
+    return mapper_factory(config.pop("mapping"))
+
+
+def _make_fetcher(factory: MakeFetcherType, **config: Any) -> fetching.Fetcher:
+    if isinstance(factory, fetching.Fetcher):
+        return factory
+    elif not config:
+        raise ConfigurationError("Section [fetching] is required when no pre-initialized Fetcher is given.")
+
     overrides: Optional[PlaceholderOverrides]
     if "mapping" in config:
         mapping = config.pop("mapping")

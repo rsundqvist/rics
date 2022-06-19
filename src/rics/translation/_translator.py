@@ -6,8 +6,7 @@ from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError
-from rics.translation._from_config import FetcherFactory
-from rics.translation._from_config import translator_from_toml_config as _from_config
+from rics.translation import _from_config
 from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_io
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import Fetcher
@@ -54,20 +53,16 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     """
 
     @classmethod
-    def from_config(cls, path: PathLikeType, fetcher_factory: FetcherFactory = None) -> "Translator":
-        """Create a translator from a TOML file.
+    def from_config(
+        cls,
+        path: PathLikeType,
+        fetcher_factory: _from_config.MakeFetcherType = _from_config.default_fetcher_factory,
+        mapper_factory: _from_config.MakeMapperType = _from_config.default_mapper_factory,
+    ) -> "Translator":
+        """Docstring inherited from delegate method."""
+        return _from_config.translator_from_toml_config(str(path), fetcher_factory, mapper_factory)
 
-        Args:
-            path: Path to a TOML file, or a pre-parsed dict.
-            fetcher_factory: A method which takes a class name and keyword arguments, returning a Fetcher. None=builtin.
-
-        Returns:
-            A Translator object.
-
-        Raises:
-            ConfigurationError: If the config is invalid.
-        """
-        return _from_config(str(path), fetcher_factory)
+    from_config.__doc__ = _from_config.translator_from_toml_config.__doc__
 
     def __init__(
         self,
