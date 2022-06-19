@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+- Filtering logic for `rics.mapping.Mapper`
+
 ### Changed
 - More plotting functions
 - Improved dependency management. Added new dependency groups `translation` and `plotting` to be installed as extras

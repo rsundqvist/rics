@@ -70,3 +70,43 @@ def test_multiple_matches_with_overrides(values, expected, allow_multiple):
 def test_failure():
     with pytest.raises(MappingError):
         Mapper(candidates=(1, 2), unmapped_values_action="raise").apply((3, 4))
+
+
+@pytest.mark.parametrize(
+    "filters, expected",
+    [
+        (
+            [
+                # Removes "b" as a candidate
+                ("shortlisted_substring_in_candidate", dict(substrings=["a"]))
+            ],
+            {"a": ("a", "ab"), "b": ("b", "ab")},
+        ),
+        (
+            [
+                # Removes "b" and "ab" as a candidate
+                ("shortlisted_substring_in_candidate", dict(substrings=["a"])),
+                ("banned_substring_in_name", dict(substrings=["b"])),
+            ],
+            {"a": ("a", "ab")},
+        ),
+        (
+            [
+                # Removes all candidates
+                ("banned_substring_in_name", dict(substrings=list("abc"))),
+            ],
+            {},
+        ),
+    ],
+)
+def test_filter(filters, expected):
+    mapper = Mapper(
+        candidates=("a", "ab", "b"),
+        min_score=0.1,
+        score_function=_substring_score,
+        filter_functions=filters,
+        cardinality=Cardinality.ManyToMany,  # Anything goes
+    )
+
+    actual = mapper.apply("abc").left_to_right
+    assert actual == expected

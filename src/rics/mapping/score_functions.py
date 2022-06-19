@@ -1,9 +1,8 @@
-"""Functions which return a "likeness" score."""
-from typing import Callable, Dict, Hashable, Iterable, Literal, Set, TypeVar
+"""Functions which return a likeness score."""
+from typing import Callable, Hashable, Iterable, List, TypeVar, Union
 
 H = TypeVar("H", bound=Hashable)
-NamesLiteral = Literal["heuristic", "equality", "like_database_table", "modified_hamming"]
-MappingScoreFunction = Callable[[H, Set[H]], Iterable[float]]
+MappingScoreFunction = Callable[[H, Iterable[H]], Iterable[float]]
 """Signature for a likeness score function.
 
 Args:
@@ -16,23 +15,6 @@ Keyword Args:
 Yields:
     A score for each candidate `c` in `candidates`.
 """
-
-
-def like_database_table(name: str, candidates: Iterable[str]) -> Iterable[float]:
-    """Try to make `value` look like the name of a database table."""
-
-    def apply(s: str) -> str:
-        s = s.lower().replace("_", "").replace(".", "")
-        return s if s.endswith("s") else s + "s"
-
-    if name.endswith("id"):
-        name = name[:-2]
-    name = apply(name)
-
-    yield from modified_hamming(
-        name=name,
-        candidates=list(map(apply, candidates)),
-    )
 
 
 def modified_hamming(name: str, candidates: Iterable[str]) -> Iterable[float]:
@@ -64,11 +46,44 @@ def equality(value: H, candidates: Iterable[H]) -> Iterable[float]:
     yield from map(float, [value == c for c in candidates])
 
 
-_functions: Dict[str, MappingScoreFunction] = {
-    func.__name__: func for func in [like_database_table, equality, modified_hamming]  # type: ignore
-}
+def like_database_table(
+    name: str, candidates: Iterable[str], score_function: Union[str, MappingScoreFunction] = modified_hamming
+) -> Iterable[float]:
+    """Try to make `value` look like the name of a database table.
+
+    Args:
+        name: An element to find matches for.
+        candidates: Potential matches for `value`.
+        score_function: The actual scoring function to use after heuristics have been applied.
+
+    Yields:
+        A score for each candidate `c` in `candidates`.
+    """
+    fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
+
+    def apply(s: str) -> str:
+        s = s.lower().replace("_", "").replace(".", "")
+        return s if s.endswith("s") else s + "s"
+
+    if name.endswith("id"):
+        name = name[:-2]
+
+    name = apply(name)
+
+    yield from fn(name, map(apply, candidates))
 
 
-def get(name: str) -> MappingScoreFunction:
+def from_name(name: str) -> MappingScoreFunction:
     """Get a scoring function by name."""
-    return _functions[name]
+    for func in _all_functions:
+        if func.__name__ == name:
+            return func
+
+    raise ValueError(f"No score function called {repr(name)}.")
+
+
+_all_functions: List[MappingScoreFunction] = [
+    like_database_table,
+    equality,
+    modified_hamming,
+]

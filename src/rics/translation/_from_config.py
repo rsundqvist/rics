@@ -37,7 +37,7 @@ def default_mapper_factory(config: Dict[str, Any]) -> Mapper:
 
     _check_forbidden_keys(["candidates", "cardinality"], config, "fetcher.mapping")
 
-    if "score_function" in config:
+    if "score_function" in config and not isinstance(config["score_function"], str):
         score_function = config.pop("score_function")
 
         if len(score_function) > 1:
@@ -46,6 +46,14 @@ def default_mapper_factory(config: Dict[str, Any]) -> Mapper:
         score_function, score_function_kwargs = next(iter(score_function.items()))
         config["score_function"] = score_function
         config.update(score_function_kwargs)
+
+    if "filter_functions" in config:
+        filters = config.pop("filter_functions")
+
+        if len(filters) == 1 and filters[0] == {}:
+            pass  # Allow/ignore empty section
+        else:
+            config["filter_functions"] = [(f.pop("function"), f) for f in filters]
 
     return Mapper(**config)
 

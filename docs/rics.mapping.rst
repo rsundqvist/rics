@@ -12,6 +12,14 @@ rics.mapping.exceptions module
    :undoc-members:
    :show-inheritance:
 
+rics.mapping.filter\_functions module
+-------------------------------------
+
+.. automodule:: rics.mapping.filter_functions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 rics.mapping.score\_functions module
 ------------------------------------
 

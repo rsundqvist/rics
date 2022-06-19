@@ -2,7 +2,15 @@ import pandas as pd
 import pytest
 from numpy.random import choice, randint
 
-from rics.mapping import score_functions
+from rics.mapping import score_functions as sf
+
+with open("tests/mapping/words.txt") as f:
+    WORDS = f.read().splitlines()
+
+
+def test_from_bad_name():
+    with pytest.raises(ValueError):
+        sf.from_name("does-not-exist")
 
 
 @pytest.mark.parametrize(
@@ -16,28 +24,17 @@ from rics.mapping import score_functions
 )
 def test_like_database_table(value, expected_max_table):
     candidate_tables = ["humans", "animals"]
-    score = score_functions.get("like_database_table")
+    score = sf.from_name("like_database_table")
 
     s = pd.Series(score(value, candidate_tables), index=candidate_tables)
-    assert s.idxmax() == expected_max_table, s.values
+    assert s.idxmax() == expected_max_table, s
 
 
 @pytest.mark.parametrize(
-    "func, dtype",
-    [
-        ("like_database_table", str),
-        ("modified_hamming", str),
-        ("equality", str),
-        ("equality", int),
-    ],
+    "score, dtype", [(func, str) for func in sf._all_functions] + [(sf.equality, int)]  # type: ignore
 )
-def test_stable(func, dtype):
+def test_stable(score, dtype):
     """Score function should respect input order."""
-    if func == "like_database_table" and dtype != str:
-        return
-
-    score = score_functions.get(func)
-
     candidates = make(12, dtype)
     values = make(6, dtype)
 
@@ -46,7 +43,7 @@ def test_stable(func, dtype):
 
         assert all([isinstance(s, float) for s in actual_scores]), "Bad return type"
 
-        expected_scores = [next(score(v, [candidates[i]])) for i in range(len(candidates))]
+        expected_scores = [next(iter(score(v, [candidates[i]]))) for i in range(len(candidates))]
 
         assert actual_scores == expected_scores
 
@@ -71,37 +68,3 @@ def make_str(count):
 
 def make_int(count):
     return list(randint(-10, 10, count))
-
-
-WORDS = [
-    "party",
-    "favor",
-    "blue",
-    "snap",
-    "doubt",
-    "major",
-    "exploration",
-    "brush",
-    "self",
-    "collection",
-    "casualty",
-    "east",
-    "comment",
-    "index",
-    "throw",
-    "referral",
-    "disorder",
-    "sermon",
-    "sleeve",
-    "institution",
-    "house",
-    "cassette",
-    "tree",
-    "prayer",
-    "damn",
-    "heir",
-    "redeem",
-    "complication",
-    "squeeze",
-    "contact",
-]
