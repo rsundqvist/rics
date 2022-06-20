@@ -2,6 +2,7 @@ import logging
 from typing import Any, Dict, Generic, Hashable, Iterable, List, Literal, Optional, Set, Tuple, TypeVar, Union
 
 from rics.cardinality import Cardinality, CardinalityType
+from rics.mapping import exceptions
 from rics.mapping import filter_functions as mf
 from rics.mapping._directional_mapping import DirectionalMapping
 from rics.mapping.exceptions import MappingError
@@ -77,6 +78,7 @@ class Mapper(Generic[ValueType, CandidateType]):
 
         Raises:
             MappingError: If any values failed to match and ``unmapped_values_action='raise'``.
+            BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
         """
         left_to_right: Dict[ValueType, MatchTuple] = {
             value: self._fixed[value] for value in filter(self._fixed.__contains__, values)
@@ -100,20 +102,20 @@ class Mapper(Generic[ValueType, CandidateType]):
         )
 
     def _map_value(self, value: ValueType) -> Optional[MatchTuple]:
-        """Map a single value against candidates.
-
-        Args:
-            value: An element to find matches for.
-
-        Returns:
-            Matching candidates sorted by decreasing score.
-        """
         scores = self._score(value, self._candidates, **self._score_kwargs)
         sorted_candidates = sorted(zip(scores, self._candidates), key=lambda t: -t[0])
 
         filtered_candidates = set(self._candidates)
         for filter_function, kwargs in self._filters:
             filtered_candidates = filter_function(value, filtered_candidates, **kwargs)
+
+            not_in_original_candidates = filtered_candidates.difference(self._candidates)
+            if not_in_original_candidates:
+                raise exceptions.BadFilterError(
+                    f"Filter {tname(filter_function)}({value}, candidates, **{kwargs}) created new"
+                    f"candidates: {not_in_original_candidates}"
+                )
+
             if not filtered_candidates:
                 return None
 

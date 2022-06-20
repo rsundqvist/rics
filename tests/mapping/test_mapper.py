@@ -1,8 +1,7 @@
 import pytest
 
 from rics.cardinality import Cardinality
-from rics.mapping import Mapper
-from rics.mapping.exceptions import MappingError
+from rics.mapping import Mapper, exceptions
 
 
 def _substring_score(k, c):
@@ -67,9 +66,14 @@ def test_multiple_matches_with_overrides(values, expected, allow_multiple):
     assert mapper.apply(values).left_to_right == expected
 
 
-def test_failure():
-    with pytest.raises(MappingError):
+def test_mapping_failure():
+    with pytest.raises(exceptions.MappingError):
         Mapper(candidates=(1, 2), unmapped_values_action="raise").apply((3, 4))
+
+
+def test_bad_filter():
+    with pytest.raises(exceptions.BadFilterError):
+        Mapper(candidates=(1, 2), filter_functions=[(lambda *_: {3, 4}, {})]).apply((3, 4))
 
 
 @pytest.mark.parametrize(
