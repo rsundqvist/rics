@@ -75,7 +75,7 @@ is writing a more advanced a ``score_function`` or fetcher than the implementati
 =====================================
 Advanced example: DVD Rental Database
 =====================================
-This examples translates a query from the `DVD Rental Sample Database`_. It covers most of the more advanced features
+This example translates a query from the `DVD Rental Sample Database`_. It covers most of the more advanced features
 that have been implemented. Using Docker, this database can be obtained by running:
 
 .. code-block::
@@ -109,14 +109,14 @@ The database has a few quirks, which are taken care of by the following config f
    :caption: Configuration for translating data in the database.
    :linenos:
 
-Translating now becomes a simple matter. The following snipped is a test case which demonstrates how translate all of
-the ~16000 rows returned by the query, verifying a random sample of 5 rows.
+Translating now becomes a simple matter. The following snippet is a test case which translates all of the ~16000 rows
+returned by the query, verifying a random sample of 5 rows.
 
 .. literalinclude:: ../tests/translation/dvdrental/test_dvdrental.py
    :language: python
    :linenos:
 
-The rows once translated become:
+The translated rows are:
 
 .. csv-table:: The rows translated. Dates are not translated, nor is the first (row number/index) column.
    :file: ../tests/translation/dvdrental/translated.csv
