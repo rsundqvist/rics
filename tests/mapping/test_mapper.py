@@ -90,14 +90,14 @@ def test_bad_filter():
             [
                 # Removes "b" and "ab" as a candidate
                 ("shortlisted_substring_in_candidate", dict(substrings=["a"])),
-                ("banned_substring_in_name", dict(substrings=["b"])),
+                ("banned_substring", dict(substrings="b", where="name")),
             ],
             {"a": ("a", "ab")},
         ),
         (
             [
                 # Removes all candidates
-                ("banned_substring_in_name", dict(substrings=list("abc"))),
+                ("banned_substring", dict(substrings=list("abc"), where="name")),
             ],
             {},
         ),

@@ -12,8 +12,9 @@ unmapped_values_action = "raise"
 score_function = "like_database_table"  # We don't need any kwargs for this function; no need to use a section
 
 [[translator.mapping.filter_functions]]
-function = "banned_substring_in_name"
+function = "banned_substring"
 substrings = ["date"]
+where= "name"
 [[translator.mapping.filter_functions]]
 function = "require_suffix"
 suffix = "_id"

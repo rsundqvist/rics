@@ -1,10 +1,17 @@
 """Functions which return filter candidates."""
 import logging
-from typing import Callable, Collection, Hashable, Iterable, List, Literal, Set, TypeVar
+from typing import Callable, Collection, Hashable, Iterable, List, Literal, Set, Tuple, TypeVar
 
 LOGGER = logging.getLogger(__name__)
 
 WhereOptions = Literal["name", "candidate", "both"]
+"""
+Determines how matching is done by various filter functions.
+
+    * `'name'`: Require only that `name` matches, ignoring the candidates.
+    * `'candidate'`: Require only that candidates match, ignoring the name.
+    * `'both'`: Require that both `name` and candidates match.
+"""
 H = TypeVar("H", bound=Hashable)
 FilterFunction = Callable[[H, Set[H]], Set[H]]
 """Signature for a filter function.
@@ -24,19 +31,11 @@ Returns:
 def require_prefix(name: str, candidates: Iterable[str], prefix: str, where: WhereOptions) -> Set[str]:
     """Require a prefix in `name` and/or `candidates`.
 
-    The `where`-argument must be one of:
-
-        * `'name'`: Require only that `name` starts with `prefix`. If it does, return all candidates,
-            otherwise return any empty collection.
-        * `'candidate'`: Require only that candidates start with `prefix`. Return those that do.
-        * `'both'`: Require that both `name` and candidates start with `prefix`. If it does, return all candidates
-            which also start with `prefix`. If `name` does not start with `prefix, return an empty collection.
-
     Args:
         name: A name.
         candidates: Potential matches for `name`.
         prefix: The prefix to look for.
-        where: One of 'name', 'candidate' or 'both'. See above.
+        where: One of 'name', 'candidate' or 'both'. See :const:`WhereOptions`.
 
     Returns:
         Candidates which pass the test.
@@ -66,19 +65,11 @@ def require_prefix(name: str, candidates: Iterable[str], prefix: str, where: Whe
 def require_suffix(name: str, candidates: Iterable[str], suffix: str, where: WhereOptions) -> Set[str]:
     """Require a suffix in `name` and/or `candidates`.
 
-    The `where`-argument must be one of:
-
-        * `'name'`: Require only that `name` ends with `suffix`. If it does, return all candidates,
-            otherwise return any empty collection.
-        * `'candidate'`: Require only that candidates end with `suffix`. Return those that do.
-        * `'both'`: Require that both `name` and candidates end with `suffix`. If it does, return all candidates
-            which also end with `suffix`. If `name` does not end with `suffix, return an empty collection.
-
     Args:
         name: A name.
         candidates: Potential matches for `name`.
         suffix: The suffix to look for.
-        where: One of 'name', 'candidate' or 'both'. See above.
+        where: One of 'name', 'candidate' or 'both'. See :const:`WhereOptions`.
 
     Returns:
         Candidates which pass the test.
@@ -106,27 +97,52 @@ def require_suffix(name: str, candidates: Iterable[str], suffix: str, where: Whe
     return set(kept)
 
 
-def banned_substring_in_name(name: str, candidates: Iterable[str], substrings: Collection[str]) -> Set[str]:
-    """Prevent `name` from being mapped if it contains a banned substring.
+def banned_substring(
+    name: str, candidates: Iterable[str], substrings: Collection[str], where: WhereOptions
+) -> Set[str]:
+    """Prevent mapping if banned substrings are found.
+
+    Matching on `name` halts all mapping, whereas matching on a candidate excludes only those candidates that match.
 
     Args:
         name: An element to find matches for.
         candidates: Potential matches for `name` (not used).
         substrings: Substrings which may not be present in `name`.
+        where: One of 'name', 'candidate' or 'both'. See :const:`WhereOptions`.
 
     Returns:
         An empty collection if `name` contains any of the substrings in
         `substrings`, otherwise all candidates in `candidates`.
     """
-    logger = LOGGER.getChild("banned_substring_in_name")
+    logger = LOGGER.getChild("banned_substring")
 
-    substrings = _substrings_in_name(name, substrings)
-    if substrings:
+    require_name = _parse_where_arg(where)
+
+    substrings_in_name = _substrings_in_name(name, substrings)
+    if substrings_in_name and require_name:
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Refuse matching of {name=}, contains banned substrings: {sorted(substrings)}.")
+            logger.debug(f"Refuse matching of {name=}, contains banned substrings: {sorted(substrings_in_name)}.")
         return set()
 
-    return set(candidates)
+    candidates = set(candidates)
+
+    if where == "name":
+        return set(candidates)
+
+    triggering_candidates, triggering_substrings = _match_with_substrings(candidates, substrings)
+
+    if not triggering_substrings:
+        return candidates
+
+    kept = candidates.difference(triggering_candidates)
+
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(
+            f"Removed candidates for {name=} that contain banned substrings "
+            f"{triggering_substrings}: {sorted(triggering_substrings)}."
+        )
+
+    return set(kept)
 
 
 def shortlisted_substring_in_candidate(name: str, candidates: Iterable[str], substrings: Collection[str]) -> Set[str]:
@@ -148,14 +164,7 @@ def shortlisted_substring_in_candidate(name: str, candidates: Iterable[str], sub
     if not substrings:
         return candidates
 
-    kept: List[str] = []
-    triggering_substrings = set()
-
-    for cand in candidates:
-        for kw in substrings:
-            if kw in cand:
-                triggering_substrings.add(kw)
-                kept.append(cand)
+    kept, triggering_substrings = _match_with_substrings(candidates, substrings)
 
     if not triggering_substrings:
         return candidates
@@ -175,6 +184,19 @@ def _parse_where_arg(where: str) -> bool:
         raise ValueError(f"Bad {where=} argument: Not in {options=}.")
 
     return where != "candidate"
+
+
+def _match_with_substrings(candidates: Iterable[str], substrings: Collection[str]) -> Tuple[List[str], List[str]]:
+    triggering_candidates = []
+    triggering_substrings = []
+
+    for cand in candidates:
+        for subs in substrings:
+            if subs in cand:
+                triggering_substrings.append(subs)
+                triggering_candidates.append(cand)
+
+    return triggering_candidates, triggering_substrings
 
 
 def _substrings_in_name(name: str, substrings: Collection[str]) -> Set[str]:

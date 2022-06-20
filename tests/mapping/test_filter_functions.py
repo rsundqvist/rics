@@ -80,10 +80,23 @@ def test_require_suffix(name, candidates, where, expected):
     assert actual == expected
 
 
-@pytest.mark.parametrize("name, expected", [("foo", True), ("more", False), ("jamboree", False)])
-def test_banned_substring_in_name(name, expected):
-    actual = mf.banned_substring_in_name(name, candidates="abc", substrings=KEYWORDS)
-    assert bool(actual) == expected
+@pytest.mark.parametrize(
+    "name, where, candidates, expected",
+    [
+        # where: name
+        ("torque", "name", set("abc"), set()),
+        ("abc", "name", ["more", "torque"], {"more", "torque"}),
+        # where: candidate
+        ("torque", "candidate", set("abc"), set("abc")),
+        ("abc", "candidate", ["more", "torque"], set()),
+        # where: both
+        ("torque", "both", ["more", "torque", "a"], set()),
+        ("abc", "both", ["more", "torque", "a"], {"a"}),
+    ],
+)
+def test_banned_substring(name, where, candidates, expected):
+    actual = mf.banned_substring(name, candidates=candidates, substrings=KEYWORDS, where=where)
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
