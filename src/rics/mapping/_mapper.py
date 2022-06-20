@@ -67,11 +67,13 @@ class Mapper(Generic[ValueType, CandidateType]):
     def candidates(self, values: Set[CandidateType]) -> None:
         self._candidates = values
 
-    def apply(self, values: Iterable[ValueType]) -> DirectionalMapping:
+    def apply(self, values: Iterable[ValueType], **kwargs: Any) -> DirectionalMapping:
         """Map values to candidates.
 
         Args:
             values: Iterable of elements to match to candidates.
+            kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
+                not known when the mapper is initialized.
 
         Returns:
             A ``BidirectionalMapping`` with values on the left side and candidates on the right.
@@ -84,7 +86,7 @@ class Mapper(Generic[ValueType, CandidateType]):
             value: self._fixed[value] for value in filter(self._fixed.__contains__, values)
         }
         for value in set(values).difference(left_to_right):
-            matches = self._map_value(value)
+            matches = self._map_value(value, kwargs)
             if matches is None:
                 continue  # All candidates removed by filtering
             if matches:
@@ -101,13 +103,13 @@ class Mapper(Generic[ValueType, CandidateType]):
             _verify=True,
         )
 
-    def _map_value(self, value: ValueType) -> Optional[MatchTuple]:
-        scores = self._score(value, self._candidates, **self._score_kwargs)
+    def _map_value(self, value: ValueType, kwargs: Dict[str, Any]) -> Optional[MatchTuple]:
+        scores = self._score(value, self._candidates, **self._score_kwargs, **kwargs)
         sorted_candidates = sorted(zip(scores, self._candidates), key=lambda t: -t[0])
 
         filtered_candidates = set(self._candidates)
-        for filter_function, kwargs in self._filters:
-            filtered_candidates = filter_function(value, filtered_candidates, **kwargs)
+        for filter_function, function_kwargs in self._filters:
+            filtered_candidates = filter_function(value, filtered_candidates, **function_kwargs, **kwargs)
 
             not_in_original_candidates = filtered_candidates.difference(self._candidates)
             if not_in_original_candidates:

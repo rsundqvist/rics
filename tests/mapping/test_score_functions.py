@@ -14,6 +14,32 @@ def test_from_bad_name():
 
 
 @pytest.mark.parametrize(
+    "value, add_table, expected",
+    [
+        ("id", False, [0, 0, 0, 0, 0]),
+        ("id", True, [1, 0, 0, 0, 0]),
+        ("name", False, [0, 0, 0, 1, 1]),
+        ("exact", True, [0, 1, 0, 0, 0]),
+    ],
+)
+def test_equality_with_affix(value, add_table, expected):
+    columns = ["animal_id", "exact", "exact_animal", "cute_name", "name_real"]
+
+    actual = list(
+        sf.equality_with_affix(
+            value,
+            columns,
+            table="animal",  # Given by mapper
+            # Configured
+            add_table=add_table,
+            suffixes=["real"],
+            prefixes=["cute"],
+        )
+    )
+    assert actual == expected
+
+
+@pytest.mark.parametrize(
     "value, expected_max_table",
     [
         ("human_id", "humans"),
@@ -31,20 +57,20 @@ def test_like_database_table(value, expected_max_table):
 
 
 @pytest.mark.parametrize(
-    "score, dtype", [(func, str) for func in sf._all_functions] + [(sf.equality, int)]  # type: ignore
+    "func, dtype", [(func, str) for func in sf._all_functions] + [(sf.equality, int)]  # type: ignore
 )
-def test_stable(score, dtype):
+def test_stable(func, dtype):
     """Score function should respect input order."""
     candidates = make(12, dtype)
     values = make(6, dtype)
 
-    for v in values:
-        actual_scores = list(score(v, candidates.copy()))
+    kwargs = {"prefixes": ["un"]} if func == sf.equality_with_affix else {}
 
+    for v in values:
+        actual_scores = list(func(v, candidates.copy(), **kwargs))
         assert all([isinstance(s, float) for s in actual_scores]), "Bad return type"
 
-        expected_scores = [next(iter(score(v, [candidates[i]]))) for i in range(len(candidates))]
-
+        expected_scores = [next(iter(func(v, [candidates[i]], **kwargs))) for i in range(len(candidates))]
         assert actual_scores == expected_scores
 
 
