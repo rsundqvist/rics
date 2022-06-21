@@ -6,8 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+Extremely not backwards-compatible.
+
 ### Added
-- Filtering logic for `rics.mapping.Mapper`
+- The `InheritedKeysDict` class.
+- Integration of `Mapper` in the `Fetcher` for programmatic placeholder-mapping.
+- Filtering logic for `Mapper`
+- The `plottting.pi_ticks`-function to plot an (X-)axis in terms of PI.
+- Dvdrental testcase and docs running against a docker DB (not in CI)
 
 ### Changed
 - More plotting functions
