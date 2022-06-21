@@ -132,7 +132,8 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         return Fetcher.from_records(instr, tuple(df), list(df.to_records(index=False)))
 
     def __repr__(self) -> str:
-        return f"{tname(self)}(read_function={tname(self._read)})"
+        read_path_format = self._format_source("{source}")
+        return f"{tname(self)}(read_function={tname(self._read)}, {read_path_format=})"
 
 
 def _make_format_fn(read_path_format: Optional[Union[str, FormatFn]]) -> FormatFn:

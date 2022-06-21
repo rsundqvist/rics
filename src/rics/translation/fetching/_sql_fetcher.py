@@ -100,7 +100,8 @@ class SqlFetcher(Fetcher[str, IdType, str]):
             start = perf_counter()
             ts_dict = self._get_summaries()
             if LOGGER.isEnabledFor(logging.INFO):
-                LOGGER.info(f"Found {len(ts_dict)} tables in {format_perf_counter(start)}: {sorted(ts_dict)}")
+                sz = {name: ts.size for name, ts in sorted(ts_dict.items())}
+                LOGGER.info(f"Processed {len(ts_dict)} tables in {format_perf_counter(start)}. Lengths={sz}.")
             self._table_ts_dict = ts_dict
 
         return self._table_ts_dict

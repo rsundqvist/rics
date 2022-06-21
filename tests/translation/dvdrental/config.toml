@@ -27,7 +27,6 @@ connection_string = "postgresql+pg8000://postgres@localhost:5001/dvdrental"
 # column names in an SQL table) to wanted names, eg id = 'animal_id'.
 [fetching.mapping]
 unmapped_values_action = "ignore"
-runtime_key_updates = true  # Update keys based on runtime keyword arguments.
 
 
 [fetching.mapping.score_function.equality_with_affix]
