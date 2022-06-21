@@ -18,4 +18,5 @@ def test_dvd_rental():
     translator.translate(df, inplace=True)
 
     assert (df.select_dtypes("datetime").columns == DATE_COLUMNS).all()
-    assert expected.equals(df.sample(len(expected), random_state=0))
+    actual = df.sample(len(expected), random_state=0)
+    assert expected.equals(actual), actual.to_string()

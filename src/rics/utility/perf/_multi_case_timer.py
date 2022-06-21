@@ -59,7 +59,7 @@ class MultiCaseTimer:
             runtime will be approximately ``5 * 3 * 2 = 30`` seconds.
 
         Returns:
-            A dict `run_results` on the form {candidate_label, {data_label, [runtime..]}}.
+            A dict `run_results` on the form ``{candidate_label: {data_label: [runtime..]}}``.
 
         Raises:
             ValueError: If the total expected runtime exceeds `max_expected_runtime`.

@@ -20,4 +20,5 @@ def wait_for_dvdrental(sleep: float = 0.5, attempts: int = 3) -> bool:
         if ready == 0:  # Ready
             return True
         time.sleep(sleep)
-    return False
+
+    return False or os.environ.get("FORCE_SKIPIF_TESTS", "false").lower() == "true"
