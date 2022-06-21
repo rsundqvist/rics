@@ -135,7 +135,6 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
 
     def get_placeholders(self, source: SourceType) -> List[str]:
         """Get placeholders for `source`."""
-        # TODO: overrida i SqlFetcher/PandasFetcher.
         placeholders = self.placeholders
         if source not in placeholders:
             raise exceptions.UnknownSourceError(source)

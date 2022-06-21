@@ -39,9 +39,3 @@ prefixes = ["first"]  # Match 'first_name' -> 'name'.
 code = "postal_code"
 [fetching.mapping.overrides.film]
 name = "title"
-
-# TODO: Detta är för sources/tables, inte placeholders
-#[[fetching.mapping.sources.filter_functions]]
-#function = "banned_substring"
-#substrings =["p2007", "_seq"]
-#where="candidate"
