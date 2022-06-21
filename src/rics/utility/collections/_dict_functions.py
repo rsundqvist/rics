@@ -1,5 +1,4 @@
-"""Miscellaneous utility methods for Python collections."""
-from typing import Any, Callable, Dict, Hashable, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Hashable, List, TypeVar
 
 _KT = TypeVar("_KT", bound=Hashable)
 _HVT = TypeVar("_HVT", bound=Hashable)
@@ -23,7 +22,7 @@ def compute_if_absent(d: Dict[_KT, _VT], key: _KT, func: Callable[[_KT], _VT] = 
     return d[key]
 
 
-def reverse_dict(d: Dict[_KT, _HVT]) -> Optional[Dict[_HVT, _KT]]:
+def reverse_dict(d: Dict[_KT, _HVT]) -> Dict[_HVT, _KT]:
     """Swap keys and values.
 
     Args:
