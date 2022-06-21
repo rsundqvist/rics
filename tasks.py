@@ -141,7 +141,7 @@ def tests(c):
     # type: (Context) -> None
     """Run tests."""
     pytest_options = ["--xdoctest", "--cov", "--cov-append", "--cov-report=", "--cov-fail-under=0"]
-    _run(c, f"poetry run pytest {' '.join(pytest_options)} {TEST_DIR}")
+    _run(c, f"poetry run pytest {' '.join(pytest_options)} {TEST_DIR} {SOURCE_DIR}")
 
 
 @task(
