@@ -45,7 +45,7 @@ def test_fetch_all(sql_fetcher, data, table_to_verify):
     ],
 )
 def test_heuristic(sql_fetcher, ids_to_fetch, expected):
-    ans = sql_fetcher.fetch_placeholders(FetchInstruction("huge_table", ids_to_fetch, ("id",), {"id"}, False)).records
+    ans = sql_fetcher.fetch_translations(FetchInstruction("huge_table", ids_to_fetch, ("id",), {"id"}, False)).records
     assert ans == tuple((e,) for e in expected)
 
 

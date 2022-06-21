@@ -36,8 +36,7 @@ class TableSummary:
 
     def select_columns(self, instr: FetchInstruction) -> List[str]:
         """Return required and optional columns of the table."""
-        known_column_names = set(self.columns.keys())
-        return Fetcher.select_placeholders(instr, known_column_names)
+        return Fetcher.select_placeholders(instr, self.columns.keys())
 
 
 class SqlFetcher(Fetcher[str, IdType, str]):
@@ -123,7 +122,7 @@ class SqlFetcher(Fetcher[str, IdType, str]):
             raise ValueError(f"Invalid table: {table}")
         return table
 
-    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
+    def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
         """Fetch columns from a SQL database."""
         ts = self._summaries[instr.source]
         columns = ts.select_columns(instr)
@@ -176,6 +175,23 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         return list(self._summaries)
 
     @property
+    def placeholders(self) -> Dict[str, List[str]]:
+        """Placeholders for sources managed by the fetcher.
+
+        Note that placeholders (and sources) are returned as they appear as they are known to the fetcher, without
+        remapping to desired names. As an example, for sources ``cities`` and ``languages``, this property may return::
+
+           placeholders = {
+               "cities": ["city_id", "city_name", "location_id"],
+               "languages": ["id", "name"],
+           }
+
+        Returns:
+            A dict ``{source: placeholders_for_source}``.
+        """
+        return {name: list(ts.columns.keys()) for name, ts in self._summaries.items()}
+
+    @property
     def allow_fetch_all(self) -> bool:
         """Flag indicating whether the :meth:`~rics.translation.fetching.Fetcher.fetch_all` operation is permitted."""
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
@@ -221,28 +237,33 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
             raise ValueError(f"No sources found{extra}. Available tables: {table_names}")
 
-        return {name: self.make_table_summary(metadata.tables[name]) for name in tables}
+        ans = {}
+        for name in tables:
+            table = metadata.tables[name]
+            id_column = self.id_column(table.name, (c.name for c in table.columns))
+            if id_column is None:
+                continue  # Mapper would've raised an error if we required all non-filtered tables to be mapped
 
-    def make_table_summary(self, table: sqlalchemy.sql.schema.Table) -> TableSummary:
+            ans[name] = self.make_table_summary(table, table.columns[id_column])
+
+        return ans
+
+    def make_table_summary(
+        self, table: sqlalchemy.sql.schema.Table, id_column: sqlalchemy.sql.schema.Table
+    ) -> TableSummary:
         """Create a table summary."""
-        id_column_name = self.get_id_placeholder(table.name)
-        if id_column_name not in table.columns:
-            raise ValueError(
-                f"The ID column '{id_column_name}' is not present in table '{table.name}'. "
-                "Blacklist this table or add a placeholder mapping for the table."
-            )
-
-        id_column = table.columns[id_column_name]
-
         start = perf_counter()
-        size = self.get_approximate_table_size(table)
+        size = self.get_approximate_table_size(table, id_column)
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug(f"Size of {table.name}={size} resolved in {format_perf_counter(start)}.")
-
         fetch_all_permitted = self._fetch_all_limit is None or size < self._fetch_all_limit
         return TableSummary(table.name, size, table.columns, fetch_all_permitted, id_column)
 
-    def get_approximate_table_size(self, table: sqlalchemy.sql.schema.Table) -> int:
+    def get_approximate_table_size(
+        self,
+        table: sqlalchemy.sql.schema.Table,
+        id_column: sqlalchemy.sql.schema.Table,
+    ) -> int:
         """Return the approximate size of a table.
 
         Called only by the :meth:`make_table_summary` method during discovery. The default implementation performs a
@@ -250,11 +271,11 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
         Args:
             table: A table object.
+            id_column: The ID column in `table`.
 
         Returns:
             An approximate size for `table`.
         """
-        id_column = table.columns[self.get_id_placeholder(table.name)]
         return self._engine.execute(sqlalchemy.func.count(id_column)).scalar()
 
     def get_metadata(self) -> sqlalchemy.MetaData:

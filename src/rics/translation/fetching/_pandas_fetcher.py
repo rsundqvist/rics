@@ -7,8 +7,7 @@ import pandas as pd
 
 from rics.translation.fetching._fetch_instruction import FetchInstruction
 from rics.translation.fetching._fetcher import Fetcher
-from rics.translation.offline import PlaceholderOverrides
-from rics.translation.offline.types import IdType, NameType, PlaceholderOverridesDict, PlaceholderTranslations
+from rics.translation.offline.types import IdType, NameType, PlaceholderTranslations
 from rics.utility.misc import PathLikeType, tname
 
 LOGGER = logging.getLogger(__package__).getChild("PandasFetcher")
@@ -29,7 +28,6 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
             Must contain a `source` as its only placeholder. Example: ``data/{source}.pkl``. None=leave as-is.
         read_function_args: Additional positional arguments for `read_function`.
         read_function_kwargs: Additional keyword arguments for `read_function`.
-        placeholder_overrides: Placeholder name overrides. Used to adapt placeholder names in sources to wanted names.
 
     See Also:
         The official `Pandas IO documentation <https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html>`_
@@ -41,9 +39,9 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         read_path_format: Optional[Union[str, FormatFn]] = "data/{}.pkl",
         read_function_args: Iterable[Any] = None,
         read_function_kwargs: Mapping[str, Any] = None,
-        placeholder_overrides: Union[PlaceholderOverrides, PlaceholderOverridesDict] = None,
+        **kwargs: Any,
     ) -> None:
-        super().__init__(placeholder_overrides=placeholder_overrides)
+        super().__init__(**kwargs)
         self._read = getattr(pd, read_function) if isinstance(read_function, str) else read_function
         self._format_source: FormatFn = _make_format_fn(read_path_format)
         self._args = read_function_args or ()
@@ -51,6 +49,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
 
         self._source_paths: Dict[str, Path] = {}
         self._sources: List[str] = []
+        self._placeholders: Dict[str, List[str]] = {}
 
     def read(self, source_path: PathLikeType) -> pd.DataFrame:
         """Read a DataFrame from a source path.
@@ -67,7 +66,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         """Search for source paths to pass to `read_function` using `read_path_format`.
 
         Returns:
-            A dict {source, path}.
+            A dict ``{source, path}``.
 
         Raises:
             IOError: If files cannot be read.
@@ -103,12 +102,34 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
 
         return self._sources
 
-    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
+    @property
+    def placeholders(self) -> Dict[str, List[str]]:
+        """Placeholders for sources managed by the fetcher.
+
+        Note that placeholders (and sources) are returned as they appear as they are known to the fetcher, without
+        remapping to desired names. As an example, for sources ``cities`` and ``languages``, this property may return::
+
+           placeholders = {
+               "cities": ["city_id", "city_name", "location_id"],
+               "languages": ["id", "name"],
+           }
+
+        Returns:
+            A dict ``{source: placeholders_for_source}``.
+        """
+        if not self._placeholders:
+            self._placeholders = {
+                source: list(self.read(self._source_paths[source]).columns) for source in self.sources
+            }
+
+        return self._placeholders
+
+    def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
         """Read data from disk."""
         source_path = self._source_paths[instr.source]
         df = self.read(source_path)
 
-        return Fetcher.make_and_verify(instr, tuple(df), list(df.to_records(index=False)))
+        return Fetcher.from_records(instr, tuple(df), list(df.to_records(index=False)))
 
     def __repr__(self) -> str:
         return f"{tname(self)}(read_function={tname(self._read)})"

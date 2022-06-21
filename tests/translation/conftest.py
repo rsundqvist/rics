@@ -1,4 +1,4 @@
-from typing import Any, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pytest
 
@@ -11,15 +11,15 @@ from rics.translation.offline.types import PlaceholderTranslations
 
 class HexFetcher(Fetcher[str, int, str]):
     def __init__(self) -> None:
-        self.num_fetches = 0
         super().__init__()
+        self.num_fetches = 0
 
-    def fetch_placeholders(self, instr: FetchInstruction) -> PlaceholderTranslations:
+    def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
         self.num_fetches += 1
 
         placeholders = Fetcher.select_placeholders(instr, ["id", "hex", "positive"])
 
-        return Fetcher.make_and_verify(
+        return Fetcher.from_records(
             instr,
             placeholders,
             tuple(self._run(placeholders, instr.ids)),
@@ -43,6 +43,14 @@ class HexFetcher(Fetcher[str, int, str]):
     @property
     def sources(self) -> List[str]:
         return ["positive_numbers", "negative_numbers"]
+
+    @property
+    def placeholders(self) -> Dict[str, List[str]]:
+        placeholders = ["id", "hex", "positive"]
+        return {
+            "positive_numbers": placeholders,
+            "negative_numbers": placeholders,
+        }
 
 
 @pytest.fixture(scope="session")

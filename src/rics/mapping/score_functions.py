@@ -80,7 +80,7 @@ def equality_with_affix(
     join_with: str = "_",
     prefixes: Collection[str] = (),
     suffixes: Collection[str] = (),
-    table: str = "",
+    source: str = "",
 ) -> Iterable[float]:
     """Return 1.0 if ``value == candidate`` or when combined given prefixes/affixes. Zero otherwise.
 
@@ -91,11 +91,11 @@ def equality_with_affix(
     Args:
         value: A placeholder to map to a column (=candidate).
         candidates: Potential matches for `value`.
-        add_table: If True, add table to both prefixes and suffixes.
+        add_table: If True, add the table name (contain in the `source` argument) to both prefixes and suffixes.
         join_with: A string which joins `value` with affixes.
         prefixes: Affixed before `value`.
         suffixes: Affixed after `value`.
-        table: A table name. If given, it will be added to both `prefixes` and `suffixes`.
+        source: A table name. If given, it will be added to both `prefixes` and `suffixes`.
 
     Yields:
         A score for each candidate `c` in `candidates`.
@@ -105,13 +105,10 @@ def equality_with_affix(
         ValueError: If none of `prefixes`, `suffixes` and `table` is are given, which is equivalent to regular equality.
     """
     if add_table:
-        if not table:  # pragma: no cover
+        if not source:  # pragma: no cover
             raise ValueError(f"Got {add_table=} but no table was given.")
-        prefixes = [table] + list(prefixes)
-        suffixes = [table] + list(suffixes)
-
-    if not (prefixes or suffixes):  # pragma: no cover
-        raise ValueError("At least one of 'prefixes', 'suffixes' and 'table' must be given.")
+        prefixes = [source] + list(prefixes)
+        suffixes = [source] + list(suffixes)
 
     if value in candidates:
         for column in candidates:

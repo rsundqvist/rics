@@ -19,7 +19,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
     """Base class for application of ``Format`` specifications.
 
     Args:
-        placeholder_translations: Matrix of ID translation components returned by fetchers.
+        translations: Matrix of ID translation components returned by fetchers.
         default: Default values for each key in `placeholders`.
         required_placeholders: Placeholder names which must be present in `default`. None=all.
 
@@ -32,16 +32,16 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
 
     def __init__(
         self,
-        placeholder_translations: PlaceholderTranslations,
+        translations: PlaceholderTranslations,
         default: Union[NoDefault, Dict[str, Any]] = NO_DEFAULT,
         required_placeholders: Collection[str] = None,
     ) -> None:
-        self._source = placeholder_translations.source
-        self._placeholder_names = placeholder_translations.placeholders
+        self._source = translations.source
+        self._placeholder_names = translations.placeholders
 
         if default is not NO_DEFAULT:
             required_defaults = set(
-                placeholder_translations.placeholders if required_placeholders is None else required_placeholders
+                translations.placeholders if required_placeholders is None else required_placeholders
             )
             required_defaults.discard("id")
             missing = required_defaults.difference(default)
@@ -49,7 +49,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
                 raise ValueError(f"Placeholder names {sorted(missing)} not present in {default=}.")
 
         self._default = default
-        self._n_ids = len(placeholder_translations.records)
+        self._n_ids = len(translations.records)
 
     def __call__(
         self, fmt: Format, placeholders: PlaceholdersTuple = None, default_fmt: Format = None
@@ -127,12 +127,12 @@ class DefaultFormatApplier(FormatApplier):
 
     def __init__(
         self,
-        placeholder_translations: PlaceholderTranslations,
+        translations: PlaceholderTranslations,
         default: Union[NoDefault, Dict[str, Any]] = NO_DEFAULT,
         required_placeholders: Collection[str] = None,
     ) -> None:
-        super().__init__(placeholder_translations, default, required_placeholders)
-        self._pht = placeholder_translations
+        super().__init__(translations, default, required_placeholders)
+        self._pht = translations
 
     def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds:
         if self._placeholder_names == placeholders:

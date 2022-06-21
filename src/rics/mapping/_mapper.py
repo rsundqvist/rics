@@ -7,8 +7,10 @@ from rics.mapping import filter_functions as mf
 from rics.mapping._directional_mapping import DirectionalMapping
 from rics.mapping.exceptions import MappingError
 from rics.mapping.score_functions import MappingScoreFunction, from_name
+from rics.utility.collections import InheritedKeysDict
 from rics.utility.misc import tname
 
+ContextType = TypeVar("ContextType", bound=Hashable)
 ValueType = TypeVar("ValueType", bound=Hashable)
 CandidateType = TypeVar("CandidateType", bound=Hashable)
 MatchTuple = Tuple[CandidateType, ...]
@@ -16,7 +18,7 @@ MatchTuple = Tuple[CandidateType, ...]
 LOGGER = logging.getLogger(__package__).getChild("Mapper")
 
 
-class Mapper(Generic[ValueType, CandidateType]):
+class Mapper(Generic[ContextType, ValueType, CandidateType]):
     """Map candidates (right side) to values (left side).
 
     A ``Mapper`` creates :class:`~rics.mapping.BidirectionalMapping`-instances from collections of
@@ -29,7 +31,9 @@ class Mapper(Generic[ValueType, CandidateType]):
         score_function_kwargs: Keyword arguments for `score_function`.
         filter_functions: Function-kwargs pairs of filters to apply before scoring.
         min_score: Minimum score `s_i`, as given by ``score(k, c_i)``, to consider `k` a match for `c_i`.
-        overrides: User-defined 1:1 mappings which (`value` to `candidate`) override the scoring logic.
+        overrides: If a dict, assumed to be 1:1 mappings which (`value` to `candidate`) override the scoring logic. If
+            :class:`~rics.utility.collections.InheritedKeysDict`, the context passed to :meth:`apply` will be used to
+            retrieve the actual overrides.
         unmapped_values_action: Action to take if mapping fails.
         cardinality: Desired cardinality for mapped values. None=derive.
     """
@@ -41,7 +45,9 @@ class Mapper(Generic[ValueType, CandidateType]):
         score_function_kwargs: Dict[str, Any] = None,
         filter_functions: Iterable[Tuple[Union[str, mf.FilterFunction], Dict[str, Any]]] = (),
         min_score: float = 1.00,
-        overrides: Dict[ValueType, CandidateType] = None,
+        overrides: Union[
+            InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
+        ] = None,
         unmapped_values_action: Literal["raise", "ignore"] = "ignore",
         cardinality: Optional[CardinalityType] = Cardinality.OneToOne,
     ) -> None:
@@ -49,7 +55,10 @@ class Mapper(Generic[ValueType, CandidateType]):
         self._score = score_function if callable(score_function) else from_name(score_function)
         self._score_kwargs = score_function_kwargs or {}
         self._min_score = min_score
-        self._fixed = {} if overrides is None else {k: (v,) for k, v in overrides.items()}
+        self._overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = (
+            overrides if isinstance(overrides, InheritedKeysDict) else (overrides or {})
+        )
+        self._context_sensitive_overrides = isinstance(self._overrides, InheritedKeysDict)
         if unmapped_values_action not in ("raise", "ignore"):
             raise ValueError(f"{unmapped_values_action=} not in ('raise', 'ignore').")  # pragma: no cover
         self._unmapped_action = unmapped_values_action
@@ -67,11 +76,12 @@ class Mapper(Generic[ValueType, CandidateType]):
     def candidates(self, values: Set[CandidateType]) -> None:
         self._candidates = values
 
-    def apply(self, values: Iterable[ValueType], **kwargs: Any) -> DirectionalMapping:
+    def apply(self, values: Iterable[ValueType], context: ContextType = None, **kwargs: Any) -> DirectionalMapping:
         """Map values to candidates.
 
         Args:
             values: Iterable of elements to match to candidates.
+            context: Context in which mapping is being done.
             kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
                 not known when the mapper is initialized.
 
@@ -82,10 +92,10 @@ class Mapper(Generic[ValueType, CandidateType]):
             MappingError: If any values failed to match and ``unmapped_values_action='raise'``.
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
         """
-        left_to_right: Dict[ValueType, MatchTuple] = {
-            value: self._fixed[value] for value in filter(self._fixed.__contains__, values)
-        }
-        for value in set(values).difference(left_to_right):
+        values = set(values)
+        left_to_right = self._create_l2r(values, context)
+
+        for value in values.difference(left_to_right):
             matches = self._map_value(value, kwargs)
             if matches is None:
                 continue  # All candidates removed by filtering
@@ -102,6 +112,26 @@ class Mapper(Generic[ValueType, CandidateType]):
             left_to_right=left_to_right,
             _verify=True,
         )
+
+    @property
+    def context_sensitive_overrides(self) -> bool:
+        """Return True if overrides are of type :class:`rics.utility.collections.InheritedKeysDict."""
+        return self._context_sensitive_overrides
+
+    def _create_l2r(self, values: Set[ValueType], context: Optional[ContextType]) -> Dict[ValueType, MatchTuple]:
+        left_to_right: Dict[ValueType, MatchTuple]
+        overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
+
+        if context is None:
+            if self._context_sensitive_overrides:  # pragma: no cover
+                raise TypeError("Must pass a context when using context-sensitive overrides.")
+            overrides = self._overrides  # type: ignore
+        else:
+            if not self._context_sensitive_overrides:  # pragma: no cover
+                raise TypeError("Overrides must be of type InheritedKeysDict when context is given.")
+            overrides = self._overrides.get(context, {})  # type: ignore
+
+        return {value: (overrides[value],) for value in filter(overrides.__contains__, values)}
 
     def _map_value(self, value: ValueType, kwargs: Dict[str, Any]) -> Optional[MatchTuple]:
         scores = self._score(value, self._candidates, **self._score_kwargs, **kwargs)
@@ -156,7 +186,7 @@ class Mapper(Generic[ValueType, CandidateType]):
             score_function_kwargs=self._score_kwargs.copy(),
             filter_functions=[(func, kwargs.copy()) for func, kwargs in self._filters],
             min_score=self._min_score,
-            overrides=None if self._fixed is None else {k: v[0] for k, v in self._fixed.items()},
+            overrides=self._overrides.copy(),
             unmapped_values_action=self._unmapped_action,
             cardinality=self._cardinality,
         )

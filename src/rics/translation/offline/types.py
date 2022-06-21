@@ -12,8 +12,6 @@ PlaceholdersTuple = Tuple[str, ...]
 NameToSourceDict = Dict[NameType, SourceType]  # {name: source}
 TranslatedIds = Dict[IdType, str]  # {id: translation}
 # {"shared": {from_placeholder: to_placeholder}, "source-specific": {source: {from_placeholder: to_placeholder}}
-PlaceholderOverridesDict = Dict[str, Union[Dict[str, str], Dict[str, Dict[str, str]]]]
-DefaultTranslationsDict = Dict[str, Union[Dict[str, Any], Dict[str, Dict[str, Any]]]]
 SourcePlaceholderTranslations = Dict[SourceType, "PlaceholderTranslations"]  # {source: PlaceholderTranslations}
 
 
@@ -67,14 +65,11 @@ class PlaceholderTranslations(Generic[SourceType]):
 
     @staticmethod
     def to_dicts(
-        source_placeholder_translations: "SourcePlaceholderTranslations",
+        source_translations: "SourcePlaceholderTranslations",
         max_rows: int = 0,
     ) -> Dict[SourceType, Dict[str, Sequence[Any]]]:
         """Create a nested dict representation of the translations."""
-        return {
-            source: placeholder_translations.to_dict(max_rows)
-            for source, placeholder_translations in source_placeholder_translations.items()
-        }
+        return {source: translations.to_dict(max_rows) for source, translations in source_translations.items()}
 
     @classmethod
     def from_dataframe(cls, source: SourceType, data: pd.DataFrame) -> "PlaceholderTranslations":

@@ -38,12 +38,12 @@ def test_to_dict():
 
 
 def test_to_dicts():
-    source_placeholder_translations = {
+    source_translations = {
         source: PlaceholderTranslations.from_dataframe(source, pd.read_json(PATH.format(source), orient="list"))
         for source in OPTIONS
     }
 
-    actual = PlaceholderTranslations.to_dicts(source_placeholder_translations)
+    actual = PlaceholderTranslations.to_dicts(source_translations)
 
     expected = {}
     for source in OPTIONS:

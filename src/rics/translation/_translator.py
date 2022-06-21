@@ -11,16 +11,16 @@ from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_i
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching._ids_to_fetch import IdsToFetch
-from rics.translation.offline import DefaultTranslations, Format, TranslationMap
+from rics.translation.offline import Format, TranslationMap
 from rics.translation.offline._format import FormatType
 from rics.translation.offline.types import (
-    DefaultTranslationsDict,
     IdType,
     NameType,
     PlaceholderTranslations,
     SourcePlaceholderTranslations,
     SourceType,
 )
+from rics.utility.collections.inherited_keys_dict import InheritedKeysDict, MakeDict
 from rics.utility.misc import tname
 
 _NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
@@ -72,7 +72,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         fmt: FormatType = "{id}:{name}",
         mapper: Mapper = None,
         default_fmt: FormatType = None,
-        default_translations: Union[DefaultTranslations, DefaultTranslationsDict] = None,
+        default_translations: Union[InheritedKeysDict[SourceType, str, Any], MakeDict] = None,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
         self._mapper = mapper or Mapper()
@@ -241,8 +241,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         ids_to_fetch = self._get_ids_to_fetch(
             name_to_source, translatable, data_structure_io or resolve_io(translatable)
         )
-        source_placeholder_translations = self._fetch(ids_to_fetch)
-        return self._to_translation_map(source_placeholder_translations)
+        source_translations = self._fetch(ids_to_fetch)
+        return self._to_translation_map(source_translations)
 
     @property
     def online(self) -> bool:
@@ -281,8 +281,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             :class:`rics.translation.offline.TranslationMap`
         """
         if translatable is None:
-            source_placeholder_translations: SourcePlaceholderTranslations = self._fetch(None)
-            translation_map = self._to_translation_map(source_placeholder_translations)
+            source_translations: SourcePlaceholderTranslations = self._fetch(None)
+            translation_map = self._to_translation_map(source_translations)
         else:
             maybe_none, _ = self._get_updated_tmap(translatable, names, ignore_names=ignore_names, force_fetch=True)
             if maybe_none is None:
@@ -367,9 +367,9 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             else self._fetcher.fetch(ids_to_fetch, placeholders, required)
         )
 
-    def _to_translation_map(self, source_placeholder_translations: SourcePlaceholderTranslations) -> TranslationMap:
+    def _to_translation_map(self, source_translations: SourcePlaceholderTranslations) -> TranslationMap:
         return TranslationMap(
-            source_placeholder_translations,
+            source_translations,
             fmt=self._fmt,
             default=self._default,
             default_fmt=self._default_fmt,
@@ -453,17 +453,17 @@ class _IgnoredNamesPredicate(Generic[NameType]):
 def _handle_default(
     fmt: Format,
     default_fmt: Optional[FormatType],
-    default_translations: Optional[Union[DefaultTranslations, DefaultTranslationsDict]],
-) -> Tuple[Optional[DefaultTranslations], Optional[Format]]:  # pragma: no cover
+    default_translations: Optional[Union[InheritedKeysDict, MakeDict]],
+) -> Tuple[Optional[InheritedKeysDict], Optional[Format]]:  # pragma: no cover
     if default_fmt is None and default_translations is None:
         return None, None
 
-    dt: Optional[DefaultTranslations] = None
+    dt: Optional[InheritedKeysDict] = None
 
-    if isinstance(default_translations, DefaultTranslations):
+    if isinstance(default_translations, InheritedKeysDict):
         dt = default_translations
     elif isinstance(default_translations, dict):
-        dt = DefaultTranslations.from_dict(default_translations)
+        dt = InheritedKeysDict.make(default_translations)
 
     dfmt: Optional[Format]
     if default_fmt is None:
@@ -478,7 +478,7 @@ def _handle_default(
         dfmt = fmt
 
     if dfmt is not None:
-        dt = dt or DefaultTranslations()
+        dt = dt or InheritedKeysDict()
 
     if dfmt is not None:
         extra = set(dfmt.placeholders).difference(fmt.placeholders)

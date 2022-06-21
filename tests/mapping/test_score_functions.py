@@ -29,7 +29,7 @@ def test_equality_with_affix(value, add_table, expected):
         sf.equality_with_affix(
             value,
             columns,
-            table="animal",  # Given by mapper
+            source="animal",  # Given by mapper
             # Configured
             add_table=add_table,
             suffixes=["real"],

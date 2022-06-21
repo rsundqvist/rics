@@ -21,19 +21,27 @@ where = "name"
 ################################################################################
 [fetching.SqlFetcher]
 connection_string = "postgresql+pg8000://postgres@localhost:5001/dvdrental"
-whitelist_tables = ["customer", "film", "staff", "store"]
 
 # ------------------------------------------------------------------------------
 # Placeholder mapping configuration. Binds actual names in sources (such as
-# column names in an SQL table) to wanted names, eg 'animal_id' -> 'id'.
-[fetching.mapping.overrides.customer]
-customer_id = "id"
-first_name = "name"
+# column names in an SQL table) to wanted names, eg id = 'animal_id'.
+[fetching.mapping]
+unmapped_values_action = "ignore"
+runtime_key_updates = true  # Update keys based on runtime keyword arguments.
+
+
+[fetching.mapping.score_function.equality_with_affix]
+add_table = true  # For table 'dvdrental.customer', ID column is 'customer_id'.
+prefixes = ["first"]  # Match 'first_name' -> 'name'.
+
+# The Fetcher passes {"table": table_name} to Mapper.apply as keyword arguments.
+[fetching.mapping.overrides.addess]
+code = "postal_code"
 [fetching.mapping.overrides.film]
-film_id = "id"
-title = "name"
-[fetching.mapping.overrides.staff]
-staff_id = "id"
-first_name = "name"
-[fetching.mapping.overrides.store]
-store_id = "id"
+name = "title"
+
+# TODO: Detta är för sources/tables, inte placeholders
+#[[fetching.mapping.sources.filter_functions]]
+#function = "banned_substring"
+#substrings =["p2007", "_seq"]
+#where="candidate"

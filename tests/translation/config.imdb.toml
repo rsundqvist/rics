@@ -9,8 +9,7 @@ fmt = "{id}:{name}[ (original: {original_name})] from: {from}, to: {to}"
 # -> 'my_database.animals'. Overrides take precedence over scoring logic.
 [translator.mapping]
 unmapped_values_action = "raise"
-
-[translator.mapping.score_function.like_database_table]
+score_function = "like_database_table"  # We don't need any kwargs for this function; no need to use a section
 
 [translator.mapping.overrides]
 firstTitle = "title_basics"
@@ -42,16 +41,19 @@ read_path_format = "tests/translation/imdb/{}.json"
 
 # ------------------------------------------------------------------------------
 # Placeholder mapping configuration. Binds actual names in sources (such as
-# column names in an SQL table) to wanted names, eg 'animal_id' -> 'id'.
+# column names in an SQL table) to wanted names, eg id = 'animal_id'.
+[fetching.mapping]
+unmapped_values_action = "ignore"
+
 [fetching.mapping.overrides.name_basics]
-nconst = "id"
-primaryName = "name"
-birthYear = "from"
-deathYear = "to"
+id = "nconst"
+name = "primaryName"
+from = "birthYear"
+to = "deathYear"
 
 [fetching.mapping.overrides.title_basics]
-tconst = "id"
-primaryTitle = "name"
-originalTitle = "original_name"
-startYear = "from"
-endYear = "to"
+id = "tconst"
+name = "primaryTitle"
+original_name = "originalTitle"
+from = "startYear"
+to = "endYear"

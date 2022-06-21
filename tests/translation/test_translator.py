@@ -159,7 +159,7 @@ def test_explicit_name_ignored(translator):
 def test_complex_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} - {hex} - {positive}"
-    default_translations = {"shared": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
+    default_translations = {"default": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
     t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_translations=default_translations).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
@@ -245,6 +245,10 @@ def test_imdb_discovery(imdb_translator):
 
 def test_copy_with_override(imdb_translator):
     data = {"nconst": [1, 15]}
+
+    assert imdb_translator.translate(data) == {
+        "nconst": ["1:Fred Astaire from: 1899, to: 1987", "15:James Dean from: 1931, to: 1955"]
+    }
 
     copy0 = imdb_translator.copy(fmt="Number {id} is {name}")
     assert copy0.translate(data) == {"nconst": ["Number 1 is Fred Astaire", "Number 15 is James Dean"]}
