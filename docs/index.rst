@@ -34,6 +34,7 @@ My personal little ML engineering library.
 
    rics.utility
    rics.utility.perf
+   rics.utility.collections
    rics.cardinality
    rics.mapping
    rics.translation

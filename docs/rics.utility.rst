@@ -7,18 +7,11 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   rics.utility.collections
    rics.utility.perf
 
 Submodules
 ----------
-
-rics.utility.collections module
--------------------------------
-
-.. automodule:: rics.utility.collections
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 rics.utility.logs module
 ------------------------
