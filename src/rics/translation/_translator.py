@@ -55,11 +55,15 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     def from_config(
         cls,
         path: PathLikeType,
+        extra_fetchers: Iterable[str] = (),
+        /,
         fetcher_factory: _from_config.MakeFetcherType = _from_config.default_fetcher_factory,
         mapper_factory: _from_config.MakeMapperType = _from_config.default_mapper_factory,
     ) -> "Translator":
         """Docstring inherited from delegate method."""
-        return _from_config.translator_from_toml_config(str(path), fetcher_factory, mapper_factory)
+        return _from_config.translator_from_toml_config(
+            str(path), extra_fetchers, fetcher_factory=fetcher_factory, mapper_factory=mapper_factory
+        )
 
     from_config.__doc__ = _from_config.translator_from_toml_config.__doc__
 

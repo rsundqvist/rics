@@ -6,7 +6,7 @@ import toml
 from rics.mapping import Mapper
 from rics.translation import fetching
 from rics.translation.exceptions import ConfigurationError
-from rics.translation.fetching import AbstractFetcher
+from rics.translation.fetching import AbstractFetcher, MultiFetcher
 from rics.translation.fetching.types import Fetcher
 from rics.utility.collections import InheritedKeysDict
 from rics.utility.collections.inherited_keys_dict import DefaultType, MakeDict, SpecificType
@@ -71,6 +71,8 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
 
 def translator_from_toml_config(
     file: str,
+    extra_fetchers: Iterable[str] = (),
+    /,
     fetcher_factory: MakeFetcherType = default_fetcher_factory,
     mapper_factory: MakeMapperType = default_mapper_factory,
 ) -> "Translator":
@@ -78,6 +80,9 @@ def translator_from_toml_config(
 
     Args:
         file: Path to a TOML file, or a pre-parsed dict.
+        extra_fetchers: Path to TOML files defining additional fetchers. Useful for fetching from multiple sources or
+            kinds of sources, for example locally stored files in conjunction with one or more databases. The fetchers
+            are ranked by input order, with the fetcher defined in `file` being given the highest priority (rank 0).
         fetcher_factory: A pre-initialized Fetcher, or a callable taking (name, kwargs) which returns a Fetcher.
         mapper_factory: A pre-initialized Mapper, or a callable taking (kwargs) which returns a Mapper. Used for both
             Translator and Fetcher mapper initialization.
@@ -99,6 +104,17 @@ def translator_from_toml_config(
 
     translator_config = config.pop("translator", {})
     fetcher = _make_fetcher(fetcher_factory, mapper_factory, **config.pop("fetching", {}))
+    if extra_fetchers:
+        fetcher = MultiFetcher(
+            fetcher,
+            *(
+                _make_fetcher(fetcher_factory, mapper_factory, **toml.load(file_fetcher_file)["fetching"])
+                for file_fetcher_file in extra_fetchers
+            ),
+            # Note: Source discovery isn't done until mapping is done in the Translator
+            duplicate_source_discovered_action="warn",
+        )
+
     mapper = _make_mapper("translator", mapper_factory, translator_config)
     default_fmt, default_translations = _make_default_translations(**config.pop("unknown_ids", {}))
 
