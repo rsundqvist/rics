@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The `action_level.ActionLevel` enum type.
+
+### Changed
+
 ## [0.7.0] - 2022-06-21
-Extremely not backwards-compatible.
 
 ### Added
 - The `InheritedKeysDict` class.

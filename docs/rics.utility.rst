@@ -13,6 +13,14 @@ Subpackages
 Submodules
 ----------
 
+rics.utility.action\_level module
+---------------------------------
+
+.. automodule:: rics.utility.action_level
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 rics.utility.logs module
 ------------------------
 
