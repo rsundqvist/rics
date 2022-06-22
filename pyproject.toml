@@ -120,6 +120,9 @@ flake8-logging-format = ["+*",
     "-G004", # Logging statements should not use fstring. - I think this is fine IFF under enabledFor-guard
 ]
 
+[tool.flakeheaven.exceptions."src/rics/translation/fetching/"]
+flake8-docstrings = ["-D102"]  # Docstrings are inherited
+
 [tool.flakeheaven.exceptions."tests/"]
 # Test modules/classes/functions are never "really" public, and I don't want to typehint/document all of them :).
 flake8-bandit = ["-S101", "-S301", "-S403"]

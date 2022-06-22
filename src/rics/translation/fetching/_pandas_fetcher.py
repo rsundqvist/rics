@@ -75,17 +75,17 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
         directory = abs_file.parent
         file_pattern = abs_file.name
 
-        if not directory.is_dir():
+        if not directory.is_dir():  # pragma: no cover
             problem = "is not a directory" if directory.exists() else "does not exist"
             raise IOError(f"Bad path format: {directory} {problem}.")
 
         source_paths = {}
         # Path.glob does not work with absolute directories.
         for file in map(Path, os.listdir(directory)):
-            if file.name.endswith(str(file_pattern)):
+            if file.name.endswith(str(file_pattern)):  # pragma: no cover
                 source_paths[file.name.replace(file_pattern, "")] = directory.joinpath(file)
 
-        if not source_paths:
+        if not source_paths:  # pragma: no cover
             pattern = Path(self._format_source("*")).absolute()
             raise IOError(f"Bad path pattern: '{pattern}' did not match any files.")
 
@@ -93,8 +93,7 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
 
     @property
     def sources(self) -> List[str]:
-        """Source names known to the fetcher, such as ``cities`` or ``languages``."""
-        if not self._sources:
+        if not self._sources:  # pragma: no cover
             if not self._source_paths:
                 self._source_paths = self.find_sources()
             self._sources = list(self._source_paths)
@@ -104,19 +103,6 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
 
     @property
     def placeholders(self) -> Dict[str, List[str]]:
-        """Placeholders for sources managed by the fetcher.
-
-        Note that placeholders (and sources) are returned as they appear as they are known to the fetcher, without
-        remapping to desired names. As an example, for sources ``cities`` and ``languages``, this property may return::
-
-           placeholders = {
-               "cities": ["city_id", "city_name", "location_id"],
-               "languages": ["id", "name"],
-           }
-
-        Returns:
-            A dict ``{source: placeholders_for_source}``.
-        """
         if not self._placeholders:
             self._placeholders = {
                 source: list(self.read(self._source_paths[source]).columns) for source in self.sources
@@ -125,7 +111,6 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
         return self._placeholders
 
     def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
-        """Read data from disk."""
         source_path = self._source_paths[instr.source]
         df = self.read(source_path)
 
@@ -137,7 +122,7 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
 
 
 def _make_format_fn(read_path_format: Optional[Union[str, FormatFn]]) -> FormatFn:
-    if callable(read_path_format):
+    if callable(read_path_format):  # pragma: no cover
         return read_path_format
 
     # At this point read_path_format is a string or None

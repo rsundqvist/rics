@@ -42,7 +42,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         * :class:`rics.mapping.Mapper`, in-source name to :class:`~rics.offline.Format` placeholder name mapping.
     """
 
-    _FETCH_ALL: str = "_FETCH_ALL"
+    _FETCH_ALL: str = "FETCH_ALL"
 
     def __init__(
         self,
@@ -50,7 +50,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         allow_fetch_all: bool = True,
     ) -> None:
         self._mapper = mapper or Mapper(**self.default_mapper_kwargs())
-        if not self._mapper.context_sensitive_overrides:
+        if not self._mapper.context_sensitive_overrides:  # pragma: no cover
             raise ValueError("Mapper must have context-sensitive overrides (type InheritedKeysDict).")
 
         self._mapping_cache: Dict[SourceType, Dict[str, Optional[str]]] = {}
@@ -99,7 +99,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     @property
     def online(self) -> bool:
         """Return connectivity status. If False, no new translations may be fetched."""
-        return True
+        return True  # pragma: no cover
 
     def assert_online(self) -> None:
         """Raise an error if offline.
@@ -107,7 +107,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         Raises:
             OfflineError: If not online.
         """
-        if not self.online:
+        if not self.online:  # pragma: no cover
             raise OfflineError("disconnected")
 
     @property
@@ -136,7 +136,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         """Get placeholders for `source`."""
         placeholders = self.placeholders
         if source not in placeholders:
-            raise exceptions.UnknownSourceError(source)
+            raise exceptions.UnknownSourceError({source}, self.sources)
         return placeholders[source]
 
     @property
@@ -172,10 +172,9 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         """
         unknown_sources = set(t.source for t in ids_to_fetch).difference(self.sources)
         if unknown_sources:
-            sources = self.sources
-            raise exceptions.UnknownSourceError(f"Sources {unknown_sources} not recognized: Known {sources=}.")
+            raise exceptions.UnknownSourceError(unknown_sources, self.sources)
 
-        if not self.allow_fetch_all and any(t.ids is None for t in ids_to_fetch):
+        if not self.allow_fetch_all and any(t.ids is None for t in ids_to_fetch):  # pragma: no cover
             raise exceptions.ForbiddenOperationError(self._FETCH_ALL)
 
         return self._fetch(ids_to_fetch, tuple(placeholders), set(required))
@@ -345,6 +344,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         return ans
 
 
-def _log_implementation_fetch_performance(pht: PlaceholderTranslations, start: float) -> None:
+def _log_implementation_fetch_performance(pht: PlaceholderTranslations, start: float) -> None:  # pragma: no cover
     elapsed = format_perf_counter(start)
     LOGGER.debug(f"Fetched {pht.placeholders} for {len(pht.records)} IDS from '{pht.source}' in {elapsed}.")

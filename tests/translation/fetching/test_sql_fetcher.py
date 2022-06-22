@@ -1,4 +1,3 @@
-import pandas as pd
 import pytest as pytest
 
 from rics.translation.fetching import SqlFetcher

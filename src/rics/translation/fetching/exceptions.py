@@ -1,4 +1,9 @@
 """Translation-specific exceptions."""
+from typing import Iterable
+
+
+class FetcherWarning(RuntimeWarning):
+    """Base class for fetcher warnings."""
 
 
 class FetcherError(RuntimeError):
@@ -31,3 +36,14 @@ class UnknownIdError(FetcherError):
 
 class UnknownSourceError(FetcherError):
     """Caller requested unknown source(s)."""
+
+    def __init__(self, unknown_sources: Iterable, sources: Iterable) -> None:
+        super().__init__(f"Sources {set(unknown_sources)} not recognized: Known {sources=}.")
+
+
+class DuplicateSourceWarning(FetcherWarning):
+    """Duplicate sources detected."""
+
+
+class DuplicateSourceError(FetcherError):
+    """Multiple translations for the same source received."""
