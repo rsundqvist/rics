@@ -2,7 +2,7 @@ import pandas as pd
 import pytest as pytest
 
 from rics.translation.fetching import SqlFetcher
-from rics.translation.fetching._fetch_instruction import FetchInstruction
+from rics.translation.fetching.types import FetchInstruction
 
 
 def test_table_sizes(sql_fetcher):

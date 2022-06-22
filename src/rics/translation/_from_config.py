@@ -6,25 +6,27 @@ import toml
 from rics.mapping import Mapper
 from rics.translation import fetching
 from rics.translation.exceptions import ConfigurationError
+from rics.translation.fetching import AbstractFetcher
+from rics.translation.fetching.types import Fetcher
 from rics.utility.collections import InheritedKeysDict
 from rics.utility.collections.inherited_keys_dict import DefaultType, MakeDict, SpecificType
 
 if TYPE_CHECKING:
     from rics.translation._translator import Translator  # pragma: no cover
 
-FetcherFactory = Callable[[str, Dict[str, Any]], fetching.Fetcher]
-MakeFetcherType = Union[fetching.Fetcher, FetcherFactory]
+FetcherFactory = Callable[[str, Dict[str, Any]], Fetcher]
+MakeFetcherType = Union[Fetcher, FetcherFactory]
 MapperFactory = Callable[[Dict[str, Any], bool], Optional[Mapper]]
 MakeMapperType = Union[Mapper, MapperFactory]
 
 
-def default_fetcher_factory(name: str, kwargs: Dict[str, Any]) -> fetching.Fetcher:
+def default_fetcher_factory(name: str, kwargs: Dict[str, Any]) -> Fetcher:
     """Create a Fetcher from a dict config."""
     fetcher_clazz = getattr(fetching, name, None)
     if fetcher_clazz is None:
         raise ValueError(f"Fetcher class '{name}' not known. Consider using the 'fetcher_factory' argument.")
     fetcher = fetcher_clazz(**kwargs)
-    if not isinstance(fetcher, fetching.Fetcher):
+    if not isinstance(fetcher, Fetcher):
         raise TypeError(fetcher)
     return fetcher
 
@@ -131,14 +133,14 @@ def _make_mapper(parent_section: str, mapper_factory: MakeMapperType, config: Di
     config = config.pop("mapping")
     for_fetcher = parent_section.startswith("fetching")
     if for_fetcher:
-        config = {**fetching.Fetcher.default_mapper_kwargs(), **config}
+        config = {**AbstractFetcher.default_mapper_kwargs(), **config}
 
     _check_forbidden_keys(["candidates", "cardinality"], config, f"{parent_section}.mapping")
     return mapper_factory(config, for_fetcher)
 
 
-def _make_fetcher(factory: MakeFetcherType, mapper_factory: MakeMapperType, **config: Any) -> fetching.Fetcher:
-    if isinstance(factory, fetching.Fetcher):
+def _make_fetcher(factory: MakeFetcherType, mapper_factory: MakeMapperType, **config: Any) -> Fetcher:
+    if isinstance(factory, Fetcher):
         return factory
     elif not config:
         raise ConfigurationError("Section [fetching] is required when no pre-initialized Fetcher is given.")

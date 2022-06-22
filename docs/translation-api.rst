@@ -55,10 +55,10 @@ system, allowing translation data to be shared if stored centrally.
 ==============================
 Fetching: User implementations
 ==============================
-The base class may be inherited by users to customize all aspects of the fetching process. You will find the
+The abstract base class may be inherited by users to customize all aspects of the fetching process. You will find the
 API reference for this class below.
 
-.. autoclass:: rics.translation.fetching.Fetcher
+.. autoclass:: rics.translation.fetching.AbstractFetcher
    :noindex:
 
 ===================

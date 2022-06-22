@@ -1,13 +1,12 @@
 import logging
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from time import perf_counter
-from typing import Any, Collection, Dict, Generic, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
 from rics.mapping import Mapper
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import exceptions
-from rics.translation.fetching._fetch_instruction import FetchInstruction
-from rics.translation.fetching._ids_to_fetch import IdsToFetch
+from rics.translation.fetching.types import Fetcher, FetchInstruction, IdsToFetch
 from rics.translation.offline.types import (
     IdType,
     NameType,
@@ -19,10 +18,10 @@ from rics.translation.offline.types import (
 from rics.utility.collections import InheritedKeysDict, reverse_dict
 from rics.utility.perf import format_perf_counter
 
-LOGGER = logging.getLogger(__package__).getChild("Fetcher")
+LOGGER = logging.getLogger(__package__).getChild("AbstractFetcher")
 
 
-class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
+class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     """Base class for fetching translations from an external source.
 
     Users who wish to define their own fetching logic should inherit this class, but there are implementations for

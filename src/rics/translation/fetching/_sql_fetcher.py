@@ -7,8 +7,8 @@ from urllib.parse import quote_plus
 
 import sqlalchemy
 
-from rics.translation.fetching import Fetcher, exceptions
-from rics.translation.fetching._fetch_instruction import FetchInstruction
+from rics.translation.fetching import AbstractFetcher, exceptions
+from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import IdType, PlaceholderTranslations
 from rics.utility.misc import read_env_or_literal, tname
 from rics.utility.perf import format_perf_counter
@@ -36,10 +36,10 @@ class TableSummary:
 
     def select_columns(self, instr: FetchInstruction) -> List[str]:
         """Return required and optional columns of the table."""
-        return Fetcher.select_placeholders(instr, self.columns.keys())
+        return AbstractFetcher.select_placeholders(instr, self.columns.keys())
 
 
-class SqlFetcher(Fetcher[str, IdType, str]):
+class SqlFetcher(AbstractFetcher[str, IdType, str]):
     """Fetch data from a SQL source. Requires SQLAlchemy.
 
     Args:
@@ -177,24 +177,10 @@ class SqlFetcher(Fetcher[str, IdType, str]):
 
     @property
     def placeholders(self) -> Dict[str, List[str]]:
-        """Placeholders for sources managed by the fetcher.
-
-        Note that placeholders (and sources) are returned as they appear as they are known to the fetcher, without
-        remapping to desired names. As an example, for sources ``cities`` and ``languages``, this property may return::
-
-           placeholders = {
-               "cities": ["city_id", "city_name", "location_id"],
-               "languages": ["id", "name"],
-           }
-
-        Returns:
-            A dict ``{source: placeholders_for_source}``.
-        """
         return {name: list(ts.columns.keys()) for name, ts in self._summaries.items()}
 
     @property
     def allow_fetch_all(self) -> bool:
-        """Flag indicating whether the :meth:`~rics.translation.fetching.Fetcher.fetch_all` operation is permitted."""
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
     def __repr__(self) -> str:
@@ -203,7 +189,6 @@ class SqlFetcher(Fetcher[str, IdType, str]):
         return f"{tname(self)}({engine=}, {tables=})"
 
     def close(self) -> None:
-        """Close database connection."""
         LOGGER.info("Deleting %s", self._engine)
         del self._engine
         self._engine = None

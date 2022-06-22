@@ -1,18 +1,12 @@
 from typing import Dict, List, Union
 
 from rics.mapping import Mapper
-from rics.translation.fetching import Fetcher
-from rics.translation.fetching._fetch_instruction import FetchInstruction
-from rics.translation.offline.types import (
-    IdType,
-    NameType,
-    PlaceholderTranslations,
-    SourcePlaceholderTranslations,
-    SourceType,
-)
+from rics.translation.fetching import AbstractFetcher
+from rics.translation.fetching.types import FetchInstruction
+from rics.translation.offline.types import PlaceholderTranslations, SourcePlaceholderTranslations, SourceType
 
 
-class MemoryFetcher(Fetcher[NameType, IdType, SourceType]):
+class MemoryFetcher(AbstractFetcher):
     """Fetch from memory.
 
     Args:

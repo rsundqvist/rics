@@ -33,7 +33,6 @@ unmapped_values_action = "ignore"
 add_table = true  # For table 'dvdrental.customer', ID column is 'customer_id'.
 prefixes = ["first"]  # Match 'first_name' -> 'name'.
 
-# The Fetcher passes {"table": table_name} to Mapper.apply as keyword arguments.
 [fetching.mapping.overrides.addess]
 code = "postal_code"
 [fetching.mapping.overrides.film]

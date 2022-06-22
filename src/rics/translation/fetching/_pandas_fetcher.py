@@ -5,8 +5,8 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
-from rics.translation.fetching._fetch_instruction import FetchInstruction
-from rics.translation.fetching._fetcher import Fetcher
+from rics.translation.fetching import AbstractFetcher
+from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import IdType, NameType, PlaceholderTranslations
 from rics.utility.misc import PathLikeType, tname
 
@@ -15,8 +15,8 @@ PandasReadFunction = Callable[[PathLikeType, Any, Any], pd.DataFrame]
 FormatFn = Callable[[PathLikeType], str]
 
 
-class PandasFetcher(Fetcher[NameType, IdType, str]):
-    """Fetcher using pandas DataFrames as the data format.
+class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
+    """Fetcher implementation using pandas DataFrames as the data format.
 
     Fetch data from serialized DataFrames. How this is done is determined by the `read_function`. This is typically a
     Pandas function such as :func:`pandas.read_csv` or :func:`pandas.read_pickle`, but any function that accepts a
@@ -129,7 +129,7 @@ class PandasFetcher(Fetcher[NameType, IdType, str]):
         source_path = self._source_paths[instr.source]
         df = self.read(source_path)
 
-        return Fetcher.from_records(instr, tuple(df), list(df.to_records(index=False)))
+        return AbstractFetcher.from_records(instr, tuple(df), list(df.to_records(index=False)))
 
     def __repr__(self) -> str:
         read_path_format = self._format_source("{source}")

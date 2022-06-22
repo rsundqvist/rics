@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- The `Fetcher` interface. The old `Fetcher` class in now called `AbstractFetcher`.
+- The `fetching.types` module.
 - The `action_level.ActionLevel` enum type.
 
 ### Changed

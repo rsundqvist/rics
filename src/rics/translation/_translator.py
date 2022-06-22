@@ -9,8 +9,7 @@ from rics.mapping.exceptions import MappingError
 from rics.translation import _from_config
 from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_io
 from rics.translation.exceptions import OfflineError
-from rics.translation.fetching import Fetcher
-from rics.translation.fetching._ids_to_fetch import IdsToFetch
+from rics.translation.fetching.types import Fetcher, IdsToFetch
 from rics.translation.offline import Format, TranslationMap
 from rics.translation.offline._format import FormatType
 from rics.translation.offline.types import (
@@ -38,7 +37,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     Untranslatable IDs will be None by default if neither `default_fmt` nor `default_translations` is given.
 
     Args:
-        fetcher: A :class:`~rics.translation.fetching.Fetcher` or ready-to-use translations.
+        fetcher: A :class:`~rics.translation.fetching.types.Fetcher` or ready-to-use translations.
         fmt: String :class:`~rics.translation.offline.Format` specification for translations.
         mapper: A :class:`~rics.mapping.Mapper` instance for binding names to sources.
         default_fmt: Alternative format specification to use instead of `fmt` for fallback translation of unknown IDs.
@@ -67,7 +66,10 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     def __init__(
         self,
         fetcher: Union[
-            Fetcher, TranslationMap, SourcePlaceholderTranslations, Dict[SourceType, PlaceholderTranslations.MakeTypes]
+            Fetcher,
+            TranslationMap,
+            SourcePlaceholderTranslations,
+            Dict[SourceType, PlaceholderTranslations.MakeTypes],
         ],
         fmt: FormatType = "{id}:{name}",
         mapper: Mapper = None,
