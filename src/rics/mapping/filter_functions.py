@@ -145,39 +145,6 @@ def banned_substring(
     return set(kept)
 
 
-def shortlisted_substring_in_candidate(name: str, candidates: Iterable[str], substrings: Collection[str]) -> Set[str]:
-    """Shortlist candidates contains substrings that are shared with `name`.
-
-    Args:
-        name: An element to find matches for.
-        candidates: Potential matches for `name`.
-        substrings: Substrings in both `value` and `candidates` that trigger shortlisting.
-
-    Returns:
-        A subset of candidates that contain any of the substrings `substrings`, or all candidates of none of them do.
-    """
-    logger = LOGGER.getChild("shortlisted_substring_in_candidate")
-
-    candidates = set(candidates)
-    substrings = _substrings_in_name(name, substrings)
-
-    if not substrings:
-        return candidates
-
-    kept, triggering_substrings = _match_with_substrings(candidates, substrings)
-
-    if not triggering_substrings:
-        return candidates
-
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(
-            "Shortlisting candidates that share substrings "
-            f"{sorted(triggering_substrings)} with {name=}: {sorted(kept)}."
-        )
-
-    return set(kept)
-
-
 def _parse_where_arg(where: str) -> bool:
     options = ("name", "candidate", "both")
     if where not in options:

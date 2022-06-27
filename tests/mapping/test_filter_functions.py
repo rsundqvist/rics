@@ -97,19 +97,3 @@ def test_require_suffix(name, candidates, where, expected):
 def test_banned_substring(name, where, candidates, expected):
     actual = mf.banned_substring(name, candidates=candidates, substrings=KEYWORDS, where=where)
     assert actual == expected
-
-
-@pytest.mark.parametrize(
-    "name, candidates, expected",
-    [
-        ("torque", set("abc"), set("abc")),
-        ("abc", ["more", "torque"], {"more", "torque"}),
-        ("unforeseeable", ["a", "more", "whee"], {"more", "whee"}),
-        ("store", ["a", "more", "whee"], {"more"}),
-        ("store", ["a", "more", "before"], {"more", "before"}),
-    ],
-    ids=["not-in-candidates", "not-in-name", "both-in-name", "one-in-name", "one-in-two-candidates"],
-)
-def test_shortlisted_substring_in_candidate(name, candidates, expected):
-    actual = mf.shortlisted_substring_in_candidate(name, candidates, substrings=KEYWORDS)
-    assert actual == expected

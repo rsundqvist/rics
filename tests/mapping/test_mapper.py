@@ -82,14 +82,14 @@ def test_bad_filter():
         (
             [
                 # Removes "b" as a candidate
-                ("shortlisted_substring_in_candidate", dict(substrings=["a"]))
+                ("require_prefix", dict(prefix="a", where="candidate"))
             ],
-            {"a": ("a", "ab"), "b": ("b", "ab")},
+            {"a": ("a", "ab"), "b": ("ab",)},
         ),
         (
             [
                 # Removes "b" and "ab" as a candidate
-                ("shortlisted_substring_in_candidate", dict(substrings=["a"])),
+                ("require_prefix", dict(prefix="a", where="candidate")),
                 ("banned_substring", dict(substrings="b", where="name")),
             ],
             {"a": ("a", "ab")},
