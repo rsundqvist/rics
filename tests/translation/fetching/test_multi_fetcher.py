@@ -81,6 +81,6 @@ def test_from_config():
     main_config = "tests/translation/config.imdb.toml"
     extra_fetchers = [
         "tests/translation/config.toml",
-        "tests/translation/dvdrental/config.toml",
+        "tests/translation/config.imdb.toml",
     ]
     Translator.from_config(main_config, extra_fetchers)
