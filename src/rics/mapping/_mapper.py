@@ -1,12 +1,14 @@
 import logging
-from typing import Any, Dict, Generic, Hashable, Iterable, List, Literal, Optional, Set, Tuple, TypeVar, Union
+import warnings
+from typing import Any, Dict, Generic, Hashable, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 
 from rics.cardinality import Cardinality, CardinalityType
 from rics.mapping import exceptions
 from rics.mapping import filter_functions as mf
 from rics.mapping._directional_mapping import DirectionalMapping
-from rics.mapping.exceptions import MappingError
+from rics.mapping.exceptions import MappingError, MappingWarning
 from rics.mapping.score_functions import MappingScoreFunction, from_name
+from rics.utility.action_level import ActionLevel, ActionLevelTypes
 from rics.utility.collections import InheritedKeysDict
 from rics.utility.misc import tname
 
@@ -48,7 +50,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         overrides: Union[
             InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
         ] = None,
-        unmapped_values_action: Literal["raise", "ignore"] = "ignore",
+        unmapped_values_action: ActionLevelTypes = "ignore",
         cardinality: Optional[CardinalityType] = Cardinality.OneToOne,
     ) -> None:
         self.candidates = set(candidates or [])
@@ -59,9 +61,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
             overrides if isinstance(overrides, InheritedKeysDict) else (overrides or {})
         )
         self._context_sensitive_overrides = isinstance(self._overrides, InheritedKeysDict)
-        if unmapped_values_action not in ("raise", "ignore"):
-            raise ValueError(f"{unmapped_values_action=} not in ('raise', 'ignore').")  # pragma: no cover
-        self._unmapped_action = unmapped_values_action
+        self._unmapped_action: ActionLevel = ActionLevel.verify(unmapped_values_action)
         self._cardinality = None if cardinality is None else Cardinality.parse(cardinality, strict=True)
         self._filters: List[Tuple[mf.FilterFunction, Dict[str, Any]]] = [
             ((getattr(mf, func) if isinstance(func, str) else func), kwargs) for func, kwargs in filter_functions
@@ -103,9 +103,13 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
                 left_to_right[value] = matches
             else:
                 msg = f"Could not map {repr(value)} to any of {self.candidates}."
-                LOGGER.debug(msg)
-                if self._unmapped_action == "raise":
+                if self._unmapped_action is ActionLevel.RAISE:
                     raise MappingError(msg)
+                elif self._unmapped_action is ActionLevel.WARN:
+                    LOGGER.warning(msg)
+                    warnings.warn(msg, MappingWarning)
+                else:
+                    LOGGER.debug(msg)
 
         return DirectionalMapping(
             cardinality=self._cardinality,
