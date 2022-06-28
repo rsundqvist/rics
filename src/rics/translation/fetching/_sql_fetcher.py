@@ -215,7 +215,7 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
         return ans
 
     def make_table_summary(
-        self, table: sqlalchemy.sql.schema.Table, id_column: sqlalchemy.sql.schema.Table
+        self, table: sqlalchemy.sql.schema.Table, id_column: sqlalchemy.sql.schema.Column
     ) -> TableSummary:
         """Create a table summary."""
         start = perf_counter()
@@ -228,7 +228,7 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
     def get_approximate_table_size(
         self,
         table: sqlalchemy.sql.schema.Table,
-        id_column: sqlalchemy.sql.schema.Table,
+        id_column: sqlalchemy.sql.schema.Column,
     ) -> int:
         """Return the approximate size of a table.
 
