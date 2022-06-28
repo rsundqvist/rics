@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix unwanted case-sensitivity in `filter_functions.score_with_heuristics`
+- Allow user-defined cardinality in config files
+- Missing `Cardinality.parse(str)` case
+
 ## [0.8.0] - 2022-06-28
 
 ### Added
