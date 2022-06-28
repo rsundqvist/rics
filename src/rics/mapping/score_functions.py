@@ -89,15 +89,11 @@ def score_with_heuristics(
 
     Yields:
         A score for each candidate `c` in `candidates`.
-
-    Raises:
-        ValueError: If `add_table` is set by `table` is not given.
-        ValueError: If none of `prefixes`, `suffixes` and `table` is are given, which is equivalent to regular equality.
     """
     fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
 
     with_heuristics = [value.lower()] + [fstr.format(value=value, source=source).lower() for fstr in fstrings]
-    yield from (max(fn(column, with_heuristics)) for column in candidates)
+    yield from (max(fn(column.lower(), with_heuristics)) for column in candidates)
 
 
 def from_name(name: str) -> MappingScoreFunction:
