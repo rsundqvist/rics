@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Tuple, Union
 
-# CardinalityLiteral = Literal["1:1", "1:N", "N:1", "M:N"]
 CardinalityT = Union[str, "Cardinality"]
 
 
@@ -180,6 +179,6 @@ def _from_generous_string(s: str, strict: bool) -> Cardinality:
         if s == "N:N":
             s = "M:N"
     for c in Cardinality:
-        if c.value == s:
+        if s == c.value or s == c.name:
             return c
     raise ValueError(_parsing_failure_message(s, strict))

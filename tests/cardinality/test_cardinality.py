@@ -16,10 +16,14 @@ def test_count():
         (Cardinality.ManyToOne, Cardinality.ManyToOne),
         (Cardinality.ManyToMany, Cardinality.ManyToMany),
         # Correct values
-        ("1:1", Cardinality.OneToOne),
-        ("1:N", Cardinality.OneToMany),
-        ("N:1", Cardinality.ManyToOne),
-        ("M:N", Cardinality.ManyToMany),
+        (Cardinality.OneToOne.value, Cardinality.OneToOne),
+        (Cardinality.OneToMany.value, Cardinality.OneToMany),
+        (Cardinality.ManyToOne.value, Cardinality.ManyToOne),
+        (Cardinality.ManyToMany.value, Cardinality.ManyToMany),
+        (Cardinality.OneToOne.name, Cardinality.OneToOne),
+        (Cardinality.OneToMany.name, Cardinality.OneToMany),
+        (Cardinality.ManyToOne.name, Cardinality.ManyToOne),
+        (Cardinality.ManyToMany.name, Cardinality.ManyToMany),
         # Generous
         ("1-1", ValueError),
         ("1:n", ValueError),
