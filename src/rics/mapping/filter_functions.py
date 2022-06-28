@@ -54,7 +54,7 @@ def require_regex_match(
     """
     where = _parse_where_args(where)
 
-    if "source" in where and not source:
+    if "source" in where and not source:  # pragma: no cover
         raise ValueError(f"Source not given but 'source' was found in {where=}.")
 
     pattern = re.compile(regex, flags=re.IGNORECASE) if isinstance(regex, str) else regex
@@ -149,20 +149,3 @@ def _parse_where_args(args: WhereArg) -> Tuple[WhereOptions, ...]:
         if where not in WHERE_OPTIONS:
             raise ValueError(f"Bad where-argument {repr(args)}; {where=} not in {WHERE_OPTIONS}.")
     return args_tuple
-
-
-def _match_with_substrings(candidates: Iterable[str], substrings: Collection[str]) -> Tuple[List[str], List[str]]:
-    triggering_candidates = []
-    triggering_substrings = []
-
-    for cand in candidates:
-        for subs in substrings:
-            if subs in cand:
-                triggering_substrings.append(subs)
-                triggering_candidates.append(cand)
-
-    return triggering_candidates, triggering_substrings
-
-
-def _substrings_in_name(name: str, substrings: Collection[str]) -> Set[str]:
-    return set(filter(name.__contains__, substrings))
