@@ -61,14 +61,12 @@ def like_database_table(
     fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
 
     def apply(s: str) -> str:
-        s = s.replace("_", "").replace(".", "")
-        return s if s.endswith("s") else s + "s"
+        s = s.lower().replace("_", "").replace(".", "")
+        s = s[: -len("id")] if s.endswith("id") else s
+        s = s if s.endswith("s") else s + "s"
+        return s
 
-    if name.endswith("id"):
-        name = name[: -len("id")]
-    name = apply(name)
-
-    yield from fn(name, map(apply, candidates))
+    yield from fn(apply(name), map(apply, candidates))
 
 
 def score_with_heuristics(
