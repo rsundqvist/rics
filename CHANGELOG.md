@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Support for fetching using multiple fetchers
+- Support for fetching using multiple fetchers using the `MultiFetcher` class (#44)
 - The `fetching.types` module.
 - The `Fetcher` interface. The old `Fetcher` class in now called `AbstractFetcher`.
 - The `action_level.ActionLevel` enum type.
