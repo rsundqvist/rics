@@ -1,5 +1,6 @@
 import pandas as pd
 import pytest
+from numpy import inf
 from numpy.random import choice, randint
 
 from rics.mapping import score_functions as sf
@@ -40,6 +41,28 @@ def test_score_with_heuristics(value, add_source, expected):
     )
     actual_above_05 = [v > 0.5 for v in actual]
     assert actual_above_05 == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("cand0", [1.0, 0.8, 0.8]),
+        ("cand4", [0.8, 0.8, 0.8]),
+        ("whatever-kW1-dsa", [inf, -inf, -inf]),
+        ("whatever-KW2-dsa", [-inf, -inf, inf]),
+        ("whatever-kw2kw1-dsa", [inf, -inf, -inf]),
+    ],
+    ids=["no-cs-1", "no-cs-2", "kw1-cs", "kw2-cs", "kw1/kw2-cs"],
+)
+def test_score_with_heuristics_short_circuiting(value, expected):
+    kwargs = {
+        "cand0": [".*kw1.*"],
+        "cand2": [".*kw2.*"],
+    }
+    candidates = ["cand0", "cand1", "cand2"]
+
+    actual = list(sf.score_with_heuristics(value, candidates, **kwargs))
+    assert actual == expected
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,11 @@
 """Functions which return a likeness score."""
+import logging
+import re
 from typing import Callable, Collection, Hashable, Iterable, List, TypeVar, Union
+
+from rics.mapping.filter_functions import require_regex_match
+
+LOGGER = logging.getLogger(__name__)
 
 H = TypeVar("H", bound=Hashable)
 MappingScoreFunction = Callable[[H, Iterable[H]], Iterable[float]]
@@ -75,6 +81,7 @@ def score_with_heuristics(
     fstrings: Collection[str] = (),
     score_function: Union[str, MappingScoreFunction] = modified_hamming,
     source: str = None,
+    **short_circuit_regex: Iterable[Union[str, re.Pattern]],
 ) -> Iterable[float]:
     """Return the best score per candidate when applying various heuristics before passing to `score_function`.
 
@@ -84,11 +91,24 @@ def score_with_heuristics(
         fstrings: Fstrings which take `value` and/or `source` placeholders.
         score_function: The actual scoring function to use after heuristics have been applied.
         source: A source (table) name.
+        **short_circuit_regex: Regex mappings ``{candidate: regex}`` which, when matching `value`, forces an instant
+            mapping of the given value to the candidate with infinite score. Applies before all other heuristics.
 
     Yields:
         A score for each candidate `c` in `candidates`.
     """
     fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
+
+    candidates = list(candidates)
+    for candidate, regexes in filter(lambda t: t[0] in candidates, short_circuit_regex.items()):
+        for regex in regexes:
+            if require_regex_match(value, ["this-value-does-not-matter"], regex, where="name"):
+                LOGGER.getChild("score_with_heuristics").debug(
+                    f"Short circuit {value=} -> {candidate=} triggered by {regex=}."
+                )
+                inf = float("inf")
+                yield from (inf if c == candidate else -inf for c in candidates)
+                return
 
     with_heuristics = [value.lower()] + [fstr.format(value=value, source=source).lower() for fstr in fstrings]
     yield from (max(fn(column.lower(), with_heuristics)) for column in candidates)
