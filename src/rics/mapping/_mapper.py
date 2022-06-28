@@ -51,7 +51,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
             InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
         ] = None,
         unmapped_values_action: ActionLevelTypes = "ignore",
-        cardinality: Optional[CardinalityType] = Cardinality.OneToOne,
+        cardinality: Optional[CardinalityType] = Cardinality.ManyToOne,
     ) -> None:
         self.candidates = set(candidates or [])
         self._score = score_function if callable(score_function) else from_name(score_function)
@@ -95,15 +95,19 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         values = set(values)
         left_to_right = self._create_l2r(values, context)
 
+        extra = f"in {context=} " if context else ""
+
         for value in values.difference(left_to_right):
+            LOGGER.debug(f"Begin mapping {value=} {extra}to candidates {self.candidates}")
             matches = self._map_value(value, kwargs)
             if matches is None:
                 continue  # All candidates removed by filtering
             if matches:
                 left_to_right[value] = matches
-            else:
-                msg = f"Could not map {repr(value)} to any of {self.candidates}."
+            else:  # pragma: no cover
+                msg = f"Could not map {repr(value)} {extra}to any of {self.candidates}."
                 if self._unmapped_action is ActionLevel.RAISE:
+                    LOGGER.error(msg)
                     raise MappingError(msg)
                 elif self._unmapped_action is ActionLevel.WARN:
                     LOGGER.warning(msg)
@@ -166,7 +170,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
                 if LOGGER.isEnabledFor(logging.DEBUG):
                     extra = "" if self._cardinality == Cardinality.OneToOne else " Looking for more matches.."
                     LOGGER.debug(
-                        f"Mapped: {repr(value)} -> {repr(candidate)}, {score=:2.3f} > {self._min_score}.{extra}"
+                        f"Mapped: {repr(value)} -> {repr(candidate)}, {score=:2.3f} >= {self._min_score}.{extra}"
                     )
 
                 if self._cardinality == Cardinality.OneToOne:

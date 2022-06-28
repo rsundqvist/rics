@@ -35,7 +35,7 @@ def require_prefix(name: str, candidates: Iterable[str], prefix: str, where: Whe
         name: A name.
         candidates: Potential matches for `name`.
         prefix: The prefix to look for.
-        where: One of 'name', 'candidate' or 'both'. See :const:`WhereOptions`.
+        where: One of ('name', 'candidate', 'both'). See :const:`WhereOptions`.
 
     Returns:
         Candidates which pass the test.
@@ -69,7 +69,7 @@ def require_suffix(name: str, candidates: Iterable[str], suffix: str, where: Whe
         name: A name.
         candidates: Potential matches for `name`.
         suffix: The suffix to look for.
-        where: One of 'name', 'candidate' or 'both'. See :const:`WhereOptions`.
+        where: One of ('name', 'candidate', 'both'). See :const:`WhereOptions`.
 
     Returns:
         Candidates which pass the test.
@@ -108,7 +108,7 @@ def banned_substring(
         name: An element to find matches for.
         candidates: Potential matches for `name` (not used).
         substrings: Substrings which may not be present in `name`.
-        where: One of 'name', 'candidate' or 'both'. See :const:`WhereOptions`.
+        where: One of ('name', 'candidate', 'both'). See :const:`WhereOptions`.
 
     Returns:
         An empty collection if `name` contains any of the substrings in

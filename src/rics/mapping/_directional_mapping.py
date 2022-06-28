@@ -95,8 +95,9 @@ class DirectionalMapping(Generic[HL, HR]):
         Raises:
             CardinalityError: If cardinality is not :class:`~rics.cardinality.Cardinality.OneToOne`.
         """
-        if self._cardinality != Cardinality.OneToOne:
-            raise CardinalityError(f"Must have {Cardinality.OneToOne}.", self._cardinality)  # pragma: no cover
+        valid = {Cardinality.OneToOne, Cardinality.ManyToOne}
+        if self._cardinality not in valid:
+            raise CardinalityError(f"Must have one of {valid} to flatten.", self._cardinality)  # pragma: no cover
 
         return {left: right[0] for left, right in self._left_to_right.items()}
 
@@ -222,7 +223,10 @@ class DirectionalMapping(Generic[HL, HR]):
             expected = Cardinality.parse(expected)
 
         if verify and actual > expected:
-            raise CardinalityError(f"Cannot cast explicit given type {expected} to actual type {actual}.", actual)
+            raise CardinalityError(
+                f"Cannot cast explicit given type {expected} to actual type {actual} " f"for ({left=} | {right=})",
+                actual,
+            )
 
         return expected
 

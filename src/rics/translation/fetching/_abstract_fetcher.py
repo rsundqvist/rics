@@ -260,7 +260,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     @classmethod
     def default_mapper_kwargs(cls) -> Dict[str, Any]:
         """Create a default Mapper for fetcher implementations."""
-        return dict(score_function="equality_with_affix", overrides=InheritedKeysDict())
+        return dict(score_function="score_with_heuristics", overrides=InheritedKeysDict())
 
     def _fetch(
         self,

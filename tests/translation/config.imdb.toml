@@ -10,6 +10,7 @@ fmt = "{id}:{name}[ (original: {original_name})] from: {from}, to: {to}"
 [translator.mapping]
 unmapped_values_action = "raise"
 score_function = "like_database_table"  # We don't need any kwargs for this function; no need to use a section
+min_score = 3.0
 
 [translator.mapping.overrides]
 firstTitle = "title_basics"
@@ -44,6 +45,7 @@ read_path_format = "tests/translation/imdb/{}.json"
 # column names in an SQL table) to wanted names, eg id = 'animal_id'.
 [fetching.mapping]
 unmapped_values_action = "ignore"
+min_score = 5.0
 
 [fetching.mapping.overrides.name_basics]
 id = "nconst"

@@ -28,10 +28,12 @@ connection_string = "postgresql+pg8000://postgres@localhost:5001/dvdrental"
 [fetching.mapping]
 unmapped_values_action = "ignore"
 
+[fetching.mapping.score_function.score_with_heuristics]
+fstrings = [
+    "first_{value}",
+    "{source}_{value}"
+]
 
-[fetching.mapping.score_function.equality_with_affix]
-add_table = true  # For table 'dvdrental.customer', ID column is 'customer_id'.
-prefixes = ["first"]  # Match 'first_name' -> 'name'.
 
 [fetching.mapping.overrides.addess]
 code = "postal_code"

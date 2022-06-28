@@ -78,13 +78,17 @@ watchdog = { version = "^2.1.6", extras = ["watchmedo"] }
 [tool.poetry.group.dev-extras]
 optional = true
 [tool.poetry.group.dev-extras.dependencies]
+# [tool.poetry.group.translation.dependencies]
+sqlalchemy = ">=1.0.0"
+toml = ">=0.10.2"
+# [tool.poetry.group.plotting.dependencies]
+matplotlib = "*"
+seaborn = "*"
+# Actual extras -- the above should be inherited when possible
 jupyterlab = "^3"
 ipywidgets = "*"
 jupyterlab_execute_time = "*"
-seaborn = "*"
-tqdm = "*"
-
-psycopg2-binary = "^2.9.3" # Postgre
+pg8000 = ">=1.29.1"  # Pure-python psql driver
 
 [tool.flakeheaven]
 format = "grouped"

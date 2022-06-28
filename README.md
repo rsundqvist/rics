@@ -36,8 +36,7 @@ My personal little ML engineering library.
 This project uses groups for extras dependencies, which is currently a **_PRERELEASE_** feature (slated for `1.2`). Assuming
 poetry was installed the recommended way (see below), this can be done using:
 ```bash
-curl -sSL https://install.python-poetry.org/ | python -
-poetry self update --preview 1.2.0b2
+curl -sSL https://install.python-poetry.org/ | python - --version="1.2.0b2"
 ```
 
 ### Setting up for local development

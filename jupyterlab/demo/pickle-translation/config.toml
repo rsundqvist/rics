@@ -42,14 +42,14 @@ read_path_format= "../../data-cache/clean_and_fix_ids/{}.tsv.pkl"
 # Placeholder mapping configuration. Binds actual names in sources (such as
 # column names in an SQL table) to wanted names, eg id = 'animal_id'.
 [fetching.mapping.overrides.'name.basics']
-nconst = "id"
-primaryName = "name"
-birthYear = "from"
-deathYear = "to"
+id = "nconst"
+name = "primaryName"
+from = "birthYear"
+to = "deathYear"
 
 [fetching.mapping.overrides.'title.basics']
-tconst = "id"
-primaryTitle = "name"
-originalTitle = "original_name"
-startYear = "from"
-endYear = "to"
+id = "tconst"
+name = "primaryTitle"
+original_name = "originalTitle"
+from = "startYear"
+to = "endYear"

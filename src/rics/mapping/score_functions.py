@@ -18,17 +18,16 @@ Yields:
 
 
 def modified_hamming(name: str, candidates: Iterable[str]) -> Iterable[float]:
-    """Compute hamming distance modified by candidate length, in reverse."""
-    rev = tuple(reversed(name))
+    """Compute hamming distance modified by length ratio, from the back."""
 
     def _apply(candidate: str) -> float:
-        same = 0
-        count = 0
-        for a, b in zip(reversed(candidate), rev):
-            same += int(a == b)  # Works find without explicit int-cast, but black removes parentheses changing the ast
-            count += 1
+        sz = min(len(candidate), len(name))
+        same = sum([name[i] == candidate[i] for i in range(-sz, 0)])
 
-        return count * same / len(candidate)
+        ratio = 1 / (1 + abs(len(candidate) - len(name)))
+        normalized_hamming = same / sz
+
+        return ratio * normalized_hamming
 
     yield from map(_apply, candidates)
 
@@ -43,7 +42,7 @@ def equality(value: H, candidates: Iterable[H]) -> Iterable[float]:
     Yields:
         A score for each candidate `c` in `candidates`.
     """
-    yield from map(float, [value == c for c in candidates])
+    yield from map(float, (value == c for c in candidates))
 
 
 def like_database_table(
@@ -62,40 +61,31 @@ def like_database_table(
     fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
 
     def apply(s: str) -> str:
-        s = s.lower().replace("_", "").replace(".", "")
+        s = s.replace("_", "").replace(".", "")
         return s if s.endswith("s") else s + "s"
 
     if name.endswith("id"):
-        name = name[:-2]
-
+        name = name[: -len("id")]
     name = apply(name)
 
     yield from fn(name, map(apply, candidates))
 
 
-def equality_with_affix(
+def score_with_heuristics(
     value: str,  # placeholder
     candidates: Iterable[str],  # columns
-    add_table: bool = False,
-    join_with: str = "_",
-    prefixes: Collection[str] = (),
-    suffixes: Collection[str] = (),
-    source: str = "",
+    fstrings: Collection[str] = (),
+    score_function: Union[str, MappingScoreFunction] = modified_hamming,
+    source: str = None,
 ) -> Iterable[float]:
-    """Return 1.0 if ``value == candidate`` or when combined given prefixes/affixes. Zero otherwise.
-
-    This function is intended for column -> placeholder matching in database tables. Will not apply prefixes and
-    suffixes at the same time. Exact matches are always preferred, and if one is found no other candidates will be given
-    a non-zero score.
+    """Return the best score per candidate when applying various heuristics before passing to `score_function`.
 
     Args:
         value: A placeholder to map to a column (=candidate).
         candidates: Potential matches for `value`.
-        add_table: If True, add the table name (contain in the `source` argument) to both prefixes and suffixes.
-        join_with: A string which joins `value` with affixes.
-        prefixes: Affixed before `value`.
-        suffixes: Affixed after `value`.
-        source: A table name. If given, it will be added to both `prefixes` and `suffixes`.
+        fstrings: Fstrings which take `value` and/or `source` placeholders.
+        score_function: The actual scoring function to use after heuristics have been applied.
+        source: A source (table) name.
 
     Yields:
         A score for each candidate `c` in `candidates`.
@@ -104,28 +94,10 @@ def equality_with_affix(
         ValueError: If `add_table` is set by `table` is not given.
         ValueError: If none of `prefixes`, `suffixes` and `table` is are given, which is equivalent to regular equality.
     """
-    if add_table:
-        if not source:  # pragma: no cover
-            raise ValueError(f"Got {add_table=} but no table was given.")
-        prefixes = [source] + list(prefixes)
-        suffixes = [source] + list(suffixes)
+    fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
 
-    if value in candidates:
-        for column in candidates:
-            yield 1.0 if column == value else 0.0
-        return
-
-    for column in candidates:
-        if prefixes and _match_with_affixes(prefixes, column, f"{{affix}}{join_with}{value}"):
-            yield 1.0
-        elif suffixes and _match_with_affixes(suffixes, column, f"{value}{join_with}{{affix}}"):
-            yield 1.0
-        else:
-            yield 0.0
-
-
-def _match_with_affixes(affixes: Collection[str], column: str, matcher: str) -> bool:
-    return any((column == matcher.format(affix=affix)) for affix in affixes)
+    with_heuristics = [value.lower()] + [fstr.format(value=value, source=source).lower() for fstr in fstrings]
+    yield from (max(fn(column, with_heuristics)) for column in candidates)
 
 
 def from_name(name: str) -> MappingScoreFunction:
@@ -141,5 +113,5 @@ _all_functions: List[MappingScoreFunction] = [
     modified_hamming,
     like_database_table,
     equality,
-    equality_with_affix,
+    score_with_heuristics,
 ]

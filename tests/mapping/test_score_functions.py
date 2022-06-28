@@ -14,29 +14,32 @@ def test_from_bad_name():
 
 
 @pytest.mark.parametrize(
-    "value, add_table, expected",
+    "value, add_source, expected",
     [
-        ("id", False, [0, 0, 0, 0, 0]),
-        ("id", True, [1, 0, 0, 0, 0]),
-        ("name", False, [0, 0, 0, 1, 1]),
-        ("exact", True, [0, 1, 0, 0, 0]),
+        ("id", False, [False, False, False, False, False]),
+        ("id", True, [True, False, False, False, False]),
+        ("name", False, [False, False, False, True, True]),
+        ("exact", True, [False, True, False, False, False]),
     ],
 )
-def test_equality_with_affix(value, add_table, expected):
+def test_score_with_heuristics(value, add_source, expected):
     columns = ["animal_id", "exact", "exact_animal", "cute_name", "name_real"]
 
+    fstrings = ["{value}_real", "cute_{value}"]
+    if add_source:
+        fstrings.append("{source}_{value}")
+
     actual = list(
-        sf.equality_with_affix(
+        sf.score_with_heuristics(
             value,
             columns,
             source="animal",  # Given by mapper
             # Configured
-            add_table=add_table,
-            suffixes=["real"],
-            prefixes=["cute"],
+            fstrings=fstrings,
         )
     )
-    assert actual == expected
+    actual_above_05 = [v > 0.5 for v in actual]
+    assert actual_above_05 == expected
 
 
 @pytest.mark.parametrize(
@@ -64,7 +67,7 @@ def test_stable(func, dtype):
     candidates = make(12, dtype)
     values = make(6, dtype)
 
-    kwargs = {"prefixes": ["un"]} if func == sf.equality_with_affix else {}
+    kwargs = {"fstrings": ["un_{value}"]} if func == sf.score_with_heuristics else {}
 
     for v in values:
         actual_scores = list(func(v, candidates.copy(), **kwargs))
