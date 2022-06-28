@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.1] - 2022-06-28
+
 ### Fixed
 - Fix unwanted case-sensitivity in `filter_functions.score_with_heuristics`
 - Allow user-defined cardinality in config files
@@ -113,7 +115,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/rsundqvist/rics/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/rsundqvist/rics/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/rsundqvist/rics/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/rsundqvist/rics/compare/v0.5.0...v0.6.0
