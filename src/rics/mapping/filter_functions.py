@@ -90,7 +90,7 @@ def require_regex_match(
         lst.append(cand)
 
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Filtering with {pattern=} kept {sorted(kept)} and rejected {rejected}.")
+        logger.debug(f"Filtering with {keep_if_match=} and {pattern=}; kept {sorted(kept)}, rejected {rejected}.")
 
     return set(kept)
 
