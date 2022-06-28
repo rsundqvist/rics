@@ -12,8 +12,8 @@ unmapped_values_action = "raise"
 score_function = "like_database_table"  # We don't need any kwargs for this function; no need to use a section
 
 [[translator.mapping.filter_functions]]
-function = "require_suffix"
-suffix = "_id"
+function = "require_regex_match"
+regex = ".*_id$"
 where = "name"
 
 ################################################################################
@@ -27,6 +27,11 @@ connection_string = "postgresql+pg8000://postgres@localhost:5001/dvdrental"
 # column names in an SQL table) to wanted names, eg id = 'animal_id'.
 [fetching.mapping]
 unmapped_values_action = "ignore"
+
+[[fetching.mapping.filter_functions]]
+function = "banned_substring"
+substrings = ["p2007"]
+where = "source"
 
 [fetching.mapping.score_function.score_with_heuristics]
 fstrings = [

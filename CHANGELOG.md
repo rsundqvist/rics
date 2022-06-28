@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `action_level.ActionLevel` enum type.
 
 ### Changed
-- Refactor score and functions (`mapping`-module) to increase flexibility and cover more use cases (#58).
+- Refactor score and filter functions (`mapping`-module) to increase flexibility and cover more use cases (#57, #58).
 
 ## [0.7.0] - 2022-06-21
 

@@ -1,17 +1,14 @@
 """Functions which return filter candidates."""
 import logging
-from typing import Callable, Collection, Hashable, Iterable, List, Literal, Set, Tuple, TypeVar
+import re
+from typing import Callable, Collection, Hashable, Iterable, List, Literal, Set, Tuple, TypeVar, Union
 
 LOGGER = logging.getLogger(__name__)
 
-WhereOptions = Literal["name", "candidate", "both"]
-"""
-Determines how matching is done by various filter functions.
-
-    * `'name'`: Require only that `name` matches, ignoring the candidates.
-    * `'candidate'`: Require only that candidates match, ignoring the name.
-    * `'both'`: Require that both `name` and candidates match.
-"""
+WhereOptions = Literal["name", "source", "candidate"]
+WHERE_OPTIONS = ("name", "candidate", "source")
+WhereArg = Union[WhereOptions, Iterable[WhereOptions]]
+"""Determines how where matches must be found during filtering operations."""
 H = TypeVar("H", bound=Hashable)
 FilterFunction = Callable[[H, Set[H]], Set[H]]
 """Signature for a filter function.
@@ -28,129 +25,130 @@ Returns:
 """
 
 
-def require_prefix(name: str, candidates: Iterable[str], prefix: str, where: WhereOptions) -> Set[str]:
-    """Require a prefix in `name` and/or `candidates`.
+def require_regex_match(
+    name: str,
+    candidates: Iterable[str],
+    regex: Union[str, re.Pattern],
+    where: WhereArg,
+    source: str = "",
+    keep_if_match: bool = True,
+) -> Set[str]:
+    """Require a regex match in `name`, `source`, and/or `candidates`.
 
     Args:
         name: A name.
         candidates: Potential matches for `name`.
-        prefix: The prefix to look for.
-        where: One of ('name', 'candidate', 'both'). See :const:`WhereOptions`.
+        regex: A regex pattern to pass to :py:func:`re.compile`.
+        where: Which of ('name', 'candidate', 'source') to match in.
+        source: A source (table) name. Ignored if empty.
+        keep_if_match: If False, require that `regex` does _not_ match to keep candidates.
 
     Returns:
-        Candidates which pass the test.
+        Approved candidates.
+
+    Raises:
+        ValueError: If `where` contains `'source'` when `source` is not given.
+
+    See Also:
+        The :meth:`banned_substring` method.
     """
-    logger = LOGGER.getChild("require_prefix")
+    where = _parse_where_args(where)
 
-    require_name = _parse_where_arg(where)
-    if require_name and not name.startswith(prefix):
-        logger.debug(f"Refuse matching of {name=}: Missing required {prefix=}.")
-        return set()
+    if "source" in where and not source:
+        raise ValueError(f"Source not given but 'source' was found in {where=}.")
 
-    if where == "name":
-        return set(candidates)
+    pattern = re.compile(regex, flags=re.IGNORECASE) if isinstance(regex, str) else regex
+    logger = LOGGER.getChild("require_regex_match")
+    candidates = set(candidates)
+
+    # Short-circuit full refusal
+    if "name" in where:
+        match = pattern.match(name)
+        if keep_if_match and not match:
+            logger.debug(f"Refuse matching of {name=}: Does not match {pattern=}.")
+            return set()
+        if match and not keep_if_match:
+            logger.debug(f"Refuse matching of {name=}: Matches {pattern=}.")
+            return set()
+
+    if "source" in where:
+        match = pattern.match(source)
+        if keep_if_match and not match:
+            logger.debug(f"Refuse matching of {source=}: Does not match {pattern=}.")
+            return set()
+        if match and not keep_if_match:
+            logger.debug(f"Refuse matching of {source=}: Matches {pattern=}.")
+            return set()
+
+    if "candidate" not in where:
+        return candidates
 
     kept: List[str] = []
     rejected: List[str] = []
     for cand in candidates:
-        lst = kept if cand.startswith(prefix) else rejected
+        lst = kept if (bool(pattern.match(cand)) is keep_if_match) else rejected
         lst.append(cand)
 
     if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Filtering with {prefix=} kept {sorted(kept)} and rejected {rejected}.")
-
-    return set(kept)
-
-
-def require_suffix(name: str, candidates: Iterable[str], suffix: str, where: WhereOptions) -> Set[str]:
-    """Require a suffix in `name` and/or `candidates`.
-
-    Args:
-        name: A name.
-        candidates: Potential matches for `name`.
-        suffix: The suffix to look for.
-        where: One of ('name', 'candidate', 'both'). See :const:`WhereOptions`.
-
-    Returns:
-        Candidates which pass the test.
-    """
-    logger = LOGGER.getChild("require_suffix")
-
-    require_name = _parse_where_arg(where)
-
-    if require_name and not name.endswith(suffix):
-        logger.debug(f"Refuse matching of {name=}: Missing required {suffix=}.")
-        return set()
-
-    if where == "name":
-        return set(candidates)
-
-    kept: List[str] = []
-    rejected: List[str] = []
-    for cand in candidates:
-        lst = kept if cand.endswith(suffix) else rejected
-        lst.append(cand)
-
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Filtering with {suffix=} kept {sorted(kept)} and rejected {rejected}.")
+        logger.debug(f"Filtering with {pattern=} kept {sorted(kept)} and rejected {rejected}.")
 
     return set(kept)
 
 
 def banned_substring(
-    name: str, candidates: Iterable[str], substrings: Collection[str], where: WhereOptions
+    name: str,
+    candidates: Iterable[str],
+    substrings: Collection[str],
+    where: WhereArg,
+    source: str = "",
 ) -> Set[str]:
     """Prevent mapping if banned substrings are found.
 
-    Matching on `name` halts all mapping, whereas matching on a candidate excludes only those candidates that match.
+    Matching on `name` or `source` halts all mapping. Matching candidates excludes only those candidates.
 
     Args:
         name: An element to find matches for.
         candidates: Potential matches for `name` (not used).
         substrings: Substrings which may not be present in `name`.
-        where: One of ('name', 'candidate', 'both'). See :const:`WhereOptions`.
+        where: Which of ('name', 'candidate', 'source') to match in. Empty=all.
+        source: A source (table) name.
 
     Returns:
-        An empty collection if `name` contains any of the substrings in
-        `substrings`, otherwise all candidates in `candidates`.
+        Approved candidates.
+
+    See Also:
+        The :meth:`require_regex_match` method, which performs the actual work.
     """
-    logger = LOGGER.getChild("banned_substring")
+    where = _parse_where_args(where)
 
-    require_name = _parse_where_arg(where)
+    remaining = set(candidates)
 
-    substrings_in_name = _substrings_in_name(name, substrings)
-    if substrings_in_name and require_name:
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Refuse matching of {name=}, contains banned substrings: {sorted(substrings_in_name)}.")
-        return set()
+    for subs in substrings:
+        if not remaining:
+            break
 
-    candidates = set(candidates)
-
-    if where == "name":
-        return set(candidates)
-
-    triggering_candidates, triggering_substrings = _match_with_substrings(candidates, substrings)
-
-    if not triggering_substrings:
-        return candidates
-
-    kept = candidates.difference(triggering_candidates)
-
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(
-            f"Removed candidates for {name=} that contain banned substrings "
-            f"{triggering_substrings}: {sorted(triggering_substrings)}."
+        matches = require_regex_match(
+            name,
+            remaining,
+            regex=re.compile(f".*{subs}.*", flags=re.IGNORECASE),
+            where=where,
+            source=source,
+            keep_if_match=False,
         )
+        remaining = remaining.intersection(matches)
 
-    return set(kept)
+    return remaining
 
 
-def _parse_where_arg(where: str) -> bool:
-    options = ("name", "candidate", "both")
-    if where not in options:
-        raise ValueError(f"Bad {where=} argument: Not in {options=}.")
+def _parse_where_args(args: WhereArg) -> Tuple[WhereOptions, ...]:
+    if not args:
+        raise ValueError(f"At least one of {WHERE_OPTIONS} must be given.")
 
-    return where != "candidate"
+    args_tuple = tuple((args,) if isinstance(args, str) else tuple(args))
+    for where in args_tuple:
+        if where not in WHERE_OPTIONS:
+            raise ValueError(f"Bad where-argument {repr(args)}; {where=} not in {WHERE_OPTIONS}.")
+    return args_tuple
 
 
 def _match_with_substrings(candidates: Iterable[str], substrings: Collection[str]) -> Tuple[List[str], List[str]]:
