@@ -160,6 +160,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
                 return None
 
         ans = []
+        logger = LOGGER.getChild("reject")
         for score, candidate in sorted_candidates:
             if candidate not in filtered_candidates:
                 score = -float("inf")
@@ -175,9 +176,9 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
 
                 if self._cardinality == Cardinality.OneToOne:
                     break
-            elif LOGGER.isEnabledFor(logging.DEBUG):
+            elif logger.isEnabledFor(logging.DEBUG):
                 extra = " (removed by filters)" if score == -float("inf") else ""
-                LOGGER.debug(f"Rejected: {repr(value)} -> {repr(candidate)}, {score=:.3f} < {self._min_score}{extra}.")
+                logger.debug(f"Rejected: {repr(value)} -> {repr(candidate)}, {score=:.3f} < {self._min_score}{extra}.")
 
         return tuple(ans)
 
