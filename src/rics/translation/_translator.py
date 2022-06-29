@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError
-from rics.translation import _from_config
+from rics.translation import factory
 from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_io
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching.types import Fetcher, IdsToFetch
@@ -57,15 +57,15 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         path: PathLikeType,
         extra_fetchers: Iterable[str] = (),
         /,
-        fetcher_factory: _from_config.MakeFetcherType = _from_config.default_fetcher_factory,
-        mapper_factory: _from_config.MakeMapperType = _from_config.default_mapper_factory,
+        fetcher_factory: factory.MakeFetcherType = factory.default_fetcher_factory,
+        mapper_factory: factory.MakeMapperType = factory.default_mapper_factory,
     ) -> "Translator":
         """Docstring inherited from delegate method."""
-        return _from_config.translator_from_toml_config(
+        return factory.translator_from_toml_config(
             str(path), extra_fetchers, fetcher_factory=fetcher_factory, mapper_factory=mapper_factory
         )
 
-    from_config.__doc__ = _from_config.translator_from_toml_config.__doc__
+    from_config.__doc__ = factory.translator_from_toml_config.__doc__
 
     def __init__(
         self,

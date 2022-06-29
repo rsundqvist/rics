@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Make factory module public
+
 ## [0.9.0] - 2022-06-28
 
 ### Added

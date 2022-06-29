@@ -1,3 +1,5 @@
+"""Factory functions for translation classes."""
+
 import warnings
 from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
