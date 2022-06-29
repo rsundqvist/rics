@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable, Optional, Tuple
 
 import toml
 
-from rics.mapping import Mapper
+from rics.mapping import HeuristicScore, Mapper
 from rics.translation import fetching
 from rics.translation.exceptions import ConfigurationError
 from rics.translation.fetching import AbstractFetcher, MultiFetcher
@@ -60,7 +60,7 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
     Raises:
         ConfigurationError: If `config` is invalid.
     """
-    if "score_function" in config and not isinstance(config["score_function"], str):
+    if "score_function" in config and isinstance(config["score_function"], dict):
         score_function = config.pop("score_function")
 
         if len(score_function) > 1:
@@ -69,6 +69,20 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
         score_function, score_function_kwargs = next(iter(score_function.items()))
         config["score_function"] = score_function
         config["score_function_kwargs"] = score_function_kwargs
+
+    if "score_function_heuristics" in config:
+        if "score_function" not in config:
+            raise ConfigurationError("Section 'score_function_heuristics' requires an explicit score function.")
+
+        heuristics = [
+            (heuristic_config.pop("function"), heuristic_config)
+            for heuristic_config in config.pop("score_function_heuristics")
+        ]
+        if isinstance(config["score_function"], HeuristicScore):
+            for h in heuristics:
+                config["score_function"].add_heuristic(*h)
+        else:
+            config["score_function"] = HeuristicScore(config["score_function"], heuristics)
 
     if "filter_functions" in config:
         filters = config.pop("filter_functions")
@@ -190,7 +204,7 @@ def _make_mapper(parent_section: str, mapper_factory: MakeMapperType, config: Di
     if for_fetcher:
         config = {**AbstractFetcher.default_mapper_kwargs(), **config}
 
-    _check_forbidden_keys(["candidates"], config, f"{parent_section}.mapping")
+    _check_forbidden_keys(["value", "candidates"], config, f"{parent_section}.mapping")
     return mapper_factory(config, for_fetcher)
 
 

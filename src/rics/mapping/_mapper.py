@@ -7,7 +7,7 @@ from rics.mapping import exceptions
 from rics.mapping import filter_functions as mf
 from rics.mapping._directional_mapping import DirectionalMapping
 from rics.mapping.exceptions import MappingError, MappingWarning
-from rics.mapping.score_functions import MappingScoreFunction, from_name
+from rics.mapping.score_functions import ScoreFunction, from_name
 from rics.utility.action_level import ActionLevel, ActionLevelTypes
 from rics.utility.collections import InheritedKeysDict
 from rics.utility.misc import tname
@@ -43,7 +43,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
     def __init__(
         self,
         candidates: Iterable[CandidateType] = None,
-        score_function: Union[str, MappingScoreFunction] = "equality",
+        score_function: Union[str, ScoreFunction] = "equality",
         score_function_kwargs: Dict[str, Any] = None,
         filter_functions: Iterable[Tuple[Union[str, mf.FilterFunction], Dict[str, Any]]] = (),
         min_score: float = 1.00,
@@ -95,11 +95,11 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         values = set(values)
         left_to_right = self._create_l2r(values, context)
 
-        extra = f"in {context=} " if context else ""
+        extra = f" in {context=}" if context else ""
 
         for value in values.difference(left_to_right):
-            LOGGER.debug(f"Begin mapping {value=} {extra}to candidates {self.candidates}")
-            matches = self._map_value(value, kwargs)
+            LOGGER.debug(f"Begin mapping {value=}{extra} to candidates {self.candidates} using {self._score}.")
+            matches = self._map_value(value, context, kwargs)
             if matches is None:
                 continue  # All candidates removed by filtering
             if matches:
@@ -141,13 +141,15 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
 
         return {value: (overrides[value],) for value in filter(overrides.__contains__, values)}
 
-    def _map_value(self, value: ValueType, kwargs: Dict[str, Any]) -> Optional[MatchTuple]:
-        scores = self._score(value, self._candidates, **self._score_kwargs, **kwargs)
+    def _map_value(
+        self, value: ValueType, context: Optional[ContextType], kwargs: Dict[str, Any]
+    ) -> Optional[MatchTuple]:
+        scores = self._score(value, self._candidates, context, **self._score_kwargs, **kwargs)
         sorted_candidates = sorted(zip(scores, self._candidates), key=lambda t: -t[0])
 
         filtered_candidates = set(self._candidates)
         for filter_function, function_kwargs in self._filters:
-            filtered_candidates = filter_function(value, filtered_candidates, **function_kwargs, **kwargs)
+            filtered_candidates = filter_function(value, filtered_candidates, context, **function_kwargs, **kwargs)
 
             not_in_original_candidates = filtered_candidates.difference(self._candidates)
             if not_in_original_candidates:
@@ -169,9 +171,10 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
                 ans.append(candidate)
 
                 if LOGGER.isEnabledFor(logging.DEBUG):
+                    cs = " (short-circuited)" if score == float("inf") else ""
                     extra = "" if self._cardinality == Cardinality.OneToOne else " Looking for more matches.."
                     LOGGER.debug(
-                        f"Mapped: {repr(value)} -> {repr(candidate)}, {score=:2.3f} >= {self._min_score}.{extra}"
+                        f"Mapped: {repr(value)} -> {repr(candidate)}, {score=:2.3f} >= {self._min_score}{cs}.{extra}"
                     )
 
                 if self._cardinality == Cardinality.OneToOne:
@@ -184,7 +187,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
 
     def __repr__(self) -> str:
         candidates = self._candidates
-        score = tname(self._score)
+        score = self._score
         return f"{tname(self)}({score=} >= {self._min_score}, {len(self._filters)} filters, {candidates=})"
 
     def copy(self) -> "Mapper":

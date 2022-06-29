@@ -6,10 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+Refactor scoring functions.
+
+### Added
+- The `HeuristicScore` class, which enables filter-based short-circuiting and alias heuristics for score functions.
+
+### Removed
+- The `filter_functions.score_with_heuristics` function; replaced by the more general `HeuristicScore` class.
 
 ### Changed
-- Make short-circuiting logic to `filter_functions.score_with_heuristics` useful
 - Make factory module public
+- Rename `MappingScoreFunction` -> `ScoreFunction`
+- Add a third mandatory `context` parameter to all mapping functions. The `source` argument has been removed.
 
 ### Fixed
 - Fix handling logging of duplicate source discovery in MultiFetcher

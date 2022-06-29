@@ -31,14 +31,14 @@ unmapped_values_action = "ignore"
 [[fetching.mapping.filter_functions]]
 function = "banned_substring"
 substrings = ["p2007"]
-where = "source"
+where = "context"
 
-[fetching.mapping.score_function.score_with_heuristics]
-fstrings = [
-    "first_{value}",
-    "{source}_{value}"
-]
-
+[[fetching.mapping.score_function_heuristics]]
+function = "value_fstring_alias"
+fstring = "first_{value}"
+[[fetching.mapping.score_function_heuristics]]
+function = "value_fstring_alias"
+fstring = "{context}_{value}"
 
 [fetching.mapping.overrides.addess]
 code = "postal_code"

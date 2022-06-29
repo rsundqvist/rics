@@ -11,13 +11,13 @@ def test__parse_where_arg():
     with pytest.raises(ValueError):
         mf._parse_where_args(())
 
-    assert mf._parse_where_args(("name", "candidate", "source")) == ("name", "candidate", "source")
-    assert mf._parse_where_args(("name", "source")) == ("name", "source")
+    assert mf._parse_where_args(("name", "candidate", "context")) == ("name", "candidate", "context")
+    assert mf._parse_where_args(("name", "context")) == ("name", "context")
     assert mf._parse_where_args("name") == ("name",)
 
 
 @pytest.mark.parametrize(
-    "name, source, candidates, where, expected",
+    "name, context, candidates, where, expected",
     [
         # where: name
         ("name-suf", "", {"cand0", "cand1"}, "name", {"cand0", "cand1"}),
@@ -31,14 +31,14 @@ def test__parse_where_arg():
         ("name-suf", "", {"cand0-suf", "cand1"}, ("name", "candidate"), {"cand0-suf"}),
         ("name", "", {"cand0-suf", "cand1-suf"}, ("name", "candidate"), set()),
         ("name-suf", "", {"cand0", "cand1"}, ("name", "candidate"), set()),
-        # where: source
-        ("whatever", "source-suf", {"cand0", "cand1"}, "source", {"cand0", "cand1"}),
-        ("whatever", "source", {"cand0-suf", "cand1-suf"}, "source", set()),
-        # where: name + source
-        ("name", "source-suf", {"cand0-suf", "cand1-suf"}, ("name", "source"), set()),
-        ("name-suf", "source", {"cand0-suf", "cand1-suf"}, ("name", "source"), set()),
-        ("name-suf", "source-suf", {"cand0-suf", "cand1-suf"}, ("name", "source"), {"cand0-suf", "cand1-suf"}),
-        ("name-suf", "source-suf", {"cand0-suf", "cand1"}, ("name", "source", "candidate"), {"cand0-suf"}),
+        # where: context
+        ("whatever", "context-suf", {"cand0", "cand1"}, "context", {"cand0", "cand1"}),
+        ("whatever", "context", {"cand0-suf", "cand1-suf"}, "context", set()),
+        # where: name + context
+        ("name", "context-suf", {"cand0-suf", "cand1-suf"}, ("name", "context"), set()),
+        ("name-suf", "context", {"cand0-suf", "cand1-suf"}, ("name", "context"), set()),
+        ("name-suf", "context-suf", {"cand0-suf", "cand1-suf"}, ("name", "context"), {"cand0-suf", "cand1-suf"}),
+        ("name-suf", "context-suf", {"cand0-suf", "cand1"}, ("name", "context", "candidate"), {"cand0-suf"}),
     ],
     ids=[
         "where-name-hit",
@@ -50,21 +50,21 @@ def test__parse_where_arg():
         "where-name/cand-1-hit",
         "where-name/cand-name-miss",
         "where-name/cand-cand-miss",
-        "where-source-hit",
-        "where-source-miss",
-        "where-name/source-miss1",
-        "where-name/source-miss2",
-        "where-name/source-hit",
-        "where-name/source/cand-hit",
+        "where-context-hit",
+        "where-context-miss",
+        "where-name/context-miss1",
+        "where-name/context-miss2",
+        "where-name/context-hit",
+        "where-name/context/cand-hit",
     ],
 )
-def test_require_regex_match(name, source, candidates, where, expected):
-    actual = mf.require_regex_match(name, candidates, regex=".*suf$", where=where, source=source)
+def test_require_regex_match(name, context, candidates, where, expected):
+    actual = mf.require_regex_match(name, candidates, regex=".*suf$", where=where, context=context)
     assert actual == expected
 
 
 @pytest.mark.parametrize(
-    "name, source, where, candidates, expected",
+    "name, context, where, candidates, expected",
     [
         # where: name
         ("torque", "", "name", set("abc"), set()),
@@ -75,11 +75,11 @@ def test_require_regex_match(name, source, candidates, where, expected):
         # where: name + candidate
         ("torque", "", ("name", "candidate"), ["more", "torque", "a"], set()),
         ("abc", "", ("name", "candidate"), ["more", "torque", "a"], {"a"}),
-        # where: source
-        ("", "torque", "source", set("abc"), set()),
-        ("", "abc", "source", ["more", "torque"], {"more", "torque"}),
+        # where: context
+        ("", "torque", "context", set("abc"), set()),
+        ("", "abc", "context", ["more", "torque"], {"more", "torque"}),
     ],
 )
-def test_banned_substring(name, source, where, candidates, expected):
-    actual = mf.banned_substring(name, candidates=candidates, substrings=KEYWORDS, where=where, source=source)
+def test_banned_substring(name, context, where, candidates, expected):
+    actual = mf.banned_substring(name, candidates=candidates, substrings=KEYWORDS, where=where, context=context)
     assert actual == expected

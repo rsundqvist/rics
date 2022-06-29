@@ -1,16 +1,17 @@
 """Functions which return filter candidates."""
 import logging
 import re
-from typing import Callable, Collection, Hashable, Iterable, List, Literal, Set, Tuple, TypeVar, Union
+from typing import Callable, Collection, Hashable, Iterable, List, Literal, Optional, Set, Tuple, TypeVar, Union
 
 LOGGER = logging.getLogger(__name__)
 
-WhereOptions = Literal["name", "source", "candidate"]
-WHERE_OPTIONS = ("name", "candidate", "source")
+WhereOptions = Literal["name", "context", "candidate"]
+WHERE_OPTIONS = ("name", "candidate", "context")
 WhereArg = Union[WhereOptions, Iterable[WhereOptions]]
 """Determines how where matches must be found during filtering operations."""
 H = TypeVar("H", bound=Hashable)
-FilterFunction = Callable[[H, Set[H]], Set[H]]
+ContextType = TypeVar("ContextType", bound=Hashable)
+FilterFunction = Callable[[H, Iterable[H], Optional[ContextType]], Set[H]]
 """Signature for a filter function.
 
 Args:
@@ -28,34 +29,31 @@ Returns:
 def require_regex_match(
     name: str,
     candidates: Iterable[str],
+    context: Optional[str],
     regex: Union[str, re.Pattern],
     where: WhereArg,
-    source: str = "",
     keep_if_match: bool = True,
 ) -> Set[str]:
-    """Require a regex match in `name`, `source`, and/or `candidates`.
+    """Require a regex match in `name`, `context`, and/or `candidates`.
 
     Args:
         name: A name.
         candidates: Potential matches for `name`.
+        context: Context in which the function is being called.
         regex: A regex pattern to pass to :py:func:`re.compile`.
-        where: Which of ('name', 'candidate', 'source') to match in.
-        source: A source (table) name. Ignored if empty.
+        where: Which of ('name', 'candidate', 'context') to match in.
         keep_if_match: If False, require that `regex` does _not_ match to keep candidates.
 
     Returns:
         Approved candidates.
 
     Raises:
-        ValueError: If `where` contains `'source'` when `source` is not given.
+        ValueError: If `where` contains `'context'` when `context` is not given.
 
     See Also:
         The :meth:`banned_substring` method.
     """
     where = _parse_where_args(where)
-
-    if "source" in where and not source:  # pragma: no cover
-        raise ValueError(f"Source not given but 'source' was found in {where=}.")
 
     pattern = re.compile(regex, flags=re.IGNORECASE) if isinstance(regex, str) else regex
     logger = LOGGER.getChild("require_regex_match")
@@ -71,13 +69,16 @@ def require_regex_match(
             logger.debug(f"Refuse matching of {name=}: Matches {pattern=}.")
             return set()
 
-    if "source" in where:
-        match = pattern.match(source)
+    if "context" in where:
+        if context is None:  # pragma: no cover
+            raise ValueError(f"No context given but 'context' was found in {where=}.")
+
+        match = pattern.match(context)
         if keep_if_match and not match:
-            logger.debug(f"Refuse matching of {source=}: Does not match {pattern=}.")
+            logger.debug(f"Refuse matching of {context=}: Does not match {pattern=}.")
             return set()
         if match and not keep_if_match:
-            logger.debug(f"Refuse matching of {source=}: Matches {pattern=}.")
+            logger.debug(f"Refuse matching of {context=}: Matches {pattern=}.")
             return set()
 
     if "candidate" not in where:
@@ -98,20 +99,20 @@ def require_regex_match(
 def banned_substring(
     name: str,
     candidates: Iterable[str],
+    context: Optional[str],
     substrings: Collection[str],
     where: WhereArg,
-    source: str = "",
 ) -> Set[str]:
     """Prevent mapping if banned substrings are found.
 
-    Matching on `name` or `source` halts all mapping. Matching candidates excludes only those candidates.
+    Matching on `name` or `context` halts all mapping. Matching candidates excludes only those candidates.
 
     Args:
         name: An element to find matches for.
         candidates: Potential matches for `name` (not used).
+        context: Context in which the function is being called.
         substrings: Substrings which may not be present in `name`.
-        where: Which of ('name', 'candidate', 'source') to match in. Empty=all.
-        source: A source (table) name.
+        where: Which of ('name', 'candidate', 'context') to match in. Empty=all.
 
     Returns:
         Approved candidates.
@@ -130,9 +131,9 @@ def banned_substring(
         matches = require_regex_match(
             name,
             remaining,
+            context,
             regex=re.compile(f".*{subs}.*", flags=re.IGNORECASE),
             where=where,
-            source=source,
             keep_if_match=False,
         )
         remaining = remaining.intersection(matches)

@@ -1,14 +1,12 @@
 """Functions which return a likeness score."""
 import logging
-import re
-from typing import Callable, Collection, Hashable, Iterable, List, TypeVar, Union
-
-from rics.mapping.filter_functions import require_regex_match
+from typing import Callable, Hashable, Iterable, List, Optional, TypeVar, Union
 
 LOGGER = logging.getLogger(__name__)
 
 H = TypeVar("H", bound=Hashable)
-MappingScoreFunction = Callable[[H, Iterable[H]], Iterable[float]]
+ContextType = TypeVar("ContextType", bound=Hashable)
+ScoreFunction = Callable[[H, Iterable[H], Optional[ContextType]], Iterable[float]]
 """Signature for a likeness score function.
 
 Args:
@@ -23,7 +21,7 @@ Yields:
 """
 
 
-def modified_hamming(name: str, candidates: Iterable[str]) -> Iterable[float]:
+def modified_hamming(name: str, candidates: Iterable[str], context: Optional[ContextType]) -> Iterable[float]:
     """Compute hamming distance modified by length ratio, from the back."""
 
     def _apply(candidate: str) -> float:
@@ -38,12 +36,13 @@ def modified_hamming(name: str, candidates: Iterable[str]) -> Iterable[float]:
     yield from map(_apply, candidates)
 
 
-def equality(value: H, candidates: Iterable[H]) -> Iterable[float]:
+def equality(value: H, candidates: Iterable[H], context: Optional[ContextType]) -> Iterable[float]:
     """Return 1.0 if ``k == c_i``, 0.0 otherwise.
 
     Args:
         value: An element to find matches for.
         candidates: Potential matches for `value`.
+        context: Context in which the function is being called.
 
     Yields:
         A score for each candidate `c` in `candidates`.
@@ -52,19 +51,23 @@ def equality(value: H, candidates: Iterable[H]) -> Iterable[float]:
 
 
 def like_database_table(
-    name: str, candidates: Iterable[str], score_function: Union[str, MappingScoreFunction] = modified_hamming
+    name: str,
+    candidates: Iterable[str],
+    context: Optional[str],
+    score_function: Union[str, ScoreFunction] = modified_hamming,
 ) -> Iterable[float]:
     """Try to make `value` look like the name of a database table.
 
     Args:
         name: An element to find matches for.
         candidates: Potential matches for `value`.
+        context: Context in which the function is being called.
         score_function: The actual scoring function to use after heuristics have been applied.
 
     Yields:
         A score for each candidate `c` in `candidates`.
     """
-    fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
+    fn: ScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
 
     def apply(s: str) -> str:
         s = s.lower().replace("_", "").replace(".", "")
@@ -72,57 +75,10 @@ def like_database_table(
         s = s if s.endswith("s") else s + "s"
         return s
 
-    yield from fn(apply(name), map(apply, candidates))
+    yield from fn(apply(name), map(apply, candidates), context)
 
 
-def score_with_heuristics(
-    value: str,  # placeholder
-    candidates: Iterable[str],  # columns
-    fstrings: Collection[str] = (),
-    score_function: Union[str, MappingScoreFunction] = modified_hamming,
-    source: str = None,
-    **short_circuit_regex: Iterable[Union[str, re.Pattern]],
-) -> Iterable[float]:
-    """Return the best score per candidate when applying various heuristics before passing to `score_function`.
-
-    Args:
-        value: A placeholder to map to a column (=candidate).
-        candidates: Potential matches for `value`.
-        fstrings: Fstrings which take `value` and/or `source` placeholders.
-        score_function: The actual scoring function to use after heuristics have been applied.
-        source: A source (table) name.
-        **short_circuit_regex: Regex mappings ``{value: regex}``. Procedure: If `value` is in `short_circuit_regex`, set
-            a score of `+∞` all candidates that match, and `-∞` for the rest. Applies before fstring-heuristics.
-
-    Yields:
-        A score for each candidate `c` in `candidates`.
-    """
-    # TODO: This function isn't very elegant. I'd like a more structured way of adding CS/heuristics to score functions.
-    fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
-
-    candidates = list(candidates)
-
-    matches = set().union(
-        *(
-            require_regex_match("ignored", candidates, regex, where="candidate")
-            for regex in short_circuit_regex.get(value, ())
-        )
-    )
-    if matches:
-        LOGGER.getChild("score_with_heuristics").debug(
-            f"Short circuit {value=} -> candidates={repr(matches)} triggered by "
-            f"regular expressions: {short_circuit_regex[value]}."
-        )
-
-        inf = float("inf")
-        yield from (inf if c in matches else -inf for c in candidates)
-        return
-
-    with_heuristics = [value.lower()] + [fstr.format(value=value, source=source).lower() for fstr in fstrings]
-    yield from (max(fn(column.lower(), with_heuristics)) for column in candidates)
-
-
-def from_name(name: str) -> MappingScoreFunction:
+def from_name(name: str) -> ScoreFunction:
     """Get a scoring function by name."""
     for func in _all_functions:
         if func.__name__ == name:
@@ -131,9 +87,8 @@ def from_name(name: str) -> MappingScoreFunction:
     raise ValueError(f"No score function called {repr(name)}.")
 
 
-_all_functions: List[MappingScoreFunction] = [
+_all_functions: List[ScoreFunction] = [
     modified_hamming,
     like_database_table,
     equality,
-    score_with_heuristics,
 ]

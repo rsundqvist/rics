@@ -4,7 +4,7 @@ from rics.cardinality import Cardinality
 from rics.mapping import Mapper, exceptions
 
 
-def _substring_score(k, c):
+def _substring_score(k, c, _):
     for ci in c:
         yield float(k in ci) / len(ci)
 

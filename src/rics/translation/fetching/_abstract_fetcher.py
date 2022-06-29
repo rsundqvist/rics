@@ -3,7 +3,8 @@ from abc import abstractmethod
 from time import perf_counter
 from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, Set, Tuple
 
-from rics.mapping import Mapper
+from rics.mapping import HeuristicScore, Mapper
+from rics.mapping.score_functions import modified_hamming
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import exceptions
 from rics.translation.fetching.types import Fetcher, FetchInstruction, IdsToFetch
@@ -84,7 +85,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         self._mapper.candidates = set(self.get_placeholders(source) if candidates is None else candidates)
         placeholders = set(placeholders).difference(ans)  # Don't remap cached mappings
 
-        for actual, wanted in self._mapper.apply(placeholders, context=source, source=source).left_to_right.items():
+        for actual, wanted in self._mapper.apply(placeholders, context=source).left_to_right.items():
             ans[actual] = wanted[0]
 
         for not_mapped in placeholders.difference(ans):
@@ -257,11 +258,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
             else filter(known_placeholders.__contains__, instr.placeholders)
         )
 
-    @classmethod
-    def default_mapper_kwargs(cls) -> Dict[str, Any]:
-        """Create a default Mapper for fetcher implementations."""
-        return dict(score_function="score_with_heuristics", overrides=InheritedKeysDict())
-
     def _fetch(
         self,
         ids_to_fetch: Iterable[IdsToFetch],
@@ -342,6 +338,22 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
                 f" For {source=}, known placeholders are: {sorted(ans)}."
             )
         return ans
+
+    @classmethod
+    def default_mapper_kwargs(cls) -> Dict[str, Any]:
+        """Create a default Mapper for fetcher implementations."""
+        return dict(
+            score_function=HeuristicScore(
+                cls.default_score_function,  # type: ignore
+                heuristics=[("force_lower_case", {})],
+            ),
+            overrides=InheritedKeysDict(),
+        )
+
+    @classmethod
+    def default_score_function(cls, value: str, candidates: Iterable[str], context: str) -> Iterable[float]:
+        """Compute score for candidates."""
+        return modified_hamming(value, candidates, context)
 
 
 def _log_implementation_fetch_performance(pht: PlaceholderTranslations, start: float) -> None:  # pragma: no cover
