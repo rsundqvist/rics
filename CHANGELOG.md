@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make factory module public
 
 ### Fixed
+- Fix handling logging of duplicate source discovery in MultiFetcher
 - Allow empty fetching section in main config file when extra_fetchers are given
 
 ## [0.9.0] - 2022-06-28

@@ -129,14 +129,18 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
     @property
     def _source_to_fetcher_id(self) -> Dict[SourceType, int]:
         if not self._source_to_fetcher_id_actual:
-            known = {}
+            source_ranks: Dict[SourceType, int] = {}
+            source_to_fetcher_id: Dict[SourceType, int] = {}
+
             for fid, fetcher in self._id_to_fetcher.items():
+                rank = self._id_to_rank[fid]
                 for source in fetcher.sources:
-                    if source in known:
-                        print(self.duplicate_source_discovered_action)
+                    if source in source_to_fetcher_id:
+                        self._log_rejection(source, rank, source_ranks[source], translation=False)
                     else:
-                        known[source] = fid
-            self._source_to_fetcher_id_actual = known
+                        source_to_fetcher_id[source] = fid
+                        source_ranks[source] = rank
+            self._source_to_fetcher_id_actual = source_to_fetcher_id
 
         return self._source_to_fetcher_id_actual
 
@@ -162,13 +166,13 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
             other_rank = compute_if_absent(source_ranks, source, lambda _: rank)
 
             if other_rank != rank:
-                self._log_rejection(source, rank, other_rank)
+                self._log_rejection(source, rank, other_rank, translation=True)
                 if rank > other_rank:
                     continue  # Don't save -- other rank is greater (lower-is-better).
 
             ans[source] = source_translations
 
-    def _log_rejection(self, source: SourceType, rank0: int, rank1: int) -> None:  # pragma: no cover
+    def _log_rejection(self, source: SourceType, rank0: int, rank1: int, translation: bool) -> None:  # pragma: no cover
         accepted_rank, rejected_rank = (rank0, rank1) if rank0 < rank1 else (rank1, rank0)
 
         rank_to_id = reverse_dict(self._id_to_rank)
@@ -180,12 +184,19 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
 
         msg = (
             f"Discarded translations for {source=} retrieved from {rejected} since the {accepted} returned "
-            "translations for the same source. Hint: Rank is determined input order at initialization."
+            "translations for the same source."
+            if translation
+            else f"Discarded {source=} retrieved from {rejected} since the {accepted} already claimed same source."
         )
-        if self.duplicate_translation_action is ActionLevel.IGNORE:
+
+        msg += " Hint: Rank is determined input order at initialization."
+
+        action = self.duplicate_translation_action if translation else self.duplicate_source_discovered_action
+
+        if action is ActionLevel.IGNORE:
             LOGGER.debug(msg)
         else:
-            if self.duplicate_translation_action is ActionLevel.RAISE:
+            if action is ActionLevel.RAISE:
                 LOGGER.error(msg)
                 raise exceptions.DuplicateSourceError(msg)
             else:
