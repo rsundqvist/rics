@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Make factory module public
 
+### Fixed
+- Allow empty fetching section in main config file when extra_fetchers are given
+
 ## [0.9.0] - 2022-06-28
 
 ### Added
