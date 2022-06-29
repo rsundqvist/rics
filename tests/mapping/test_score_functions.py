@@ -46,20 +46,18 @@ def test_score_with_heuristics(value, add_source, expected):
 @pytest.mark.parametrize(
     "value, expected",
     [
-        ("cand0", [1.0, 0.8, 0.8]),
-        ("cand4", [0.8, 0.8, 0.8]),
-        ("whatever-kW1-dsa", [inf, -inf, -inf]),
-        ("whatever-KW2-dsa", [-inf, -inf, inf]),
-        ("whatever-kw2kw1-dsa", [inf, -inf, -inf]),
+        ("cand", [1.0, 0.0, 0.0, 0.0]),
+        ("cand0", [-inf, inf, -inf, inf]),
+        ("cand2", [-inf, inf, inf, inf]),
     ],
-    ids=["no-cs-1", "no-cs-2", "kw1-cs", "kw2-cs", "kw1/kw2-cs"],
+    # ids=["no-cs-1", "no-cs-2", "kw1-cs", "kw2-cs", "kw1/kw2-cs"],
 )
 def test_score_with_heuristics_short_circuiting(value, expected):
     kwargs = {
         "cand0": [".*kw1.*"],
-        "cand2": [".*kw2.*"],
+        "cand2": [".*kw1.*", ".*kw2.*"],
     }
-    candidates = ["cand0", "cand1", "cand2"]
+    candidates = ["cand", "cand-kW1", "cand-KW2", "cand-kW1-kw2"]
 
     actual = list(sf.score_with_heuristics(value, candidates, **kwargs))
     assert actual == expected

@@ -91,24 +91,32 @@ def score_with_heuristics(
         fstrings: Fstrings which take `value` and/or `source` placeholders.
         score_function: The actual scoring function to use after heuristics have been applied.
         source: A source (table) name.
-        **short_circuit_regex: Regex mappings ``{candidate: regex}`` which, when matching `value`, forces an instant
-            mapping of the given value to the candidate with infinite score. Applies before all other heuristics.
+        **short_circuit_regex: Regex mappings ``{value: regex}``. Procedure: If `value` is in `short_circuit_regex`, set
+            a score of `+∞` all candidates that match, and `-∞` for the rest. Applies before fstring-heuristics.
 
     Yields:
         A score for each candidate `c` in `candidates`.
     """
+    # TODO: This function isn't very elegant. I'd like a more structured way of adding CS/heuristics to score functions.
     fn: MappingScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
 
     candidates = list(candidates)
-    for candidate, regexes in filter(lambda t: t[0] in candidates, short_circuit_regex.items()):
-        for regex in regexes:
-            if require_regex_match(value, ["this-value-does-not-matter"], regex, where="name"):
-                LOGGER.getChild("score_with_heuristics").debug(
-                    f"Short circuit {value=} -> {candidate=} triggered by {regex=}."
-                )
-                inf = float("inf")
-                yield from (inf if c == candidate else -inf for c in candidates)
-                return
+
+    matches = set().union(
+        *(
+            require_regex_match("ignored", candidates, regex, where="candidate")
+            for regex in short_circuit_regex.get(value, ())
+        )
+    )
+    if matches:
+        LOGGER.getChild("score_with_heuristics").debug(
+            f"Short circuit {value=} -> candidates={repr(matches)} triggered by "
+            f"regular expressions: {short_circuit_regex[value]}."
+        )
+
+        inf = float("inf")
+        yield from (inf if c in matches else -inf for c in candidates)
+        return
 
     with_heuristics = [value.lower()] + [fstr.format(value=value, source=source).lower() for fstr in fstrings]
     yield from (max(fn(column.lower(), with_heuristics)) for column in candidates)
