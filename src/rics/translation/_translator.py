@@ -198,15 +198,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
         """
-        # Get names and figure out where to get them from
         names_to_translate = self._resolve_names(translatable, names, ignore_names)
-
-        if self.online:
-            sources = self._fetcher.sources
-        elif self._cached_tmap is not None:
-            sources = list(self._cached_tmap.keys())
-        else:
-            raise AssertionError("This should be impossible.")
+        sources = self._fetcher.sources if self.online else self._cached_tmap.sources
 
         self._mapper.candidates = set(sources)
         name_to_source = self._mapper.apply(names_to_translate)

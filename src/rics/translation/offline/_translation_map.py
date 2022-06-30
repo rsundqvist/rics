@@ -103,7 +103,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
     def name_to_source(self, value: NameToSourceDict) -> None:
         """Update bindings. Mappings name->source are always added, but may be overridden by the user."""
         source_to_source = {source: source for source in self.sources}
-        self._name_to_source: NameToSourceDict = {**source_to_source, **value}
+        self._name_to_source = {**source_to_source, **value}
 
     def copy(self) -> "TranslationMap":
         """Make a copy of this TranslationMap."""
@@ -117,7 +117,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         return len(self.names)
 
     def __iter__(self) -> Iterator[NameType]:
-        return iter(self.names)
+        return iter(self.names)  # pragma: no cover
 
     def __repr__(self) -> str:
         sources = ", ".join(

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- The `Translator` retrieving incorrect sources in offline mode
+
 ## [0.10.0] - 2022-06-30
 Refactor scoring functions.
 

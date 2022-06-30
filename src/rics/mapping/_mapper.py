@@ -105,7 +105,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
             if matches:
                 left_to_right[value] = matches
             else:  # pragma: no cover
-                msg = f"Could not map {value=} {extra}to any of {self.candidates}."
+                msg = f"Could not map {value=}{extra} to any of {self.candidates}."
                 if self._unmapped_action is ActionLevel.RAISE:
                     LOGGER.error(msg)
                     raise MappingError(msg)
