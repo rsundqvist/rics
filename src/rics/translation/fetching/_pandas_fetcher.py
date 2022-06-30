@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
-from rics.translation.fetching import AbstractFetcher
+from rics.translation.fetching import AbstractFetcher, support
 from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import IdType, NameType, PlaceholderTranslations
 from rics.utility.misc import PathLikeType, tname
@@ -114,7 +114,7 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
         source_path = self._source_paths[instr.source]
         df = self.read(source_path)
 
-        return AbstractFetcher.from_records(instr, tuple(df), list(df.to_records(index=False)))
+        return support.from_records(instr, tuple(df), list(df.to_records(index=False)))
 
     def __repr__(self) -> str:
         read_path_format = self._format_source("{source}")

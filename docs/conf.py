@@ -92,12 +92,20 @@ with open("nitpick-regex-exceptions") as f:
 autodoc_typehints = "signature"
 autodoc_default_options = {
     "members": True,
-    "undoc-members": True,
+    "undoc-members": False,
     "member-order": "bysource",
+}
+
+# -- Apidoc configuration -----------------------------------------------------
+apidoc_default_options = {
+    "members": True,
+    "undoc-members": False,
+    "show-inheritance": True,
 }
 
 # -- Intersphinx configuration -------------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
+    "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
 }

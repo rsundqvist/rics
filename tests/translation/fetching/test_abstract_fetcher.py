@@ -1,8 +1,7 @@
 import pytest
 
 from rics.translation.fetching import AbstractFetcher, MemoryFetcher, exceptions
-from rics.translation.fetching.exceptions import ImplementationError
-from rics.translation.fetching.types import FetchInstruction, IdsToFetch
+from rics.translation.fetching.types import IdsToFetch
 
 
 @pytest.fixture(scope="module")
@@ -31,23 +30,6 @@ def test_fetch_all_forbidden(data):
     with pytest.raises(exceptions.ForbiddenOperationError) as ec:
         fetcher.fetch_all()
     assert f"{repr(AbstractFetcher._FETCH_ALL)} not supported" in str(ec.value)
-
-
-def test_bad_implementation():
-    with pytest.raises(ImplementationError):
-        AbstractFetcher.from_records(
-            FetchInstruction(
-                "source",
-                [1, 2, 3],
-                ("id",),
-                {
-                    "id",
-                },
-                False,
-            ),
-            ("id",),
-            [],
-        )
 
 
 def test_unknown_placeholders(fetcher):

@@ -45,9 +45,6 @@ class Format:
 
         Raises:
             KeyError: If required placeholders are missing.
-
-        See Also:
-            :attr:`required_placeholders`
         """
         placeholders = placeholders or self.required_placeholders
         missing_required_placeholders = set(self.required_placeholders).difference(placeholders)

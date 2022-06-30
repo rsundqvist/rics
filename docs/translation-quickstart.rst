@@ -29,24 +29,20 @@ We will assume that there is a PostgreSQL database running locally with the foll
 
 What we need:
     * A :class:`~rics.translation.fetching.SqlFetcher` to fetch from the tables above.
-    * A :class:`~rics.mapping.Mapper` to bind names (such as `human_id` to table `humans`) automatically.
-    * Some :class:`~rics.translation.offline.PlaceholderOverrides` since the `animals` table has a strange ID column.
+    * A :class:`~rics.mapping.Mapper` to bind names (such as `human_id` to table `humans`) automatically for translating
+      and to map columns in the database.
+    * An :class:`~rics.utility.collections.inherited_keys_dict.InheritedKeysDict` since the `animals` table has a strange ID column.
 
 Putting it all together:
 
->>> from rics.translation import Translator
->>> from rics.translation.fetching import SqlFetcher
->>> from rics.translation.offline import PlaceholderOverrides
->>> from rics.mapping import Mapper
->>>
 >>> fetcher = SqlFetcher(
 ...     # Connection string may be an environment variable if
 ...     # prefixed by '@'. Example: @TRANSLATION_DB_CONNECTION_STRING
-...     connection_string = 'postgresql://user:passwrod@localhost:5432/mydatabase',
-...     whitelist_tables = ['humans', 'animals'],
-...     placeholder_overrides=PlaceholderOverrides(source_specific={'animals': {'bestie_id': 'id'}})
+...     connection_string='postgresql+pg8000://pg@localhost:5432/animalia',
+...     whitelist_tables=['humans', 'animals'],
+...    mapper=Mapper(overrides=InheritedKeysDict(specific={'animals': {'bestie_id': 'id'}}))
 ... )  # doctest: +SKIP
->>> mapper=Mapper(score_function='like_database_table', apply_heuristics=True, overrides={"people": "humans"})
+>>> mapper = Mapper(score_function='like_database_table', overrides={"people": "humans"})
 >>> translator = Translator(fetcher, fmt='{id}:{name}[, nice={is_nice}]', mapper=mapper) # doctest: +SKIP
 >>> data = {'animal': [0, 2], 'people': [1991, 1999]}
 >>> for key, translated_table in translator.translate(data).items():
@@ -62,7 +58,7 @@ Translations for 'people':
 
 **Summary**:
     * Database contains tables `humans` and `animals`. Names are "animal" and "people".
-    * ``PlaceholderOverrides``: The ID-column in `animals` is ``animals.bestie_id``, we expected ``id``.
+    * ``InheritedKeysDict``: The ID-column in `animals` is ``animals.bestie_id``, we expected ``id``.
     * ``Mapper``: Responsible for matching `animal` with table `animals`. The words `"people"` and `"humans"` are too
       different for :meth:`~rics.mapping.score_functions.like_database_table`, so we provide this binding.
     * The translator ties it all together when we call :meth:`~rics.translation.Translator.translate`.
@@ -73,7 +69,7 @@ The example above could be solved using config options that :meth:`Translator.fr
 is writing a more advanced a ``score_function`` or fetcher than the implementations of this package provide.
 
 =====================================
-Advanced example: DVD Rental Database
+Example: DVD Rental Database
 =====================================
 This example translates a query from the `DVD Rental Sample Database`_. It covers most of the more advanced features
 that have been implemented. Using Docker, this database can be obtained by running:

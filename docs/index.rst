@@ -33,8 +33,8 @@ My personal little ML engineering library.
    :maxdepth: 4
 
    rics.utility
-   rics.utility.perf
    rics.utility.collections
+   rics.utility.perf
    rics.cardinality
    rics.mapping
    rics.translation

@@ -37,18 +37,11 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     Untranslatable IDs will be None by default if neither `default_fmt` nor `default_translations` is given.
 
     Args:
-        fetcher: A :class:`~rics.translation.fetching.types.Fetcher` or ready-to-use translations.
-        fmt: String :class:`~rics.translation.offline.Format` specification for translations.
-        mapper: A :class:`~rics.mapping.Mapper` instance for binding names to sources.
+        fetcher: A :class:`.Fetcher` or ready-to-use translations.
+        fmt: String :class:`.Format` specification for translations.
+        mapper: A :class:`.Mapper` instance for binding names to sources.
         default_fmt: Alternative format specification to use instead of `fmt` for fallback translation of unknown IDs.
         default_translations: Shared and/or source-specific default placeholder values for unknown IDs.
-
-    See Also:
-        Related classes:
-
-        * :class:`rics.translation.offline.Format`, the format specification.
-        * :class:`rics.translation.offline.TranslationMap`, application of formats.
-        * :class:`rics.translation.fetching.Fetcher`, fetching of translation data from external sources.
     """
 
     @classmethod
@@ -60,12 +53,10 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         fetcher_factory: factory.MakeFetcherType = factory.default_fetcher_factory,
         mapper_factory: factory.MakeMapperType = factory.default_mapper_factory,
     ) -> "Translator":
-        """Docstring inherited from delegate method."""
+        """See :func:`.factory.translator_from_toml_config`."""
         return factory.translator_from_toml_config(
             str(path), extra_fetchers, fetcher_factory=fetcher_factory, mapper_factory=mapper_factory
         )
-
-    from_config.__doc__ = factory.translator_from_toml_config.__doc__
 
     def __init__(
         self,
@@ -84,10 +75,10 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         self._mapper = mapper or Mapper()
         self._default, self._default_fmt = _handle_default(self._fmt, default_fmt, default_translations)
 
-        self._cached_tmap: Optional[TranslationMap]
+        self._cached_tmap: TranslationMap
         if isinstance(fetcher, Fetcher):
             self._fetcher = fetcher
-            self._cached_tmap = None
+            self._cached_tmap = TranslationMap({})
         else:  # pragma: no cover
             self._cached_tmap = (
                 self._to_translation_map(
@@ -109,7 +100,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             A copy of this translator with `overrides` applied.
 
         Raises:
-            NotImplementedError: If share_fetcher=False.
+            NotImplementedError: If ``share_fetcher=False``.
         """
         if not share_fetcher:
             raise NotImplementedError("Fetcher clone not implemented.")
@@ -157,7 +148,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             MappingError: If required (explicitly given) names fail to map to a source.
         """
         translation_map, names_to_translate = self._get_updated_tmap(translatable, names, ignore_names=ignore_names)
-        if translation_map is None:
+        if not translation_map:
             return None if inplace else translatable  # pragma: no cover
 
         return resolve_io(translatable).insert(
@@ -232,7 +223,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             data_structure_io: Static Data Structure IO class used to extract IDs from `translatable`. None=derive.
 
         Returns:
-            A :class:`~rics.translation.offline._translation_map.TranslationMap`.
+            A :class:`.TranslationMap`.
 
         Raises:
             OfflineError: If disconnected from the fetcher, ie not :attr:`online`.
@@ -263,9 +254,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                 predicate which indicates (returns True for) derived names to keep.
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns True for) names to ignore.
-            delete_fetcher: If True, go offline after retrieving data. The translation will still function, but some
-                methods may raise exceptions and new data cannot be retrieved. Deleting allows the fetcher to close
-                files and connections. If the fetcher has a ``close()``-method, it will be called before deletion.
+            delete_fetcher: If True, invoke :meth:`.Fetcher.close` and delete the fetcher after retrieving data. The
+                Translator will still function, but some methods may raise exceptions and new data cannot be retrieved.
 
         Returns:
             Self, for chained assignment.
@@ -274,10 +264,6 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             ForbiddenOperationError: If the fetcher does not permit the FETCH_ALL operation (only when `translatable` is
                 None).
             MappingError: If a `translatable` is given, but no names to translate could be extracted.
-
-        See Also:
-            :meth:`rics.translation.fetching.Fetcher.fetch_all`
-            :class:`rics.translation.offline.TranslationMap`
         """
         if translatable is None:
             source_translations: SourcePlaceholderTranslations = self._fetch(None)
@@ -308,7 +294,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     ) -> Tuple[Optional[TranslationMap], List[NameType]]:
         """Get an updated translation map.  # noqa
 
-        Setting force_fetch=True will ignore the cached translation if there is one.
+        Setting ``force_fetch=True`` will ignore the cached translation if there is one.
 
         Steps:
             1. Resolve which data structure IO to use, fail if not found.
@@ -326,7 +312,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
         translation_map = (
             self.fetch(translatable, name_to_source, translatable_io)
-            if force_fetch or self._cached_tmap is None
+            if force_fetch or not self._cached_tmap
             else self._cached_tmap
         )
 

@@ -1,7 +1,7 @@
 import logging
 from abc import abstractmethod
 from time import perf_counter
-from typing import Any, Collection, Dict, Iterable, List, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from rics.mapping import HeuristicScore, Mapper
 from rics.mapping.score_functions import modified_hamming
@@ -23,24 +23,16 @@ LOGGER = logging.getLogger(__package__).getChild("AbstractFetcher")
 
 
 class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
-    """Base class for fetching translations from an external source.
+    """Base class for retrieving translations from an external source.
 
     Users who wish to define their own fetching logic should inherit this class, but there are implementations for
     common uses cases. See :class:`~rics.translation.fetching.PandasFetcher` for a versatile base fetcher or
     :class:`~rics.translation.fetching.SqlFetcher` for a more specialized solution.
 
     Args:
-        mapper: A :class:`~rics.mapping.Mapper` instance used to adapt placeholder names in sources to wanted names, ie
-            the names of the placeholders that are in the translation :class:`~rics.offline.Format` being used.
+        mapper: A :class:`.Mapper` instance used to adapt placeholder names in sources to wanted names, ie
+            the names of the placeholders that are in the translation :class:`.Format` being used.
         allow_fetch_all: If False, an error will be raised when :meth:`fetch_all` is called.
-
-    See Also:
-        Related classes:
-
-        * :class:`rics.translation.offline.Format`, the format specification.
-        * :class:`rics.translation.offline.TranslationMap`, application of formats.
-        * :class:`rics.translation.Translator`, the main user interface for translation.
-        * :class:`rics.mapping.Mapper`, in-source name to :class:`~rics.offline.Format` placeholder name mapping.
     """
 
     _FETCH_ALL: str = "FETCH_ALL"
@@ -52,7 +44,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     ) -> None:
         self._mapper = mapper or Mapper(**self.default_mapper_kwargs())
         if not self._mapper.context_sensitive_overrides:  # pragma: no cover
-            raise ValueError("Mapper must have context-sensitive overrides (type InheritedKeysDict).")
+            raise ValueError(f"Mapper must have context-sensitive overrides (type {InheritedKeysDict.__name__}).")
 
         self._mapping_cache: Dict[SourceType, Dict[str, Optional[str]]] = {}
         self._allow_fetch_all = allow_fetch_all
@@ -68,7 +60,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
 
         Args:
             source: The source to map placeholders for.
-            placeholders: Desired placeholders, such as the output of :meth:`rics.offline.Format.placeholders`.
+            placeholders: Desired :attr:`~.Format.placeholders`.
             candidates: A subset of candidates (placeholder names) in `source` to map with `placeholders`. None=retrieve
                 using :meth:`get_placeholders`.
             clear_cache: If True, force a full remap.
@@ -166,10 +158,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
             UnknownSourceError: For sources(s) that are unknown to the fetcher.
             ForbiddenOperationError: If trying to fetch all IDs when not possible or permitted.
             ImplementationError: For errors made by the inheriting implementation.
-
-        Notes:
-            Placeholders are usually columns in relational database applications. These are the components which are
-            combined to create ID translations. See :class:`rics.translation.offline.Format` documentation for details.
         """
         unknown_sources = set(t.source for t in ids_to_fetch).difference(self.sources)
         if unknown_sources:
@@ -222,41 +210,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
 
     def close(self) -> None:
         """Close the fetcher. Does nothing by default."""
-
-    @classmethod
-    def from_records(
-        cls, instr: FetchInstruction, known_placeholders: Collection[str], records: Sequence[Sequence[Any]]
-    ) -> PlaceholderTranslations:
-        """Make a :class:`~rics.translation.offline.types.PlaceholderTranslations` instance from records.
-
-        Convenience method meant for use by implementations.
-
-        Args:
-            instr: A fetch instruction.
-            known_placeholders: Known placeholders for the `instr.source`.
-            records: Records produced from the instruction.
-
-        Returns:
-            Placeholder translation elements.
-
-        Raises:
-            ImplementationError: If the underlying fetcher does not return enough IDs.
-        """
-        if instr.ids is not None and len(records) < len(set(instr.ids)):
-            actual_len = len(records)
-            minimum = len(set(instr.ids))
-            raise exceptions.ImplementationError(f"Got {actual_len} records, expected at least {minimum}.")
-
-        return PlaceholderTranslations(instr.source, tuple(known_placeholders), records)
-
-    @classmethod
-    def select_placeholders(cls, instr: FetchInstruction, known_placeholders: Collection[str]) -> List[str]:
-        """Select as many known placeholders as possible."""
-        return list(
-            known_placeholders
-            if instr.all_placeholders
-            else filter(known_placeholders.__contains__, instr.placeholders)
-        )
 
     def _fetch(
         self,

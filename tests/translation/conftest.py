@@ -3,7 +3,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 import pytest
 
 from rics.translation import Translator
-from rics.translation.fetching import AbstractFetcher
+from rics.translation.fetching import AbstractFetcher, support
 from rics.translation.fetching.exceptions import UnknownIdError
 from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import PlaceholderTranslations
@@ -17,9 +17,9 @@ class HexFetcher(AbstractFetcher[str, int, str]):
     def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
         self.num_fetches += 1
 
-        placeholders = AbstractFetcher.select_placeholders(instr, ["id", "hex", "positive"])
+        placeholders = support.select_placeholders(instr, ["id", "hex", "positive"])
 
-        return AbstractFetcher.from_records(
+        return support.from_records(
             instr,
             placeholders,
             tuple(self._run(placeholders, instr.ids)),

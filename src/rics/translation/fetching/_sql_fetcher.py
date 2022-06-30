@@ -7,7 +7,7 @@ from urllib.parse import quote_plus
 
 import sqlalchemy
 
-from rics.translation.fetching import AbstractFetcher, exceptions
+from rics.translation.fetching import AbstractFetcher, exceptions, support
 from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import IdType, PlaceholderTranslations
 from rics.utility.misc import read_env_or_literal, tname
@@ -36,7 +36,7 @@ class TableSummary:
 
     def select_columns(self, instr: FetchInstruction) -> List[str]:
         """Return required and optional columns of the table."""
-        return AbstractFetcher.select_placeholders(instr, self.columns.keys())
+        return support.select_placeholders(instr, self.columns.keys())
 
 
 class SqlFetcher(AbstractFetcher[str, IdType, str]):

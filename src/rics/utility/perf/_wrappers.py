@@ -24,13 +24,13 @@ def run_multivariate_test(
         test_data: Test data to evaluate.
         time_per_candidate: Desired runtime for each repetition per candidate label.
         plot: If True, plot a figure using :meth:`~rics.utility.perf.plot_run`.
-        **figure_kwargs: Keyword arguments for the barplot. Ignored if plot=False.
+        **figure_kwargs: Keyword arguments for the barplot. Ignored if ``plot=False``.
 
     Returns:
         A long-format DataFrame of results.
 
     Raises:
-        ModuleNotFoundError: If Seaborn isn't installed and plot=True.
+        ModuleNotFoundError: If Seaborn isn't installed and ``plot=True``.
     """
     run_results = MultiCaseTimer(candidate_method, test_data).run(time_per_candidate=time_per_candidate)
 

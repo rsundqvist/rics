@@ -25,9 +25,6 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
 
     Raises:
         ValueError: If `default` is given and any placeholder names are missing.
-
-    See Also:
-        :class:`rics.translation.offline._format.Format`
     """
 
     def __init__(
