@@ -7,14 +7,13 @@ inf = float("inf")
 
 @pytest.fixture(scope="module")
 def heuristic_score():
-    return HeuristicScore(
-        "equality",
-        [
-            ("short_circuit_to_value", dict(regex=".*MATCH$", target="TARGET_VALUE")),
-            ("force_lower_case", {}),
-            ("value_fstring_alias", dict(fstring="prefixed_{value}")),
-        ],
-    )
+    heuristics = [
+        ("short_circuit_to_value", dict(regex=".*MATCH$", target="TARGET_VALUE")),
+        ("force_lower_case", {}),
+    ]
+    ans = HeuristicScore("equality", heuristics)
+    ans.add_heuristic("value_fstring_alias", dict(fstring="prefixed_{value}"))  # Add coverage
+    return ans
 
 
 @pytest.mark.parametrize(

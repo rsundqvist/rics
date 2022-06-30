@@ -52,9 +52,6 @@ class HeuristicScore(Generic[H]):
         score_function: Union[str, ScoreFunction],
         heuristics: Iterable[Tuple[Union[str, HeuristicsTypes], Dict[str, Any]]],
     ) -> None:
-        if not heuristics:  # pragma: no cover
-            raise ValueError("No heuristics given.")
-
         self._score: ScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
 
         self._heuristics: List[Tuple[HeuristicsTypes, Dict[str, Any]]] = [
