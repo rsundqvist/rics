@@ -301,7 +301,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             2. Resolve name-to-source mappings. If none are found, return None.
             3. Create a new translation map, or update the cached one.
 
-        See the translate-method for more detailed documentation.
+        See the :meth:`translate`-method for more detailed documentation.
         """
         translatable_io = resolve_io(translatable)  # Fail fast if untranslatable type
 

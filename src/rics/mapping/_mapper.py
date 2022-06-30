@@ -123,7 +123,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
 
     @property
     def context_sensitive_overrides(self) -> bool:
-        """Return True if overrides are of type :class:`rics.utility.collections.InheritedKeysDict."""
+        """Return True if overrides are of type :class:`.InheritedKeysDict`."""
         return self._context_sensitive_overrides
 
     def _create_l2r(self, values: Set[ValueType], context: Optional[ContextType]) -> Dict[ValueType, MatchTuple]:
