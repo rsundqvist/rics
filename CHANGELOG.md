@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+## [0.10.0] - 2022-06-30
 Refactor scoring functions.
 
 ### Added
@@ -15,7 +17,7 @@ Refactor scoring functions.
 - The `filter_functions.score_with_heuristics` function; replaced by the more general `HeuristicScore` class.
 
 ### Changed
-- Make factory module public
+- Make `translation.factory` module public
 - Rename `MappingScoreFunction` -> `ScoreFunction`
 - Add a third mandatory `context` parameter to all mapping functions. The `source` argument has been removed.
 
@@ -139,7 +141,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/rsundqvist/rics/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/rsundqvist/rics/compare/v0.8.1...v0.9.0
 [0.8.1]: https://github.com/rsundqvist/rics/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/rsundqvist/rics/compare/v0.7.0...v0.8.0
