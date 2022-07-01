@@ -40,8 +40,9 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         fetcher: A :class:`.Fetcher` or ready-to-use translations.
         fmt: String :class:`.Format` specification for translations.
         mapper: A :class:`.Mapper` instance for binding names to sources.
-        default_fmt: Alternative format specification to use instead of `fmt` for fallback translation of unknown IDs.
-        default_translations: Shared and/or source-specific default placeholder values for unknown IDs.
+        default_fmt: Alternative :class:`.Format` to use instead of `fmt` for fallback translation of unknown IDs.
+        default_translations: Shared and/or source-specific default placeholder values for unknown IDs. See the
+            :meth:`.InheritedKeysDict.make`-method documentation for details on how to specify these.
     """
 
     @classmethod
@@ -53,7 +54,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         fetcher_factory: factory.MakeFetcherType = factory.default_fetcher_factory,
         mapper_factory: factory.MakeMapperType = factory.default_mapper_factory,
     ) -> "Translator":
-        """See :func:`.factory.translator_from_toml_config`."""
+        """See :func:`rics.translation.factory.translator_from_toml_config`."""
         return factory.translator_from_toml_config(
             str(path), extra_fetchers, fetcher_factory=fetcher_factory, mapper_factory=mapper_factory
         )
@@ -94,7 +95,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         Args:
             share_fetcher: If True, the returned translator will share the current translator's fetcher.
             overrides: Keyword arguments to use when instantiating the copy. Options that aren't given will be taken
-                from the current instance. See class documentation for possible choices.
+                from the current instance. See the :class:`Translator` class documentation for possible choices.
 
         Returns:
             A copy of this translator with `overrides` applied.

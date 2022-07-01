@@ -13,8 +13,9 @@ class Format:
     """Format specification for translations strings.
 
     Translator formats are similar to regular f-strings, with two important exceptions:
-    1. Positional arguments may not be used; ``'{}'`` is not accepted, correct form is ``'{key-name}'``.
-    2. Substrings surrounded by ``[]`` denote an optional element.
+
+        1. Positional arguments (``'{}'``) may not be used; correct form is ``'{key-name}'``.
+        2. Substrings surrounded by ``[]`` denote an optional element.
 
     Args:
         fmt: A translation fstring.
