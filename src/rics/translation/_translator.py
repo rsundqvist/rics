@@ -11,8 +11,8 @@ from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_i
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching.types import Fetcher, IdsToFetch
 from rics.translation.offline import Format, TranslationMap
-from rics.translation.offline._format import FormatType
 from rics.translation.offline.types import (
+    FormatType,
     IdType,
     NameType,
     PlaceholderTranslations,

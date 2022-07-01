@@ -1,11 +1,9 @@
 import re
 from dataclasses import dataclass
-from typing import Iterable, List, Tuple, Union
+from typing import Iterable, List, Tuple
 
-from rics.translation.offline.types import PlaceholdersTuple
+from rics.translation.offline.types import FormatType, PlaceholdersTuple
 from rics.utility.misc import tname
-
-FormatType = Union[str, "Format"]
 
 _REQUIRED_ELEMENT_RE = r"{(?P<required>\w+)}"
 _OPTIONAL_ELEMENT_REGEX = r"(?P<optional>\[(?P<left>.*?){(?P<optional_name>\w+)}(?P<right>.*?)\])"

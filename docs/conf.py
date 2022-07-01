@@ -97,11 +97,7 @@ autodoc_default_options = {
 }
 
 # -- Apidoc configuration -----------------------------------------------------
-apidoc_default_options = {
-    "members": True,
-    "undoc-members": False,
-    "show-inheritance": True,
-}
+
 
 # -- Intersphinx configuration -------------------------------------------------
 intersphinx_mapping = {

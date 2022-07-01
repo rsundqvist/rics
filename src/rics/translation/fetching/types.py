@@ -28,11 +28,11 @@ class IdsToFetch(Generic[SourceType, IdType]):
 
 @dataclass(frozen=True)
 class FetchInstruction(IdsToFetch[SourceType, IdType]):
-    """Instructions given to an implementation.
-
-    Tuples of this type are passed to the :meth:`_fetch_translations` method of fetcher implementations.
+    """Instructions passed from an abstract fetcher to an implementation.
 
     Attributes:
+        source: Where to fetch from.
+        ids: Unique IDs to fetch translations for. None=fetch as much as possible.
         placeholders: All desired placeholders in preferred order.
         required: Placeholders that must be included in the response.
         all_placeholders: Flag indicated whether to retrieve as many placeholders as possible.

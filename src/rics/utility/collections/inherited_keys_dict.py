@@ -4,16 +4,16 @@ from typing import Any, Dict, Hashable, Iterator, Mapping, TypeVar, Union
 
 from rics.utility.misc import tname
 
-_OKT = TypeVar("_OKT", bound=Hashable)
-_KT = TypeVar("_KT", bound=Hashable)
-_VT = TypeVar("_VT")
+SKT = TypeVar("SKT", bound=Hashable)
+KT = TypeVar("KT", bound=Hashable)
+VT = TypeVar("VT")
 
-DefaultType = Dict[_KT, _VT]
-SpecificType = Dict[_OKT, DefaultType]
+DefaultType = Dict[KT, VT]
+SpecificType = Dict[SKT, DefaultType]
 MakeDict = Dict[str, Union[DefaultType, SpecificType]]
 
 
-class InheritedKeysDict(Mapping[_OKT, Dict[_KT, _VT]]):
+class InheritedKeysDict(Mapping[SKT, Dict[KT, VT]]):
     """A nested dictionary that returns default-backed child dictionaries.
 
     The length of a InheritedKeysDict is equal to the number of specific outer keys, and is considered True when cast to
@@ -56,7 +56,7 @@ class InheritedKeysDict(Mapping[_OKT, Dict[_KT, _VT]]):
         self._specific = specific or {}
         self._default = default or {}
 
-    def __getitem__(self, context: _OKT) -> DefaultType:
+    def __getitem__(self, context: SKT) -> DefaultType:
         if not self:
             raise KeyError(context)
 
@@ -80,7 +80,7 @@ class InheritedKeysDict(Mapping[_OKT, Dict[_KT, _VT]]):
     def __len__(self) -> int:
         return len(self._specific)
 
-    def __iter__(self) -> Iterator[_OKT]:
+    def __iter__(self) -> Iterator[SKT]:
         yield from self._specific
 
     def copy(self) -> "InheritedKeysDict":

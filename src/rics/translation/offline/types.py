@@ -1,12 +1,20 @@
 """Types used for offline translation."""
 from dataclasses import dataclass
-from typing import Any, Dict, Generic, Sequence, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, Generic, Sequence, Tuple, TypeVar, Union
 
 import pandas as pd
 
+if TYPE_CHECKING:
+    from rics.translation.offline._format import Format
+
+FormatType = Union[str, "Format"]
+
 NameType = TypeVar("NameType", int, str)
+"""Type used to label collections of IDs, such as the column names in a DataFrame or the keys of a dict."""
 IdType = TypeVar("IdType", int, str)
+"""Type of the value being translated into human-readable labels."""
 SourceType = TypeVar("SourceType", int, str)
+"""Type used to describe sources. Typically a string for things like files and database tables."""
 
 PlaceholdersTuple = Tuple[str, ...]
 NameToSourceDict = Dict[NameType, SourceType]  # {name: source}

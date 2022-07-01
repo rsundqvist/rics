@@ -1,11 +1,11 @@
 from typing import Any, Callable, Dict, Hashable, List, TypeVar
 
-_KT = TypeVar("_KT", bound=Hashable)
-_HVT = TypeVar("_HVT", bound=Hashable)
-_VT = TypeVar("_VT")
+KT = TypeVar("KT", bound=Hashable)
+HVT = TypeVar("HVT", bound=Hashable)
+VT = TypeVar("VT")
 
 
-def compute_if_absent(d: Dict[_KT, _VT], key: _KT, func: Callable[[_KT], _VT] = None) -> _VT:
+def compute_if_absent(d: Dict[KT, VT], key: KT, func: Callable[[KT], VT] = None) -> VT:
     """Compute and store `key` using `func` if `key` is not in the dict.
 
     Args:
@@ -22,7 +22,7 @@ def compute_if_absent(d: Dict[_KT, _VT], key: _KT, func: Callable[[_KT], _VT] = 
     return d[key]
 
 
-def reverse_dict(d: Dict[_KT, _HVT]) -> Dict[_HVT, _KT]:
+def reverse_dict(d: Dict[KT, HVT]) -> Dict[HVT, KT]:
     """Swap keys and values.
 
     Args:
