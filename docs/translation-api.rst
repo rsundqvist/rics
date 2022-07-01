@@ -10,10 +10,11 @@ The ``Translator`` is the main entry point for all translation tasks. For a simp
 ====================
 Handling unknown IDs
 ====================
-Untranslatable IDs are will be `None` by default. Both and alternative alternative translation format and default values
-may be specified to handle IDs which weren't returned by the underlying fetcher. Alternative formats work just like
-regular formats, but if any placeholders other than `id` are specified, these must be included in the default
-translations. As an example, by copying the ``[unknown_ids.*]`` sections from `config.toml`_, we see that the output for
+Untranslatable IDs are `None` by default. An alternative translation format and default values may be specified to
+handle these IDs. Default translations are required if this format uses placeholders except `id`. Formats don't need to
+use any placeholders at all, in which case the IDs will simply be replaced by the given string.
+
+As an example, by copying the ``[unknown_ids.*]`` sections from `config.toml`_, we see that the output for
 an unknown title with ID `"tt0043440"` is translated the way we specified it.
 
 .. list-table::
@@ -31,6 +32,13 @@ an unknown title with ID `"tt0043440"` is translated the way we specified it.
     A simple `default_fmt` such as ``"{id} not translated"`` or just ``"unknown"`` may be enough, and will only
     fail if the fetcher is configured to fail for unknown IDs. Using one of these we could've skipped the
     ``default-translations`` section entirely in the example above.
+
+===============
+Working offline
+===============
+The :meth:`.Translator.store`-method is used to fetch as much data as possible (or needed, if sample data is given).
+Once fetching is complete, the fetcher is disconnected and discarded. Translations will be faster, but may cause high
+memory consumption. A Translator working offline is always serializable.
 
 ======================
 Fetching: SQL database
@@ -55,18 +63,14 @@ system, allowing translation data to be shared if stored centrally.
 ==============================
 Fetching: User implementations
 ==============================
-The abstract base class may be inherited by users to customize all aspects of the fetching process. You will find the
-API reference for this class below.
+The abstract base class may be inherited by users to customize all aspects of the fetching process.
+
+.. note::
+   The implementations are written to be flexible. Consider inheriting one of those instead of the AbstractFetcher,
+   overriding the appropriate functions to achieve the desired result.
 
 .. autoclass:: rics.translation.fetching.AbstractFetcher
    :noindex:
-
-===================
-Offline translation
-===================
-The :meth:`rics.translation.Translator.store`-method is used to fetch as much data as possible or needed (if sample data
-is given). Once fetching is complete, the fetcher will be disconnected and discarded. Translations will be faster, but
-may cause high memory consumption.
 
 .. _config.toml:
     https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.toml

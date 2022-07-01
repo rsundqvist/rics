@@ -26,7 +26,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     """Base class for retrieving translations from an external source.
 
     Users who wish to define their own fetching logic should inherit this class, but there are implementations for
-    common uses cases. See :class:`~rics.translation.fetching.PandasFetcher` for a versatile base fetcher or
+    common uses cases. See :class:`~rics.translation.fetching.PandasFetcher` for a versatile base fetcher, or
     :class:`~rics.translation.fetching.SqlFetcher` for a more specialized solution.
 
     Args:
