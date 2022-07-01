@@ -32,18 +32,8 @@ My personal little ML engineering library.
 
 ## Quickstart for development
 
-### Notice
-This project uses groups for extras dependencies, which is currently a **_PRERELEASE_** feature (slated for `1.2`). Assuming
-poetry was installed the recommended way (see below), this can be done using:
-```bash
-curl -sSL https://install.python-poetry.org/ | python - --version="1.2.0b2"
-```
-
 ### Setting up for local development
 Assumes a "modern" version of Ubuntu (guide written under `Ubuntu 20.04.2 LTS`) with basic dev dependencies installed.
-
-This project uses groups for extras dependencies. If installation fails, make sure that output from `poetry --version` 
-is `1.2.0` or greater.
 
 To get started, run the following commands:
 
@@ -56,7 +46,7 @@ To get started, run the following commands:
    ```bash
    git clone git@github.com:rsundqvist/rics.git
    cd rics
-   poetry install --with dev-extras
+   poetry install --dev -E translation -E plotting
    inv install-hooks
    ./run-invocations
    ```

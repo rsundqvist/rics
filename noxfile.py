@@ -30,7 +30,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
         session.run(
             "poetry",
             "export",
-            "--with=dev",
+            "--dev",
             "--without-hashes",
             f"--output={requirements.name}",
             external=True,
@@ -40,8 +40,11 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
 
 def install_with_project_extras(session: Session) -> None:
     """Install the project using poetry."""
-    only = [f"--only={e}" for e in extras]
-    session.run_always("poetry", "install", "--no-interaction", *only, external=True)
+    extra = []
+    for e in extras:
+        extra.append("-E")
+        extra.append(e)
+    session.run_always("poetry", "install", "--no-interaction", *extra, external=True)
     session.install(".")
 
 
