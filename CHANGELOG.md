@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Convenience functions for (de)serializing `Translator` instances.
+
+### Fixed
+- Broken docs.
+
 ## [0.10.2] - 2022-07-01
 Try to restore the translation API docs.
 

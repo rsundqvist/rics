@@ -1,6 +1,7 @@
 import logging
 import warnings
 from collections import defaultdict
+from pathlib import Path
 from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from rics._internal_support.types import PathLikeType
@@ -25,6 +26,8 @@ from rics.utility.misc import tname
 _NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
 
 LOGGER = logging.getLogger(__package__).getChild("Translator")
+
+DEFAULT_STORAGE_PATH = Path("~").joinpath(".rics").joinpath("offline-translator.pkl")
 
 NamesPredicate = Callable[[NameType], bool]
 NameTypes = Union[NameType, Iterable[NameType]]
@@ -240,14 +243,43 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         """Return connectivity status. If False, no new translations may be fetched."""
         return hasattr(self, "_fetcher")
 
+    @classmethod
+    def restore(cls, path: PathLikeType = DEFAULT_STORAGE_PATH) -> "Translator":
+        """Restore a serialized Translator.
+
+        Args:
+            path: Path to a serialized Translator.
+
+        Returns:
+            A Translator.
+
+        Raises:
+            TypeError: If the object at `path` is not a Translator.
+
+        See Also:
+            The :meth:`Translator.store` method.
+        """
+        import pickle  # noqa: S403
+
+        path = str(Path(str(path)).expanduser())
+        with open(path, "rb") as f:
+            ans = pickle.load(f)  # noqa: S301
+
+        if not isinstance(ans, Translator):  # pragma: no cover
+            raise TypeError(f"Serialized object at at path='{path}' is a {type(ans)}, not {Translator.__qualname__}.")
+
+        return ans
+
     def store(
         self,
         translatable: DefaultTranslatable = None,
         names: Names = None,
         ignore_names: Names = None,
         delete_fetcher: bool = True,
+        path: PathLikeType = DEFAULT_STORAGE_PATH,
+        serialize: bool = False,
     ) -> "Translator":
-        """Retrieve and store translations in a local cache.
+        """Retrieve and store translations in memory.
 
         Args:
             translatable: Data from which IDs to fetch will be extracted. None=fetch all IDs.
@@ -257,6 +289,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                 also be a predicate which indicates (returns True for) names to ignore.
             delete_fetcher: If True, invoke :meth:`.Fetcher.close` and delete the fetcher after retrieving data. The
                 Translator will still function, but some methods may raise exceptions and new data cannot be retrieved.
+            path: Location where the serialized Translator will be stored on disk. Ignored when ``serialize==False``.
+            serialize: If True, serialize the Translator to `path` once data has been retrieved.
 
         Returns:
             Self, for chained assignment.
@@ -265,6 +299,14 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             ForbiddenOperationError: If the fetcher does not permit the FETCH_ALL operation (only when `translatable` is
                 None).
             MappingError: If a `translatable` is given, but no names to translate could be extracted.
+
+        Notes:
+            The Translator is guaranteed to be serializable once offline. Fetchers often aren't as they require things
+            like database connections to function. Serializability can be tested using the
+            :meth:`rics.utility.misc.serializable` method.
+
+        See Also:
+            The :meth:`Translator.restore` method.
         """
         if translatable is None:
             source_translations: SourcePlaceholderTranslations = self._fetch(None)
@@ -282,8 +324,19 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             self._fetcher.close()
             del self._fetcher
 
-        LOGGER.info("Store %s", translation_map)
         self._cached_tmap = translation_map
+
+        if serialize:
+            import os
+            import pickle  # noqa: S403
+
+            path = Path(str(path)).expanduser()
+            path.parent.mkdir(parents=True, exist_ok=True)
+            with open(path, "wb") as f:
+                pickle.dump(self, f)
+
+            mb_size = os.path.getsize(path) / 1000000
+            LOGGER.info(f"Stored {self} of size {mb_size:.3g} MB at path='{path}'.")
         return self
 
     def _get_updated_tmap(

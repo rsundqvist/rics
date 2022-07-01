@@ -81,6 +81,26 @@ def test_missing_config():
         Translator.from_config("tests/translation/bad-config.toml")
 
 
+def test_store_and_restore(hex_fetcher):
+    from tempfile import TemporaryDirectory
+
+    translator = Translator(hex_fetcher, fmt="{id}:{hex}")
+
+    data = {
+        "positive_numbers": list(range(0, 5)),
+        "negative_numbers": list(range(-5, -1)),
+    }
+    translated_data = translator(data)
+
+    with TemporaryDirectory("test-store-and-restore", "rics") as tmpdir:
+        path = f"{tmpdir}/test-translator.pkl"
+        translator.store(path=path, serialize=True)
+        restored = Translator.restore(path=path)
+
+    translated_by_restored = restored(data)
+    assert translated_by_restored == translated_data
+
+
 def test_store_with_explicit_values(hex_fetcher):
     data = {
         "positive_numbers": list(range(0, 5)),
