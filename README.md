@@ -46,7 +46,7 @@ To get started, run the following commands:
    ```bash
    git clone git@github.com:rsundqvist/rics.git
    cd rics
-   poetry install --dev -E translation -E plotting
+   poetry install -E translation -E plotting
    inv install-hooks
    ./run-invocations
    ```
