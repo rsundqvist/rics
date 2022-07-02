@@ -17,6 +17,7 @@ My personal little ML engineering library.
 
    Quickstart guide <translation-quickstart>
    Translation format strings <translation-format>
+   TOML configuration <translation-config-format>
    Translation API <translation-api>
 
 .. toctree::

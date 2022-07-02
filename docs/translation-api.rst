@@ -73,4 +73,4 @@ The abstract base class may be inherited by users to customize all aspects of th
    :noindex:
 
 .. _config.toml:
-    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.toml
+   ../jupyterlab/demo/sql-translation/config.toml

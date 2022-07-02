@@ -7,13 +7,9 @@ Turn meaningless IDs into human-readable labels.
 
    Total number of `Covid cases`_ cases per day. IDs have been translated using the standard **id:name**-format.
 
-======================
-The Configuration File
-======================
-The recommended way of creating and configuring fetchers is the :meth:`Translator.from_config()
-<rics.translation.Translator.from_config>` method, which takes a TOML config-file and returns a ready-to-run
-:class:`~rics.translation.Translator`. The translator has a lot of configuration options, as does its components. See
-the `Translating with a SQL database`_ notebook and its associated `config.toml`_ file for an example.
+.. note::
+    The recommended way of creating and configuring fetchers is the :meth:`Translator.from_config()
+    <rics.translation.Translator.from_config>` method. For details, see the :doc:`translation-config-format` page.
 
 =============================
 Translating IDs in 30 seconds
@@ -68,9 +64,9 @@ The example above could be solved using config options that :meth:`Translator.fr
 <rics.translation.Translator.from_config>` provides. The primary use case for importing and using these classes directly
 is writing a more advanced a ``score_function`` or fetcher than the implementations of this package provide.
 
-=====================================
+============================
 Example: DVD Rental Database
-=====================================
+============================
 This example translates a query from the `DVD Rental Sample Database`_. It covers most of the more advanced features
 that have been implemented. Using Docker, this database can be obtained by running:
 
@@ -98,15 +94,21 @@ The query above shows who rented what and when, what store they rented from and 
    :file: dvdrental.csv
    :header-rows: 1
 
-The database has a few quirks, which are taken care of by the following config file:
+The database has a few quirks, which are taken care of by the following
+:download:`config <../tests/translation/dvdrental/config.toml>` file:
 
 .. literalinclude:: ../tests/translation/dvdrental/config.toml
    :language: toml
    :caption: Configuration for translating data in the database.
    :linenos:
 
+.. note::
+
+   See :doc:`translation-config-format` for configuration file details.
+
 Translating now becomes a simple matter. The following snippet is a test case which translates all of the ~16000 rows
 returned by the query, verifying a random sample of 5 rows.
+
 
 .. literalinclude:: ../tests/translation/dvdrental/test_dvdrental.py
    :language: python
@@ -120,9 +122,5 @@ The translated rows are:
 
 .. _DVD Rental Sample Database:
     https://www.postgresqltutorial.com/postgresql-getting-started/postgresql-sample-database/
-.. _Translating with a SQL database:
-    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/SqlFetcher.ipynb
-.. _config.toml:
-    https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/sql-translation/config.toml
 .. _Covid cases:
     https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide
