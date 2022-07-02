@@ -130,9 +130,6 @@ def translator_from_toml_config(
 
     Raises:
         ConfigurationError: If the config is invalid.
-
-    Warnings:
-        UserWarning: If the user may be doing something they didn't intend to.
     """
     from rics.translation import Translator
 

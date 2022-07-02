@@ -8,6 +8,19 @@ H = TypeVar("H", bound=Hashable)
 ContextType = TypeVar("ContextType", bound=Hashable)
 
 AliasFunction = Callable[[H, Iterable[H], Optional[ContextType]], Tuple[H, Iterable[H]]]
+"""Signature for an alias function for heuristic scoring.
+
+Args:
+    name: An element to find matches for.
+    candidates: Potential matches for `value`.
+    context: The context in which mapping is being performed.
+
+Keyword Args:
+    kwargs: Accepted only by some functions.
+
+Returns:
+    A tuple (name, candidates) with applied heuristics to increase (or decrease) score as desired.
+"""
 
 
 def short_circuit_to_value(

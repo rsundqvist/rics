@@ -17,6 +17,7 @@ FilterFunction = Callable[[H, Iterable[H], Optional[ContextType]], Set[H]]
 Args:
     name: An element to find matches for.
     candidates: Potential matches for `value`.
+    context: The context in which filtering is being performed.
 
 Keyword Args:
     kwargs: Accepted only by some functions.

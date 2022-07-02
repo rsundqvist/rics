@@ -30,7 +30,7 @@ class Cardinality(Enum):
 
     @property
     def many_left(self) -> bool:
-        """Many-relationship on the right, True for ``N:1`` and ``M:N``."""
+        """Many-relationship on the left, True for ``N:1`` and ``M:N``."""
         return self == Cardinality.ManyToMany or self == Cardinality.ManyToOne  # pragma: no cover
 
     @property
@@ -40,7 +40,7 @@ class Cardinality(Enum):
 
     @property
     def one_left(self) -> bool:
-        """One-relationship on the right, True for ``1:1`` and ``1:N``."""
+        """One-relationship on the left, True for ``1:1`` and ``1:N``."""
         return not self.many_left  # pragma: no cover
 
     @property

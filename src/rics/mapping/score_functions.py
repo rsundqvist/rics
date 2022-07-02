@@ -12,6 +12,7 @@ ScoreFunction = Callable[[H, Iterable[H], Optional[ContextType]], Iterable[float
 Args:
     name: An element to find matches for.
     candidates: Potential matches for `value`.
+    context: The context in which scoring is being performed.
 
 Keyword Args:
     kwargs: Accepted only by some functions.
