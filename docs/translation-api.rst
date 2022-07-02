@@ -19,8 +19,9 @@ Untranslatable IDs are `None` by default. An alternative translation format and 
 handle these IDs. Default translations are required if this format uses placeholders except `id`. Formats don't need to
 use any placeholders at all, in which case the IDs will simply be replaced by the given string.
 
-As an example, by copying the ``[unknown_ids.*]`` sections from `config.toml`_, we see that the output for
-an unknown title with ID `"tt0043440"` is translated the way we specified it.
+Examples of default translations can be found in :doc:`examples/notebooks/sql-translation/SqlFetcher`, which uses
+:download:`this <examples/notebooks/sql-translation/config.toml>` config file. We can see that output for an unknown
+title with ID `"tt0043440"` is translated the way we specified it:
 
 .. list-table::
    :widths: 20 70
@@ -82,6 +83,3 @@ The abstract base class may be inherited by users to customize all aspects of th
 
 .. autoclass:: rics.translation.fetching.AbstractFetcher
    :noindex:
-
-.. _config.toml:
-   ../jupyterlab/demo/sql-translation/config.toml
