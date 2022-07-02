@@ -22,6 +22,14 @@ rics.translation.exceptions module
    :undoc-members:
    :show-inheritance:
 
+rics.translation.factory module
+-------------------------------
+
+.. automodule:: rics.translation.factory
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

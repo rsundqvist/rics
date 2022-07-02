@@ -62,6 +62,8 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             str(path), extra_fetchers, fetcher_factory=fetcher_factory, mapper_factory=mapper_factory
         )
 
+    from_config.__doc__ = factory.translator_from_toml_config.__doc__
+
     def __init__(
         self,
         fetcher: Union[

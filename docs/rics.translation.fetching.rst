@@ -12,6 +12,14 @@ rics.translation.fetching.exceptions module
    :undoc-members:
    :show-inheritance:
 
+rics.translation.fetching.support module
+----------------------------------------
+
+.. automodule:: rics.translation.fetching.support
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 rics.translation.fetching.types module
 --------------------------------------
 
