@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.1] - 2022-07-02
+Documentation and docstring fixes.
+
+### Added
+- A [TOML Configuration](https://rics.readthedocs.io/en/latest/translation-config-format.html) section to docs
+
 ## [0.11.0] - 2022-07-01
 
 ### Added
@@ -157,7 +163,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.11.1...HEAD
+[0.11.1]: https://github.com/rsundqvist/rics/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/rsundqvist/rics/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/rsundqvist/rics/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/rsundqvist/rics/compare/v0.10.0...v0.10.1
