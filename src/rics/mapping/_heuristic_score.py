@@ -12,6 +12,7 @@ LOGGER = logging.getLogger(__name__)
 H = TypeVar("H", bound=Hashable)
 ContextType = TypeVar("ContextType", bound=Hashable)
 HeuristicsTypes = Union[AliasFunction, FilterFunction]
+"""Heuristic function types."""
 
 
 class HeuristicScore(Generic[H]):
@@ -31,9 +32,9 @@ class HeuristicScore(Generic[H]):
 
     Args:
         score_function: An underlying score function.
-        heuristics: Tuples (HeuristicType, kwargs) to apply to the inputs of the score function. Keyword arguments will
-            be reused between calls. Applied in the given order, so filters that are likely to trigger should be placed
-            early.
+        heuristics: Tuples (:attr:`HeuristicTypes`, kwargs) to apply to the inputs of the score function. Keyword
+            arguments will be reused between calls. Applied in the given order, so filters that are likely to trigger
+            should be placed early.
 
     Raises:
         ValueError: If no `heuristics` are given.

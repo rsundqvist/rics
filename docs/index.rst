@@ -16,9 +16,17 @@ My personal little ML engineering library.
    :maxdepth: 4
 
    Quickstart guide <translation-quickstart>
-   Translation format strings <translation-format>
-   TOML configuration <translation-config-format>
-   Translation API <translation-api>
+   translation-format
+   translation-config-format
+   translation-api
+
+.. toctree::
+   :caption: ID Translation Examples
+   :maxdepth: 8
+
+   examples/dvdrental.rst
+   examples/notebooks/sql-translation/SqlFetcher.ipynb
+   examples/notebooks/pickle-translation/PickleFetcher.ipynb
 
 .. toctree::
    :caption: Documentation

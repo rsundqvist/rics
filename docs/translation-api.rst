@@ -1,3 +1,8 @@
+Translation API
+===============
+For the complete specification, see :mod:`rics.translation` and :mod:`rics.mapping`. The key components of the
+translation machinery are presented below.
+
 ==============
 The Translator
 ==============
@@ -40,18 +45,24 @@ The :meth:`.Translator.store`-method is used to fetch as much data as possible (
 Once fetching is complete, the fetcher is disconnected and discarded. Translations will be faster, but may cause high
 memory consumption. A Translator working offline is always serializable.
 
-======================
-Fetching: SQL database
-======================
+=====================
+Fetching translations
+=====================
+Fetching is done using :class:`rics.translation.fetching.types.Fetcher` implementations. The most interesting
+implementations are listed below.
+
+------------
+SQL database
+------------
 Implementation based on SQLAlchemy. Any supported dialect should work out of the box, though drivers for your particular
 dialect may need to be installed separately.
 
 .. autoclass:: rics.translation.fetching.SqlFetcher
    :noindex:
 
-=====================
-Fetching: Local files
-=====================
+-----------
+Local files
+-----------
 Implementation wrapping a pandas Read-function where file names are interpreted as `source` names. Most readers in
 `pandas.io <https://pandas.pydata.org/docs/reference/io.html>`_ should work, though additional dependencies may
 be required for some of them. Many of these functions do not actually require the file to be present on the local file
@@ -60,9 +71,9 @@ system, allowing translation data to be shared if stored centrally.
 .. autoclass:: rics.translation.fetching.PandasFetcher
    :noindex:
 
-==============================
-Fetching: User implementations
-==============================
+--------------------
+User implementations
+--------------------
 The abstract base class may be inherited by users to customize all aspects of the fetching process.
 
 .. note::

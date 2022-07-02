@@ -3,20 +3,22 @@ TOML Configuration
 
 The recommended way of creating and configuring fetchers is the :meth:`Translator.from_config()
 <rics.translation.Translator.from_config>` method, which takes a TOML config-file and returns a ready-to-run
-:class:`~rics.translation.Translator`. The translator has a lot of configuration options, as does its components.
+:class:`~rics.translation.Translator`.
 
 The only valid top-level keys are ``translator``, ``unknown_ids``, and ``fetching``. Only the ``fetching`` section is
 required, though it may be left out of the main configuration file if fetching is configured separately. Other top-level
 keys will raise a :class:`~rics.translation.exceptions.ConfigurationError` if present.
 
 **Examples**:
-    * `Translating with a SQL database`_, uses the :download:`config <../jupyterlab/demo/pickle-translation/config.toml>` file.
-    * `Translating with Pickled files`_, uses the :download:`config <../jupyterlab/demo/sql-translation/config.toml>` file.
-    * `Example: DVD Rental Database <translation-quickstart.html#example-dvd-rental-database>`__, uses the
-      :download:`config <../tests/translation/dvdrental/config.toml>` file.
+    * :doc:`examples/notebooks/sql-translation/SqlFetcher`,
+      uses :download:`this <examples/notebooks/sql-translation/config.toml>` config file.
+    * :doc:`examples/notebooks/pickle-translation/PickleFetcher`,
+      uses :download:`this <examples/notebooks/pickle-translation/config.toml>` config file.
+    * `Example: DVD Rental Database <translation-quickstart.html#example-dvd-rental-database>`__, uses
+      :download:`this <../tests/translation/dvdrental/config.toml>` config file.
 
-Configuring multiple fetchers
------------------------------
+Multiple fetchers
+-----------------
 Complex applications may require multiple fetchers. These may be specified in auxiliary config files, one fetcher per
 file. Only the ``fetching`` key will be considered in these files. If multiple fetchers are defined, theses will be
 combined into a :class:`~rics.translation.fetching.MultiFetcher`. Fetchers are considered in the order in which the
@@ -24,7 +26,8 @@ config files are given when resolving :attr:`~rics.translation.fetching.types.Fe
 mapping, eg when translating data with a Translator created by running
 
 >>> from rics.translation import Translator
->>> Translator.from_config("translation.toml", extra_fetchers=["fetcher.toml", "backup-fetcher.toml"])
+>>> extra_fetchers=["fetcher.toml", "backup-fetcher.toml"]
+>>> Translator.from_config("translation.toml", extra_fetchers=extra_fetchers)
 
 the :func:`~rics.translation.Translator.map_to_sources`-function will first consider the sources of the
 fetcher defined in **translation.toml** (if there is one), then the ones defined in `fetcher.toml` before finally
@@ -245,8 +248,3 @@ identical contents. We would like to use a format ``"[{title}. ]{name}"`` to out
 
 to force the fetcher to inform the Translator that the `title` placeholder (column) does not exist for the `title_basics`
 source (we used `"_"` since TOML `does not have <https://github.com/toml-lang/toml/issues/30>`__ a ``null``-type).
-
-.. _Translating with a SQL database:
-    ../jupyterlab/demo/sql-translation/SqlFetcher.ipynb
-.. _Translating with Pickled files:
-    ../jupyterlab/demo/pickle-translation/PickleFetcher.ipynb

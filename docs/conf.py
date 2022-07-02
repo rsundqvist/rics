@@ -6,6 +6,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 
+import shutil
+
 # If extensions (or modules to document with autodoc) are in another
 # directory, add these directories to sys.path here. If the directory is
 # relative to the documentation root, use os.path.abspath to make it
@@ -39,6 +41,8 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
+    "nbsphinx",
+    "sphinx.ext.mathjax",
     "recommonmark",
 ]
 
@@ -48,7 +52,7 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "**.ipynb_checkpoints"]
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -96,12 +100,14 @@ autodoc_default_options = {
     "member-order": "bysource",
 }
 
-# -- Apidoc configuration -----------------------------------------------------
-
-
 # -- Intersphinx configuration -------------------------------------------------
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
 }
+
+# -- Nbsphinx
+nbsphinx_execute = "never"
+
+shutil.copytree("../jupyterlab/demo/", "examples/notebooks", dirs_exist_ok=True)

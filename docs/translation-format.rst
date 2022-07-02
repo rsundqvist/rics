@@ -1,5 +1,5 @@
 ==========================
-Translation format strings
+Translation Format Strings
 ==========================
 The :class:`rics.translation.offline.Format` class defines the string format. These are similar to regular fstrings,
 with two significant exceptions:
