@@ -18,7 +18,7 @@ from the terminal. To describe the database, run
 from a separate terminal window. Leave out the last part (``-c "\d+"``) to query the database manually. We will use a
 small query to describe rental transactions in the database:
 
-.. literalinclude:: ../tests/translation/dvdrental/query.sql
+.. literalinclude:: ../../tests/translation/dvdrental/query.sql
    :language: sql
    :caption: Query returning DVD rental transactions.
    :linenos:
@@ -32,7 +32,7 @@ The query above shows who rented what and when, what store they rented from and 
 The database has a few quirks, which are taken care of by the following
 :download:`config <../../tests/translation/dvdrental/config.toml>` file:
 
-.. literalinclude:: ../tests/translation/dvdrental/config.toml
+.. literalinclude:: ../../tests/translation/dvdrental/config.toml
    :language: toml
    :caption: Configuration for translating data in the database.
    :linenos:
@@ -45,14 +45,14 @@ Translating now becomes a simple matter. The following snippet is a test case wh
 returned by the query, verifying a random sample of 5 rows.
 
 
-.. literalinclude:: ../tests/translation/dvdrental/test_dvdrental.py
+.. literalinclude:: ../../tests/translation/dvdrental/test_dvdrental.py
    :language: python
    :linenos:
 
 The translated rows are:
 
 .. csv-table:: The rows translated. Dates are not translated, nor is the first (row number/index) column.
-   :file: ../tests/translation/dvdrental/translated.csv
+   :file: ../../tests/translation/dvdrental/translated.csv
    :header-rows: 1
 
 .. _DVD Rental Sample Database:
