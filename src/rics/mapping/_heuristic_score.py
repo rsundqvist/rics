@@ -18,7 +18,12 @@ HeuristicsTypes = Union[AliasFunction, FilterFunction]
 class HeuristicScore(Generic[H]):
     """Callable wrapper for computing heuristic scores.
 
-    Instances are callable. Signature is given by :const:`~rics.mapping.score_functions.ScoreFunction`.
+    Instances are callable. Signature is given by :attr:`.ScoreFunction`.
+    
+    Short-circuting:
+        A mechanism for forced matching. Score is set to `+∞` for short-circuited candidates, and `-∞` for the rest.
+        No further matching will be performed after this point, so ensure that all desired candidates are returned by
+        chosen filters.
 
     Procedure:
         1. Exact matches are always preferred, and will trigger ``short-circuiting`` for the matching candidate.
@@ -35,15 +40,6 @@ class HeuristicScore(Generic[H]):
         heuristics: Tuples (:attr:`HeuristicTypes`, kwargs) to apply to the inputs of the score function. Keyword
             arguments will be reused between calls. Applied in the given order, so filters that are likely to trigger
             should be placed early.
-
-    Raises:
-        ValueError: If no `heuristics` are given.
-        KeyError: If a given function name cannot be found.
-
-    Notes:
-        ``Short-circuiting`` is a mechanism for forced matching. The score for short-circuited candidates are set to
-        `+∞` and `-∞` for the rest. No further matching will be performed after this point, so take care that any
-        filter functions you use return all desired candidates.
     """
 
     LOGGER = logging.getLogger(__package__).getChild("HeuristicScore")
