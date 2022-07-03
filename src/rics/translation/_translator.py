@@ -196,8 +196,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         names_to_translate = self._resolve_names(translatable, names, ignore_names)
         sources = self._fetcher.sources if self.online else self._cached_tmap.sources
 
-        self._mapper.candidates = set(sources)
-        name_to_source = self._mapper.apply(names_to_translate)
+        name_to_source = self._mapper.apply(names_to_translate, sources)
 
         # Fail if any of the explicitly given (ie literal, not predicate) names fail to map to a source.
         if isinstance(names, (str, Iterable)):

@@ -9,18 +9,23 @@ def _substring_score(k, c, _):
         yield float(k in ci) / len(ci)
 
 
-def test_default():
-    mapper = Mapper(("a", "ab", "b"))
-    assert mapper.apply(["a"]).left_to_right == {"a": ("a",)}
-    assert mapper.apply(["b"]).left_to_right == {"b": ("b",)}
-    assert mapper.apply(["a", "b"]).left_to_right == {"a": ("a",), "b": ("b",)}
+@pytest.fixture(scope="module")
+def candidates():
+    return ("a", "ab", "b")
 
 
-def test_with_overrides():
-    mapper = Mapper(("a", "ab", "b"), overrides={"a": "fixed"})
-    assert mapper.apply(["a"]).left_to_right == {"a": ("fixed",)}
-    assert mapper.apply(["b"]).left_to_right == {"b": ("b",)}
-    assert mapper.apply(["a", "b"]).left_to_right == {"a": ("fixed",), "b": ("b",)}
+def test_default(candidates):
+    mapper = Mapper()
+    assert mapper.apply(candidates, ["a"]).left_to_right == {"a": ("a",)}
+    assert mapper.apply(candidates, ["b"]).left_to_right == {"b": ("b",)}
+    assert mapper.apply(candidates, ["a", "b"]).left_to_right == {"a": ("a",), "b": ("b",)}
+
+
+def test_with_overrides(candidates):
+    mapper = Mapper(overrides={"a": "fixed"})
+    assert mapper.apply(["a"], candidates).left_to_right == {"a": ("fixed",)}
+    assert mapper.apply(["b"], candidates).left_to_right == {"b": ("b",)}
+    assert mapper.apply(["a", "b"], candidates).left_to_right == {"a": ("fixed",), "b": ("b",)}
 
 
 @pytest.mark.parametrize(
@@ -34,14 +39,13 @@ def test_with_overrides():
         ("ab", {"a": ("a",), "b": ("b",)}, False),
     ],
 )
-def test_multiple_matches(values, expected, allow_multiple):
+def test_multiple_matches(values, expected, allow_multiple, candidates):
     mapper = Mapper(
-        ("a", "ab", "b"),
         min_score=0.1,
         score_function=_substring_score,
         cardinality=None if allow_multiple else Cardinality.OneToOne,
     )
-    assert mapper.apply(values).left_to_right == expected
+    assert mapper.apply(values, candidates).left_to_right == expected
 
 
 @pytest.mark.parametrize(
@@ -55,25 +59,24 @@ def test_multiple_matches(values, expected, allow_multiple):
         ("ab", {"a": ("fixed",), "b": ("b",)}, False),
     ],
 )
-def test_multiple_matches_with_overrides(values, expected, allow_multiple):
+def test_multiple_matches_with_overrides(values, expected, allow_multiple, candidates):
     mapper = Mapper(
-        candidates=("a", "ab", "b"),
         overrides={"a": "fixed"},
         min_score=0.1,
         score_function=_substring_score,
         cardinality=None if allow_multiple else Cardinality.OneToOne,
     )
-    assert mapper.apply(values).left_to_right == expected
+    assert mapper.apply(values, candidates).left_to_right == expected
 
 
-def test_mapping_failure():
+def test_mapping_failure(candidates):
     with pytest.raises(exceptions.MappingError):
-        Mapper(candidates=(1, 2), unmapped_values_action="raise").apply((3, 4))
+        Mapper(unmapped_values_action="raise").apply((3, 4), candidates)
 
 
-def test_bad_filter():
+def test_bad_filter(candidates):
     with pytest.raises(exceptions.BadFilterError):
-        Mapper(candidates=(1, 2), filter_functions=[(lambda *_: {3, 4}, {})]).apply((3, 4))
+        Mapper(filter_functions=[(lambda *_: {3, 4}, {})]).apply((3, 4), candidates)
 
 
 @pytest.mark.parametrize(
@@ -103,14 +106,13 @@ def test_bad_filter():
         ),
     ],
 )
-def test_filter(filters, expected):
+def test_filter(filters, expected, candidates):
     mapper = Mapper(
-        candidates=("a", "ab", "b"),
         min_score=0.1,
         score_function=_substring_score,
         filter_functions=filters,
         cardinality=Cardinality.ManyToMany,  # Anything goes
     )
 
-    actual = mapper.apply("abc").left_to_right
+    actual = mapper.apply("abc", candidates).left_to_right
     assert actual == expected

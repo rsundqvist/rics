@@ -201,7 +201,6 @@ def _make_mapper(parent_section: str, mapper_factory: MakeMapperType, config: Di
     if for_fetcher:
         config = {**AbstractFetcher.default_mapper_kwargs(), **config}
 
-    _check_forbidden_keys(["value", "candidates"], config, f"{parent_section}.mapping")
     return mapper_factory(config, for_fetcher)
 
 

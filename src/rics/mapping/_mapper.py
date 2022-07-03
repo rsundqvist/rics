@@ -27,7 +27,6 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
     candidates for sets of values passed to :meth:`apply`.
 
     Args:
-        candidates: Possible items for values to be matched with.
         score_function: A callable which accepts a value `k` and an ordered collection of candidates `c`, returning a
             score ``s_i`` for each candidate `c_i` in `c`. Default: ``s_i = float(k == c_i)``. Higher=better match.
         score_function_kwargs: Keyword arguments for `score_function`.
@@ -42,7 +41,6 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
 
     def __init__(
         self,
-        candidates: Iterable[CandidateType] = None,
         score_function: Union[str, ScoreFunction] = "equality",
         score_function_kwargs: Dict[str, Any] = None,
         filter_functions: Iterable[Tuple[Union[str, mf.FilterFunction], Dict[str, Any]]] = (),
@@ -53,7 +51,6 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         unmapped_values_action: ActionLevelTypes = "ignore",
         cardinality: Optional[CardinalityType] = Cardinality.ManyToOne,
     ) -> None:
-        self.candidates = set(candidates or [])
         self._score = score_function if callable(score_function) else from_name(score_function)
         self._score_kwargs = score_function_kwargs or {}
         self._min_score = min_score
@@ -67,20 +64,18 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
             ((getattr(mf, func) if isinstance(func, str) else func), kwargs) for func, kwargs in filter_functions
         ]
 
-    @property
-    def candidates(self) -> Set[CandidateType]:
-        """Candidates to match with when `apply` is called."""
-        return self._candidates
-
-    @candidates.setter
-    def candidates(self, values: Set[CandidateType]) -> None:
-        self._candidates = values
-
-    def apply(self, values: Iterable[ValueType], context: ContextType = None, **kwargs: Any) -> DirectionalMapping:
+    def apply(
+        self,
+        values: Iterable[ValueType],
+        candidates: Iterable[CandidateType],
+        context: ContextType = None,
+        **kwargs: Any,
+    ) -> DirectionalMapping:
         """Map values to candidates.
 
         Args:
             values: Iterable of elements to match to candidates.
+            candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
             context: Context in which mapping is being done.
             kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
                 not known when the mapper is initialized.
@@ -92,20 +87,21 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
             MappingError: If any values failed to match and ``unmapped_values_action='raise'``.
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
         """
+        candidates = set(candidates)
         values = set(values)
         left_to_right = self._create_l2r(values, context)
 
         extra = f" in {context=}" if context else ""
 
         for value in values.difference(left_to_right):
-            LOGGER.debug(f"Begin mapping {value=}{extra} to candidates {self.candidates} using {self._score}.")
-            matches = self._map_value(value, context, kwargs)
+            LOGGER.debug(f"Begin mapping {value=}{extra} to {candidates=} using {self._score}.")
+            matches = self._map_value(value, candidates, context, kwargs)
             if matches is None:
                 continue  # All candidates removed by filtering
             if matches:
                 left_to_right[value] = matches
             else:  # pragma: no cover
-                msg = f"Could not map {value=}{extra} to any of {self.candidates}."
+                msg = f"Could not map {value=}{extra} to any of {candidates=}."
                 if self._unmapped_action is ActionLevel.RAISE:
                     LOGGER.error(msg)
                     raise MappingError(msg)
@@ -142,16 +138,16 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         return {value: (overrides[value],) for value in filter(overrides.__contains__, values)}
 
     def _map_value(
-        self, value: ValueType, context: Optional[ContextType], kwargs: Dict[str, Any]
+        self, value: ValueType, candidates: Set[CandidateType], context: Optional[ContextType], kwargs: Dict[str, Any]
     ) -> Optional[MatchTuple]:
-        scores = self._score(value, self._candidates, context, **self._score_kwargs, **kwargs)
-        sorted_candidates = sorted(zip(scores, self._candidates), key=lambda t: -t[0])
+        scores = self._score(value, candidates, context, **self._score_kwargs, **kwargs)
+        sorted_candidates = sorted(zip(scores, candidates), key=lambda t: -t[0])
 
-        filtered_candidates = set(self._candidates)
+        filtered_candidates = set(candidates)
         for filter_function, function_kwargs in self._filters:
             filtered_candidates = filter_function(value, filtered_candidates, context, **function_kwargs, **kwargs)
 
-            not_in_original_candidates = filtered_candidates.difference(self._candidates)
+            not_in_original_candidates = filtered_candidates.difference(candidates)
             if not_in_original_candidates:
                 raise exceptions.BadFilterError(
                     f"Filter {tname(filter_function)}({value}, candidates, **{kwargs}) created new"
@@ -186,14 +182,12 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         return tuple(ans)
 
     def __repr__(self) -> str:
-        candidates = self._candidates
         score = self._score
-        return f"{tname(self)}({score=} >= {self._min_score}, {len(self._filters)} filters, {candidates=})"
+        return f"{tname(self)}({score=} >= {self._min_score}, {len(self._filters)} filters)"
 
     def copy(self) -> "Mapper":
         """Make a copy of this Mapper."""
         return Mapper(
-            candidates=self.candidates,
             score_function=self._score,
             score_function_kwargs=self._score_kwargs.copy(),
             filter_functions=[(func, kwargs.copy()) for func, kwargs in self._filters],

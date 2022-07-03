@@ -74,10 +74,10 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
             self._mapping_cache[source] = {}
         ans = self._mapping_cache[source]
 
-        self._mapper.candidates = set(self.get_placeholders(source) if candidates is None else candidates)
+        candidates = set(self.get_placeholders(source) if candidates is None else candidates)
         placeholders = set(placeholders).difference(ans)  # Don't remap cached mappings
 
-        for actual, wanted in self._mapper.apply(placeholders, context=source).left_to_right.items():
+        for actual, wanted in self._mapper.apply(placeholders, candidates, context=source).left_to_right.items():
             ans[actual] = wanted[0]
 
         for not_mapped in placeholders.difference(ans):
