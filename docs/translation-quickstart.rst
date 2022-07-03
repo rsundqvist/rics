@@ -29,7 +29,7 @@ In this example, we will translate data represented by::
                                             2 | Simba  | true
 
 Normally, translations are fetched from external sources. For this demonstration however, we will simply enumerate the
-translations:
+translations ourselves.
 
 >>> from rics.translation.fetching import MemoryFetcher
 >>> from rics.translation import Translator
@@ -52,3 +52,6 @@ Translations for 'animal':
 Translations for 'people':
     '1991:Richard'
     '1999:Sofia'
+
+.. _Covid cases:
+    https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide
