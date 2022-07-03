@@ -69,6 +69,10 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
         }
 
     @property
+    def fetchers(self) -> List[Fetcher]:
+        return list(self._id_to_fetcher.values())
+
+    @property
     def sources(self) -> List[SourceType]:
         return list(self._source_to_fetcher_id)
 

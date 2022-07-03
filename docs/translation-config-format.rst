@@ -11,11 +11,14 @@ keys will raise a :class:`~rics.translation.exceptions.ConfigurationError` if pr
 
 **Examples**:
     * :doc:`examples/notebooks/sql-translation/SqlFetcher`,
-      uses :download:`this <examples/notebooks/sql-translation/config.toml>` config file.
+      which uses :download:`this <examples/notebooks/sql-translation/config.toml>` config file.
     * :doc:`examples/notebooks/pickle-translation/PickleFetcher`,
-      uses :download:`this <examples/notebooks/pickle-translation/config.toml>` config file.
-    * `Example: DVD Rental Database <translation-quickstart.html#example-dvd-rental-database>`__, uses
-      :download:`this <../tests/translation/dvdrental/config.toml>` config file.
+      which uses :download:`this <examples/notebooks/pickle-translation/config.toml>` config file.
+    * `Example: DVD Rental Database <translation-quickstart.html#example-dvd-rental-database>`__ defines a
+      :class:`~rics.translation.fetching.MemoryFetcher` in the main
+      :download:`translation config <../tests/translation/dvdrental/translation.toml>` file, and a
+      :class:`~rics.translation.fetching.SqlFetcher` (:download:`sql-fetcher.toml <../tests/translation/dvdrental/sql-fetcher.toml>`).
+      The two are combined into a :class:`~rics.translation.fetching.MultiFetcher`.
 
 Multiple fetchers
 -----------------

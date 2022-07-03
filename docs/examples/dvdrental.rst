@@ -29,12 +29,18 @@ The query above shows who rented what and when, what store they rented from and 
    :file: dvdrental.csv
    :header-rows: 1
 
-The database has a few quirks, which are taken care of by the following
-:download:`config <../../tests/translation/dvdrental/config.toml>` file:
+The database has a few quirks, managed by :download:`this <../../tests/translation/dvdrental/translation.toml>`
+translation configuration file and a :download:`separate file <../../tests/translation/dvdrental/sql-fetcher.toml>` for
+access to the SQL database.
 
-.. literalinclude:: ../../tests/translation/dvdrental/config.toml
+.. literalinclude:: ../../tests/translation/dvdrental/translation.toml
    :language: toml
-   :caption: Configuration for translating data in the database.
+   :caption: Translation configuration, mapping, and definition of the categories.
+   :linenos:
+
+.. literalinclude:: ../../tests/translation/dvdrental/sql-fetcher.toml
+   :language: toml
+   :caption: Configuration for fetching SQL data.
    :linenos:
 
 .. note::
