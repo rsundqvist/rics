@@ -24,6 +24,13 @@ def test_sources(multi_fetcher):
     assert sorted(multi_fetcher.sources) == ["animals", "big_table", "huge_table", "humans"]
 
 
+def test_sources_per_child(multi_fetcher):
+    children = multi_fetcher.fetchers
+    assert len(children) == 2
+    assert children[0].sources == ["humans"]
+    assert sorted(children[1].sources) == ["animals", "big_table", "huge_table", "humans"]
+
+
 def test_placeholders(multi_fetcher):
     assert multi_fetcher.placeholders == {
         "animals": ["id", "name", "is_nice"],

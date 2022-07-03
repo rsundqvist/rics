@@ -70,6 +70,7 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
 
     @property
     def fetchers(self) -> List[Fetcher]:
+        """Return child fetchers."""
         return list(self._id_to_fetcher.values())
 
     @property
