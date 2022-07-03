@@ -9,7 +9,10 @@ fmt = "{id}:{name}[ (original: {original_name})] *{from}†{to}"
 # -> 'my_database.animals'. Overrides take precedence over scoring logic.
 [translator.mapping]
 unmapped_values_action = "raise"
-score_function = "like_database_table"  # We don't need any kwargs for this function; no need to use a section
+score_function = "modified_hamming"
+
+[[translator.mapping.score_function_heuristics]]
+function = "like_database_table"
 
 [translator.mapping.overrides]
 firstTitle = "title.basics"

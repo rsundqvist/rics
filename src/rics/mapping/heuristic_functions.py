@@ -1,6 +1,6 @@
 """Functions which perform heuristics for score functions."""
 import re
-from typing import Any, Callable, Hashable, Iterable, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Callable, Hashable, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 
 from rics.mapping.filter_functions import require_regex_match
 
@@ -21,6 +21,22 @@ Keyword Args:
 Returns:
     A tuple (name, candidates) with applied heuristics to increase (or decrease) score as desired.
 """
+
+
+def like_database_table(
+    name: str,
+    candidates: Iterable[str],
+    context: Optional[ContextType],
+) -> Tuple[str, List[str]]:
+    """Try to make `value` look like the name of a database table."""
+
+    def apply(s: str) -> str:
+        s = s.lower().replace("_", "").replace(".", "")
+        s = s[: -len("id")] if s.endswith("id") else s
+        s = s if s.endswith("s") else s + "s"
+        return s
+
+    return apply(name), list(map(apply, candidates))
 
 
 def short_circuit_to_value(

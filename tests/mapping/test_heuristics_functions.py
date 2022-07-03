@@ -4,6 +4,24 @@ from rics.mapping import heuristic_functions as hf
 
 
 @pytest.mark.parametrize(
+    "value, expected_match",
+    [
+        ("human_id", "humans"),
+        ("human", "humans"),
+        ("animal", "animals"),
+        ("animals_id", "animals"),
+    ],
+)
+def test_like_database_table(value, expected_match):
+    candidates = ["humans", "animals"]
+    expected_pos = candidates.index(expected_match)
+
+    new_value, new_candidates = hf.like_database_table(value, candidates, None)
+    assert candidates == ["humans", "animals"]
+    assert new_value == new_candidates[expected_pos]
+
+
+@pytest.mark.parametrize(
     "value, candidates, expected",
     [
         ("target-miss", ["MATCH0", "MATCH1"], []),

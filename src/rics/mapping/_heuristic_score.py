@@ -2,9 +2,9 @@ import logging
 from typing import Any, Dict, Generic, Hashable, Iterable, List, Optional, Tuple, TypeVar, Union
 
 from rics.mapping import filter_functions, heuristic_functions
+from rics.mapping import score_functions as sf
 from rics.mapping.filter_functions import FilterFunction
 from rics.mapping.heuristic_functions import AliasFunction
-from rics.mapping.score_functions import ScoreFunction, from_name
 from rics.utility.misc import tname
 
 LOGGER = logging.getLogger(__package__).getChild("HeuristicScore")
@@ -32,8 +32,8 @@ class HeuristicScore(Generic[H]):
 
     Args:
         score_function: A :attr:`~rics.mapping.score_functions.ScoreFunction` to wrap.
-        heuristics: Tuples (heuristic, kwargs) to apply to the inputs of the score function. Applied in the order in
-          which they are given.
+        heuristics: Iterable of heuristics or tuples (heuristic, kwargs) to apply to the inputs of the score function.
+            Applied in the order in which they are given.
 
     Heuristic types:
         * An :const:`~rics.mapping.heuristic_functions.AliasFunction`, which accepts and returns a tuple
@@ -44,18 +44,21 @@ class HeuristicScore(Generic[H]):
 
     def __init__(
         self,
-        score_function: Union[str, ScoreFunction],
-        heuristics: Iterable[Tuple[Union[str, HeuristicsTypes], Dict[str, Any]]],
+        score_function: Union[str, sf.ScoreFunction],
+        heuristics: Iterable[Union[Union[str, HeuristicsTypes], Tuple[Union[str, HeuristicsTypes], Dict[str, Any]]]],
     ) -> None:
-        self._score: ScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
+        self._score: sf.ScoreFunction = (
+            getattr(sf, score_function) if isinstance(score_function, str) else score_function
+        )
         self._heuristics: List[Tuple[HeuristicsTypes, Dict[str, Any]]] = []
 
-        for func_or_name, kwargs in heuristics:
-            self.add_heuristic(func_or_name, kwargs)
+        for h in heuristics:
+            func, kwargs = h if isinstance(h, tuple) else (h, {})
+            self.add_heuristic(func, kwargs)
 
-    def add_heuristic(self, heuristic: Union[str, HeuristicsTypes], kwargs: Dict[str, Any]) -> None:
+    def add_heuristic(self, heuristic: Union[str, HeuristicsTypes], kwargs: Dict[str, Any] = None) -> None:
         """Add a new heuristic."""
-        new_heuristic = (_resolve_heuristic(heuristic), kwargs)
+        new_heuristic = (_resolve_heuristic(heuristic), kwargs or {})
         self._heuristics.append(new_heuristic)
 
     def __repr__(self) -> str:

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Changed `like_database_table` from score function to alias function
 - Thread safety: Change 'candidates' from init/property to `Mapper.apply` arg
 - Remove `store`/`restore` serialize argument. Default path is now None for `Translator.store`.
 

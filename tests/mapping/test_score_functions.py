@@ -1,4 +1,3 @@
-import pandas as pd
 import pytest
 from numpy.random import choice, randint
 
@@ -7,31 +6,11 @@ from rics.mapping import score_functions as sf
 with open("tests/mapping/words.txt") as f:
     WORDS = f.read().splitlines()
 
-
-def test_from_bad_name():
-    with pytest.raises(ValueError):
-        sf.from_name("does-not-exist")
+SCORE_FUNCTIONS = [sf.equality, sf.modified_hamming]
 
 
 @pytest.mark.parametrize(
-    "value, expected_max_table",
-    [
-        ("human_id", "humans"),
-        ("human", "humans"),
-        ("animal", "animals"),
-        ("animals_id", "animals"),
-    ],
-)
-def test_like_database_table(value, expected_max_table):
-    candidate_tables = ["humans", "animals"]
-    score = sf.from_name("like_database_table")
-
-    s = pd.Series(score(value, candidate_tables, None), index=candidate_tables)
-    assert s.idxmax() == expected_max_table, s
-
-
-@pytest.mark.parametrize(
-    "func, dtype", [(func, str) for func in sf._all_functions] + [(sf.equality, int)]  # type: ignore
+    "func, dtype", [(func, str) for func in SCORE_FUNCTIONS] + [(sf.equality, int)]  # type: ignore
 )
 def test_stable(func, dtype):
     """Score function should respect input order."""

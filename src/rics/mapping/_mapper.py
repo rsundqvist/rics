@@ -5,9 +5,9 @@ from typing import Any, Dict, Generic, Hashable, Iterable, List, Optional, Set, 
 from rics.cardinality import Cardinality, CardinalityType
 from rics.mapping import exceptions
 from rics.mapping import filter_functions as mf
+from rics.mapping import score_functions as sf
 from rics.mapping._directional_mapping import DirectionalMapping
 from rics.mapping.exceptions import MappingError, MappingWarning
-from rics.mapping.score_functions import ScoreFunction, from_name
 from rics.utility.action_level import ActionLevel, ActionLevelTypes
 from rics.utility.collections import InheritedKeysDict
 from rics.utility.misc import tname
@@ -42,7 +42,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
 
     def __init__(
         self,
-        score_function: Union[str, ScoreFunction] = "equality",
+        score_function: Union[str, sf.ScoreFunction] = "equality",
         score_function_kwargs: Dict[str, Any] = None,
         filter_functions: Iterable[Tuple[Union[str, mf.FilterFunction], Dict[str, Any]]] = (),
         min_score: float = 1.00,
@@ -52,7 +52,7 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         unmapped_values_action: ActionLevelTypes = "ignore",
         cardinality: Optional[CardinalityType] = Cardinality.ManyToOne,
     ) -> None:
-        self._score = score_function if callable(score_function) else from_name(score_function)
+        self._score = getattr(sf, score_function) if isinstance(score_function, str) else score_function
         self._score_kwargs = score_function_kwargs or {}
         self._min_score = min_score
         self._overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = (
