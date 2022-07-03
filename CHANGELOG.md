@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2022-07-03
+
 ### Changed
 - Changed `like_database_table` from score function to alias function
 - Thread safety: Change 'candidates' from init/property to `Mapper.apply` arg
@@ -168,7 +170,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.11.1...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/rsundqvist/rics/compare/v0.11.1...v0.12.0
 [0.11.1]: https://github.com/rsundqvist/rics/compare/v0.11.0...v0.11.1
 [0.11.0]: https://github.com/rsundqvist/rics/compare/v0.10.2...v0.11.0
 [0.10.2]: https://github.com/rsundqvist/rics/compare/v0.10.1...v0.10.2
