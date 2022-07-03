@@ -14,10 +14,6 @@ Turn meaningless IDs into human-readable labels.
 =============================
 Translating IDs in 30 seconds
 =============================
-.. note::
-
-   For a more complicated (and more realistic) use case, see
-   `Example: DVD Rental Database <translation-quickstart.html#example-dvd-rental-database>`__.
 
 In this example, we will translate data represented by::
 
@@ -55,3 +51,5 @@ Translations for 'people':
 
 .. _Covid cases:
     https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide
+
+For a more complicated (and more realistic) use case, see :doc:`examples/dvdrental`.
