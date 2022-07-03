@@ -17,7 +17,7 @@ class MultiCaseTimer:
 
     Args:
         candidate_method: A single method, collection of method or a dict {label: function} of candidates.
-        test_data: A single datum or a dict {label: data} to evaluate candidates on.
+        test_data: A single datum or a dict ``{label: data}`` to evaluate candidates on.
         sanity_check: If True, verify total expected runtime.
     """
 

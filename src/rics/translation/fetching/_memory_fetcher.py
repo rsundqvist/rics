@@ -10,7 +10,7 @@ class MemoryFetcher(AbstractFetcher):
     """Fetch from memory.
 
     Args:
-        data: A dict {source: PlaceholderTranslations} to fetch from.
+        data: A dict ``{source: PlaceholderTranslations}`` to fetch from.
         mapper: A :class:`~rics.mapping.Mapper` instance used to adapt placeholder names in sources to wanted names, ie
             the names of the placeholders that are in the translation :class:`~rics.offline.Format` being used.
     """
