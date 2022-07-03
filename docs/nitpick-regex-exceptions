@@ -3,14 +3,19 @@
 
 \.types\..*
 
+\.KT$
+\.VT$
+\.HT$
+\.SKT$
+\.ContextType$
+\.H$
+
 # Online translation
 _fetch_instruction\.FetchInstruction
 _resolve\.DefaultTranslatable
 _ids_to_fetch\.IdsToFetch
 
 # Offline translation
-_placeholder_overrides\.T
-online\.PlaceholderOverrides
 _magic_dict\.MagicDict
 
 # Mapping
