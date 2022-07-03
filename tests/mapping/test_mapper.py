@@ -11,21 +11,21 @@ def _substring_score(k, c, _):
 
 @pytest.fixture(scope="module")
 def candidates():
-    return ("a", "ab", "b")
+    return "a", "ab", "b"
 
 
 def test_default(candidates):
     mapper = Mapper()
-    assert mapper.apply(candidates, ["a"]).left_to_right == {"a": ("a",)}
-    assert mapper.apply(candidates, ["b"]).left_to_right == {"b": ("b",)}
-    assert mapper.apply(candidates, ["a", "b"]).left_to_right == {"a": ("a",), "b": ("b",)}
+    assert mapper(candidates, ["a"]).left_to_right == {"a": ("a",)}
+    assert mapper(candidates, ["b"]).left_to_right == {"b": ("b",)}
+    assert mapper(candidates, ["a", "b"]).left_to_right == {"a": ("a",), "b": ("b",)}
 
 
 def test_with_overrides(candidates):
     mapper = Mapper(overrides={"a": "fixed"})
-    assert mapper.apply(["a"], candidates).left_to_right == {"a": ("fixed",)}
-    assert mapper.apply(["b"], candidates).left_to_right == {"b": ("b",)}
-    assert mapper.apply(["a", "b"], candidates).left_to_right == {"a": ("fixed",), "b": ("b",)}
+    assert mapper(["a"], candidates).left_to_right == {"a": ("fixed",)}
+    assert mapper(["b"], candidates).left_to_right == {"b": ("b",)}
+    assert mapper(["a", "b"], candidates).left_to_right == {"a": ("fixed",), "b": ("b",)}
 
 
 @pytest.mark.parametrize(
@@ -45,7 +45,7 @@ def test_multiple_matches(values, expected, allow_multiple, candidates):
         score_function=_substring_score,
         cardinality=None if allow_multiple else Cardinality.OneToOne,
     )
-    assert mapper.apply(values, candidates).left_to_right == expected
+    assert mapper(values, candidates).left_to_right == expected
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_multiple_matches_with_overrides(values, expected, allow_multiple, candi
         score_function=_substring_score,
         cardinality=None if allow_multiple else Cardinality.OneToOne,
     )
-    assert mapper.apply(values, candidates).left_to_right == expected
+    assert mapper(values, candidates).left_to_right == expected
 
 
 def test_mapping_failure(candidates):
@@ -114,5 +114,5 @@ def test_filter(filters, expected, candidates):
         cardinality=Cardinality.ManyToMany,  # Anything goes
     )
 
-    actual = mapper.apply("abc", candidates).left_to_right
+    actual = mapper("abc", candidates).left_to_right
     assert actual == expected

@@ -21,10 +21,7 @@ LOGGER = logging.getLogger(__package__).getChild("Mapper")
 
 
 class Mapper(Generic[ContextType, ValueType, CandidateType]):
-    """Map candidates (right side) to values (left side).
-
-    A ``Mapper`` creates :class:`~rics.mapping.BidirectionalMapping`-instances from collections of
-    candidates for sets of values passed to :meth:`apply`.
+    """Map values and candidates.
 
     Args:
         score_function: A callable which accepts a value `k` and an ordered collection of candidates `c`, returning a
@@ -32,11 +29,15 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         score_function_kwargs: Keyword arguments for `score_function`.
         filter_functions: Function-kwargs pairs of filters to apply before scoring.
         min_score: Minimum score `s_i`, as given by ``score(k, c_i)``, to consider `k` a match for `c_i`.
-        overrides: If a dict, assumed to be 1:1 mappings which (`value` to `candidate`) override the scoring logic. If
+        overrides: If a dict, assumed to be 1:1 mappings (`value` to `candidate`) which override the scoring logic. If
             :class:`~rics.utility.collections.InheritedKeysDict`, the context passed to :meth:`apply` will be used to
             retrieve the actual overrides.
-        unmapped_values_action: Action to take if mapping fails.
+        unmapped_values_action: Action to take if mapping fails for any values.
         cardinality: Desired cardinality for mapped values. None=derive.
+
+    See Also:
+        Function types :class:`~rics.mapping.HeuristicScore`, :attr:`~rics.mapping.score_functions.ScoreFunction`,
+        :attr:`~rics.mapping.filter_functions.FilterFunction`, :attr:`~rics.mapping.heuristic_functions.AliasFunction`
     """
 
     def __init__(
@@ -81,7 +82,8 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
                 not known when the mapper is initialized.
 
         Returns:
-            A ``BidirectionalMapping`` with values on the left side and candidates on the right.
+            A :class:`.DirectionalMapping` on the form ``{value: (matched_candidate,)}``. May be turned into a plain
+            ``{value: candidate}`` dict by using the :meth:`.DirectionalMapping.flatten` function.
 
         Raises:
             MappingError: If any values failed to match and ``unmapped_values_action='raise'``.
@@ -116,6 +118,8 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
             left_to_right=left_to_right,
             _verify=True,
         )
+
+    __call__ = apply
 
     @property
     def context_sensitive_overrides(self) -> bool:
