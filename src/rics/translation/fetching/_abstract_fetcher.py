@@ -91,7 +91,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
 
     @property
     def online(self) -> bool:
-        """Return connectivity status. If False, no new translations may be fetched."""
         return True  # pragma: no cover
 
     def assert_online(self) -> None:
@@ -106,24 +105,12 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     @property
     @abstractmethod
     def sources(self) -> List[SourceType]:
-        """Source names known to the fetcher, such as ``cities`` or ``languages``."""
+        raise NotImplementedError
 
     @property
     @abstractmethod
     def placeholders(self) -> Dict[SourceType, List[str]]:
-        """Placeholders for sources managed by the fetcher.
-
-        Note that placeholders (and sources) are returned as they appear as they are known to the fetcher, without
-        remapping to desired names. As an example, for sources ``cities`` and ``languages``, this property may return::
-
-           placeholders = {
-               "cities": ["city_id", "city_name", "location_id"],
-               "languages": ["id", "name"],
-           }
-
-        Returns:
-            A dict ``{source: placeholders_for_source}``.
-        """
+        raise NotImplementedError
 
     def get_placeholders(self, source: SourceType) -> List[str]:
         """Get placeholders for `source`."""
@@ -134,7 +121,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
 
     @property
     def allow_fetch_all(self) -> bool:
-        """Flag indicating whether the :meth:`fetch_all` operation is permitted."""
         return self._allow_fetch_all
 
     def fetch(
@@ -143,22 +129,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
     ) -> SourcePlaceholderTranslations:
-        """Retrieve placeholder translations from the source.
-
-        Args:
-            ids_to_fetch: Tuples (source, ids) to fetch. If ``ids=None``, retrieve data for as many IDs as possible.
-            placeholders: All desired placeholders in preferred order.
-            required: Placeholders that must be included in the response.
-
-        Returns:
-            A mapping ``{source: PlaceholderTranslations}`` for translation.
-
-        Raises:
-            UnknownPlaceholderError: For placeholder(s) that are unknown to the fetcher.
-            UnknownSourceError: For sources(s) that are unknown to the fetcher.
-            ForbiddenOperationError: If trying to fetch all IDs when not possible or permitted.
-            ImplementationError: For errors made by the inheriting implementation.
-        """
         unknown_sources = set(t.source for t in ids_to_fetch).difference(self.sources)
         if unknown_sources:
             raise exceptions.UnknownSourceError(unknown_sources, self.sources)
@@ -173,20 +143,6 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
     ) -> SourcePlaceholderTranslations:
-        """Fetch as much data as possible.
-
-        Args:
-            placeholders: All desired placeholders in preferred order.
-            required: Placeholders that must be included in the response.
-
-        Returns:
-            A mapping ``{source: PlaceholderTranslations}`` for translation.
-
-        Raises:
-            ForbiddenOperationError: If fetching all IDs is not possible or permitted.
-            UnknownPlaceholderError: For placeholder(s) that are unknown to the fetcher.
-            ImplementationError: For errors made by the inheriting implementation.
-        """
         if not self.allow_fetch_all:
             raise exceptions.ForbiddenOperationError(self._FETCH_ALL)
 
@@ -209,7 +165,10 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         """
 
     def close(self) -> None:
-        """Close the fetcher. Does nothing by default."""
+        """Close the fetcher. Does nothing by default.
+
+        :noindex:
+        """
 
     def _fetch(
         self,
