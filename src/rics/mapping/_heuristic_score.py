@@ -7,7 +7,7 @@ from rics.mapping.heuristic_functions import AliasFunction
 from rics.mapping.score_functions import ScoreFunction, from_name
 from rics.utility.misc import tname
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__package__).getChild("HeuristicScore")
 
 H = TypeVar("H", bound=Hashable)
 ContextType = TypeVar("ContextType", bound=Hashable)
@@ -18,31 +18,29 @@ HeuristicsTypes = Union[AliasFunction, FilterFunction]
 class HeuristicScore(Generic[H]):
     """Callable wrapper for computing heuristic scores.
 
-    Instances are callable. Signature is given by :attr:`.ScoreFunction`.
-    
-    Short-circuting:
+    Instances are callable. Signature is given by :attr:`~rics.mapping.score_functions.ScoreFunction`.
+
+    Short-circuiting:
         A mechanism for forced matching. Score is set to `+∞` for short-circuited candidates, and `-∞` for the rest.
         No further matching will be performed after this point, so ensure that all desired candidates are returned by
         chosen filters.
 
     Procedure:
-        1. Exact matches are always preferred, and will trigger ``short-circuiting`` for the matching candidate.
+        1. Trigger ``short-circuiting`` if there is an exact value-candidate match.
         2. All `heuristics` are applied and scores are computed.
-        3. If no ``short-circuiting`` was triggered by filter functions, yield the highest score for each candidate.
-
-    Heuristics may be of two kinds:
-        * An :const:`AliasFunction`, which accepts and returns a tuple (value, candidates) to be evaluated.
-        * A :const:`FilterFunction`, which accepts a tuple (value, candidates) and returns a subset of `candidates`. If
-          any candidates are returned, ``short-circuiting`` is triggered.
+        3. If no ``short-circuiting`` is triggered in step 2, yield max score for each candidate.
 
     Args:
-        score_function: An underlying score function.
-        heuristics: Tuples (:attr:`HeuristicTypes`, kwargs) to apply to the inputs of the score function. Keyword
-            arguments will be reused between calls. Applied in the given order, so filters that are likely to trigger
-            should be placed early.
-    """
+        score_function: A :attr:`~rics.mapping.score_functions.ScoreFunction` to wrap.
+        heuristics: Tuples (heuristic, kwargs) to apply to the inputs of the score function. Applied in the order in
+          which they are given.
 
-    LOGGER = logging.getLogger(__package__).getChild("HeuristicScore")
+    Heuristic types:
+        * An :const:`~rics.mapping.heuristic_functions.AliasFunction`, which accepts and returns a tuple
+          (value, candidates) to be evaluated.
+        * A :const:`~rics.mapping.filter_functions.FilterFunction`, which accepts a tuple (value, candidates) and
+          returns a subset of `candidates`. If any candidates are returned, ``short-circuiting`` is triggered.
+    """
 
     def __init__(
         self,
@@ -50,10 +48,10 @@ class HeuristicScore(Generic[H]):
         heuristics: Iterable[Tuple[Union[str, HeuristicsTypes], Dict[str, Any]]],
     ) -> None:
         self._score: ScoreFunction = from_name(score_function) if isinstance(score_function, str) else score_function
+        self._heuristics: List[Tuple[HeuristicsTypes, Dict[str, Any]]] = []
 
-        self._heuristics: List[Tuple[HeuristicsTypes, Dict[str, Any]]] = [
-            (_resolve_heuristic(func_or_name), func_kwargs) for func_or_name, func_kwargs in heuristics
-        ]
+        for func_or_name, kwargs in heuristics:
+            self.add_heuristic(func_or_name, kwargs)
 
     def add_heuristic(self, heuristic: Union[str, HeuristicsTypes], kwargs: Dict[str, Any]) -> None:
         """Add a new heuristic."""
