@@ -27,8 +27,6 @@ _NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
 
 LOGGER = logging.getLogger(__package__).getChild("Translator")
 
-DEFAULT_STORAGE_PATH = Path("~").joinpath(".rics").joinpath("offline-translator.pkl")
-
 NamesPredicate = Callable[[NameType], bool]
 NameTypes = Union[NameType, Iterable[NameType]]
 Names = Union[NameTypes, NamesPredicate]
@@ -246,7 +244,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         return hasattr(self, "_fetcher")
 
     @classmethod
-    def restore(cls, path: PathLikeType = DEFAULT_STORAGE_PATH) -> "Translator":
+    def restore(cls, path: PathLikeType) -> "Translator":
         """Restore a serialized Translator.
 
         Args:
@@ -268,7 +266,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             ans = pickle.load(f)  # noqa: S301
 
         if not isinstance(ans, Translator):  # pragma: no cover
-            raise TypeError(f"Serialized object at at path='{path}' is a {type(ans)}, not {Translator.__qualname__}.")
+            raise TypeError(f"Serialized object at at path='{path}' is a {type(ans)}, not {Translator.__name__}.")
 
         return ans
 
@@ -278,8 +276,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         names: Names = None,
         ignore_names: Names = None,
         delete_fetcher: bool = True,
-        path: PathLikeType = DEFAULT_STORAGE_PATH,
-        serialize: bool = False,
+        path: PathLikeType = None,
     ) -> "Translator":
         """Retrieve and store translations in memory.
 
@@ -291,8 +288,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
                 also be a predicate which indicates (returns True for) names to ignore.
             delete_fetcher: If True, invoke :meth:`.Fetcher.close` and delete the fetcher after retrieving data. The
                 Translator will still function, but some methods may raise exceptions and new data cannot be retrieved.
-            path: Location where the serialized Translator will be stored on disk. Ignored when ``serialize==False``.
-            serialize: If True, serialize the Translator to `path` once data has been retrieved.
+            path: If given, serialize the Translator will be stored on disk after retrieving data.
 
         Returns:
             Self, for chained assignment.
@@ -328,7 +324,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
         self._cached_tmap = translation_map
 
-        if serialize:
+        if path:
             import os
             import pickle  # noqa: S403
 

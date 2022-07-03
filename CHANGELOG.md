@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Remove `store`/`restore` serialize argument. Default path is now None for `Translator.store`.
+
 ## [0.11.1] - 2022-07-02
 Documentation and docstring fixes.
 

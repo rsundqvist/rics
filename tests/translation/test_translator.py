@@ -94,7 +94,7 @@ def test_store_and_restore(hex_fetcher):
 
     with TemporaryDirectory("test-store-and-restore", "rics") as tmpdir:
         path = f"{tmpdir}/test-translator.pkl"
-        translator.store(path=path, serialize=True)
+        translator.store(path=path)
         restored = Translator.restore(path=path)
 
     translated_by_restored = restored(data)
