@@ -47,10 +47,10 @@ Section: Translator
    * - fmt
      - :class:`~rics.translation.offline.Format`
      - Specify how translated IDs are displayed
-     - See :doc:`translation-format`
+     - See: :doc:`translation-format`
 
 * Parameters for :attr:`Name <rics.translation.offline.types.NameType>`-to-:attr:`source <rics.translation.offline.types.SourceType>`
-  mapping are specified in a ``[translator.mapping]``-subsection. See :ref:`Subsection: Mapping` for details (context =
+  mapping are specified in a ``[translator.mapping]``-subsection. See: :ref:`Subsection: Mapping` for details (context =
   :attr:`source <rics.translation.offline.types.SourceType>`).
 
 Section: Unknown IDs
@@ -68,7 +68,7 @@ Section: Unknown IDs
      - Can be a plain string ``fmt="Unknown"``, or ``fmt="{id}"`` to leave as-is.
 
 * Alternative :attr:`placeholder <rics.translation.offline.Format.placeholders>`-values for unknown IDs can be declared
-  in a ``[unknown_ids.overrides]``-subsection. See :ref:`Subsection: Overrides` for details (context =
+  in a ``[unknown_ids.overrides]``-subsection. See: :ref:`Subsection: Overrides` for details (context =
   :attr:`source <rics.translation.offline.types.SourceType>`).
 
 Section: Fetching
@@ -89,7 +89,7 @@ Section: Fetching
   actual :attr:`placeholder <rics.translation.fetching.types.Fetcher.placeholders>` names
   in :attr:`~rics.translation.fetching.types.Fetcher.sources`
   to desired :attr:`placeholder names <rics.translation.offline.Format.placeholders>` requested by the calling
-  Translator instance. See :ref:`Subsection: Mapping` for details
+  Translator instance. See: :ref:`Subsection: Mapping` for details
   (context = :attr:`source <rics.translation.offline.types.SourceType>`).
 
 Subsection: Mapping
@@ -104,7 +104,7 @@ Subsection: Mapping
    * - score_function
      - :attr:`~rics.mapping.score_functions.ScoreFunction`
      - Compute value/candidate-likeness
-     - See :mod:`rics.mapping.score_functions`
+     - See: :mod:`rics.mapping.score_functions`
    * - unmapped_values_action
      - `raise | warn | ignore`
      - Handle unmatched values.
@@ -115,7 +115,7 @@ Subsection: Mapping
      - See: :class:`rics.cardinality.Cardinality`
 
 * Score functions which take additional keyword arguments should instead be specified in a child section, eg
-  ``[*.mapping.<score-function-name>]``. See :mod:`rics.mapping.score_functions` for options.
+  ``[*.mapping.<score-function-name>]``. See: :mod:`rics.mapping.score_functions` for options.
 
 .. hint::
 
@@ -161,7 +161,7 @@ As an example, the next snippet ensures that only names ending with an ``_id``-s
 Score function
 ~~~~~~~~~~~~~~
 There are some :attr:`~rics.mapping.score_functions.ScoreFunction` s which take additional keyword arguments. These must
-be declared in a ``[*.overrides.<score-function-name>]``-subsection. See :mod:`rics.mapping.score_functions` for options.
+be declared in a ``[*.overrides.<score-function-name>]``-subsection. See: :mod:`rics.mapping.score_functions` for options.
 
 Score function heuristics
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,6 +184,10 @@ class.
      - :py:class:`str`
      - Function name.
      - See: :mod:`rics.mapping.heuristic_functions`
+   * - mutate
+     - :py:class:`bool`
+     - Keep changes made by `function`.
+     - Disabled by default.
 
 .. note::
 

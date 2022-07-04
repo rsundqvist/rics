@@ -32,14 +32,18 @@ class HeuristicScore(Generic[H]):
 
     Args:
         score_function: A :attr:`~rics.mapping.score_functions.ScoreFunction` to wrap.
-        heuristics: Iterable of heuristics or tuples (heuristic, kwargs) to apply to the inputs of the score function.
-            Applied in the order in which they are given.
+        heuristics: Iterable of heuristics or tuples (heuristic, kwargs) to apply to the (value, candidates) inputs to
+            the `score_function`.
 
     Heuristic types:
         * An :const:`~rics.mapping.heuristic_functions.AliasFunction`, which accepts and returns a tuple
           (value, candidates) to be evaluated.
         * A :const:`~rics.mapping.filter_functions.FilterFunction`, which accepts a tuple (value, candidates) and
           returns a subset of `candidates`. If any candidates are returned, ``short-circuiting`` is triggered.
+
+    Notes:
+        * Heuristic function input order = application order.
+        * You may add ``mutate=True`` to the heuristics kwargs to forward to the modifications made by that function.
     """
 
     def __init__(
@@ -75,18 +79,42 @@ class HeuristicScore(Generic[H]):
         if value in candidates:
             yield from (float("inf") if c == value else -float("inf") for c in candidates)
 
-        best = list(self._score(value, candidates, context, **kwargs))
+        base_score = list(self._score(value, candidates, context, **kwargs))  # Unmodified score
+        best = list(base_score)
 
+        h_value = value
+        h_candidates = list(candidates)
         for func, func_kwargs in self._heuristics:
-            res = func(value, candidates, context, **func_kwargs)
+            func_kwargs = func_kwargs.copy()
+            mutate = func_kwargs.pop("mutate", False)
+            res = func(h_value, h_candidates, context, **func_kwargs)
             if isinstance(res, tuple):  # Alias function -- res is a modified (value, candidates) tuple
-                for i, score in enumerate(self._score(*res, context, **kwargs)):
-                    best[i] = max(best[i], score)
+                res_value, res_candidates = res[0], list(res[1])
+                for i, heuristic_score in enumerate(self._score(res_value, res_candidates, context, **kwargs)):
+                    best[i] = max(best[i], heuristic_score)
+                if mutate:
+                    h_value, h_candidates = res_value, res_candidates
             else:  # Filter function
+                if mutate:
+                    LOGGER.warning(f"Ignoring {mutate=} for filter function {func=}.")
+
                 if res:
-                    LOGGER.debug(f"Short circuit {value=} -> candidates={repr(res)} triggered by {tname(func)}.")
-                    yield from (float("inf") if c in res else -float("inf") for c in candidates)
+                    args = f"{repr(h_value), repr(h_candidates)}" + ", ".join(
+                        f"{k}={repr(v)}" for k, v, in func_kwargs.items()
+                    )
+                    LOGGER.debug(f"Short circuit {value=} -> candidates={repr(res)} triggered by {tname(func)}({args})")
+                    yield from (float("inf") if c in res else -float("inf") for c in h_candidates)
                     return  # Short-circuit
+
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            msg = " | ".join(
+                [
+                    f"{repr(cand)}: {score:.3f} -> {heuristic_score:.3f}"
+                    for cand, score, heuristic_score in zip(candidates, base_score, best)
+                ]
+            )
+            LOGGER.debug(f"Heuristic scores for {value=}: {msg}")
+
         yield from best
 
     def __str__(self) -> str:
