@@ -95,7 +95,7 @@ class HeuristicScore(Generic[H]):
                 if mutate:
                     h_value, h_candidates = res_value, res_candidates
             else:  # Filter function
-                if mutate:
+                if mutate:  # pragma: no cover
                     LOGGER.warning(f"Ignoring {mutate=} for filter function {func=}.")
 
                 if res:

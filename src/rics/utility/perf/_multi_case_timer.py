@@ -82,7 +82,7 @@ class MultiCaseTimer:
             candidate_results: Dict[str, List[float]] = {}
             LOGGER.debug("Run candidate '%s' %dx%d times...", candidate_label, repeat, candidate_number)
             for data_label, test_data in self._data.items():
-                raw_timings = Timer(lambda: func(test_data)).repeat(repeat, candidate_number)
+                raw_timings = Timer(lambda: func(test_data)).repeat(repeat, candidate_number)  # noqa: B023
                 candidate_results[data_label] = [dt / candidate_number for dt in raw_timings]
 
             _cache_warning(candidate_results, candidate_label)
