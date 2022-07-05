@@ -1,11 +1,5 @@
-"""Support for Python collections."""
+"""Utilities related to Python collections."""
 
-from rics.utility.collections._dict_functions import compute_if_absent, flatten_dict, reverse_dict
-from rics.utility.collections.inherited_keys_dict import InheritedKeysDict
+from rics.utility.collections import dicts
 
-__all__ = [
-    "compute_if_absent",
-    "InheritedKeysDict",
-    "reverse_dict",
-    "flatten_dict",
-]
+__all__ = ["dicts"]

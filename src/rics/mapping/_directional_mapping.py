@@ -1,16 +1,12 @@
-from typing import Any, Dict, Generic, Hashable, Iterable, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, Hashable, Iterable, Optional, Tuple, TypeVar
 
-from rics.cardinality import Cardinality, CardinalityType
-from rics.cardinality.exceptions import CardinalityError
+from rics.mapping._cardinality import Cardinality
+from rics.mapping.exceptions import CardinalityError
+from rics.mapping.types import HL, HR, DictMapping
 from rics.utility.misc import tname
 
-HL = TypeVar("HL", bound=Hashable)
-HR = TypeVar("HR", bound=Hashable)
 HAnySide = TypeVar("HAnySide", bound=Hashable)
-MatchTupleLeft = Tuple[HL, ...]
-MatchTupleRight = Tuple[HR, ...]
 MatchTupleAnySide = TypeVar("MatchTupleAnySide", bound=Hashable)
-DictMapping = Union[Dict[HL, MatchTupleRight], Dict[HR, MatchTupleLeft]]
 
 
 class DirectionalMapping(Generic[HL, HR]):
@@ -30,7 +26,7 @@ class DirectionalMapping(Generic[HL, HR]):
 
     def __init__(
         self,
-        cardinality: CardinalityType = None,
+        cardinality: Cardinality.ParseType = None,
         left_to_right: DictMapping = None,
         right_to_left: DictMapping = None,
         _verify: bool = True,
@@ -53,12 +49,12 @@ class DirectionalMapping(Generic[HL, HR]):
         return self._cardinality
 
     @property
-    def left(self) -> MatchTupleLeft:
+    def left(self) -> Tuple[HL, ...]:
         """Left-side elements in the mapping."""
         return tuple(self._left_to_right)
 
     @property
-    def right(self) -> MatchTupleRight:
+    def right(self) -> Tuple[HR, ...]:
         """Right-side elements in the mapping."""
         return tuple(self._right_to_left)
 
@@ -202,7 +198,7 @@ class DirectionalMapping(Generic[HL, HR]):
     @classmethod
     def _handle_cardinality(
         cls,
-        expected: Optional[CardinalityType],
+        expected: Optional[Cardinality.ParseType],
         left: DictMapping,
         right: DictMapping,
         verify: bool,

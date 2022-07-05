@@ -1,26 +1,22 @@
 import logging
 import warnings
-from typing import Any, Dict, Generic, Hashable, Iterable, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Union
 
-from rics.cardinality import Cardinality, CardinalityType
 from rics.mapping import exceptions
 from rics.mapping import filter_functions as mf
 from rics.mapping import score_functions as sf
+from rics.mapping._cardinality import Cardinality
 from rics.mapping._directional_mapping import DirectionalMapping
 from rics.mapping.exceptions import MappingError, MappingWarning
+from rics.mapping.types import ContextType, FilterFunction, MappedItemType, MatchTuple, ScoreFunction
 from rics.utility.action_level import ActionLevel, ActionLevelTypes
-from rics.utility.collections import InheritedKeysDict
-from rics.utility.misc import tname
-
-ContextType = TypeVar("ContextType", bound=Hashable)
-ValueType = TypeVar("ValueType", bound=Hashable)
-CandidateType = TypeVar("CandidateType", bound=Hashable)
-MatchTuple = Tuple[CandidateType, ...]
+from rics.utility.collections.dicts import InheritedKeysDict
+from rics.utility.misc import get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("Mapper")
 
 
-class Mapper(Generic[ContextType, ValueType, CandidateType]):
+class Mapper(Generic[ContextType, MappedItemType]):
     """Map values and candidates.
 
     Args:
@@ -30,45 +26,41 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         filter_functions: Function-kwargs pairs of filters to apply before scoring.
         min_score: Minimum score `s_i`, as given by ``score(k, c_i)``, to consider `k` a match for `c_i`.
         overrides: If a dict, assumed to be 1:1 mappings (`value` to `candidate`) which override the scoring logic. If
-            :class:`~rics.utility.collections.InheritedKeysDict`, the context passed to :meth:`apply` will be used to
-            retrieve the actual overrides.
+            :class:`.InheritedKeysDict`, the context passed to :meth:`apply` is used to retrieve specific overrides.
         unmapped_values_action: Action to take if mapping fails for any values.
         cardinality: Desired cardinality for mapped values. None=derive.
-
-    See Also:
-        Function types :class:`~rics.mapping.HeuristicScore`, :attr:`~rics.mapping.score_functions.ScoreFunction`,
-        :attr:`~rics.mapping.filter_functions.FilterFunction`, :attr:`~rics.mapping.heuristic_functions.AliasFunction`
     """
 
     def __init__(
         self,
-        score_function: Union[str, sf.ScoreFunction] = "equality",
+        score_function: Union[str, ScoreFunction] = "equality",
         score_function_kwargs: Dict[str, Any] = None,
-        filter_functions: Iterable[Tuple[Union[str, mf.FilterFunction], Dict[str, Any]]] = (),
+        filter_functions: Iterable[Tuple[Union[str, FilterFunction], Dict[str, Any]]] = (),
         min_score: float = 1.00,
         overrides: Union[
-            InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
+            InheritedKeysDict[ContextType, MappedItemType, MappedItemType], Dict[MappedItemType, MappedItemType]
         ] = None,
         unmapped_values_action: ActionLevelTypes = "ignore",
-        cardinality: Optional[CardinalityType] = Cardinality.ManyToOne,
+        cardinality: Optional[Cardinality.ParseType] = Cardinality.ManyToOne,
     ) -> None:
-        self._score = getattr(sf, score_function) if isinstance(score_function, str) else score_function
+        self._score = get_by_full_name(score_function, sf) if isinstance(score_function, str) else score_function
         self._score_kwargs = score_function_kwargs or {}
         self._min_score = min_score
-        self._overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = (
+        self._overrides: Union[InheritedKeysDict, Dict[MappedItemType, MappedItemType]] = (
             overrides if isinstance(overrides, InheritedKeysDict) else (overrides or {})
         )
         self._context_sensitive_overrides = isinstance(self._overrides, InheritedKeysDict)
         self._unmapped_action: ActionLevel = ActionLevel.verify(unmapped_values_action)
         self._cardinality = None if cardinality is None else Cardinality.parse(cardinality, strict=True)
-        self._filters: List[Tuple[mf.FilterFunction, Dict[str, Any]]] = [
-            ((getattr(mf, func) if isinstance(func, str) else func), kwargs) for func, kwargs in filter_functions
+        self._filters: List[Tuple[FilterFunction, Dict[str, Any]]] = [
+            ((get_by_full_name(func, mf) if isinstance(func, str) else func), kwargs)
+            for func, kwargs in filter_functions
         ]
 
     def apply(
         self,
-        values: Iterable[ValueType],
-        candidates: Iterable[CandidateType],
+        values: Iterable[MappedItemType],
+        candidates: Iterable[MappedItemType],
         context: ContextType = None,
         **kwargs: Any,
     ) -> DirectionalMapping:
@@ -104,10 +96,10 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
                 left_to_right[value] = matches
             else:  # pragma: no cover
                 msg = f"Could not map {value=}{extra} to any of {candidates=}."
-                if self._unmapped_action is ActionLevel.RAISE:
+                if self.unmapped_values_action is ActionLevel.RAISE:
                     LOGGER.error(msg)
                     raise MappingError(msg)
-                elif self._unmapped_action is ActionLevel.WARN:
+                elif self.unmapped_values_action is ActionLevel.WARN:
                     LOGGER.warning(msg)
                     warnings.warn(msg, MappingWarning)
                 else:
@@ -122,13 +114,20 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
     __call__ = apply
 
     @property
+    def unmapped_values_action(self) -> ActionLevel:
+        """Return the action to take if mapping fails for any values."""
+        return self._unmapped_action
+
+    @property
     def context_sensitive_overrides(self) -> bool:
-        """Return True if overrides are of type :class:`.InheritedKeysDict`."""
+        """Return True if overrides are context sensitive."""
         return self._context_sensitive_overrides
 
-    def _create_l2r(self, values: Set[ValueType], context: Optional[ContextType]) -> Dict[ValueType, MatchTuple]:
-        left_to_right: Dict[ValueType, MatchTuple]
-        overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
+    def _create_l2r(
+        self, values: Set[MappedItemType], context: Optional[ContextType]
+    ) -> Dict[MappedItemType, MatchTuple]:
+        left_to_right: Dict[MappedItemType, MatchTuple]
+        overrides: Dict[MappedItemType, MappedItemType]  # Type on override check done during init
 
         if context is None:
             if self._context_sensitive_overrides:  # pragma: no cover
@@ -142,7 +141,11 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
         return {value: (overrides[value],) for value in filter(overrides.__contains__, values)}
 
     def _map_value(
-        self, value: ValueType, candidates: Set[CandidateType], context: Optional[ContextType], kwargs: Dict[str, Any]
+        self,
+        value: MappedItemType,
+        candidates: Set[MappedItemType],
+        context: Optional[ContextType],
+        kwargs: Dict[str, Any],
     ) -> Optional[MatchTuple]:
         scores = self._score(value, candidates, context, **self._score_kwargs, **kwargs)
         sorted_candidates = sorted(zip(scores, candidates), key=lambda t: -t[0])
@@ -197,6 +200,6 @@ class Mapper(Generic[ContextType, ValueType, CandidateType]):
             filter_functions=[(func, kwargs.copy()) for func, kwargs in self._filters],
             min_score=self._min_score,
             overrides=self._overrides.copy(),
-            unmapped_values_action=self._unmapped_action,
+            unmapped_values_action=self.unmapped_values_action,
             cardinality=self._cardinality,
         )

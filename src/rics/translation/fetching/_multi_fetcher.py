@@ -4,13 +4,14 @@ from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from time import perf_counter
 from typing import Any, Callable, Dict, Iterable, List, Tuple
 
-from rics.translation.fetching import exceptions
-from rics.translation.fetching.types import Fetcher, IdsToFetch
-from rics.translation.offline.types import IdType, NameType, SourcePlaceholderTranslations, SourceType
+from rics.performance import format_perf_counter
+from rics.translation.fetching import Fetcher, exceptions
+from rics.translation.fetching.types import IdsToFetch
+from rics.translation.offline.types import SourcePlaceholderTranslations
+from rics.translation.types import IdType, NameType, SourceType
 from rics.utility.action_level import ActionLevel, ActionLevelHelper, ActionLevelTypes
-from rics.utility.collections import compute_if_absent, reverse_dict
+from rics.utility.collections.dicts import compute_if_absent, reverse_dict
 from rics.utility.misc import tname
-from rics.utility.perf import format_perf_counter
 
 LOGGER = logging.getLogger(__package__).getChild("MultiFetcher")
 
@@ -27,7 +28,7 @@ def _invoke(func: Callable, *args: Any) -> FetchResult:
 
 
 class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
-    """Fetcher implementation combining the results of other fetchers."""
+    """Fetcher which combines the results of other fetchers."""
 
     def __init__(
         self,

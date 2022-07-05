@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Sequence
 from rics.translation.dio import DataStructureIO
 from rics.translation.dio.exceptions import NotInplaceTranslatableError
 from rics.translation.offline import TranslationMap
-from rics.translation.offline.types import IdType, NameType
+from rics.translation.types import IdType, NameType
 
 
 class SingleValueIO(DataStructureIO):

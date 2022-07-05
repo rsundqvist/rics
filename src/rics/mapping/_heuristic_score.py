@@ -1,24 +1,17 @@
 import logging
-from typing import Any, Dict, Generic, Hashable, Iterable, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, Iterable, List, Optional, Tuple, Union
 
-from rics.mapping import filter_functions, heuristic_functions
-from rics.mapping import score_functions as sf
-from rics.mapping.filter_functions import FilterFunction
-from rics.mapping.heuristic_functions import AliasFunction
-from rics.utility.misc import tname
+from rics.mapping import filter_functions, heuristic_functions, score_functions
+from rics.mapping.types import ContextType, HeuristicsTypes, MappedItemType, ScoreFunction
+from rics.utility.misc import get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("HeuristicScore")
 
-H = TypeVar("H", bound=Hashable)
-ContextType = TypeVar("ContextType", bound=Hashable)
-HeuristicsTypes = Union[AliasFunction, FilterFunction]
-"""Heuristic function types."""
 
-
-class HeuristicScore(Generic[H]):
+class HeuristicScore(Generic[ContextType, MappedItemType]):
     """Callable wrapper for computing heuristic scores.
 
-    Instances are callable. Signature is given by :attr:`~rics.mapping.score_functions.ScoreFunction`.
+    Instances are callable. Signature is given by :attr:`~rics.mapping.types.ScoreFunction`.
 
     Short-circuiting:
         A mechanism for forced matching. Score is set to `+∞` for short-circuited candidates, and `-∞` for the rest.
@@ -31,14 +24,14 @@ class HeuristicScore(Generic[H]):
         3. If no ``short-circuiting`` is triggered in step 2, yield max score for each candidate.
 
     Args:
-        score_function: A :attr:`~rics.mapping.score_functions.ScoreFunction` to wrap.
+        score_function: A :attr:`~rics.mapping.types.ScoreFunction` to wrap.
         heuristics: Iterable of heuristics or tuples (heuristic, kwargs) to apply to the (value, candidates) inputs to
             the `score_function`.
 
     Heuristic types:
-        * An :const:`~rics.mapping.heuristic_functions.AliasFunction`, which accepts and returns a tuple
+        * An :const:`~rics.mapping.types.AliasFunction`, which accepts and returns a tuple
           (value, candidates) to be evaluated.
-        * A :const:`~rics.mapping.filter_functions.FilterFunction`, which accepts a tuple (value, candidates) and
+        * A :const:`~rics.mapping.types.FilterFunction`, which accepts a tuple (value, candidates) and
           returns a subset of `candidates`. If any candidates are returned, ``short-circuiting`` is triggered.
 
     Notes:
@@ -48,11 +41,11 @@ class HeuristicScore(Generic[H]):
 
     def __init__(
         self,
-        score_function: Union[str, sf.ScoreFunction],
+        score_function: Union[str, ScoreFunction],
         heuristics: Iterable[Union[Union[str, HeuristicsTypes], Tuple[Union[str, HeuristicsTypes], Dict[str, Any]]]],
     ) -> None:
-        self._score: sf.ScoreFunction = (
-            getattr(sf, score_function) if isinstance(score_function, str) else score_function
+        self._score: ScoreFunction = (
+            get_by_full_name(score_function, score_functions) if isinstance(score_function, str) else score_function
         )
         self._heuristics: List[Tuple[HeuristicsTypes, Dict[str, Any]]] = []
 
@@ -71,7 +64,7 @@ class HeuristicScore(Generic[H]):
         return f"{tname(self)}({score_function=}, {heuristics=})"
 
     def __call__(
-        self, value: H, candidates: Iterable[H], context: Optional[ContextType], **kwargs: Any
+        self, value: MappedItemType, candidates: Iterable[MappedItemType], context: Optional[ContextType], **kwargs: Any
     ) -> Iterable[float]:
         """Apply `score_function` with heuristics and short-circuiting."""
         candidates = list(candidates)
@@ -125,11 +118,11 @@ class HeuristicScore(Generic[H]):
 def _resolve_heuristic(func_or_name: Union[str, HeuristicsTypes]) -> HeuristicsTypes:  # pragma: no cover
     if isinstance(func_or_name, str):
         try:
-            return getattr(filter_functions, func_or_name)
+            return get_by_full_name(func_or_name, filter_functions)
         except AttributeError:
             pass
         try:
-            return getattr(heuristic_functions, func_or_name)
+            return get_by_full_name(func_or_name, heuristic_functions)
         except AttributeError:
             pass
 

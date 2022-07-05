@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Bump development status to `Development Status :: 3 - Alpha` on PyPi. 
+Switched to the [PyData Sphinx theme](https://github.com/pydata/pydata-sphinx-theme).
+
+### Changed
+- Switched to pydata Sphinx theme.
+- Moved `Cardinality` to the `mapping` namespace.
+- Move `utility.perf` up one level
+
+### Added
+- Make it possible to initialize `Fetcher`s from arbitrary packages in `Translator.from_config`.
+- `py.typed` marker
+- Additional `types`-modules for typehint imports
+
+### Fixed
+- Numerous doc fixes
+
 ## [0.12.2] - 2022-07-04
 
 ### Fixed

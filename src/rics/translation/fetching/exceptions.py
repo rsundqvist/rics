@@ -1,4 +1,4 @@
-"""Translation-specific exceptions."""
+"""Errors and warnings related to fethcing."""
 from typing import Iterable
 
 
@@ -11,11 +11,7 @@ class FetcherError(RuntimeError):
 
 
 class ForbiddenOperationError(FetcherError):
-    """Exception indicating that the fetcher does not support an operation.
-
-    Args:
-        operation: The operation which was not supported.
-    """
+    """Exception indicating that the fetcher does not support an operation."""
 
     def __init__(self, operation: str, reason: str = "not supported by this fetcher.") -> None:
         super().__init__(f"Operation '{operation}' " + reason)

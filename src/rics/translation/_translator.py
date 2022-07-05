@@ -2,48 +2,107 @@ import logging
 import warnings
 from collections import defaultdict
 from pathlib import Path
-from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError
 from rics.translation import factory
-from rics.translation.dio import DataStructureIO, DefaultTranslatable, resolve_io
+from rics.translation.dio import DataStructureIO, resolve_io
 from rics.translation.exceptions import OfflineError
-from rics.translation.fetching.types import Fetcher, IdsToFetch
+from rics.translation.fetching import Fetcher
+from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline import Format, TranslationMap
-from rics.translation.offline.types import (
-    FormatType,
-    IdType,
-    NameType,
-    PlaceholderTranslations,
-    SourcePlaceholderTranslations,
-    SourceType,
-)
-from rics.utility.collections.inherited_keys_dict import InheritedKeysDict, MakeDict
+from rics.translation.offline.types import FormatType, PlaceholderTranslations, SourcePlaceholderTranslations
+from rics.translation.types import ID, IdType, Names, NamesPredicate, NameType, NameTypes, SourceType, Translatable
+from rics.utility.collections.dicts import InheritedKeysDict, MakeType
 from rics.utility.misc import tname
 
 _NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
 
 LOGGER = logging.getLogger(__package__).getChild("Translator")
 
-NamesPredicate = Callable[[NameType], bool]
-NameTypes = Union[NameType, Iterable[NameType]]
-Names = Union[NameTypes, NamesPredicate]
 
-
-class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
+class Translator(Generic[Translatable, NameType, IdType, SourceType]):
     """Translate IDs to human-readable labels.
 
-    Untranslatable IDs will be None by default if neither `default_fmt` nor `default_translations` is given.
+    The `Translator` is the main entry point for all translation tasks. Translation is performed three steps:
+
+        1. The :attr:`map_to_sources` method performs name-to-source mapping (see :class:`.DirectionalMapping`).
+        2. The :attr:`fetch` method extracts IDs to translate and retrieves data (see :class:`.TranslationMap`).
+        3. Finnaly, the :attr:`translate` method applies the translations and returns to the caller.
+
+    You do not have to perform the first two steps yourself; calling `translate` is enough.
 
     Args:
         fetcher: A :class:`.Fetcher` or ready-to-use translations.
         fmt: String :class:`.Format` specification for translations.
         mapper: A :class:`.Mapper` instance for binding names to sources.
         default_fmt: Alternative :class:`.Format` to use instead of `fmt` for fallback translation of unknown IDs.
-        default_translations: Shared and/or source-specific default placeholder values for unknown IDs. See the
-            :meth:`.InheritedKeysDict.make`-method documentation for details on how to specify these.
+        default_translations: Shared and/or source-specific default placeholder values for unknown IDs. See
+            :meth:`.InheritedKeysDict.make` for details.
+
+    Notes:
+        Untranslatable IDs will be None by default if neither `default_fmt` nor `default_translations` is given.
+
+    Examples:
+        A minimal example. For a more complete use case, see the :ref:`dvdrental` example. Assume that we have data for
+        people and animals as in the table below::
+
+            people:                       animals:
+                 id | name    | gender       id | name   | is_nice
+              ------+---------+--------     ----+--------+---------
+               1991 | Richard | Male          0 | Tarzan | false
+               1999 | Sofia   | Female        1 | Morris | true
+               1904 | Fred    | Male          2 | Simba  | true
+
+        In most real cases we'd fetch this table from somewhere. In this case, howeever, there's so little data that we
+        can simply enumerate the components needed for translation ourselves to create a :class:`.MemoryFetcher`.
+
+        >>> from rics.translation import Translator
+        >>> translation_data = {
+        ...     'animals': {'id': [0, 1, 2], 'name': ['Tarzan', 'Morris', 'Simba'], 'is_nice': [False, True, True]},
+        ...     'people': {'id': [1999, 1991, 1904], 'name': ['Sofia', 'Richard', 'Fred']},
+        ... }
+        >>> translator = Translator(translation_data, fmt='{id}:{name}[, nice={is_nice}]')
+        >>> data = {'animals': [0, 2], 'people': [1991, 1999]}
+        >>> for key, translated_table in translator.translate(data).items():
+        >>>     print(f'Translations for {repr(key)}:')
+        >>>     for translated_id in translated_table:
+        >>>         print(f'    {repr(translated_id)}')
+        Translations for 'animals':
+            '0:Tarzan, nice=False'
+            '2:Simba, nice=True'
+        Translations for 'people':
+            '1991:Richard'
+            '1999:Sofia'
+
+        Handling unknown IDs.
+
+    >>> default_translations = dict(
+    ...     default={'is_nice': 'Maybe?', 'name': "Bob"},
+    ...     specific={'animals': {'name': 'Fido'}},
+    >>> )
+    >>> useless_database = {
+    ...     'animals': {'id': [], 'name': []},
+    ...     'people': {'id': [], 'name': []}
+    >>> }
+    >>> translator = Translator(useless_database, default_translations=default_translations,
+    ...                         fmt='{id}:{name}[, nice={is_nice}]')
+    >>> data = {'animals': [0], 'people': [0]}
+    >>> for key, translated_table in translator.translate(data).items():
+    >>>     print(f'Translations for {repr(key)}:')
+    >>>     for translated_id in translated_table:
+    >>>         print(f'    {repr(translated_id)}')
+            Translations for 'animals':
+                '0:Fido'
+            Translations for 'people':
+                '0:Bob'
+
+    Since we didn't give an explicit `default_fmt`, the regular `fmt` is used instead. Formats can be plain strings,
+    in which case tranlation will never explicitly fail unless the name itself fails to map and
+    :attr:`.Mapper.unmapped_values_action` is set to :attr:`.ActionLevel.RAISE`.
+
     """
 
     @classmethod
@@ -52,15 +111,13 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         path: PathLikeType,
         extra_fetchers: Iterable[str] = (),
         /,
-        fetcher_factory: factory.MakeFetcherType = factory.default_fetcher_factory,
-        mapper_factory: factory.MakeMapperType = factory.default_mapper_factory,
+        fetcher_factory: factory.FetcherFactory = factory.default_fetcher_factory,
+        mapper_factory: factory.MapperFactory = factory.default_mapper_factory,
     ) -> "Translator":
-        """See :func:`rics.translation.factory.translator_from_toml_config`."""
-        return factory.translator_from_toml_config(
-            str(path), extra_fetchers, fetcher_factory=fetcher_factory, mapper_factory=mapper_factory
-        )
+        """See :class:`.TranslatorFactory`."""
+        return factory.TranslatorFactory(path, extra_fetchers, fetcher_factory, mapper_factory).create()
 
-    from_config.__doc__ = factory.translator_from_toml_config.__doc__
+    from_config.__doc__ = factory.TranslatorFactory.__doc__
 
     def __init__(
         self,
@@ -73,7 +130,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         fmt: FormatType = "{id}:{name}",
         mapper: Mapper = None,
         default_fmt: FormatType = None,
-        default_translations: Union[InheritedKeysDict[SourceType, str, Any], MakeDict] = None,
+        default_translations: MakeType = None,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
         self._mapper = mapper or Mapper()
@@ -93,7 +150,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
             )
 
     def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator":
-        """Make a copy of this translator.
+        """Make a copy of this Translator.
 
         Args:
             share_fetcher: If True, the returned translator will share the current translator's fetcher.
@@ -128,11 +185,11 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def translate(
         self,
-        translatable: DefaultTranslatable,
+        translatable: Translatable,
         names: Names = None,
         ignore_names: Names = None,
         inplace: bool = False,
-    ) -> Optional[DefaultTranslatable]:
+    ) -> Optional[Translatable]:
         """Translate IDs to human-readable strings.
 
         Args:
@@ -161,11 +218,11 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def __call__(
         self,
-        translatable: DefaultTranslatable,
+        translatable: Translatable,
         names: Names = None,
         ignore_names: Names = None,
         inplace: bool = False,
-    ) -> Optional[DefaultTranslatable]:
+    ) -> Optional[Translatable]:
         """Inherits docstring from self.translate."""
         return self.translate(translatable, names, ignore_names, inplace)  # pragma: no cover
 
@@ -173,7 +230,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def map_to_sources(
         self,
-        translatable: DefaultTranslatable,
+        translatable: Translatable,
         names: Names = None,
         ignore_names: Names = None,
     ) -> Optional[DirectionalMapping]:
@@ -214,7 +271,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def fetch(
         self,
-        translatable: DefaultTranslatable,
+        translatable: Translatable,
         name_to_source: DirectionalMapping[NameType, SourceType],
         data_structure_io: Type[DataStructureIO] = None,
     ) -> TranslationMap:
@@ -271,7 +328,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def store(
         self,
-        translatable: DefaultTranslatable = None,
+        translatable: Translatable = None,
         names: Names = None,
         ignore_names: Names = None,
         delete_fetcher: bool = True,
@@ -338,7 +395,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def _get_updated_tmap(
         self,
-        translatable: DefaultTranslatable,
+        translatable: Translatable,
         names: Names = None,
         ignore_names: Names = None,
         force_fetch: bool = False,
@@ -374,7 +431,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
     @staticmethod
     def _get_ids_to_fetch(
         name_to_source: DirectionalMapping,
-        translatable: DefaultTranslatable,
+        translatable: Translatable,
         dio: Type[DataStructureIO],
     ) -> List[IdsToFetch]:
 
@@ -392,10 +449,10 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         placeholders = self._fmt.placeholders
         required = self._fmt.required_placeholders
 
-        if self._default_fmt and "id" in self._default_fmt.placeholders and "id" not in placeholders:
+        if self._default_fmt and ID in self._default_fmt.placeholders and ID not in placeholders:
             # Ensure that default translations can always use the ID
-            placeholders = placeholders + ("id",)
-            required = required + ("id",)
+            placeholders = placeholders + (ID,)
+            required = required + (ID,)
 
         return (
             self._fetcher.fetch_all(placeholders, required)
@@ -419,7 +476,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
 
     def _resolve_names(
         self,
-        translatable: DefaultTranslatable,
+        translatable: Translatable,
         names: Optional[Names],
         ignored_names: Optional[Names],
     ) -> List[NameType]:
@@ -440,7 +497,7 @@ class Translator(Generic[DefaultTranslatable, NameType, IdType, SourceType]):
         return names_to_translate
 
     @classmethod
-    def _extract_from_attribute(cls, translatable: DefaultTranslatable) -> List[NameType]:
+    def _extract_from_attribute(cls, translatable: Translatable) -> List[NameType]:
         no_use_keys = False
         for attr_name in _NAME_ATTRIBUTES:
             if attr_name == "keys" and no_use_keys:
@@ -489,7 +546,7 @@ class _IgnoredNamesPredicate(Generic[NameType]):
 def _handle_default(
     fmt: Format,
     default_fmt: Optional[FormatType],
-    default_translations: Optional[Union[InheritedKeysDict, MakeDict]],
+    default_translations: Optional[MakeType],
 ) -> Tuple[Optional[InheritedKeysDict], Optional[Format]]:  # pragma: no cover
     if default_fmt is None and default_translations is None:
         return None, None
@@ -518,7 +575,7 @@ def _handle_default(
 
     if dfmt is not None:
         extra = set(dfmt.placeholders).difference(fmt.placeholders)
-        extra.discard("id")
+        extra.discard(ID)
         if extra:
             raise ValueError(
                 f"The given fallback translation format {repr(default_fmt)} uses placeholders "

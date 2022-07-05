@@ -5,8 +5,9 @@ from rics._internal_support.types import NO_DEFAULT
 from rics.translation.offline import MagicDict
 from rics.translation.offline._format import Format, FormatType
 from rics.translation.offline._format_applier import DefaultFormatApplier, FormatApplier
-from rics.translation.offline.types import IdType, NameToSourceDict, NameType, SourcePlaceholderTranslations, SourceType
-from rics.utility.collections import InheritedKeysDict
+from rics.translation.offline.types import NameToSourceDict, SourcePlaceholderTranslations
+from rics.translation.types import IdType, NameType, SourceType
+from rics.utility.collections.dicts import InheritedKeysDict
 from rics.utility.misc import tname
 
 

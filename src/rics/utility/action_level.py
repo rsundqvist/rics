@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Literal, Optional, Union
 
 ActionLevelTypes = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], "ActionLevel"]
+"""Types which may be interpreted as an ActionLevel."""
 
 
 class BadActionLevelError(ValueError):
@@ -27,8 +28,11 @@ class ActionLevel(Enum):
     """Action level enumeration type for events."""
 
     RAISE = "raise"
+    """Raise an error."""
     WARN = "warn"
+    """Raise a warning"""
     IGNORE = "ignore"
+    """Ignore the event."""
 
     @classmethod
     def verify(
@@ -86,7 +90,19 @@ class ActionLevelHelper:
         self._forbidden_for_purpose = forbidden_for_purpose
 
     def verify(self, action: ActionLevelTypes, purpose: str) -> ActionLevel:
-        """Verify an action level."""
+        """Verify an action level with constraints.
+
+        Args:
+            action: The value to verify.
+            purpose: Additional information to add if an exception is raised.
+
+        Returns:
+            A valid action level for the given purpose.
+
+        Raises:
+            BadActionLevelError: If `action` is not in ('ignore', 'warn', 'raise') or if `action` is in `remove`.
+            ValueError: If `purpose` is unknown and `require_purpose` is set to `'exists'`.
+        """
         if self._require == "exists" and purpose not in self._forbidden_for_purpose:
             raise ValueError(f"Unknown {purpose=} given.")
         return ActionLevel.verify(action, purpose, forbidden=self._forbidden_for_purpose.get(purpose))

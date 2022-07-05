@@ -3,8 +3,7 @@ from typing import Dict
 
 import pytest
 
-from rics.cardinality import Cardinality
-from rics.mapping import DirectionalMapping
+from rics.mapping import Cardinality, DirectionalMapping
 from rics.translation.offline.types import PlaceholdersTuple
 
 

@@ -6,7 +6,8 @@ codecov
 *.zip
 *.csv
 jupyterlab/data-cache/*
-docs/examples/notebooks/
+docs/documentation/examples/notebooks/
+docs/_autosummary/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

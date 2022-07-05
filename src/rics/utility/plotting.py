@@ -12,6 +12,13 @@ from matplotlib.ticker import FuncFormatter, IndexLocator
 ERROR_BAR_CAPSIZE: float = 0.1
 
 
+class HasXAxis(Protocol):
+    """A type that has an X-axis."""
+
+    xaxis: XAxis
+    """X-Axis attribute."""
+
+
 def configure() -> None:
     """Call all configure-functions in this module.
 
@@ -51,11 +58,7 @@ def configure_matplotlib() -> None:
     mtick.PercentFormatter = functools.partial(mtick.PercentFormatter, xmax=1)
 
 
-class _HasXAxis(Protocol):
-    xaxis: XAxis
-
-
-def pi_ticks(ax: Union[Axis, _HasXAxis], half_rep: Literal["frac", "dec"] = None) -> None:
+def pi_ticks(ax: Union[Axis, HasXAxis], half_rep: Literal["frac", "dec"] = None) -> None:
     """Decorate an axis by setting the labels to multiples of pi.
 
     The `half_rep` must be one of:

@@ -7,36 +7,14 @@ from urllib.parse import quote_plus
 
 import sqlalchemy
 
+from rics.performance import format_perf_counter
 from rics.translation.fetching import AbstractFetcher, exceptions, support
 from rics.translation.fetching.types import FetchInstruction
-from rics.translation.offline.types import IdType, PlaceholderTranslations
+from rics.translation.offline.types import PlaceholderTranslations
+from rics.translation.types import IdType
 from rics.utility.misc import read_env_or_literal, tname
-from rics.utility.perf import format_perf_counter
 
 LOGGER = logging.getLogger(__package__).getChild("SqlFetcher")
-
-
-@dataclass(frozen=True)
-class TableSummary:
-    """Brief description of a known table.
-
-    Args:
-        name: Name of the table.
-        size: Approximate size of the table.
-        columns: Columns in the table.
-        fetch_all_permitted: A flag indicating that the FETCH_ALL-operation is permitted for this table.
-        id_column: The ID column of the table.
-    """
-
-    name: str
-    size: int
-    columns: sqlalchemy.sql.base.ImmutableColumnCollection
-    fetch_all_permitted: bool
-    id_column: sqlalchemy.schema.Column
-
-    def select_columns(self, instr: FetchInstruction) -> List[str]:
-        """Return required and optional columns of the table."""
-        return support.select_placeholders(instr, self.columns.keys())
 
 
 class SqlFetcher(AbstractFetcher[str, IdType, str]):
@@ -84,7 +62,7 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
 
         self._whitelist = set(whitelist_tables or [])
         self._blacklist = set(blacklist_tables or [])
-        self._table_ts_dict: Optional[Dict[str, TableSummary]] = None
+        self._table_ts_dict: Optional[Dict[str, SqlFetcher.TableSummary]] = None
         self._reflect_views = include_views
 
         self._in_limit = fetch_in_below
@@ -93,7 +71,7 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
         self._fetch_all_limit = fetch_all_limit
 
     @property
-    def _summaries(self) -> Dict[str, TableSummary]:
+    def _summaries(self) -> Dict[str, "SqlFetcher.TableSummary"]:
         """Names and sizes of tables that the fetcher may interact with."""
         if self._table_ts_dict is None:
             start = perf_counter()
@@ -117,7 +95,9 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
         stmt = select if instr.ids is None else self._make_query(ts, select, set(instr.ids))
         return PlaceholderTranslations(instr.source, tuple(columns), tuple(self._engine.execute(stmt)))
 
-    def _make_query(self, ts: TableSummary, select: sqlalchemy.sql.Select, ids: Set[IdType]) -> sqlalchemy.sql.Select:
+    def _make_query(
+        self, ts: "SqlFetcher.TableSummary", select: sqlalchemy.sql.Select, ids: Set[IdType]
+    ) -> sqlalchemy.sql.Select:
         num_ids = len(ids)
 
         # Just fetch everything if we're getting "most of" the data anyway
@@ -161,6 +141,7 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
 
     @property
     def allow_fetch_all(self) -> bool:
+        """:noindex:"""  # noqa: D400
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
     def __repr__(self) -> str:
@@ -181,7 +162,7 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
             connection_string = connection_string.format(password=quote_plus(read_env_or_literal(password)))
         return connection_string
 
-    def _get_summaries(self) -> Dict[str, TableSummary]:
+    def _get_summaries(self) -> Dict[str, "SqlFetcher.TableSummary"]:
         start = perf_counter()
         metadata = self.get_metadata()
         if LOGGER.isEnabledFor(logging.DEBUG):
@@ -216,14 +197,14 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
 
     def make_table_summary(
         self, table: sqlalchemy.sql.schema.Table, id_column: sqlalchemy.sql.schema.Column
-    ) -> TableSummary:
+    ) -> "SqlFetcher.TableSummary":
         """Create a table summary."""
         start = perf_counter()
         size = self.get_approximate_table_size(table, id_column)
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug(f"Size of {table.name}={size} resolved in {format_perf_counter(start)}.")
         fetch_all_permitted = self._fetch_all_limit is None or size < self._fetch_all_limit
-        return TableSummary(table.name, size, table.columns, fetch_all_permitted, id_column)
+        return SqlFetcher.TableSummary(table.name, size, table.columns, fetch_all_permitted, id_column)
 
     def get_approximate_table_size(
         self,
@@ -249,3 +230,22 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
         metadata = sqlalchemy.MetaData(self._engine)
         metadata.reflect(only=self._whitelist or None, views=self._reflect_views)
         return metadata
+
+    @dataclass(frozen=True)
+    class TableSummary:
+        """Brief description of a known table."""
+
+        name: str
+        """Name of the table."""
+        size: int
+        """Approximate size of the table."""
+        columns: sqlalchemy.sql.base.ColumnCollection
+        """A flag indicating that the FETCH_ALL-operation is permitted for this table."""
+        fetch_all_permitted: bool
+        """A flag indicating that the FETCH_ALL-operation is permitted for this table."""
+        id_column: sqlalchemy.schema.Column
+        """The ID column of the table."""
+
+        def select_columns(self, instr: FetchInstruction) -> List[str]:
+            """Return required and optional columns of the table."""
+            return support.select_placeholders(instr, self.columns.keys())

@@ -12,23 +12,13 @@
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-
 </div>
-
 
 My personal little ML engineering library.
 
 * GitHub repo: <https://github.com/rsundqvist/rics.git>
 * Documentation: <https://rics.readthedocs.io>
 * Free software: MIT
-
-## Features
-
-* An extensible [ID translation suite](https://rics.readthedocs.io/en/latest/translation-quickstart.html), including SQL integration for retrival of data
-* Multivariate performance testing - [with plots!](https://rics.readthedocs.io/en/latest/utility-perftest.html)
-* Various other utilities methods - 
-  from [logging configuration](https://rics.readthedocs.io/en/latest/utility-logging.html)
-  to [fetching data from the web](https://rics.readthedocs.io/en/latest/utility-data-download.html)
 
 ## Quickstart for development
 

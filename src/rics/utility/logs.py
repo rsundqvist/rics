@@ -29,6 +29,20 @@ def basic_config(rics_level: Union[int, str] = None, force: bool = True, **kwarg
     Keyword Args:
         <namespace>_level: Log level for the namespace denoted by `namespace` (without the `"_level"`-suffix).
             Use underscores instead of dots for submodules, eg ``module.submodule`` => ``module_submodule``.
+
+    Examples:
+        Basic usage.
+
+        >>> from rics.utility.logs import basic_config, logging
+        >>> root_logger = logging.getLogger()
+        >>> basic_config(level=logging.INFO, rics_level=logging.DEBUG)
+        >>> logging.getLogger("rics").debug("I'm a debug message!")
+        >>> root_logger.debug("I'm a debug message!")
+        >>> root_logger.critical("I'm a critical message!") # Doctest: +SKIP
+        2022-02-05T11:17:05.378 [rics:DEBUG] I'm a debug message!
+        2022-02-05T11:17:05.378 [root:CRITICAL] I'm a critical message!
+
+        The Python :py:mod:`logging` module was imported on the same line to save space.
     """
     wildcard_levels, kwargs = _extract_wildcards(rics_level=rics_level, force=force, **kwargs)
 
