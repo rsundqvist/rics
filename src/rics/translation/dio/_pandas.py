@@ -5,7 +5,7 @@ import pandas as pd
 from rics.translation.dio._data_structure_io import DataStructureIO
 from rics.translation.dio._sequence import translate_sequence
 from rics.translation.offline import TranslationMap
-from rics.translation.offline.types import IdType, NameType
+from rics.translation.types import IdType, NameType
 
 T = TypeVar("T", pd.DataFrame, pd.Series)
 

@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional, Sequence, TypeVar
 
 from rics.translation.dio._data_structure_io import DataStructureIO
 from rics.translation.offline import TranslationMap
-from rics.translation.offline.types import IdType, NameType
+from rics.translation.types import IdType, NameType
 
 T = TypeVar("T", bound=Dict)
 

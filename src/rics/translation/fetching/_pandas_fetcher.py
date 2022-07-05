@@ -7,8 +7,9 @@ import pandas as pd
 
 from rics.translation.fetching import AbstractFetcher, support
 from rics.translation.fetching.types import FetchInstruction
-from rics.translation.offline.types import IdType, NameType, PlaceholderTranslations
-from rics.utility.misc import PathLikeType, tname
+from rics.translation.offline.types import PlaceholderTranslations
+from rics.translation.types import IdType, NameType
+from rics.utility.misc import PathLikeType, get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("PandasFetcher")
 PandasReadFunction = Callable[[PathLikeType, Any, Any], pd.DataFrame]
@@ -42,7 +43,7 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self._read = getattr(pd, read_function) if isinstance(read_function, str) else read_function
+        self._read = get_by_full_name(read_function, pd) if isinstance(read_function, str) else read_function
         self._format_source: FormatFn = _make_format_fn(read_path_format)
         self._args = read_function_args or ()
         self._kwargs = read_function_kwargs or {}

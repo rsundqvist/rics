@@ -1,9 +1,13 @@
-from typing import Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
+
+if TYPE_CHECKING:
+    from rics.translation.offline import Format  # noqa: F401
 
 from rics.mapping import Mapper
 from rics.translation.fetching import AbstractFetcher
 from rics.translation.fetching.types import FetchInstruction
-from rics.translation.offline.types import PlaceholderTranslations, SourcePlaceholderTranslations, SourceType
+from rics.translation.offline.types import PlaceholderTranslations, SourcePlaceholderTranslations
+from rics.translation.types import SourceType
 
 
 class MemoryFetcher(AbstractFetcher):
@@ -11,8 +15,8 @@ class MemoryFetcher(AbstractFetcher):
 
     Args:
         data: A dict ``{source: PlaceholderTranslations}`` to fetch from.
-        mapper: A :class:`~rics.mapping.Mapper` instance used to adapt placeholder names in sources to wanted names, ie
-            the names of the placeholders that are in the translation :class:`~rics.offline.Format` being used.
+        mapper: A :class:`.Mapper` instance used to adapt placeholder names in sources to wanted names, ie
+            the names of the placeholders that are in the translation :class:`.Format` being used.
     """
 
     def __init__(

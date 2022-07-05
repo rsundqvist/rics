@@ -3,7 +3,7 @@ from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Sequence
 
 from rics.translation.offline import TranslationMap
-from rics.translation.offline.types import IdType, NameType
+from rics.translation.types import IdType, NameType
 
 
 class DataStructureIO:

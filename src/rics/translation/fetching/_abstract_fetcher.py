@@ -5,19 +5,14 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 from rics.mapping import HeuristicScore, Mapper
 from rics.mapping.score_functions import modified_hamming
+from rics.performance import format_perf_counter
 from rics.translation.exceptions import OfflineError
 from rics.translation.fetching import exceptions
-from rics.translation.fetching.types import Fetcher, FetchInstruction, IdsToFetch
-from rics.translation.offline.types import (
-    IdType,
-    NameType,
-    PlaceholdersTuple,
-    PlaceholderTranslations,
-    SourcePlaceholderTranslations,
-    SourceType,
-)
-from rics.utility.collections import InheritedKeysDict, reverse_dict
-from rics.utility.perf import format_perf_counter
+from rics.translation.fetching._fetcher import Fetcher
+from rics.translation.fetching.types import FetchInstruction, IdsToFetch
+from rics.translation.offline.types import PlaceholdersTuple, PlaceholderTranslations, SourcePlaceholderTranslations
+from rics.translation.types import ID, IdType, NameType, SourceType
+from rics.utility.collections.dicts import InheritedKeysDict, reverse_dict
 
 LOGGER = logging.getLogger(__package__).getChild("AbstractFetcher")
 
@@ -87,7 +82,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
 
     def id_column(self, source: SourceType, candidates: Iterable[str] = None) -> Optional[str]:
         """Return the ID column for `source`."""
-        return self.map_placeholders(source, ["id"], candidates=candidates)["id"]
+        return self.map_placeholders(source, [ID], candidates=candidates)[ID]
 
     @property
     def online(self) -> bool:
@@ -146,7 +141,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         if not self.allow_fetch_all:
             raise exceptions.ForbiddenOperationError(self._FETCH_ALL)
 
-        ids_to_fetch = [IdsToFetch(source, None) for source in self.sources]
+        ids_to_fetch: List[IdsToFetch] = [IdsToFetch(source, None) for source in self.sources]
         return self._fetch(ids_to_fetch, tuple(placeholders), set(required))
 
     @abstractmethod
@@ -165,10 +160,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         """
 
     def close(self) -> None:
-        """Close the fetcher. Does nothing by default.
-
-        :noindex:
-        """
+        pass
 
     def _fetch(
         self,
@@ -200,7 +192,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
                 # The mapping is only in reverse from the Fetchers point-of-view; we're mapping back to "proper" values.
                 translations.placeholders = tuple(reverse_mappings.get(p, p) for p in translations.placeholders)
 
-            translations.id_pos = translations.placeholders.index("id")
+            translations.id_pos = translations.placeholders.index(ID)
             yield instr.source, translations
 
     def _make_fetch_instruction(
@@ -211,9 +203,9 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     ) -> Tuple[Optional[Dict[str, str]], FetchInstruction]:
         fetch_all_placeholders = not placeholders
 
-        required_placeholders.add("id")
-        if "id" not in placeholders:
-            placeholders = ("id",) + placeholders
+        required_placeholders.add(ID)
+        if ID not in placeholders:
+            placeholders = (ID,) + placeholders
 
         wanted_to_actual = self._make_mapping(itf, placeholders, required_placeholders)
 

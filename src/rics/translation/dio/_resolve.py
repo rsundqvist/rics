@@ -1,6 +1,4 @@
-from typing import Dict, Sequence, Type, TypeVar
-
-import pandas as pd
+from typing import Type
 
 from rics.translation.dio import DataStructureIO
 from rics.translation.dio._dict import DictIO
@@ -8,11 +6,10 @@ from rics.translation.dio._pandas import PandasIO
 from rics.translation.dio._sequence import SequenceIO
 from rics.translation.dio._single_value import SingleValueIO
 from rics.translation.dio.exceptions import UntranslatableTypeError
+from rics.translation.types import Translatable
 
-DefaultTranslatable = TypeVar("DefaultTranslatable", pd.DataFrame, pd.Series, Dict, Sequence, str, int)
 
-
-def resolve_io(arg: DefaultTranslatable) -> Type[DataStructureIO]:
+def resolve_io(arg: Translatable) -> Type[DataStructureIO]:
     """Get an IO instance for `arg`.
 
     Args:

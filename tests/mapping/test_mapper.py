@@ -1,7 +1,6 @@
 import pytest
 
-from rics.cardinality import Cardinality
-from rics.mapping import Mapper, exceptions
+from rics.mapping import Cardinality, Mapper, exceptions
 
 
 def _substring_score(k, c, _):

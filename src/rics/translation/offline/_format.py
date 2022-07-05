@@ -19,6 +19,24 @@ class Format:
 
     Args:
         fmt: A translation fstring.
+
+    Examples:
+        A format string with an optionl element.
+
+        >>> from rics.translation.offline import Format
+        >>> fmt = Format('{id}:{name}[, nice={is_nice}]')
+
+        The ``Format`` class when used directly only returns required placeholders by default..
+
+        >>> fmt.fstring(), fmt.fstring().format(id=0, name='Tarzan')
+        ('{id}:{name}', '0:Tarzan')
+
+        ..but the `placeholders` attribute can be used to retrieve all placeholders, required and optional:
+
+        >>> fmt.placeholders
+        ('id', 'name', 'is_nice')
+        >>> fmt.fstring(fmt.placeholders), fmt.fstring(fmt.placeholders).format(id=1, name='Morris', is_nice=True)
+        ('{id}:{name}, nice={is_nice}', '1:Morris, nice=True')
     """
 
     PLACEHOLDER_PATTERN: re.Pattern = re.compile(_OPTIONAL_ELEMENT_REGEX + "|" + _REQUIRED_ELEMENT_RE)

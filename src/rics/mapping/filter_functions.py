@@ -1,7 +1,7 @@
-"""Functions which return filter candidates."""
+"""Functions that remove candidates."""
 import logging
 import re
-from typing import Callable, Collection, Hashable, Iterable, List, Literal, Optional, Set, Tuple, TypeVar, Union
+from typing import Collection, Iterable, List, Literal, Optional, Set, Tuple, Union
 
 LOGGER = logging.getLogger(__name__)
 
@@ -9,22 +9,6 @@ WhereOptions = Literal["name", "context", "candidate"]
 WHERE_OPTIONS = ("name", "candidate", "context")
 WhereArg = Union[WhereOptions, Iterable[WhereOptions]]
 """Determines how where matches must be found during filtering operations."""
-H = TypeVar("H", bound=Hashable)
-ContextType = TypeVar("ContextType", bound=Hashable)
-FilterFunction = Callable[[H, Iterable[H], Optional[ContextType]], Set[H]]
-"""Signature for a filter function.
-
-Args:
-    name: An element to find matches for.
-    candidates: Potential matches for `value`.
-    context: The context in which filtering is being performed.
-
-Keyword Args:
-    kwargs: Accepted only by some functions.
-
-Returns:
-    A subset of candidates to keep.
-"""
 
 
 def require_regex_match(

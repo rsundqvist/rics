@@ -10,7 +10,7 @@ repository = "https://github.com/rsundqvist/rics"
 documentation = "https://rics.readthedocs.io"
 keywords = ["rics"]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Operating System :: POSIX :: Linux",
@@ -65,7 +65,7 @@ mypy = "^0.961"
 # description: https://github.com/astropy/astropy/issues/11723
 # https://github.com/astropy/astropy/pull/12270
 sphinx = "^5.0.1"
-sphinx-rtd-theme = "^1.0.0"
+pydata-sphinx-theme = "^0.9.0"
 myst-parser = "^0.18.0"
 nbsphinx = "^0.8.9"
 bump2version = "^1.0.1"
@@ -118,6 +118,9 @@ flake8-logging-format = ["+*",
 [tool.flakeheaven.exceptions."src/rics/translation/fetching/"]
 flake8-docstrings = ["-D102"]  # Docstrings are inherited
 
+[tool.flakeheaven.exceptions."src/rics/mapping/score_functions.py"]
+flake8-darglint = ["-DAR101", "-DAR301"]
+
 [tool.flakeheaven.exceptions."tests/"]
 # Test modules/classes/functions are never "really" public, and I don't want to typehint/document all of them :).
 flake8-bandit = ["-S101", "-S301", "-S403"]
@@ -129,7 +132,7 @@ flake8-annotations = ["-ANN001", "-ANN101", "-ANN102", "-ANN201", "-ANN202", "-A
 flake8-annotations = ["-*"]
 flake8-docstrings = ["-*"]
 
-[tool.flakeheaven.exceptions."src/rics/__init__"]
+[tool.flakeheaven.exceptions."src/rics/__init__.py"]
 pyflakes = ["-F401"]  # Module imported but unused - False positive for __version__; IDE solves for real positives
 
 

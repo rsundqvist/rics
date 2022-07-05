@@ -1,20 +1,15 @@
 """Types used for offline translation."""
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, Generic, Sequence, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Dict, Generic, Sequence, Tuple, Union
 
 import pandas as pd
+
+from rics.translation.types import ID, IdType, NameType, SourceType
 
 if TYPE_CHECKING:
     from rics.translation.offline._format import Format
 
 FormatType = Union[str, "Format"]
-
-NameType = TypeVar("NameType", int, str)
-"""Type used to label collections of IDs, such as the column names in a DataFrame or the keys of a dict."""
-IdType = TypeVar("IdType", int, str)
-"""Type of the value being translated into human-readable labels."""
-SourceType = TypeVar("SourceType", int, str)
-"""Type used to describe sources. Typically a string for things like files and database tables."""
 
 PlaceholdersTuple = Tuple[str, ...]
 NameToSourceDict = Dict[NameType, SourceType]  # {name: source}
@@ -25,22 +20,18 @@ SourcePlaceholderTranslations = Dict[SourceType, "PlaceholderTranslations"]  # {
 
 @dataclass
 class PlaceholderTranslations(Generic[SourceType]):
-    """Matrix of ID translation components returned by fetchers.
-
-    Attributes:
-        source: Source for the placeholders.
-        placeholders: Names of placeholders in the order in which they appear in `records`.
-        records: Response matrix of shape `N x M` where `N` is the number of IDs returned and `M` is the length of
-            `placeholders`.
-        id_pos: Position if the `"id"` placeholder in `placeholders`.
-    """
+    """Matrix of ID translation components returned by fetchers."""
 
     MakeTypes = Union["PlaceholderTranslations", pd.DataFrame, Dict[str, Sequence[Any]]]
 
     source: SourceType
+    """Source from which translations were retrieved."""
     placeholders: PlaceholdersTuple
+    """Names of placeholders in the order in which they appear in `records`."""
     records: Sequence[Sequence[Any]]
+    """Matrix of shape `N x M` where `N` is the number of IDs returned and `M` is the length of `placeholders`."""
     id_pos: int = -1
+    """Position if the the ID placeholder in `placeholders`."""
 
     @classmethod
     def make(cls, source: SourceType, data: MakeTypes) -> "PlaceholderTranslations":
@@ -86,7 +77,7 @@ class PlaceholderTranslations(Generic[SourceType]):
             source,
             placeholders=tuple(data),
             records=list(map(list, data.to_records(index=False))),
-            id_pos=data.columns.get_loc("id") if "id" in data else -1,
+            id_pos=data.columns.get_loc(ID) if ID in data else -1,
         )
 
     @classmethod

@@ -1,6 +1,7 @@
 from typing import Any, Iterator, Mapping
 
-from rics.translation.offline.types import IdType, TranslatedIds
+from rics.translation.offline.types import TranslatedIds
+from rics.translation.types import IdType
 
 
 class MagicDict(Mapping[IdType, str]):

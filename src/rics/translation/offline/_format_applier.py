@@ -4,14 +4,8 @@ from typing import Any, Collection, Dict, Generic, List, Union
 from rics._internal_support.types import NO_DEFAULT, NoDefault
 from rics.translation.offline._format import Format
 from rics.translation.offline._magic_dict import MagicDict
-from rics.translation.offline.types import (
-    IdType,
-    NameType,
-    PlaceholdersTuple,
-    PlaceholderTranslations,
-    SourceType,
-    TranslatedIds,
-)
+from rics.translation.offline.types import PlaceholdersTuple, PlaceholderTranslations, TranslatedIds
+from rics.translation.types import ID, IdType, NameType, SourceType
 from rics.utility.misc import tname
 
 
@@ -40,7 +34,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
             required_defaults = set(
                 translations.placeholders if required_placeholders is None else required_placeholders
             )
-            required_defaults.discard("id")
+            required_defaults.discard(ID)
             missing = required_defaults.difference(default)
             if missing:
                 raise ValueError(f"Placeholder names {sorted(missing)} not present in {default=}.")
@@ -73,7 +67,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         else:
             default_fmt = default_fmt or fmt
             placeholders = tuple(filter(self._placeholder_names.__contains__, default_fmt.placeholders))
-            m = {**self._default, "id": "{}"} if "id" in placeholders else self._default
+            m = {**self._default, ID: "{}"} if ID in placeholders else self._default
             default_fstring = default_fmt.fstring(placeholders).format(**m)
 
         return MagicDict(

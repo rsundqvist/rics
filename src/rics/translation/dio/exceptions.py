@@ -4,7 +4,7 @@ from typing import Any, Type
 
 
 class DataStructureIOError(RuntimeError):
-    """Base class for translator exceptions."""
+    """Base class for IO exceptions."""
 
 
 class UntranslatableTypeError(DataStructureIOError):

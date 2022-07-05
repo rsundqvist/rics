@@ -5,7 +5,7 @@ import numpy as np
 from rics.translation.dio import DataStructureIO
 from rics.translation.dio.exceptions import NotInplaceTranslatableError
 from rics.translation.offline import TranslationMap
-from rics.translation.offline.types import IdType, NameType
+from rics.translation.types import IdType, NameType
 
 T = TypeVar("T", list, np.ndarray, tuple)
 

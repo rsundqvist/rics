@@ -1,29 +1,22 @@
 """Functions which return a likeness score."""
 import logging
-from typing import Callable, Hashable, Iterable, Optional, TypeVar
+from typing import Iterable, Optional
+
+from rics.mapping.types import ContextType, MappedItemType
 
 LOGGER = logging.getLogger(__name__)
 
-H = TypeVar("H", bound=Hashable)
-ContextType = TypeVar("ContextType", bound=Hashable)
-ScoreFunction = Callable[[H, Iterable[H], Optional[ContextType]], Iterable[float]]
-"""Signature for a likeness score function.
-
-Args:
-    name: An element to find matches for.
-    candidates: Potential matches for `value`.
-    context: The context in which scoring is being performed.
-
-Keyword Args:
-    kwargs: Accepted only by some functions.
-
-Yields:
-    A score for each candidate `c` in `candidates`.
-"""
-
 
 def modified_hamming(name: str, candidates: Iterable[str], context: Optional[ContextType]) -> Iterable[float]:
-    """Compute hamming distance modified by length ratio, from the back."""
+    """Compute hamming distance modified by length ratio, from the back.
+
+    Examples:
+        >>> from rics.mapping.score_functions import modified_hamming
+        >>> print(list(modified_hamming('aa', ['aa', 'a', 'ab'], context=None)))
+        [1.0, 0.5, 0.5]
+        >>> print(list(modified_hamming('face', ['face', 'FAce', 'race', 'place'], context=None)))
+        [1.0, 0.5, 0.75, 0.375]
+    """
 
     def _apply(candidate: str) -> float:
         sz = min(len(candidate), len(name))
@@ -37,15 +30,14 @@ def modified_hamming(name: str, candidates: Iterable[str], context: Optional[Con
     yield from map(_apply, candidates)
 
 
-def equality(value: H, candidates: Iterable[H], context: Optional[ContextType]) -> Iterable[float]:
+def equality(
+    value: MappedItemType, candidates: Iterable[MappedItemType], context: Optional[ContextType]
+) -> Iterable[float]:
     """Return 1.0 if ``k == c_i``, 0.0 otherwise.
 
-    Args:
-        value: An element to find matches for.
-        candidates: Potential matches for `value`.
-        context: Context in which the function is being called.
-
-    Yields:
-        A score for each candidate `c` in `candidates`.
+    Examples:
+        >>> from rics.mapping.score_functions import equality
+        >>> print(list(equality('a', 'aAb', context=None)))
+        [1.0, 0.0, 0.0]
     """
     yield from map(float, (value == c for c in candidates))

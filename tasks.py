@@ -14,6 +14,7 @@ from invoke.runners import Result
 ROOT_DIR = Path(__file__).parent
 DOCS_DIR = ROOT_DIR.joinpath("docs")
 DOCS_BUILD_DIR = DOCS_DIR.joinpath("_build")
+DOCS_GEN_DIR = DOCS_DIR.joinpath("_autosummary")
 DOCS_INDEX = DOCS_BUILD_DIR.joinpath("index.html")
 COVERAGE_FILE = ROOT_DIR.joinpath(".coverage")
 COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
@@ -69,6 +70,7 @@ def clean_docs(c):
     # type: (Context) -> None
     """Clean up files from documentation builds."""
     _run(c, f"rm -fr {DOCS_BUILD_DIR}")
+    _run(c, f"rm -fr {DOCS_GEN_DIR}")
 
 
 @task(pre=[clean_build, clean_python, clean_tests, clean_docs])
@@ -162,20 +164,16 @@ def coverage(c, fmt="report", open_browser=False):
 
 @task(
     help={
-        "serve": "Build the docs watching for changes",
         "open_browser": "Open the docs in the web browser",
     }
 )
-def docs(c, serve=False, open_browser=False):
-    # type: (Context, bool, bool) -> None
+def docs(c, open_browser=False):
+    # type: (Context, bool) -> None
     """Build documentation."""
-    _run(c, f"sphinx-apidoc -o {DOCS_DIR} {SOURCE_DIR}")
-    build_docs = f"sphinx-build -b html {DOCS_DIR} {DOCS_BUILD_DIR}"
+    build_docs = f"sphinx-build -W -a -j auto -b html {DOCS_DIR} {DOCS_BUILD_DIR}"
     _run(c, build_docs)
     if open_browser:
         webbrowser.open(DOCS_INDEX.absolute().as_uri())
-    if serve:
-        _run(c, f"poetry run watchmedo shell-command -p '*.rst;*.md' -c '{build_docs}' -R -D .")
 
 
 @task(

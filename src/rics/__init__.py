@@ -1,11 +1,6 @@
 """Rics ML Engineering Library.
 
-My little library written help with common Machine Learning and Data Science tasks.
-
-Highlights:
-    * Various utility modules in the :mod:`rics.utility` package.
-    * Configurable mapping in the :mod:`rics.mapping` package.
-    * Flexible translation of IDs in :mod:`rics.translation` package suite.
+My personal little library. Written to help with common Machine Learning and Data Science tasks.
 """
 import logging
 

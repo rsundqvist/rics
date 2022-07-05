@@ -1,26 +1,9 @@
 """Functions which perform heuristics for score functions."""
 import re
-from typing import Any, Callable, Hashable, Iterable, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Iterable, List, Optional, Set, Tuple, Union
 
 from rics.mapping.filter_functions import require_regex_match
-
-H = TypeVar("H", bound=Hashable)
-ContextType = TypeVar("ContextType", bound=Hashable)
-
-AliasFunction = Callable[[H, Iterable[H], Optional[ContextType]], Tuple[H, Iterable[H]]]
-"""Signature for an alias function for heuristic scoring.
-
-Args:
-    name: An element to find matches for.
-    candidates: Potential matches for `value`.
-    context: The context in which mapping is being performed.
-
-Keyword Args:
-    kwargs: Accepted only by some functions.
-
-Returns:
-    A tuple (name, candidates) with applied heuristics to increase (or decrease) score as desired.
-"""
+from rics.mapping.types import ContextType
 
 
 def like_database_table(
