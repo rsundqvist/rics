@@ -1,4 +1,5 @@
 """Mapping errors."""
+from typing import Any, Set
 
 
 class MappingError(ValueError):
@@ -7,6 +8,11 @@ class MappingError(ValueError):
 
 class UserMappingError(ValueError):
     """A user-defined mapping function did something strange."""
+
+    def __init__(self, msg: str, value: Any, candidates: Set[Any]) -> None:
+        super().__init__(msg)
+        self.value = value
+        self.candidates = candidates
 
 
 class CardinalityError(MappingError):

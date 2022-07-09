@@ -6,6 +6,7 @@ from rics.mapping.exceptions import MappingError
 from rics.translation import Translator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
 from rics.translation.exceptions import ConfigurationError, TooManyFailedTranslationsError
+from rics.translation.fetching.exceptions import UnknownSourceError
 
 
 def test_translate_without_id(hex_fetcher):
@@ -310,3 +311,21 @@ def test_reverse(hex_fetcher):
 
     actual = t.translate(translated, reverse=True)
     assert expected == actual
+
+
+def test_simple_function_overrides(translator):
+    actual = translator.translate(1, names="whatever", override_function=lambda *args: "positive_numbers")
+    assert actual == "1:0x1, positive=True"
+
+    actual = translator.translate(1, names="positive_numbers", override_function=lambda *args: None)
+    assert actual == "1:0x1, positive=True"
+
+    with pytest.raises(UnknownSourceError):
+        translator.translate(1, names="whatever", override_function=lambda *args: "bad")
+
+
+def test_complex_function_overrides(translator):
+    with pytest.raises(NotImplementedError) as e:
+        translator.translate(1, names="whatever", override_function=lambda *args: {})
+
+    assert "https://github.com/rsundqvist/rics/issues/64" in str(e.value)
