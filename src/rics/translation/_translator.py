@@ -7,16 +7,27 @@ from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Typ
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
-from rics.mapping.exceptions import MappingError
+from rics.mapping.exceptions import MappingError, UserMappingError
 from rics.performance import format_perf_counter
 from rics.translation import factory
 from rics.translation.dio import DataStructureIO, resolve_io
 from rics.translation.exceptions import ConnectionStatusError, TooManyFailedTranslationsError
 from rics.translation.fetching import Fetcher
+from rics.translation.fetching.exceptions import UnknownSourceError
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline import Format, TranslationMap
 from rics.translation.offline.types import FormatType, PlaceholderTranslations, SourcePlaceholderTranslations
-from rics.translation.types import ID, IdType, Names, NamesPredicate, NameType, NameTypes, SourceType, Translatable
+from rics.translation.types import (
+    ID,
+    ExtendedOverrideFunction,
+    IdType,
+    Names,
+    NamesPredicate,
+    NameType,
+    NameTypes,
+    SourceType,
+    Translatable,
+)
 from rics.utility.collections.dicts import InheritedKeysDict, MakeType
 from rics.utility.misc import tname
 
@@ -191,6 +202,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         names: Names = None,
         ignore_names: Names = None,
         inplace: bool = False,
+        override_function: ExtendedOverrideFunction = None,
         maximal_untranslated_fraction: float = 1.0,
         reverse: bool = False,
     ) -> Optional[Translatable]:
@@ -203,6 +215,9 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns True for) names to ignore.
             inplace: If True, translation is performed in-place and this function returns None.
+            override_function: A callable with inputs (value, candidates, ids) that returns either None, the source to
+                use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched from different
+                sources in spite of being labelled with the same name. Used only for name-to-source mapping.
             maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
                 raised. 1=disabled. Ignored in `reverse` mode.
             reverse: If True, perform reverse translations back to IDs instead. Offline mode only.
@@ -217,6 +232,10 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             ValueError: If `maximal_untranslated_fraction` is not a valid fraction.
             TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
             ConnectionStatusError: If ``reverse=True`` while the translator is online.
+            UnknownSourceError: If `override_function` returns a source which is not known to the ``Translator``.
+
+        See Also:
+            The :meth:`.Mapper.apply` function, which performs both placeholder and name-to-source mapping.
         """
         if self.online and reverse:  # pragma: no cover
             raise ConnectionStatusError("Reverse translation cannot be performed online.")
@@ -224,7 +243,12 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         if not (0.0 <= maximal_untranslated_fraction <= 1):  # pragma: no cover
             raise ValueError(f"Argument {maximal_untranslated_fraction=} is not a valid fraction")
 
-        translation_map, names_to_translate = self._get_updated_tmap(translatable, names, ignore_names=ignore_names)
+        translation_map, names_to_translate = self._get_updated_tmap(
+            translatable,
+            names,
+            ignore_names=ignore_names,
+            override_function=override_function,
+        )
         if not translation_map:
             return None if inplace else translatable  # pragma: no cover
 
@@ -265,6 +289,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         translatable: Translatable,
         names: Names = None,
         ignore_names: Names = None,
+        override_function: ExtendedOverrideFunction = None,
     ) -> Optional[DirectionalMapping]:
         """Map names to translation sources.
 
@@ -274,6 +299,9 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
                 predicate which indicates (returns True for) derived names to keep.
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns True for) names to ignore.
+            override_function: A callable with inputs (value, candidates, ids) that returns either None, the source to
+                use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched from different
+                sources in spite of being labelled with the same name. Used only for name-to-source mapping.
 
         Returns:
             A mapping of names to translation sources. Returns None if mapping failed but success was not required.
@@ -281,11 +309,30 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         Raises:
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
+            UnknownSourceError: If `override_function` returns a source which is not known to the ``Translator``.
         """
         names_to_translate = self._resolve_names(translatable, names, ignore_names)
         sources = self._fetcher.sources if self.online else self._cached_tmap.sources
 
-        name_to_source = self._mapper(names_to_translate, sources)
+        def func(value: NameType, candidates: Set[SourceType], _: None) -> Optional[SourceType]:
+            assert override_function is not None, "This shouldn't happen"  # noqa: S101
+            res = override_function(value, candidates, [])
+            if res is None:
+                return None
+            if isinstance(res, dict):
+                raise NotImplementedError(
+                    "Name splitting is not yet supported. See https://github.com/rsundqvist/rics/issues/64"
+                )
+            else:
+                return res
+
+        if override_function is None:
+            name_to_source = self._mapper(names_to_translate, sources)
+        else:
+            try:
+                name_to_source = self._mapper(names_to_translate, sources, override_function=func)
+            except UserMappingError as e:
+                raise UnknownSourceError(e.value, e.candidates) from e
 
         # Fail if any of the explicitly given (ie literal, not predicate) names fail to map to a source.
         if isinstance(names, (str, Iterable)):
@@ -354,7 +401,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             ans = pickle.load(f)  # noqa: S301
 
         if not isinstance(ans, Translator):  # pragma: no cover
-            raise TypeError(f"Serialized object at at path='{path}' is a {type(ans)}, not {Translator.__name__}.")
+            raise TypeError(f"Serialized object at at {path=} is a {type(ans)}, not {Translator.__name__}.")
 
         return ans
 
@@ -430,6 +477,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         translatable: Translatable,
         names: Names = None,
         ignore_names: Names = None,
+        override_function: ExtendedOverrideFunction = None,
         force_fetch: bool = False,
     ) -> Tuple[Optional[TranslationMap], List[NameType]]:
         """Get an updated translation map.  # noqa
@@ -445,7 +493,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         """
         translatable_io = resolve_io(translatable)  # Fail fast if untranslatable type
 
-        name_to_source = self.map_to_sources(translatable, names, ignore_names)
+        name_to_source = self.map_to_sources(translatable, names, ignore_names, override_function)
         if name_to_source is None:
             # Nothing to translate.
             return None, []  # pragma: no cover

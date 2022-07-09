@@ -186,7 +186,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
                 )
                 if self.unknown_user_override_action is ActionLevel.RAISE:
                     LOGGER.error(msg)
-                    raise UserMappingError(msg)
+                    raise UserMappingError(msg, value, candidates)
                 elif self.unknown_user_override_action is ActionLevel.WARN:
                     LOGGER.warning(msg)
                     warnings.warn(msg, UserMappingWarning)
