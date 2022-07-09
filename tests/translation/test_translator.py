@@ -292,3 +292,21 @@ def test_untranslated_fraction():
 
     with pytest.raises(TooManyFailedTranslationsError):
         translator.translate(1, names="source", maximal_untranslated_fraction=0.0)
+
+
+def test_reverse(hex_fetcher):
+    fmt = "{id}:{hex}[, positive={positive}]"
+    t = Translator(hex_fetcher, fmt=fmt).store()
+    expected = {"positive_numbers": list(range(-1, 2))}
+    translated = t.translate(expected.copy())
+
+    assert translated == {
+        "positive_numbers": [
+            "-1:-0x1, positive=False",
+            "0:0x0, positive=True",
+            "1:0x1, positive=True",
+        ]
+    }
+
+    actual = t.translate(translated, reverse=True)
+    assert expected == actual

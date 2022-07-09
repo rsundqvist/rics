@@ -1,4 +1,4 @@
-from typing import Any, Iterator, Mapping
+from typing import Any, Iterator, Mapping, Optional
 
 from rics.translation.offline.types import TranslatedIds
 from rics.translation.types import IdType
@@ -22,6 +22,11 @@ class MagicDict(Mapping[IdType, str]):
     ) -> None:
         self._real: TranslatedIds = real_translations
         self._default = default_value
+
+    @property
+    def default_value(self) -> Optional[str]:
+        """Return the default string value to return for unknown keys, if any."""
+        return self._default
 
     def __getitem__(self, key: IdType) -> str:
         if key in self._real or self._default is None:

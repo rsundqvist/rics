@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 from rics.mapping import HeuristicScore, Mapper
 from rics.mapping.score_functions import modified_hamming
 from rics.performance import format_perf_counter
-from rics.translation.exceptions import OfflineError
+from rics.translation.exceptions import ConnectionStatusError
 from rics.translation.fetching import exceptions
 from rics.translation.fetching._fetcher import Fetcher
 from rics.translation.fetching.types import FetchInstruction, IdsToFetch
@@ -92,10 +92,10 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         """Raise an error if offline.
 
         Raises:
-            OfflineError: If not online.
+            ConnectionStatusError: If not online.
         """
         if not self.online:  # pragma: no cover
-            raise OfflineError("disconnected")
+            raise ConnectionStatusError("disconnected")
 
     @property
     @abstractmethod

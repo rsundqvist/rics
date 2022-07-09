@@ -12,15 +12,17 @@ Switched to the [PyData Sphinx theme](https://github.com/pydata/pydata-sphinx-th
 seem) to work for classes exposed through `__init__`-files.
 
 ### Changed
+- Name of `OfflineError` changed to `ConnectionStatusError`.
 - Moved `Cardinality` to the `mapping` namespace.
-- Move `utility.perf` up one level
+- Move `utility.perf` up one level.
 
 ### Added
+- Implement reverse translations. Added `reverse` argument to `Translator.translate` to translate from translations back to IDs.
 - An option `maximal_untranslated_fraction` to raise an error if translation fails for too many IDs in `Translator.translate`.
 - Make it possible to initialize `Fetcher`s from arbitrary packages in `Translator.from_config`.
-- Make it possible configure `ScoreFunction`s, `FilterFunction`s and `AliasFunction`s from arbitrary modules
+- Make it possible configure `ScoreFunction`s, `FilterFunction`s and `AliasFunction`s from arbitrary modules 
   (still defaults to package functions).
-- The `py.typed` marker (PEP-561 compliance)
+- The `py.typed` marker (PEP-561 compliance).
 - Additional `types`-modules for typehint imports
 
 ### Fixed

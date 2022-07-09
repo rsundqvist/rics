@@ -11,7 +11,7 @@ from rics.mapping.exceptions import MappingError
 from rics.performance import format_perf_counter
 from rics.translation import factory
 from rics.translation.dio import DataStructureIO, resolve_io
-from rics.translation.exceptions import OfflineError, TooManyFailedTranslationsError
+from rics.translation.exceptions import ConnectionStatusError, TooManyFailedTranslationsError
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline import Format, TranslationMap
@@ -192,6 +192,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         ignore_names: Names = None,
         inplace: bool = False,
         maximal_untranslated_fraction: float = 1.0,
+        reverse: bool = False,
     ) -> Optional[Translatable]:
         """Translate IDs to human-readable strings.
 
@@ -203,7 +204,8 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
                 also be a predicate which indicates (returns True for) names to ignore.
             inplace: If True, translation is performed in-place and this function returns None.
             maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
-                raised. 1=disabled.
+                raised. 1=disabled. Ignored in `reverse` mode.
+            reverse: If True, perform reverse translations back to IDs instead. Offline mode only.
 
         Returns:
             A copy of `translatable` with IDs replaced by translations if ``inplace=False``, otherwise None.
@@ -214,7 +216,11 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             MappingError: If required (explicitly given) names fail to map to a source.
             ValueError: If `maximal_untranslated_fraction` is not a valid fraction.
             TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
+            ConnectionStatusError: If ``reverse=True`` while the translator is online.
         """
+        if self.online and reverse:  # pragma: no cover
+            raise ConnectionStatusError("Reverse translation cannot be performed online.")
+
         if not (0.0 <= maximal_untranslated_fraction <= 1):  # pragma: no cover
             raise ValueError(f"Argument {maximal_untranslated_fraction=} is not a valid fraction")
 
@@ -228,7 +234,19 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
                 translatable, names_to_translate, translation_map, translatable_io, maximal_untranslated_fraction
             )
 
-        return translatable_io.insert(translatable, names=names_to_translate, tmap=translation_map, copy=not inplace)
+        if reverse:
+            translation_map.reverse_mode = True
+            try:
+                return translatable_io.insert(
+                    translatable, names=names_to_translate, tmap=translation_map, copy=not inplace
+                )
+            finally:
+                translation_map.reverse_mode = False
+
+        else:
+            return translatable_io.insert(
+                translatable, names=names_to_translate, tmap=translation_map, copy=not inplace
+            )
 
     def __call__(
         self,
@@ -300,7 +318,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             A :class:`.TranslationMap`.
 
         Raises:
-            OfflineError: If disconnected from the fetcher, ie not :attr:`online`.
+            ConnectionStatusError: If disconnected from the fetcher, ie not :attr:`online`.
         """
         ids_to_fetch = self._get_ids_to_fetch(
             name_to_source, translatable, data_structure_io or resolve_io(translatable)
@@ -458,7 +476,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
 
     def _fetch(self, ids_to_fetch: Optional[List[IdsToFetch]]) -> SourcePlaceholderTranslations:
         if not self.online:
-            raise OfflineError("Cannot fetch new translations.")  # pragma: no cover
+            raise ConnectionStatusError("Cannot fetch new translations.")  # pragma: no cover
 
         placeholders = self._fmt.placeholders
         required = self._fmt.required_placeholders

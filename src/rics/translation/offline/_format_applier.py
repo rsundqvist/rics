@@ -42,9 +42,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         self._default = default
         self._n_ids = len(translations.records)
 
-    def __call__(
-        self, fmt: Format, placeholders: PlaceholdersTuple = None, default_fmt: Format = None
-    ) -> MagicDict[IdType]:
+    def __call__(self, fmt: Format, placeholders: PlaceholdersTuple = None, default_fmt: Format = None) -> MagicDict:
         """Translate IDs.
 
         Args:

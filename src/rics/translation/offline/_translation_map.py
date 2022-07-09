@@ -7,7 +7,7 @@ from rics.translation.offline._format import Format, FormatType
 from rics.translation.offline._format_applier import DefaultFormatApplier, FormatApplier
 from rics.translation.offline.types import NameToSourceDict, SourcePlaceholderTranslations
 from rics.translation.types import IdType, NameType, SourceType
-from rics.utility.collections.dicts import InheritedKeysDict
+from rics.utility.collections.dicts import InheritedKeysDict, reverse_dict
 from rics.utility.misc import tname
 
 
@@ -43,7 +43,9 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         self._source_formatters: Dict[SourceType, FormatApplier] = self._make_formatters(source_translations, default)
         self.name_to_source = name_to_source or {}
 
-    def apply(self, name: NameType, fmt: FormatType = None, default_fmt: FormatType = None) -> MagicDict[IdType]:
+        self._reverse_mode: bool = False
+
+    def apply(self, name: NameType, fmt: FormatType = None, default_fmt: FormatType = None) -> MagicDict:
         """Create translations for names. Note: ``__getitem__`` delegates to this method.
 
         Args:
@@ -67,7 +69,12 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         fmt = Format.parse(fmt)
         default_fmt = self._default_fmt if default_fmt is None else Format.parse(default_fmt)
         source = self.name_to_source[name]
-        return self._source_formatters[source](fmt, default_fmt=default_fmt)
+        translations = self._source_formatters[source](fmt, default_fmt=default_fmt)
+        return (
+            MagicDict(reverse_dict(translations), default_value=translations.default_value)
+            if self.reverse_mode
+            else translations
+        )
 
     @property
     def names(self) -> List[NameType]:
@@ -76,7 +83,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
 
     @property
     def sources(self) -> List[SourceType]:
-        """Return translation source."""
+        """Return translation sources."""
         return list(self._source_formatters)
 
     @property
@@ -107,6 +114,21 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
     @fmt.setter
     def fmt(self, value: Optional[FormatType]) -> None:
         self._fmt = None if value is None else Format.parse(value)
+
+    @property
+    def reverse_mode(self) -> bool:
+        """Return reversed mode status flag.
+
+         If set, the mappings returned by :meth:`apply` (and therefore also ``__getitem__`` are reversed.
+
+        Returns:
+            Reversal status flag.
+        """
+        return self._reverse_mode
+
+    @reverse_mode.setter
+    def reverse_mode(self, value: bool) -> None:
+        self._reverse_mode = value
 
     def copy(self) -> "TranslationMap":
         """Make a copy of this TranslationMap."""

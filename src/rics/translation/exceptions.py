@@ -5,8 +5,8 @@ class ConfigurationError(ValueError):
     """Raised in case of bad configuration."""
 
 
-class OfflineError(ValueError):
-    """Raised for offline state errors."""
+class ConnectionStatusError(ValueError):
+    """Raised when trying to perform operations in a bad online/offline state."""
 
 
 class TranslationError(ValueError):

@@ -31,7 +31,7 @@ def compute_if_absent(d: Dict[KT, VT], key: KT, func: Callable[[KT], VT] = None)
     return d[key]
 
 
-def reverse_dict(d: Dict[KT, HVT]) -> Dict[HVT, KT]:
+def reverse_dict(d: Mapping[KT, HVT]) -> Dict[HVT, KT]:
     """Swap keys and values.
 
     Args:
