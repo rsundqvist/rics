@@ -17,7 +17,9 @@ Switched to the [PyData Sphinx theme](https://github.com/pydata/pydata-sphinx-th
 
 ### Added
 - Make it possible to initialize `Fetcher`s from arbitrary packages in `Translator.from_config`.
-- `py.typed` marker
+- Make it possible configure `ScoreFunction`s, `FilterFunction`s and `AliasFunction`s from arbitrary modules
+  (still defaults to package functions).
+- The `py.typed` marker (PEP-561 compliance)
 - Additional `types`-modules for typehint imports
 
 ### Fixed
