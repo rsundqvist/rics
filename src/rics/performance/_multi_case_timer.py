@@ -18,7 +18,7 @@ class MultiCaseTimer:
     Args:
         candidate_method: A single method, collection of method or a dict {label: function} of candidates.
         test_data: A single datum or a dict ``{label: data}`` to evaluate candidates on.
-        sanity_check: If True, verify total expected runtime.
+        sanity_check: If ``True``, verify total expected runtime.
     """
 
     EXPECTED_RUNTIME_WARNING_LIMIT = 3 * 60 * 60
@@ -50,9 +50,10 @@ class MultiCaseTimer:
         Args:
             time_per_candidate: Desired runtime for each repetition per candidate label. Ignored if `number` is set.
             repeat: Number of times to repeat for all candidates per data label.
-            number: Number of times to execute each test case, per repetition. None=base on `per_case_time_allocation`.
-            max_expected_runtime: Maximum expected runtime to allow before throwing an exception. None=disabled. Default
-                is one week (604 800 seconds).
+            number: Number of times to execute each test case, per repetition. Compute based on
+                `per_case_time_allocation` if ``None``.
+            max_expected_runtime: Maximum expected runtime to allow before throwing an exception. `Disabled if `None``.
+                Default is one week (604 800 seconds).
 
         Examples:
             If `repeat=5` and `time_per_candidate=3` for an instance with and 2 candidates, the total

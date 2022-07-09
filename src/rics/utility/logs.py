@@ -22,8 +22,8 @@ def basic_config(rics_level: Union[int, str] = None, force: bool = True, **kwarg
     """Do basic logging configuration with package defaults.
 
     Args:
-        rics_level: Log level for the `rics` package. None=inherit.
-        force: If True, override existing configuration if it exists.
+        rics_level: Log level for the `rics` package. Inherit if ``None``.
+        force: If ``True``, override existing configuration if it exists.
         **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
 
     Keyword Args:

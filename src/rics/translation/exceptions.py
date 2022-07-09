@@ -10,7 +10,7 @@ class ConnectionStatusError(ValueError):
 
 
 class TranslationError(ValueError):
-    """Base class for translator errors."""
+    """Base class for translation errors."""
 
 
 class TooManyFailedTranslationsError(TranslationError):

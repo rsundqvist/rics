@@ -27,14 +27,14 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
         password: Password to insert into the connection string. Will be escaped to allow for special characters. If
             given, the connection string must contain a password key, eg; ``dialect://user:{password}@host:port``. Can
             be an environment variable just like `connection_string`.
-        whitelist_tables: The only tables the fetcher may access.
-        blacklist_tables: The only tables the fetcher may not access.
-        include_views: If True, discover views as well.
+        whitelist_tables: The only tables the ``SqlFetcher`` may access.
+        blacklist_tables: The only tables the ``SqlFetcher`` may not access.
+        include_views: If ``True``, discover views as well.
         fetch_in_below: Always use ``IN``-clause when fetching less than `fetch_in_below` IDs.
         fetch_between_over: Always use ``BETWEEN``-clause when fetching more than `fetch_between_over` IDs.
         fetch_between_max_overfetch_factor: If number of IDs to fetch is between `fetch_in_below` and
             `fetch_between_over`, use this factor to choose between ``IN`` and ``BETWEEN`` clause.
-        fetch_all_limit: Maximum size of table to allow a fetch all-operation. None=No limit, 0=never allow.
+        fetch_all_limit: Maximum size of table to allow a fetch all-operation. 0=never allow. Ignore if ``None``.
 
     Raises:
         ValueError: If both `whitelist_tables` and `blacklist_tables` are given.
@@ -72,7 +72,7 @@ class SqlFetcher(AbstractFetcher[str, IdType, str]):
 
     @property
     def _summaries(self) -> Dict[str, "SqlFetcher.TableSummary"]:
-        """Names and sizes of tables that the fetcher may interact with."""
+        """Names and sizes of tables that the ``SqlFetcher`` may interact with."""
         if self._table_ts_dict is None:
             start = perf_counter()
             ts_dict = self._get_summaries()

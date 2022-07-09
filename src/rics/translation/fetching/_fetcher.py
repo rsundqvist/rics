@@ -15,22 +15,22 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
         """Flag indicating whether the :meth:`fetch_all` operation is permitted."""
 
     def close(self) -> None:
-        """Close the fetcher. Does nothing by default."""
+        """Close the ``Fetcher``. Does nothing by default."""
 
     @property
     @abstractmethod
     def online(self) -> bool:
-        """Return connectivity status. If False, no new translations may be fetched."""
+        """Return connectivity status. If ``False``, no new translations may be fetched."""
 
     @property
     @abstractmethod
     def sources(self) -> List[SourceType]:
-        """Source names known to the fetcher, such as ``cities`` or ``languages``."""
+        """Source names known to the ``Fetcher``, such as ``cities`` or ``languages``."""
 
     @property
     @abstractmethod
     def placeholders(self) -> Dict[SourceType, List[str]]:
-        """Placeholders for sources managed by the fetcher.
+        """Placeholders for sources managed by the ``Fetcher``.
 
         Returns:
             A dict ``{source: [placeholders..]}``.
@@ -57,8 +57,8 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
             A mapping ``{source: PlaceholderTranslations}`` for translation.
 
         Raises:
-            UnknownPlaceholderError: For placeholder(s) that are unknown to the fetcher.
-            UnknownSourceError: For sources(s) that are unknown to the fetcher.
+            UnknownPlaceholderError: For placeholder(s) that are unknown to the ``Fetcher``.
+            UnknownSourceError: For sources(s) that are unknown to the ``Fetcher``.
             ForbiddenOperationError: If trying to fetch all IDs when not possible or permitted.
             ImplementationError: For errors made by the inheriting implementation.
 
@@ -84,6 +84,6 @@ class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
 
         Raises:
             ForbiddenOperationError: If fetching all IDs is not possible or permitted.
-            UnknownPlaceholderError: For placeholder(s) that are unknown to the fetcher.
+            UnknownPlaceholderError: For placeholder(s) that are unknown to the ``Fetcher``.
             ImplementationError: For errors made by the inheriting implementation.
         """

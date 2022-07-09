@@ -15,7 +15,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
     Args:
         translations: Matrix of ID translation components returned by fetchers.
         default: Default values for each key in `placeholders`.
-        required_placeholders: Placeholder names which must be present in `default`. None=all.
+        required_placeholders: Placeholder names which must be present in `default`. All if ``None``.
 
     Raises:
         ValueError: If `default` is given and any placeholder names are missing.
@@ -47,7 +47,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
 
         Args:
             fmt: Translation format to use.
-            placeholders: Placeholders to include in the formatted output. None=as many as possible.
+            placeholders: Placeholders to include in the formatted output. Use as many as possible if ``None``.
             default_fmt: Alternative format for default translation.
 
         Returns:
@@ -89,7 +89,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
 
     @property
     def positional(self) -> bool:
-        """If True, names are stripped from fstring placeholders."""
+        """If ``True``, names are stripped from fstring placeholders."""
         return True
 
     @property

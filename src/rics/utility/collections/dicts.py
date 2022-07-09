@@ -20,7 +20,7 @@ def compute_if_absent(d: Dict[KT, VT], key: KT, func: Callable[[KT], VT] = None)
     Args:
         d: A dict.
         key: The key to get.
-        func: A function to call for missing keys. None=perform regular __getitem__ class.
+        func: A function to call for missing keys. Perform regular ``__getitem__`` call if ``None``.
 
     Returns:
         The value of `k` in `d`.
@@ -60,7 +60,7 @@ def flatten_dict(
     Args:
         d: A dict to flatten. Keys must be strings.
         join_string: Joiner for nested keys.
-        filter_predicate: A callable which takes a key and value, returning True if the entry should be kept.
+        filter_predicate: A callable which takes a key and value, returning ``True`` if the entry should be kept.
 
     Returns:
         A flattened version of `d`.
@@ -99,8 +99,8 @@ def _flatten_inner(
 class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
     """A nested dictionary that returns default-backed child dictionaries.
 
-    The length of a InheritedKeysDict is equal to the number of specific outer keys, and is considered True when cast to
-    bool if there are shared and/or specific keys present.
+    The length of an ``InheritedKeysDict`` is equal to the number of specific outer keys, and is considered ``True``
+    when cast to bool if there are shared and/or specific keys present.
 
     Args:
         default: Shared (fallback) mappings for all contexts.
@@ -167,7 +167,7 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
         yield from self._specific
 
     def copy(self) -> "InheritedKeysDict":
-        """Make a copy of this InheritedKeysDict."""
+        """Make a copy of this ``InheritedKeysDict``."""
         return InheritedKeysDict(specific=self._specific.copy(), default=self._default.copy())
 
     @classmethod

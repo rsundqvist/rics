@@ -24,7 +24,7 @@ def from_records(
         Placeholder translation elements.
 
     Raises:
-        ImplementationError: If the underlying fetcher does not return enough IDs.
+        ImplementationError: If the underlying ``Fetcher`` does not return enough IDs.
     """
     if instr.ids is not None and len(records) < len(set(instr.ids)):
         actual_len = len(records)

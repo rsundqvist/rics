@@ -12,17 +12,14 @@ class DictIO(DataStructureIO):
 
     @staticmethod
     def handles_type(arg: Any) -> bool:
-        """Return True if the implementation handles data for the type of `arg`."""
         return isinstance(arg, dict)
 
     @staticmethod
     def extract(translatable: T, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
-        """Extract IDs from a dict `translatable`."""
         return {name: translatable[name] for name in names}
 
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
-        """Insert translations into a dict."""
         translatable = dict(translatable) if copy else translatable  # type: ignore
 
         for name in filter(translatable.__contains__, names):

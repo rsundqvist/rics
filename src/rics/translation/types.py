@@ -30,7 +30,7 @@ Args:
     ids: IDs for `name`.
 
 Returns:
-    Either None (let regular logic decide), a dict, or a source.
+    Either ``None`` (let regular logic decide), a dict, or a source.
 
     If a dict, it is expected to be on the form ``{source: [ids_for_source..]}``.
 

@@ -27,7 +27,7 @@ Args:
     context: The context in which scoring is being performed.
 
 Returns:
-    Either None (let regular logic decide) or a single candidate `c` in `candidates`.
+    Either ``None`` (let regular logic decide) or a single candidate `c` in `candidates`.
 """
 
 ScoreFunction = Callable[[MappedItemType, Iterable[MappedItemType], Optional[ContextType]], Iterable[float]]

@@ -3,15 +3,15 @@ from typing import Iterable
 
 
 class FetcherWarning(RuntimeWarning):
-    """Base class for fetcher warnings."""
+    """Base class for ``Fetcher`` warnings."""
 
 
 class FetcherError(RuntimeError):
-    """Base class for fetcher exceptions."""
+    """Base class for ``Fetcher`` exceptions."""
 
 
 class ForbiddenOperationError(FetcherError):
-    """Exception indicating that the fetcher does not support an operation."""
+    """Exception indicating that the ``Fetcher`` does not support an operation."""
 
     def __init__(self, operation: str, reason: str = "not supported by this fetcher.") -> None:
         super().__init__(f"Operation '{operation}' " + reason)

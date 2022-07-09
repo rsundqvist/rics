@@ -20,11 +20,11 @@ MapperFactory = Callable[[Dict[str, Any], bool], Optional[Mapper]]
 
 
 def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> AbstractFetcher:
-    """Create a Fetcher from a dict config.
+    """Create a ``Fetcher`` from a dict config.
 
     Args:
-        clazz: Type of Fetcher to create.
-        config: Keyword arguments for the fetcher.
+        clazz: Type of ``Fetcher`` to create.
+        config: Keyword arguments for the fetcher class.
 
     Returns:
         An AbstractFetcher instance.
@@ -41,14 +41,14 @@ def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> AbstractFetch
 
 
 def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optional[Mapper]:
-    """Create a Mapper from a dict config.
+    """Create a ``Mapper`` from a dict config.
 
     Args:
-        config: Keyword arguments for the fetcher.
-        for_fetcher: Flag indicating that the mapper returned will be used by an AbstractFetcher instance.
+        config: Keyword arguments for the ``Mapper``.
+        for_fetcher: Flag indicating that the ``Mapper`` returned will be used by an ``AbstractFetcher`` instance.
 
     Returns:
-        A Mapper instance.
+        A ``Mapper`` instance.
 
     Raises:
         ConfigurationError: If `config` is invalid.
@@ -101,16 +101,19 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
 
 
 class TranslatorFactory(Generic[NameType, IdType, SourceType]):
-    """Create a Translator from TOML inputs.
+    """Create a ``Translator`` from TOML inputs.
 
     Args:
         file: Path to a TOML file, or a pre-parsed dict.
         extra_fetchers: Path to TOML files defining additional fetchers. Useful for fetching from multiple sources or
             kinds of sources, for example locally stored files in conjunction with one or more databases. The fetchers
             are ranked by input order, with the fetcher defined in `file` being given the highest priority (rank 0).
-        fetcher_factory: A Fetcher instance, or a callable taking (name, kwargs) which returns an AbstractFetcher.
-        mapper_factory: A Mapper instance, or a callable taking (kwargs) which returns a Mapper. Used for both
-            Translator and Fetcher mapper initialization.
+        fetcher_factory: A Fetcher instance, or a callable taking (name, kwargs) which returns an ``AbstractFetcher``.
+        mapper_factory: A ``Mapper`` instance, or a callable taking (kwargs) which returns a ``Mapper``. Used for both
+            ``Translator`` and ``Fetcher`` mapper initialization.
+
+    See Also:
+        The :ref:`translator-config` page.
     """
 
     def __init__(
@@ -127,10 +130,10 @@ class TranslatorFactory(Generic[NameType, IdType, SourceType]):
         self.config_string: str = f"Translator.fromConfig({self.file}, extra_fetchers={self.extra_fetchers})"
 
     def create(self) -> "Translator":
-        """Create a translator from a TOML file.
+        """Create a ``Translator`` from a TOML file.
 
         Returns:
-            A Translator object.
+            A ``Translator`` object.
 
         Raises:
             ConfigurationError: If the config is invalid.

@@ -14,12 +14,12 @@ class IdsToFetch(Generic[SourceType, IdType]):
     source: SourceType
     """Where to fetch from."""
     ids: Optional[Iterable[IdType]]
-    """Unique IDs to fetch translations for. None=fetch as much as possible."""
+    """Unique IDs to fetch translations for. Fetch as much as possible if ``None``"""
 
 
 @dataclass(frozen=True)
 class FetchInstruction(IdsToFetch):
-    """Instructions passed from an abstract fetcher to an implementation."""
+    """Instructions passed from an ``AbstractFetcher`` to an implementation."""
 
     placeholders: PlaceholdersTuple
     """All desired placeholders in preferred order."""

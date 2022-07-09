@@ -27,7 +27,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
     Args:
         mapper: A :class:`.Mapper` instance used to adapt placeholder names in sources to wanted names, ie
             the names of the placeholders that are in the translation :class:`.Format` being used.
-        allow_fetch_all: If False, an error will be raised when :meth:`fetch_all` is called.
+        allow_fetch_all: If ``False``, an error will be raised when :meth:`fetch_all` is called.
     """
 
     _FETCH_ALL: str = "FETCH_ALL"
@@ -56,14 +56,14 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         Args:
             source: The source to map placeholders for.
             placeholders: Desired :attr:`~.Format.placeholders`.
-            candidates: A subset of candidates (placeholder names) in `source` to map with `placeholders`. None=retrieve
-                using :meth:`get_placeholders`.
-            clear_cache: If True, force a full remap.
+            candidates: A subset of candidates (placeholder names) in `source` to map with `placeholders`. ``None``
+                =retrieve using :meth:`get_placeholders`.
+            clear_cache: If ``True``, force a full remap.
 
         Returns:
             A dict ``{wanted_placeholder_name: actual_placeholder_name_in_source}``, where
-            `actual_placeholder_name_in_source` will be None if the wanted placeholder could not be mapped to any of the
-            candidates available for the source.
+            `actual_placeholder_name_in_source` will be ``None`` if the wanted placeholder could not be mapped to any of
+            the candidates available for the source.
         """
         if clear_cache or source not in self._mapping_cache:
             self._mapping_cache[source] = {}
@@ -149,8 +149,8 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
         """Retrieve placeholder translations from the source.
 
         Args:
-            instruction: A single instruction for IDs to fetch. If IDs is None, the fetcher should retrieve data for as
-                many IDs as possible.
+            instruction: A single instruction for IDs to fetch. If IDs is ``None``, the fetcher should retrieve data for
+                as many IDs as possible.
 
         Returns:
             Placeholder translation elements.
@@ -245,7 +245,7 @@ class AbstractFetcher(Fetcher[NameType, IdType, SourceType]):
 
     @classmethod
     def default_mapper_kwargs(cls) -> Dict[str, Any]:
-        """Create a default Mapper for fetcher implementations."""
+        """Create a default ``Mapper`` for ``AbstractFetcher`` implementations."""
         return dict(
             score_function=HeuristicScore(
                 cls.default_score_function,  # type: ignore

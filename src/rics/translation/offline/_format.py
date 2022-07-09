@@ -12,7 +12,7 @@ _OPTIONAL_ELEMENT_REGEX = r"(?P<optional>\[(?P<left>.*?){(?P<optional_name>\w+)}
 class Format:
     """Format specification for translations strings.
 
-    Translator formats are similar to regular f-strings, with two important exceptions:
+    Translation formats are similar to regular f-strings, with two important exceptions:
 
         1. Positional arguments (``'{}'``) may not be used; correct form is ``'{key-name}'``.
         2. Substrings surrounded by ``[]`` denote an optional element.
@@ -54,8 +54,8 @@ class Format:
         """Create a format string for the given placeholders.
 
         Args:
-            placeholders: Keys to keep. Passing None is equivalent to passing :attr:`required_placeholders`.
-            positional: If True, remove names to return a positional fstring.
+            placeholders: Keys to keep. Passing ``None`` is equivalent to passing :attr:`required_placeholders`.
+            positional: If ``True``, remove names to return a positional fstring.
 
         Returns:
             An fstring with optional elements removed unless included in `placeholders`.

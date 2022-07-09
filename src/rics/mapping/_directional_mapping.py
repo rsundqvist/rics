@@ -13,13 +13,13 @@ class DirectionalMapping(Generic[HL, HR]):
     """A two-way mapping between hashable elements.
 
     Args:
-        cardinality: Explicit cardinality. None=derive.
+        cardinality: Explicit cardinality. Derive if ``None``.
         left_to_right: A left-to-right mapping of elements.
         right_to_left: A right-to-left mapping of elements.
-        _verify: If False, input checks are disabled. Intended for internal use.
+        _verify: If ``False``, input checks are disabled. Intended for internal use.
 
     Raises:
-        ValueError: If both of `left_to_right` and `right_to_left` are None.
+        ValueError: If both of `left_to_right` and `right_to_left` are ``None``.
         ValueError: If verification of two-sided input fails, and ``verify=True``.
         CardinalityError: If explicit `cardinality` < :attr:`cardinality`, and ``verify=True``.
     """
@@ -102,7 +102,7 @@ class DirectionalMapping(Generic[HL, HR]):
 
         Args:
             elements: Elements to select.
-            exclude: If True, return everything **except** the given elements.
+            exclude: If ``True``, return everything **except** the given elements.
 
         Returns:
             A new Mapping for the selection.
@@ -117,7 +117,7 @@ class DirectionalMapping(Generic[HL, HR]):
 
         Args:
             elements: Elements to select.
-            exclude: If True, return everything **except** the given elements.
+            exclude: If ``True``, return everything **except** the given elements.
 
         Returns:
             A new instance for the selection.
@@ -148,8 +148,8 @@ class DirectionalMapping(Generic[HL, HR]):
 
         Args:
             elements: Elements to select.
-            left: If True, select elements from the left side.
-            exclude: If True, return everything **except** the given elements.
+            left: If ``True``, select elements from the left side.
+            exclude: If ``True``, return everything **except** the given elements.
 
         Returns:
             A new instance for the selection.

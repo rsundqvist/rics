@@ -46,7 +46,7 @@ class ActionLevel(Enum):
         Args:
             action: The value to verify.
             purpose: Additional information to add if an exception is raised.
-            forbidden: Which of ('ignore', 'warn', 'raise') not to accept. None=accept all.
+            forbidden: Which of ('ignore', 'warn', 'raise') not to accept. Accept all if ``None``.
 
         Returns:
             A valid action level for the given purpose.

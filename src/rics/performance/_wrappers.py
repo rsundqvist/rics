@@ -23,7 +23,7 @@ def run_multivariate_test(
         candidate_method: Candidate methods to evaluate.
         test_data: Test data to evaluate.
         time_per_candidate: Desired runtime for each repetition per candidate label.
-        plot: If True, plot a figure using :meth:`~rics.performance.plot_run`.
+        plot: If ``True``, plot a figure using :meth:`~rics.performance.plot_run`.
         **figure_kwargs: Keyword arguments for the barplot. Ignored if ``plot=False``.
 
     Returns:

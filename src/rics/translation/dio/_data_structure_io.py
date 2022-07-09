@@ -11,7 +11,7 @@ class DataStructureIO:
 
     @staticmethod
     def handles_type(arg: Any) -> bool:
-        """Return True if the implementation handles data for the type of `arg`."""
+        """Return ``True`` if the implementation handles data for the type of `arg`."""
         raise NotImplementedError
 
     @staticmethod
@@ -36,10 +36,10 @@ class DataStructureIO:
             c: A collection apply translations for. Modified iff ``copy=False``.
             names: Names in `t` to translate..
             tmap: Translations for IDs in `c`.
-            copy: If True modify contents of the original collection `c`. Otherwise, return a copy.
+            copy: If ``True``, modify contents of the original collection `c`. Otherwise, return a copy.
 
         Returns:
-            A copy of `c` if ``copy=True``. None otherwise.
+            A copy of `c` if ``copy=True``. ``None`` otherwise.
 
         Raises:
             NotInplaceTranslatableError: If ``copy=False`` for a type which is not translatable in-place.

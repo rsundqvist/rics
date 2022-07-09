@@ -37,7 +37,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
         unmapped_values_action: Action to take if mapping fails for any values.
         unknown_user_override_action: Action to take if a :attr:`~rics.mapping.types.UserOverrideFunction` returns an
             unknown candidate.
-        cardinality: Desired cardinality for mapped values. None=derive.
+        cardinality: Desired cardinality for mapped values. Derive if ``None``.
     """
 
     def __init__(
@@ -82,12 +82,12 @@ class Mapper(Generic[ContextType, MappedItemType]):
             values: Iterable of elements to match to candidates.
             candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
             context: Context in which mapping is being done.
-            override_function: A callable that takes inputs (value, candidates, context) that returns either None (let
-                the regular mapping logic decide) or one of the candidates. Unlike static overrides, override functions
-                may not return non-candidates as matches. How non-candidates returned by override functions is handled
-                is determined by the :attr:`unknown_user_override_action` property.
+            override_function: A callable that takes inputs (value, candidates, context) that returns either ``None``
+                (let the regular mapping logic decide) or one of the candidates. Unlike static overrides, override
+                functions may not return non-candidates as matches. How non-candidates returned by override functions is
+                handled is determined by the :attr:`unknown_user_override_action` property.
             **kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
-                not known when the mapper is initialized.
+                not known when the ``Mapper`` is initialized.
 
         Returns:
             A :class:`.DirectionalMapping` on the form ``{value: (matched_candidate,)}``. May be turned into a plain
@@ -145,7 +145,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
 
     @property
     def context_sensitive_overrides(self) -> bool:
-        """Return True if overrides are context sensitive."""
+        """Return ``True`` if overrides are context sensitive."""
         return self._context_sensitive_overrides
 
     def _create_l2r(
@@ -250,7 +250,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
         return f"{tname(self)}({score=} >= {self._min_score}, {len(self._filters)} filters)"
 
     def copy(self) -> "Mapper":
-        """Make a copy of this Mapper."""
+        """Make a copy of this ``Mapper``."""
         return Mapper(
             score_function=self._score,
             score_function_kwargs=self._score_kwargs.copy(),

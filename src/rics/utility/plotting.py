@@ -65,7 +65,7 @@ def pi_ticks(ax: Union[Axis, HasXAxis], half_rep: Literal["frac", "dec"] = None)
 
         * `'frac'`: output `0/2π, 1/2π, 2/2π, 3/2π..`
         * `'dec'`: output `0.0π, 0.5π, 1.0π, 1.5π..`
-        * None: output `0, π, 2π, 3π..`
+        * ``None``: output `0, π, 2π, 3π..`
 
     Args:
         ax: An axis to decorate, or an object with an `xaxis` attribute.

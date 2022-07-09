@@ -1,3 +1,5 @@
+.. _translator-config:
+
 Translator Configuration Files
 ==============================
 

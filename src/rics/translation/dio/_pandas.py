@@ -15,12 +15,10 @@ class PandasIO(DataStructureIO):
 
     @staticmethod
     def handles_type(arg: Any) -> bool:
-        """Return True if the implementation handles data for the type of `arg`."""
         return isinstance(arg, (pd.DataFrame, pd.Series))
 
     @staticmethod
     def extract(translatable: T, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
-        """Extract IDs from a pandas object `translatable`."""
         if isinstance(translatable, pd.DataFrame):
             return translatable[names].to_dict(orient="list")
         else:
@@ -28,7 +26,6 @@ class PandasIO(DataStructureIO):
 
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
-        """Insert translations into a Pandas type."""
         translatable = translatable.copy() if copy else translatable
 
         if isinstance(translatable, pd.DataFrame):

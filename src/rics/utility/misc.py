@@ -73,17 +73,17 @@ def get_local_or_remote(
         file: A file to retrieve or download.
         remote_root: Remote URL where the data may be retrieved using ``requests.get``.
         local_root: Local directory where the file may be cached.
-        force: If True, always download and apply processing (if applicable). Existing files will be overwritten.
+        force: If ``True``, always download and apply processing (if applicable). Existing files will be overwritten.
         postprocessor: A function which takes a single argument `input_path` and returns a pickleable type.
-        show_progress: If True, show a progress bar. Requires the `tqdm`_ package.
+        show_progress: If ``True``, show a progress bar. Requires the `tqdm`_ package.
 
     Returns:
         An absolute path to the data.
 
     Raises:
         ValueError: If local root path does not exist or is not a directory.
-        ValueError: If the local file does not exist and ``remote==None``.
-        ModuleNotFoundError: If the ``tqdm`` package is not installed but ``show_progress==True``.
+        ValueError: If the local file does not exist and ``remote=None``.
+        ModuleNotFoundError: If the ``tqdm`` package is not installed but ``show_progress=True``.
 
     Examples:
         Fetch the Title Basics table (a CSV file) of the `IMDb dataset`_.
@@ -139,7 +139,7 @@ def read_env_or_literal(
         A processed version `arg` where the final response is ``ans_type(processed-arg)``.
 
     Raises:
-        ValueError: If `arg` does not start with `env_marker` and `enforce_env_var` is True.
+        ValueError: If `arg` does not start with `env_marker` and `enforce_env_var` is ``True``.
 
     Notes:
         The constructor of `desired_return_type` may raise errors not listed here.
@@ -160,7 +160,7 @@ def serializable(obj: Any) -> bool:
         obj: An object to attempt to serialize.
 
     Returns:
-        True if `obj` was pickled without issues.
+        ``True`` if `obj` was pickled without issues.
     """
     import io
     import pickle  # noqa: S403

@@ -26,7 +26,7 @@ class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
     Args:
         read_function: A Pandas `read`-function.
         read_path_format: A formatting string or a callable to apply to a source before passing them to `read_function`.
-            Must contain a `source` as its only placeholder. Example: ``data/{source}.pkl``. None=leave as-is.
+            Must contain a `source` as its only placeholder. Example: ``data/{source}.pkl``. Leave as-is if ``None``.
         read_function_args: Additional positional arguments for `read_function`.
         read_function_kwargs: Additional keyword arguments for `read_function`.
 

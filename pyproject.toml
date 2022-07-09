@@ -117,6 +117,8 @@ flake8-logging-format = ["+*",
 
 [tool.flakeheaven.exceptions."src/rics/translation/fetching/"]
 flake8-docstrings = ["-D102"]  # Docstrings are inherited
+[tool.flakeheaven.exceptions."src/rics/translation/dio/"]
+flake8-docstrings = ["-D102"]  # Docstrings are inherited
 
 [tool.flakeheaven.exceptions."src/rics/mapping/score_functions.py"]
 flake8-darglint = ["-DAR101", "-DAR301"]

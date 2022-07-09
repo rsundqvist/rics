@@ -27,7 +27,7 @@ def require_regex_match(
         context: Context in which the function is being called.
         regex: A regex pattern to pass to :py:func:`re.compile`.
         where: Which of ('name', 'candidate', 'context') to match in.
-        keep_if_match: If False, require that `regex` does _not_ match to keep candidates.
+        keep_if_match: If ``False``, require that `regex` does _not_ match to keep candidates.
 
     Returns:
         Approved candidates.

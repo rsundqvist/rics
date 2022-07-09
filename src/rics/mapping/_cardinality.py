@@ -37,22 +37,22 @@ class Cardinality(Enum):
 
     @property
     def many_left(self) -> bool:
-        """Many-relationship on the left, True for ``N:1`` and ``M:N``."""
+        """Many-relationship on the left, ``True`` for ``N:1`` and ``M:N``."""
         return self == Cardinality.ManyToMany or self == Cardinality.ManyToOne  # pragma: no cover
 
     @property
     def many_right(self) -> bool:
-        """Many-relationship on the right, True for ``1:N`` and ``M:N``."""
+        """Many-relationship on the right, ``True`` for ``1:N`` and ``M:N``."""
         return self == Cardinality.ManyToMany or self == Cardinality.OneToMany  # pragma: no cover
 
     @property
     def one_left(self) -> bool:
-        """One-relationship on the left, True for ``1:1`` and ``1:N``."""
+        """One-relationship on the left, ``True`` for ``1:1`` and ``1:N``."""
         return not self.many_left  # pragma: no cover
 
     @property
     def one_right(self) -> bool:
-        """One-relationship on the right, True for ``1:1`` and ``N:1``."""
+        """One-relationship on the right, ``True`` for ``1:1`` and ``N:1``."""
         return not self.many_right  # pragma: no cover
 
     @property
@@ -113,7 +113,7 @@ class Cardinality(Enum):
 
         Args:
             arg: Argument to parse.
-            strict: If True, `arg` must match exactly when it is given as a string.
+            strict: If ``True``, `arg` must match exactly when it is given as a string.
 
         Returns:
             A :class:`Cardinality`.

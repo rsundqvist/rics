@@ -15,12 +15,10 @@ class SequenceIO(DataStructureIO):
 
     @staticmethod
     def handles_type(arg: Any) -> bool:
-        """Return True if the implementation handles data for the type of `arg`."""
         return isinstance(arg, (list, np.ndarray, tuple))
 
     @staticmethod
     def extract(translatable: T, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
-        """Extract IDs from an array `translatable`."""
         if len(names) != 1:
             raise ValueError("Length of names must be one.")
 
@@ -28,7 +26,6 @@ class SequenceIO(DataStructureIO):
 
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
-        """Insert translations into an array."""
         t = translate_sequence(translatable, names, tmap)
 
         if copy:

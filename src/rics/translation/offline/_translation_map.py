@@ -50,14 +50,14 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
 
         Args:
             name: A name to translate.
-            fmt: Format to use. If None, fall back to init format.
+            fmt: Format to use. If ``None``, fall back to init format.
             default_fmt: Alternative format for default translation. Resolution: Arg -> init arg, fmt arg, init fmt arg
 
         Returns:
             Translations for `name` as a dict ``{id: translation}``.
 
         Raises:
-            ValueError: If ``fmt==None`` and initialized without `fmt`.
+            ValueError: If ``fmt=None`` and initialized without `fmt`.
             KeyError: If trying to translate `name` which is not known.
         """
         if fmt is None:  # pragma: no cover
@@ -131,7 +131,7 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         self._reverse_mode = value
 
     def copy(self) -> "TranslationMap":
-        """Make a copy of this TranslationMap."""
+        """Make a copy of this ``TranslationMap``."""
         return copy(self)
 
     def __getitem__(self, item: Union[NameType, Tuple[NameType, FormatType]]) -> MagicDict:
