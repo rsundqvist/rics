@@ -22,7 +22,7 @@ class PandasIO(DataStructureIO):
     def extract(translatable: T, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
         """Extract IDs from a pandas object `translatable`."""
         if isinstance(translatable, pd.DataFrame):
-            return translatable[names]
+            return translatable[names].to_dict(orient="list")
         else:
             return {names[0]: translatable}
 

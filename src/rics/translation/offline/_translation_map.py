@@ -20,7 +20,12 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         fmt: A translation format. Must be given to use as a mapping.
         default: Per-source default values.
         default_fmt: Alternative format specification to use instead of `fmt` for fallback translation.
+
+    Notes:
+        Type checking of `fmt` and `default_fmt` attributes may fail due to https://github.com/python/mypy/issues/3004
     """
+
+    # TODO: Remove the ignores when https://github.com/python/mypy/issues/3004 (5+ years old..) is fixed.
 
     FORMAT_APPLIER_TYPE: Type[FormatApplier] = DefaultFormatApplier
     """Format applicator implementation type."""
@@ -33,31 +38,10 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         default: InheritedKeysDict[SourceType, str, Any] = None,
         default_fmt: FormatType = None,
     ) -> None:
-        default_fmt = None if default_fmt is None else Format.parse(default_fmt)
-        self._source_formatters: Dict[SourceType, FormatApplier] = self._make_formatters(
-            source_translations, default_fmt=default_fmt, default=default
-        )
-        self._default_fmt: Optional[Format] = default_fmt
-
+        self.default_fmt = default_fmt  # type: ignore
+        self.fmt = fmt  # type: ignore
+        self._source_formatters: Dict[SourceType, FormatApplier] = self._make_formatters(source_translations, default)
         self.name_to_source = name_to_source or {}
-        self._fmt = None if fmt is None else Format.parse(fmt)
-
-    @staticmethod
-    def _make_formatters(
-        source_translations: SourcePlaceholderTranslations,
-        default_fmt: Optional[Format],
-        default: Optional[InheritedKeysDict[SourceType, str, Any]],
-    ) -> Dict[SourceType, FormatApplier]:
-        dt: InheritedKeysDict = default or InheritedKeysDict()
-
-        return {
-            source: TranslationMap.FORMAT_APPLIER_TYPE(
-                translations=translations,
-                default=dt.get(source, NO_DEFAULT if default_fmt is None else {}),
-                required_placeholders=None if default_fmt is None else default_fmt.required_placeholders,
-            )
-            for source, translations in source_translations.items()
-        }
 
     def apply(self, name: NameType, fmt: FormatType = None, default_fmt: FormatType = None) -> MagicDict[IdType]:
         """Create translations for names. Note: ``__getitem__`` delegates to this method.
@@ -106,6 +90,24 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
         source_to_source = {source: source for source in self.sources}
         self._name_to_source: NameToSourceDict = {**source_to_source, **value}
 
+    @property
+    def default_fmt(self) -> Optional[Format]:
+        """Return the format specification to use instead of `fmt` for fallback translation."""
+        return self._default_fmt  # pragma: no cover
+
+    @default_fmt.setter
+    def default_fmt(self, value: Optional[FormatType]) -> None:
+        self._default_fmt = None if value is None else Format.parse(value)
+
+    @property
+    def fmt(self) -> Optional[Format]:
+        """Return the translation format."""
+        return self._fmt  # pragma: no cover
+
+    @fmt.setter
+    def fmt(self, value: Optional[FormatType]) -> None:
+        self._fmt = None if value is None else Format.parse(value)
+
     def copy(self) -> "TranslationMap":
         """Make a copy of this TranslationMap."""
         return copy(self)
@@ -125,3 +127,19 @@ class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
             {f"'{formatter.source}': {len(formatter)} IDs" for formatter in self._source_formatters.values()}
         )
         return f"{tname(self)}({sources})"
+
+    def _make_formatters(
+        self,
+        source_translations: SourcePlaceholderTranslations,
+        default: Optional[InheritedKeysDict[SourceType, str, Any]],
+    ) -> Dict[SourceType, FormatApplier]:
+        dt: InheritedKeysDict = default or InheritedKeysDict()
+
+        return {
+            source: TranslationMap.FORMAT_APPLIER_TYPE(
+                translations=translations,
+                default=dt.get(source, NO_DEFAULT if self.default_fmt is None else {}),
+                required_placeholders=None if self.default_fmt is None else self.default_fmt.required_placeholders,
+            )
+            for source, translations in source_translations.items()
+        }

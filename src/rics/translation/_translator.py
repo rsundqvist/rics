@@ -2,14 +2,16 @@ import logging
 import warnings
 from collections import defaultdict
 from pathlib import Path
+from time import perf_counter
 from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError
+from rics.performance import format_perf_counter
 from rics.translation import factory
 from rics.translation.dio import DataStructureIO, resolve_io
-from rics.translation.exceptions import OfflineError
+from rics.translation.exceptions import OfflineError, TooManyFailedTranslationsError
 from rics.translation.fetching import Fetcher
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline import Format, TranslationMap
@@ -26,13 +28,11 @@ LOGGER = logging.getLogger(__package__).getChild("Translator")
 class Translator(Generic[Translatable, NameType, IdType, SourceType]):
     """Translate IDs to human-readable labels.
 
-    The `Translator` is the main entry point for all translation tasks. Translation is performed three steps:
+    The `Translator` is the main entry point for all translation tasks. Simplified translation process steps:
 
         1. The :attr:`map_to_sources` method performs name-to-source mapping (see :class:`.DirectionalMapping`).
         2. The :attr:`fetch` method extracts IDs to translate and retrieves data (see :class:`.TranslationMap`).
-        3. Finnaly, the :attr:`translate` method applies the translations and returns to the caller.
-
-    You do not have to perform the first two steps yourself; calling `translate` is enough.
+        3. Finally, the :attr:`translate` method applies the translations and returns to the caller.
 
     Args:
         fetcher: A :class:`.Fetcher` or ready-to-use translations.
@@ -43,7 +43,9 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             :meth:`.InheritedKeysDict.make` for details.
 
     Notes:
-        Untranslatable IDs will be None by default if neither `default_fmt` nor `default_translations` is given.
+        Untranslatable IDs will be None by default if neither `default_fmt` nor `default_translations` is given. Adding
+        the `maximal_untranslated_fraction` option to :meth:`translate` will raise an exceptions if too many IDs are
+        left untranslated. Note however that this verifiction step may be expensive.
 
     Examples:
         A minimal example. For a more complete use case, see the :ref:`dvdrental` example. Assume that we have data for
@@ -189,6 +191,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         names: Names = None,
         ignore_names: Names = None,
         inplace: bool = False,
+        maximal_untranslated_fraction: float = 1.0,
     ) -> Optional[Translatable]:
         """Translate IDs to human-readable strings.
 
@@ -199,6 +202,8 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns True for) names to ignore.
             inplace: If True, translation is performed in-place and this function returns None.
+            maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
+                raised. 1=disabled.
 
         Returns:
             A copy of `translatable` with IDs replaced by translations if ``inplace=False``, otherwise None.
@@ -207,14 +212,23 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             UntranslatableTypeError: If `translatable` is not translatable using any standard IOs.
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
+            ValueError: If `maximal_untranslated_fraction` is not a valid fraction.
+            TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
         """
+        if not (0.0 <= maximal_untranslated_fraction <= 1):  # pragma: no cover
+            raise ValueError(f"Argument {maximal_untranslated_fraction=} is not a valid fraction")
+
         translation_map, names_to_translate = self._get_updated_tmap(translatable, names, ignore_names=ignore_names)
         if not translation_map:
             return None if inplace else translatable  # pragma: no cover
 
-        return resolve_io(translatable).insert(
-            translatable, names=names_to_translate, tmap=translation_map, copy=not inplace
-        )
+        translatable_io = resolve_io(translatable)
+        if LOGGER.isEnabledFor(logging.DEBUG) or maximal_untranslated_fraction < 1:
+            self._verify_translations(
+                translatable, names_to_translate, translation_map, translatable_io, maximal_untranslated_fraction
+            )
+
+        return translatable_io.insert(translatable, names=names_to_translate, tmap=translation_map, copy=not inplace)
 
     def __call__(
         self,
@@ -467,6 +481,37 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             default=self._default,
             default_fmt=self._default_fmt,
         )
+
+    @staticmethod
+    def _verify_translations(
+        translatable: Translatable,
+        names_to_translate: List[NameType],
+        translation_map: TranslationMap,
+        translatable_io: Type[DataStructureIO],
+        maximal_untranslated_fraction: float,
+    ) -> None:
+        start = perf_counter()
+        copied_map = translation_map.copy()
+        # TODO: Remove the ignores when https://github.com/python/mypy/issues/3004 (5+ years old..) is fixed.
+        copied_map.fmt = "found"  # type: ignore
+        copied_map.default_fmt = ""  # type: ignore
+        ans = translatable_io.insert(translatable, names=names_to_translate, tmap=copied_map, copy=True)
+        extracted = translatable_io.extract(ans, names=names_to_translate)
+
+        for name, translations in extracted.items():
+            fraction = sum(t == "" for t in translations) / len(translations)
+
+            source = translation_map.name_to_source[name]
+            msg = f"Failed to translate {fraction:.3%} of IDs for {name=} using {source=}."
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                LOGGER.debug(msg)
+            if fraction > maximal_untranslated_fraction:
+                raise TooManyFailedTranslationsError(
+                    msg + f" Limit: maximal_untranslated_fraction={maximal_untranslated_fraction:.3%}"
+                )
+
+        n_ids = sum(map(len, extracted.values()))
+        LOGGER.debug(f"Verified {n_ids} IDs from {len(extracted)} different sources in {format_perf_counter(start)}.")
 
     def __repr__(self) -> str:
         more = f"fetcher={self._fetcher}" if self.online else f"cache={self._cached_tmap}"

@@ -5,7 +5,7 @@ from rics.mapping import Mapper
 from rics.mapping.exceptions import MappingError
 from rics.translation import Translator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
-from rics.translation.exceptions import ConfigurationError
+from rics.translation.exceptions import ConfigurationError, TooManyFailedTranslationsError
 
 
 def test_translate_without_id(hex_fetcher):
@@ -280,3 +280,15 @@ def test_copy_with_override(imdb_translator):
 def test_no_names(translator):
     with pytest.raises(AttributeError):
         translator.translate(pd.Series(range(3)))
+
+
+def test_untranslated_fraction():
+    translator = Translator({"source": {"id": [0], "name": ["zero"]}}, default_fmt="{id} not translated")
+
+    translator.translate([0, 1], names="source", maximal_untranslated_fraction=0.5)
+
+    with pytest.raises(TooManyFailedTranslationsError):
+        translator.translate([0, 0, 1], names="source", maximal_untranslated_fraction=0.0)
+
+    with pytest.raises(TooManyFailedTranslationsError):
+        translator.translate(1, names="source", maximal_untranslated_fraction=0.0)
