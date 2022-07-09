@@ -7,8 +7,15 @@ from rics.mapping import filter_functions as mf
 from rics.mapping import score_functions as sf
 from rics.mapping._cardinality import Cardinality
 from rics.mapping._directional_mapping import DirectionalMapping
-from rics.mapping.exceptions import MappingError, MappingWarning
-from rics.mapping.types import ContextType, FilterFunction, MappedItemType, MatchTuple, ScoreFunction
+from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError, UserMappingWarning
+from rics.mapping.types import (
+    ContextType,
+    FilterFunction,
+    MappedItemType,
+    MatchTuple,
+    ScoreFunction,
+    UserOverrideFunction,
+)
 from rics.utility.action_level import ActionLevel, ActionLevelTypes
 from rics.utility.collections.dicts import InheritedKeysDict
 from rics.utility.misc import get_by_full_name, tname
@@ -28,6 +35,8 @@ class Mapper(Generic[ContextType, MappedItemType]):
         overrides: If a dict, assumed to be 1:1 mappings (`value` to `candidate`) which override the scoring logic. If
             :class:`.InheritedKeysDict`, the context passed to :meth:`apply` is used to retrieve specific overrides.
         unmapped_values_action: Action to take if mapping fails for any values.
+        unknown_user_override_action: Action to take if a :attr:`~rics.mapping.types.UserOverrideFunction` returns an
+            unknown candidate.
         cardinality: Desired cardinality for mapped values. None=derive.
     """
 
@@ -41,6 +50,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
             InheritedKeysDict[ContextType, MappedItemType, MappedItemType], Dict[MappedItemType, MappedItemType]
         ] = None,
         unmapped_values_action: ActionLevelTypes = "ignore",
+        unknown_user_override_action: ActionLevelTypes = "raise",
         cardinality: Optional[Cardinality.ParseType] = Cardinality.ManyToOne,
     ) -> None:
         self._score = get_by_full_name(score_function, sf) if isinstance(score_function, str) else score_function
@@ -51,6 +61,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
         )
         self._context_sensitive_overrides = isinstance(self._overrides, InheritedKeysDict)
         self._unmapped_action: ActionLevel = ActionLevel.verify(unmapped_values_action)
+        self._bad_candidate_action: ActionLevel = ActionLevel.verify(unknown_user_override_action)
         self._cardinality = None if cardinality is None else Cardinality.parse(cardinality, strict=True)
         self._filters: List[Tuple[FilterFunction, Dict[str, Any]]] = [
             ((get_by_full_name(func, mf) if isinstance(func, str) else func), kwargs)
@@ -62,6 +73,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
         values: Iterable[MappedItemType],
         candidates: Iterable[MappedItemType],
         context: ContextType = None,
+        override_function: UserOverrideFunction = None,
         **kwargs: Any,
     ) -> DirectionalMapping:
         """Map values to candidates.
@@ -70,7 +82,11 @@ class Mapper(Generic[ContextType, MappedItemType]):
             values: Iterable of elements to match to candidates.
             candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
             context: Context in which mapping is being done.
-            kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
+            override_function: A callable that takes inputs (value, candidates, context) that returns either None (let
+                the regular mapping logic decide) or one of the candidates. Unlike static overrides, override functions
+                may not return non-candidates as matches. How non-candidates returned by override functions is handled
+                is determined by the :attr:`unknown_user_override_action` property.
+            **kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
                 not known when the mapper is initialized.
 
         Returns:
@@ -80,10 +96,14 @@ class Mapper(Generic[ContextType, MappedItemType]):
         Raises:
             MappingError: If any values failed to match and ``unmapped_values_action='raise'``.
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
+            UserMappingError: If `func` returns an unknown candidate.
         """
         candidates = set(candidates)
         values = set(values)
         left_to_right = self._create_l2r(values, context)
+
+        if override_function:
+            self._add_function_overrides(override_function, values, candidates, context, left_to_right)
 
         extra = f" in {context=}" if context else ""
 
@@ -119,12 +139,19 @@ class Mapper(Generic[ContextType, MappedItemType]):
         return self._unmapped_action
 
     @property
+    def unknown_user_override_action(self) -> ActionLevel:
+        """Return the action to take if an override function returns an unknown candidate."""
+        return self._bad_candidate_action
+
+    @property
     def context_sensitive_overrides(self) -> bool:
         """Return True if overrides are context sensitive."""
         return self._context_sensitive_overrides
 
     def _create_l2r(
-        self, values: Set[MappedItemType], context: Optional[ContextType]
+        self,
+        values: Set[MappedItemType],
+        context: Optional[ContextType],
     ) -> Dict[MappedItemType, MatchTuple]:
         left_to_right: Dict[MappedItemType, MatchTuple]
         overrides: Dict[MappedItemType, MappedItemType]  # Type on override check done during init
@@ -139,6 +166,36 @@ class Mapper(Generic[ContextType, MappedItemType]):
             overrides = self._overrides.get(context, {})  # type: ignore
 
         return {value: (overrides[value],) for value in filter(overrides.__contains__, values)}
+
+    def _add_function_overrides(
+        self,
+        func: UserOverrideFunction,
+        values: Iterable[MappedItemType],
+        candidates: Set[MappedItemType],
+        context: Optional[ContextType],
+        left_to_right: Dict[MappedItemType, MatchTuple],
+    ) -> None:
+        for value in values:
+            user_override = func(value, candidates, context)
+            if user_override is None:
+                continue
+            if user_override not in candidates:
+                msg = (
+                    f"The user-defined override function {func} returned an unknown "
+                    f"candidate {repr(user_override)} for {value=}."
+                )
+                if self.unknown_user_override_action is ActionLevel.RAISE:
+                    LOGGER.error(msg)
+                    raise UserMappingError(msg)
+                elif self.unknown_user_override_action is ActionLevel.WARN:
+                    LOGGER.warning(msg)
+                    warnings.warn(msg, UserMappingWarning)
+                else:
+                    LOGGER.debug(msg)
+                continue
+
+            LOGGER.debug(f"Using override {repr(value)} -> {repr(user_override)} returned by {func}.")
+            left_to_right[value] = (user_override,)
 
     def _map_value(
         self,

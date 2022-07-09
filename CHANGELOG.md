@@ -17,6 +17,7 @@ seem) to work for classes exposed through `__init__`-files.
 - Move `utility.perf` up one level.
 
 ### Added
+- Implement override functions in `Mapper.apply`.
 - Implement reverse translations. Added `reverse` argument to `Translator.translate` to translate from translations back to IDs.
 - An option `maximal_untranslated_fraction` to raise an error if translation fails for too many IDs in `Translator.translate`.
 - Make it possible to initialize `Fetcher`s from arbitrary packages in `Translator.from_config`.

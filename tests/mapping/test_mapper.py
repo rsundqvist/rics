@@ -1,6 +1,7 @@
 import pytest
 
 from rics.mapping import Cardinality, Mapper, exceptions
+from rics.mapping.exceptions import UserMappingError, UserMappingWarning
 
 
 def _substring_score(k, c, _):
@@ -25,6 +26,21 @@ def test_with_overrides(candidates):
     assert mapper(["a"], candidates).left_to_right == {"a": ("fixed",)}
     assert mapper(["b"], candidates).left_to_right == {"b": ("b",)}
     assert mapper(["a", "b"], candidates).left_to_right == {"a": ("fixed",), "b": ("b",)}
+
+
+def test_user_override(candidates):
+    mapper = Mapper(overrides={"a": "fixed"}, unknown_user_override_action="ignore")
+    assert mapper(["a"], candidates, override_function=lambda *args: "ab").left_to_right == {"a": ("ab",)}
+    assert mapper(["a"], candidates, override_function=lambda *args: "ignored").left_to_right == {"a": ("fixed",)}
+    assert mapper(["a"], candidates, override_function=lambda *args: None).left_to_right == {"a": ("fixed",)}
+
+    mapper = Mapper(overrides={"a": "fixed"}, unknown_user_override_action="warn")
+    with pytest.warns(UserMappingWarning):
+        assert mapper(["a"], candidates, override_function=lambda *args: "bad").left_to_right == {"a": ("fixed",)}
+
+    mapper = Mapper(overrides={"a": "fixed"}, unknown_user_override_action="raise")
+    with pytest.raises(UserMappingError):
+        mapper(["a"], candidates, override_function=lambda *args: "bad")
 
 
 @pytest.mark.parametrize(

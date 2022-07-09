@@ -15,11 +15,26 @@ MatchTuple = Tuple[MappedItemType, ...]
 ContextType = TypeVar("ContextType", bound=Hashable)
 """Type of context in which mapping is being performed."""
 
+UserOverrideFunction = Callable[[MappedItemType, Set[MappedItemType], Optional[ContextType]], Optional[MappedItemType]]
+"""Signature for a user-defined override function.
+
+Unlike static overrides, which are always accepted, the return value of an override function must be in `candidates` to
+be considered valid.
+
+Args:
+    value: An element to find matches for.
+    candidates: Potential matches for `value`.
+    context: The context in which scoring is being performed.
+
+Returns:
+    Either None (let regular logic decide) or a single candidate `c` in `candidates`.
+"""
+
 ScoreFunction = Callable[[MappedItemType, Iterable[MappedItemType], Optional[ContextType]], Iterable[float]]
 """Signature for a likeness score function.
 
 Args:
-    name: An element to find matches for.
+    value: An element to find matches for.
     candidates: Potential matches for `value`.
     context: The context in which scoring is being performed.
 
@@ -36,7 +51,7 @@ AliasFunction = Callable[
 """Signature for an alias function for heuristic scoring.
 
 Args:
-    name: An element to find matches for.
+    value: An element to find matches for.
     candidates: Potential matches for `value`.
     context: The context in which mapping is being performed.
 
@@ -51,7 +66,7 @@ FilterFunction = Callable[[MappedItemType, Iterable[MappedItemType], Optional[Co
 """Signature for a filter function.
 
 Args:
-    name: An element to find matches for.
+    value: An element to find matches for.
     candidates: Potential matches for `value`.
     context: The context in which filtering is being performed.
 
