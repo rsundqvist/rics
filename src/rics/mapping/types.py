@@ -5,8 +5,10 @@ HL = TypeVar("HL", bound=Hashable)
 """Hashable type on the left side of a directional relationship."""
 HR = TypeVar("HR", bound=Hashable)
 """Hashable type on the right side of a directional relationship."""
-DictMapping = Union[Dict[HL, (Tuple[HR, ...])], Dict[HR, (Tuple[HL, ...])]]
-"""Type for a left-to-right or right-to-left directional relationship."""
+LeftToRight = Dict[HL, Tuple[HR, ...]]
+"""A left-to-right mapping."""
+RightToLeft = Dict[HR, Tuple[HL, ...]]
+"""A right-to-left mapping."""
 
 ValueType = TypeVar("ValueType", bound=Hashable)
 """A type of item being mapped."""

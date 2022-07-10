@@ -8,7 +8,7 @@ import pandas as pd
 from rics.translation.fetching import AbstractFetcher, support
 from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import PlaceholderTranslations
-from rics.translation.types import IdType, NameType
+from rics.translation.types import IdType
 from rics.utility.misc import PathLikeType, get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("PandasFetcher")
@@ -16,7 +16,7 @@ PandasReadFunction = Callable[[PathLikeType, Any, Any], pd.DataFrame]
 FormatFn = Callable[[PathLikeType], str]
 
 
-class PandasFetcher(AbstractFetcher[NameType, IdType, str]):
+class PandasFetcher(AbstractFetcher[IdType, str]):
     """Fetcher implementation using pandas DataFrames as the data format.
 
     Fetch data from serialized DataFrames. How this is done is determined by the `read_function`. This is typically a

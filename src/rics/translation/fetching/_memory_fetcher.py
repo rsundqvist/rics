@@ -1,30 +1,24 @@
-from typing import TYPE_CHECKING, Dict, List, Union
+from typing import Any, Dict, List, Union
 
-if TYPE_CHECKING:
-    from rics.translation.offline import Format  # noqa: F401
-
-from rics.mapping import Mapper
 from rics.translation.fetching import AbstractFetcher
 from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import PlaceholderTranslations, SourcePlaceholderTranslations
-from rics.translation.types import SourceType
+from rics.translation.types import IdType, SourceType
 
 
-class MemoryFetcher(AbstractFetcher):
+class MemoryFetcher(AbstractFetcher[IdType, SourceType]):
     """Fetch from memory.
 
     Args:
         data: A dict ``{source: PlaceholderTranslations}`` to fetch from.
-        mapper: A :class:`.Mapper` instance used to adapt placeholder names in sources to wanted names, ie
-            the names of the placeholders that are in the translation :class:`.Format` being used.
     """
 
     def __init__(
         self,
         data: Union[SourcePlaceholderTranslations, Dict[SourceType, PlaceholderTranslations.MakeTypes]],
-        mapper: Mapper = None,
+        **kwargs: Any,
     ) -> None:
-        super().__init__(mapper=mapper)
+        super().__init__(**kwargs)
         self._data: SourcePlaceholderTranslations = {
             source: PlaceholderTranslations.make(source, pht) for source, pht in data.items()
         }

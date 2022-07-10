@@ -47,9 +47,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         score_function_kwargs: Dict[str, Any] = None,
         filter_functions: Iterable[Tuple[Union[str, FilterFunction], Dict[str, Any]]] = (),
         min_score: float = 1.00,
-        overrides: Union[
-            InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
-        ] = None,
+        overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = None,
         unmapped_values_action: ActionLevelTypes = "ignore",
         unknown_user_override_action: ActionLevelTypes = "raise",
         cardinality: Optional[Cardinality.ParseType] = Cardinality.ManyToOne,
@@ -76,7 +74,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         context: ContextType = None,
         override_function: UserOverrideFunction = None,
         **kwargs: Any,
-    ) -> DirectionalMapping:
+    ) -> DirectionalMapping[ValueType, CandidateType]:
         """Map values to candidates.
 
         Args:

@@ -3,10 +3,10 @@ from typing import Dict, Generic, Iterable, List
 
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline.types import SourcePlaceholderTranslations
-from rics.translation.types import IdType, NameType, SourceType
+from rics.translation.types import IdType, SourceType
 
 
-class Fetcher(ABC, Generic[NameType, IdType, SourceType]):
+class Fetcher(ABC, Generic[IdType, SourceType]):
     """Interface for fetching translations from an external source."""
 
     @property

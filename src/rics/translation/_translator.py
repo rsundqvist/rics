@@ -135,13 +135,13 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
     def __init__(
         self,
         fetcher: Union[
-            Fetcher,
-            TranslationMap,
-            SourcePlaceholderTranslations,
+            Fetcher[IdType, SourceType],
+            TranslationMap[NameType, IdType, SourceType],
+            SourcePlaceholderTranslations[SourceType],
             Dict[SourceType, PlaceholderTranslations.MakeTypes],
         ],
         fmt: FormatType = "{id}:{name}",
-        mapper: Mapper = None,
+        mapper: Mapper[NameType, SourceType, None] = None,
         default_fmt: FormatType = None,
         default_translations: MakeType = None,
     ) -> None:
@@ -151,7 +151,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
 
         self._cached_tmap: TranslationMap
         if isinstance(fetcher, Fetcher):
-            self._fetcher = fetcher
+            self._fetcher: Fetcher = fetcher
             self._cached_tmap = TranslationMap({})
         else:  # pragma: no cover
             self._cached_tmap = (
@@ -186,10 +186,10 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         }
 
         if "mapper" not in kwargs:  # pragma: no cover
-            kwargs["mapper"] = self._mapper.copy()
+            kwargs["mapper"] = self.mapper.copy()
 
         if "fetcher" not in kwargs:  # pragma: no cover
-            kwargs["fetcher"] = self._fetcher if self.online else self._cached_tmap.copy()  # type: ignore
+            kwargs["fetcher"] = self.fetcher if self.online else self._cached_tmap.copy()  # type: ignore
 
         if "default_translations" not in kwargs:  # pragma: no cover
             kwargs["default_translations"] = self._default
@@ -312,7 +312,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             UnknownSourceError: If `override_function` returns a source which is not known to the ``Translator``.
         """
         names_to_translate = self._resolve_names(translatable, names, ignore_names)
-        sources = self._fetcher.sources if self.online else self._cached_tmap.sources
+        sources = self.fetcher.sources if self.online else self._cached_tmap.sources
 
         def func(value: NameType, candidates: Set[SourceType], _: None) -> Optional[SourceType]:
             assert override_function is not None, "This shouldn't happen"  # noqa: S101
@@ -327,10 +327,10 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
                 return res
 
         if override_function is None:
-            name_to_source = self._mapper(names_to_translate, sources)
+            name_to_source = self.mapper(names_to_translate, sources)
         else:
             try:
-                name_to_source = self._mapper(names_to_translate, sources, override_function=func)
+                name_to_source = self.mapper(names_to_translate, sources, override_function=func)
             except UserMappingError as e:
                 raise UnknownSourceError(e.value, e.candidates) from e
 
@@ -377,6 +377,24 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
     def online(self) -> bool:
         """Return connectivity status. If ``False``, no new translations may be fetched."""
         return hasattr(self, "_fetcher")
+
+    @property
+    def fetcher(self) -> Fetcher[IdType, SourceType]:
+        """Return the ``Fetcher`` instance used to retrieve translations."""
+        if not self.online:
+            raise ConnectionStatusError("Cannot fetch new translations.")  # pragma: no cover
+
+        return self._fetcher
+
+    @property
+    def mapper(self) -> Mapper[NameType, SourceType, None]:
+        """Return the ``Mapper`` instance used for name-to-source binding."""
+        return self._mapper
+
+    @property
+    def cache(self) -> TranslationMap[NameType, IdType, SourceType]:
+        """Return a ``TranslationMap`` of cached translations."""
+        return self._cached_tmap
 
     @classmethod
     def restore(cls, path: PathLikeType) -> "Translator":
@@ -450,11 +468,11 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
                 raise MappingError("No values in the translatable were mapped. Cannot store translations.")
             translation_map = maybe_none  # mypy, would be cleaner to just use translation map..
             if LOGGER.isEnabledFor(logging.DEBUG):
-                not_fetched = sorted(set(self._fetcher.sources).difference(translation_map.sources))
+                not_fetched = set(self.fetcher.sources).difference(translation_map.sources)
                 LOGGER.debug(f"Available sources {not_fetched} were not fetched.")
 
         if delete_fetcher:  # pragma: no cover
-            self._fetcher.close()
+            self.fetcher.close()
             del self._fetcher
 
         self._cached_tmap = translation_map
@@ -499,9 +517,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             return None, []  # pragma: no cover
 
         translation_map = (
-            self.fetch(translatable, name_to_source, translatable_io)
-            if force_fetch or not self._cached_tmap
-            else self._cached_tmap
+            self.fetch(translatable, name_to_source, translatable_io) if force_fetch or not self.cache else self.cache
         )
 
         n2s = name_to_source.flatten()
@@ -523,8 +539,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         return [IdsToFetch(source, ids) for source, ids in source_to_ids.items()]
 
     def _fetch(self, ids_to_fetch: Optional[List[IdsToFetch]]) -> SourcePlaceholderTranslations:
-        if not self.online:
-            raise ConnectionStatusError("Cannot fetch new translations.")  # pragma: no cover
+        fetcher = self.fetcher
 
         placeholders = self._fmt.placeholders
         required = self._fmt.required_placeholders
@@ -535,9 +550,9 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
             required = required + (ID,)
 
         return (
-            self._fetcher.fetch_all(placeholders, required)
+            fetcher.fetch_all(placeholders, required)
             if ids_to_fetch is None
-            else self._fetcher.fetch(ids_to_fetch, placeholders, required)
+            else fetcher.fetch(ids_to_fetch, placeholders, required)
         )
 
     def _to_translation_map(self, source_translations: SourcePlaceholderTranslations) -> TranslationMap:
@@ -580,7 +595,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         LOGGER.debug(f"Verified {n_ids} IDs from {len(extracted)} different sources in {format_perf_counter(start)}.")
 
     def __repr__(self) -> str:
-        more = f"fetcher={self._fetcher}" if self.online else f"cache={self._cached_tmap}"
+        more = f"fetcher={self.fetcher}" if self.online else f"cache={self.cache}"
 
         online = self.online
         return f"{tname(self)}({online=}: {more})"

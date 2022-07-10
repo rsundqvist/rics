@@ -209,5 +209,5 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
         return InheritedKeysDict(default=default, specific=specific)
 
 
-MakeType = Union[Dict[str, Union[Dict[KT, VT], Dict[OKT, Dict[KT, VT]]]], InheritedKeysDict]
+MakeType = Union[Dict[str, Union[Dict[KT, VT], Dict[OKT, Dict[KT, VT]]]], InheritedKeysDict[OKT, KT, VT]]
 """Valid input types for making the :meth:`InheritedKeysDict.make` function."""

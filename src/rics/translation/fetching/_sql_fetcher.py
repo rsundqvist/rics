@@ -17,7 +17,7 @@ from rics.utility.misc import read_env_or_literal, tname
 LOGGER = logging.getLogger(__package__).getChild("SqlFetcher")
 
 
-class SqlFetcher(AbstractFetcher[str, IdType, str]):
+class SqlFetcher(AbstractFetcher[IdType, str]):
     """Fetch data from a SQL source. Requires SQLAlchemy.
 
     Args:
