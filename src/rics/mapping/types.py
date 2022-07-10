@@ -8,14 +8,16 @@ HR = TypeVar("HR", bound=Hashable)
 DictMapping = Union[Dict[HL, (Tuple[HR, ...])], Dict[HR, (Tuple[HL, ...])]]
 """Type for a left-to-right or right-to-left directional relationship."""
 
-MappedItemType = TypeVar("MappedItemType", bound=Hashable)
+ValueType = TypeVar("ValueType", bound=Hashable)
 """A type of item being mapped."""
-MatchTuple = Tuple[MappedItemType, ...]
+CandidateType = TypeVar("CandidateType", bound=Hashable)
+"""A type of item being mapped."""
+MatchTuple = Tuple[CandidateType, ...]
 """A tuple of candidates matched to a value."""
 ContextType = TypeVar("ContextType", bound=Hashable)
 """Type of context in which mapping is being performed."""
 
-UserOverrideFunction = Callable[[MappedItemType, Set[MappedItemType], Optional[ContextType]], Optional[MappedItemType]]
+UserOverrideFunction = Callable[[ValueType, Set[CandidateType], Optional[ContextType]], Optional[CandidateType]]
 """Signature for a user-defined override function.
 
 Unlike static overrides, which are always accepted, the return value of an override function must be in `candidates` to
@@ -30,7 +32,7 @@ Returns:
     Either ``None`` (let regular logic decide) or a single candidate `c` in `candidates`.
 """
 
-ScoreFunction = Callable[[MappedItemType, Iterable[MappedItemType], Optional[ContextType]], Iterable[float]]
+ScoreFunction = Callable[[ValueType, Iterable[CandidateType], Optional[ContextType]], Iterable[float]]
 """Signature for a likeness score function.
 
 Args:
@@ -46,7 +48,7 @@ Yields:
 """
 
 AliasFunction = Callable[
-    [MappedItemType, Iterable[MappedItemType], Optional[ContextType]], Tuple[MappedItemType, Iterable[MappedItemType]]
+    [ValueType, Iterable[CandidateType], Optional[ContextType]], Tuple[ValueType, Iterable[CandidateType]]
 ]
 """Signature for an alias function for heuristic scoring.
 
@@ -62,7 +64,7 @@ Returns:
     A tuple (name, candidates) with applied heuristics to increase (or decrease) score as desired.
 """
 
-FilterFunction = Callable[[MappedItemType, Iterable[MappedItemType], Optional[ContextType]], Set[MappedItemType]]
+FilterFunction = Callable[[ValueType, Iterable[CandidateType], Optional[ContextType]], Set[CandidateType]]
 """Signature for a filter function.
 
 Args:

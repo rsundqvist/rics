@@ -2,13 +2,13 @@ import logging
 from typing import Any, Dict, Generic, Iterable, List, Optional, Tuple, Union
 
 from rics.mapping import filter_functions, heuristic_functions, score_functions
-from rics.mapping.types import ContextType, HeuristicsTypes, MappedItemType, ScoreFunction
+from rics.mapping.types import CandidateType, ContextType, HeuristicsTypes, ScoreFunction, ValueType
 from rics.utility.misc import get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("HeuristicScore")
 
 
-class HeuristicScore(Generic[ContextType, MappedItemType]):
+class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
     """Callable wrapper for computing heuristic scores.
 
     Instances are callable. Signature is given by :attr:`~rics.mapping.types.ScoreFunction`.
@@ -64,7 +64,7 @@ class HeuristicScore(Generic[ContextType, MappedItemType]):
         return f"{tname(self)}({score_function=}, {heuristics=})"
 
     def __call__(
-        self, value: MappedItemType, candidates: Iterable[MappedItemType], context: Optional[ContextType], **kwargs: Any
+        self, value: ValueType, candidates: Iterable[CandidateType], context: Optional[ContextType], **kwargs: Any
     ) -> Iterable[float]:
         """Apply `score_function` with heuristics and short-circuiting."""
         candidates = list(candidates)

@@ -9,12 +9,13 @@ from rics.mapping._cardinality import Cardinality
 from rics.mapping._directional_mapping import DirectionalMapping
 from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError, UserMappingWarning
 from rics.mapping.types import (
+    CandidateType,
     ContextType,
     FilterFunction,
-    MappedItemType,
     MatchTuple,
     ScoreFunction,
     UserOverrideFunction,
+    ValueType,
 )
 from rics.utility.action_level import ActionLevel, ActionLevelTypes
 from rics.utility.collections.dicts import InheritedKeysDict
@@ -23,7 +24,7 @@ from rics.utility.misc import get_by_full_name, tname
 LOGGER = logging.getLogger(__package__).getChild("Mapper")
 
 
-class Mapper(Generic[ContextType, MappedItemType]):
+class Mapper(Generic[ValueType, CandidateType, ContextType]):
     """Map values and candidates.
 
     Args:
@@ -47,7 +48,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
         filter_functions: Iterable[Tuple[Union[str, FilterFunction], Dict[str, Any]]] = (),
         min_score: float = 1.00,
         overrides: Union[
-            InheritedKeysDict[ContextType, MappedItemType, MappedItemType], Dict[MappedItemType, MappedItemType]
+            InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
         ] = None,
         unmapped_values_action: ActionLevelTypes = "ignore",
         unknown_user_override_action: ActionLevelTypes = "raise",
@@ -56,7 +57,7 @@ class Mapper(Generic[ContextType, MappedItemType]):
         self._score = get_by_full_name(score_function, sf) if isinstance(score_function, str) else score_function
         self._score_kwargs = score_function_kwargs or {}
         self._min_score = min_score
-        self._overrides: Union[InheritedKeysDict, Dict[MappedItemType, MappedItemType]] = (
+        self._overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = (
             overrides if isinstance(overrides, InheritedKeysDict) else (overrides or {})
         )
         self._context_sensitive_overrides = isinstance(self._overrides, InheritedKeysDict)
@@ -70,8 +71,8 @@ class Mapper(Generic[ContextType, MappedItemType]):
 
     def apply(
         self,
-        values: Iterable[MappedItemType],
-        candidates: Iterable[MappedItemType],
+        values: Iterable[ValueType],
+        candidates: Iterable[CandidateType],
         context: ContextType = None,
         override_function: UserOverrideFunction = None,
         **kwargs: Any,
@@ -150,11 +151,11 @@ class Mapper(Generic[ContextType, MappedItemType]):
 
     def _create_l2r(
         self,
-        values: Set[MappedItemType],
+        values: Set[ValueType],
         context: Optional[ContextType],
-    ) -> Dict[MappedItemType, MatchTuple]:
-        left_to_right: Dict[MappedItemType, MatchTuple]
-        overrides: Dict[MappedItemType, MappedItemType]  # Type on override check done during init
+    ) -> Dict[ValueType, MatchTuple]:
+        left_to_right: Dict[ValueType, MatchTuple]
+        overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
 
         if context is None:
             if self._context_sensitive_overrides:  # pragma: no cover
@@ -170,10 +171,10 @@ class Mapper(Generic[ContextType, MappedItemType]):
     def _add_function_overrides(
         self,
         func: UserOverrideFunction,
-        values: Iterable[MappedItemType],
-        candidates: Set[MappedItemType],
+        values: Iterable[ValueType],
+        candidates: Set[CandidateType],
         context: Optional[ContextType],
-        left_to_right: Dict[MappedItemType, MatchTuple],
+        left_to_right: Dict[ValueType, MatchTuple],
     ) -> None:
         for value in values:
             user_override = func(value, candidates, context)
@@ -199,8 +200,8 @@ class Mapper(Generic[ContextType, MappedItemType]):
 
     def _map_value(
         self,
-        value: MappedItemType,
-        candidates: Set[MappedItemType],
+        value: ValueType,
+        candidates: Set[CandidateType],
         context: Optional[ContextType],
         kwargs: Dict[str, Any],
     ) -> Optional[MatchTuple]:
