@@ -17,7 +17,7 @@ from rics.utility.collections.dicts import InheritedKeysDict, reverse_dict
 LOGGER = logging.getLogger(__package__).getChild("AbstractFetcher")
 
 
-class AbstractFetcher(Fetcher[IdType, SourceType]):
+class AbstractFetcher(Fetcher[SourceType, IdType]):
     """Base class for retrieving translations from an external source.
 
     Users who wish to define their own fetching logic should inherit this class, but there are implementations for

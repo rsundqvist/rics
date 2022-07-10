@@ -100,7 +100,7 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
     return Mapper(**config)
 
 
-class TranslatorFactory(Generic[NameType, IdType, SourceType]):
+class TranslatorFactory(Generic[NameType, SourceType, IdType]):
     """Create a ``Translator`` from TOML inputs.
 
     Args:

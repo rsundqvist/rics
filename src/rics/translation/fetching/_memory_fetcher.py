@@ -6,7 +6,7 @@ from rics.translation.offline.types import PlaceholderTranslations, SourcePlaceh
 from rics.translation.types import IdType, SourceType
 
 
-class MemoryFetcher(AbstractFetcher[IdType, SourceType]):
+class MemoryFetcher(AbstractFetcher[SourceType, IdType]):
     """Fetch from memory.
 
     Args:

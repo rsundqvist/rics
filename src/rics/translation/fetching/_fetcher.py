@@ -6,7 +6,7 @@ from rics.translation.offline.types import SourcePlaceholderTranslations
 from rics.translation.types import IdType, SourceType
 
 
-class Fetcher(ABC, Generic[IdType, SourceType]):
+class Fetcher(ABC, Generic[SourceType, IdType]):
     """Interface for fetching translations from an external source."""
 
     @property

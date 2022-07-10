@@ -4,10 +4,11 @@ from typing import Any, Collection, List, Sequence
 from rics.translation.fetching import exceptions
 from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import PlaceholderTranslations
+from rics.translation.types import IdType, SourceType
 
 
 def from_records(
-    instr: FetchInstruction,
+    instr: FetchInstruction[SourceType, IdType],
     known_placeholders: Collection[str],
     records: Sequence[Sequence[Any]],
 ) -> PlaceholderTranslations:
@@ -34,7 +35,7 @@ def from_records(
     return PlaceholderTranslations(instr.source, tuple(known_placeholders), records)
 
 
-def select_placeholders(instr: FetchInstruction, known_placeholders: Collection[str]) -> List[str]:
+def select_placeholders(instr: FetchInstruction[SourceType, IdType], known_placeholders: Collection[str]) -> List[str]:
     """Select from a subset of known placeholders.
 
     Args:

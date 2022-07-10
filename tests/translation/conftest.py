@@ -9,7 +9,7 @@ from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import PlaceholderTranslations
 
 
-class HexFetcher(AbstractFetcher[int, str]):
+class HexFetcher(AbstractFetcher[str, int]):
     def __init__(self) -> None:
         super().__init__()
         self.num_fetches = 0
