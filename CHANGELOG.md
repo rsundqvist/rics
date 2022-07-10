@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2022-07-10
+
 Bump development status to `Development Status :: 3 - Alpha` on PyPi. 
 Switched to the [PyData Sphinx theme](https://github.com/pydata/pydata-sphinx-theme) and automatic summaries (doesn't 
 seem) to work for classes exposed through `__init__`-files.
@@ -15,6 +17,7 @@ seem) to work for classes exposed through `__init__`-files.
 - Name of `OfflineError` changed to `ConnectionStatusError`.
 - Moved `Cardinality` to the `mapping` namespace.
 - Move `utility.perf` up one level.
+- Swapped generic `TypeVar` order for `IdType` and `SourceType` to match the name -> source -> ID hierarchy
 
 ### Added
 - Implement override functions in `Mapper.apply`.
@@ -201,7 +204,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.12.2...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/rsundqvist/rics/compare/v0.12.2...v0.13.0
 [0.12.2]: https://github.com/rsundqvist/rics/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/rsundqvist/rics/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/rsundqvist/rics/compare/v0.11.1...v0.12.0
