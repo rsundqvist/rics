@@ -2,7 +2,7 @@
 import logging
 from typing import Iterable, Optional
 
-from rics.mapping.types import ContextType, MappedItemType
+from rics.mapping.types import CandidateType, ContextType, ValueType
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,9 +30,7 @@ def modified_hamming(name: str, candidates: Iterable[str], context: Optional[Con
     yield from map(_apply, candidates)
 
 
-def equality(
-    value: MappedItemType, candidates: Iterable[MappedItemType], context: Optional[ContextType]
-) -> Iterable[float]:
+def equality(value: ValueType, candidates: Iterable[CandidateType], context: Optional[ContextType]) -> Iterable[float]:
     """Return 1.0 if ``k == c_i``, 0.0 otherwise.
 
     Examples:
