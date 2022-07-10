@@ -20,16 +20,15 @@ My personal little ML engineering library.
 * Documentation: <https://rics.readthedocs.io>
 * Free software: MIT
 
-## Quickstart for development
-
-### Setting up for local development
+## Setting up for local development
 Assumes a "modern" version of Ubuntu (guide written under `Ubuntu 20.04.2 LTS`) with basic dev dependencies installed.
 
 To get started, run the following commands:
 
-1. Installing the latest version of Poetry
+1. Installing Poetry and Invoke
    ```bash
    curl -sSL https://install.python-poetry.org/ | python -
+   pip install invoke
    ```
 
 2. Installing the project
@@ -38,24 +37,10 @@ To get started, run the following commands:
    cd rics
    poetry install -E translation -E plotting
    inv install-hooks
-   ./run-invocations
+   ./run-invocations.sh
    ```
-   The last step is optional, but serves to verify that the project is ready-to-run.
-
-### Registering the project on Codecov
-
-Probably only for forking?
-```bash
-curl -Os https://uploader.codecov.io/latest/linux/codecov
-chmod +x codecov
-```
-
-Visit https://app.codecov.io and log in, follow instructions to link the repo and get a token for private repos.
-```bash
-CODECOV_TOKEN="<from-the-website>"
-inv coverage --fmt=xml
-./codecov -t ${CODECOV_TOKEN}
-```
+   
+    The last step is optional, but serves to verify that the project is ready-to-run.
 
 ## Credits
 
@@ -63,5 +48,4 @@ This package was created with [Cookiecutter][cookiecutter] and
 the [fedejaure/cookiecutter-modern-pypackage][cookiecutter-modern-pypackage] project template.
 
 [cookiecutter]: https://github.com/cookiecutter/cookiecutter
-
 [cookiecutter-modern-pypackage]: https://github.com/fedejaure/cookiecutter-modern-pypackage
