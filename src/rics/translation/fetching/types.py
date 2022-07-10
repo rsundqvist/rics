@@ -18,7 +18,7 @@ class IdsToFetch(Generic[SourceType, IdType]):
 
 
 @dataclass(frozen=True)
-class FetchInstruction(IdsToFetch):
+class FetchInstruction(IdsToFetch[SourceType, IdType]):
     """Instructions passed from an ``AbstractFetcher`` to an implementation."""
 
     placeholders: PlaceholdersTuple

@@ -1,8 +1,8 @@
-from typing import Any, Dict, Generic, Hashable, Iterable, Optional, Tuple, TypeVar
+from typing import Any, Dict, Generic, Hashable, Iterable, Optional, Tuple, TypeVar, Union
 
 from rics.mapping._cardinality import Cardinality
 from rics.mapping.exceptions import CardinalityError
-from rics.mapping.types import HL, HR, DictMapping
+from rics.mapping.types import HL, HR, LeftToRight, RightToLeft
 from rics.utility.misc import tname
 
 HAnySide = TypeVar("HAnySide", bound=Hashable)
@@ -27,8 +27,8 @@ class DirectionalMapping(Generic[HL, HR]):
     def __init__(
         self,
         cardinality: Cardinality.ParseType = None,
-        left_to_right: DictMapping = None,
-        right_to_left: DictMapping = None,
+        left_to_right: LeftToRight[HL, HR] = None,
+        right_to_left: RightToLeft[HR, HL] = None,
         _verify: bool = True,
     ) -> None:
         self._left_to_right = self._to_other(left_to_right, right_to_left)
@@ -59,17 +59,17 @@ class DirectionalMapping(Generic[HL, HR]):
         return tuple(self._right_to_left)
 
     @property
-    def left_to_right(self) -> DictMapping:
+    def left_to_right(self) -> LeftToRight[HL, HR]:
         """Left-to-right element mappings."""
         return self._left_to_right
 
     @property
-    def right_to_left(self) -> DictMapping:
+    def right_to_left(self) -> RightToLeft[HR, HL]:
         """Right-to-left element mappings."""
         return self._right_to_left
 
     @property
-    def reverse(self) -> "DirectionalMapping":
+    def reverse(self) -> "DirectionalMapping[HR, HL]":
         """Reverse the mapping by swapping the sides.
 
         Returns:
@@ -127,8 +127,12 @@ class DirectionalMapping(Generic[HL, HR]):
         """
         return self._select(elements, left=False, exclude=exclude)
 
-    @staticmethod
-    def _to_other(primary_side: Optional[DictMapping], backup_side: Optional[DictMapping]) -> DictMapping:
+    @classmethod
+    def _to_other(
+        cls,
+        primary_side: Optional[Union[LeftToRight, RightToLeft]],
+        backup_side: Optional[Union[LeftToRight, RightToLeft]],
+    ) -> Union[LeftToRight, RightToLeft]:
         if primary_side is not None:
             return primary_side
 
@@ -199,8 +203,8 @@ class DirectionalMapping(Generic[HL, HR]):
     def _handle_cardinality(
         cls,
         expected: Optional[Cardinality.ParseType],
-        left: DictMapping,
-        right: DictMapping,
+        left: LeftToRight,
+        right: RightToLeft,
         verify: bool,
     ) -> Cardinality:
         if not (left and right):

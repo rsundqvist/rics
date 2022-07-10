@@ -8,7 +8,7 @@ from rics.performance import format_perf_counter
 from rics.translation.fetching import Fetcher, exceptions
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline.types import SourcePlaceholderTranslations
-from rics.translation.types import IdType, NameType, SourceType
+from rics.translation.types import IdType, SourceType
 from rics.utility.action_level import ActionLevel, ActionLevelHelper, ActionLevelTypes
 from rics.utility.collections.dicts import compute_if_absent, reverse_dict
 from rics.utility.misc import tname
@@ -27,7 +27,7 @@ def _invoke(func: Callable, *args: Any) -> FetchResult:
     return id(func.__self__), func(*args)  # type: ignore
 
 
-class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
+class MultiFetcher(Fetcher[IdType, SourceType]):
     """Fetcher which combines the results of other fetchers."""
 
     def __init__(
@@ -70,7 +70,7 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
         }
 
     @property
-    def fetchers(self) -> List[Fetcher]:
+    def fetchers(self) -> List[Fetcher[IdType, SourceType]]:
         """Return child fetchers."""
         return list(self._id_to_fetcher.values())
 
@@ -79,8 +79,11 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
         return list(self._source_to_fetcher_id)
 
     def fetch(
-        self, ids_to_fetch: Iterable[IdsToFetch], placeholders: Iterable[str] = (), required: Iterable[str] = ()
-    ) -> SourcePlaceholderTranslations:
+        self,
+        ids_to_fetch: Iterable[IdsToFetch[SourceType, IdType]],
+        placeholders: Iterable[str] = (),
+        required: Iterable[str] = (),
+    ) -> SourcePlaceholderTranslations[SourceType]:
         tasks: Dict[int, List[IdsToFetch]] = {fid: [] for fid in self._id_to_fetcher}
         num_instructions = 0
         for idt in ids_to_fetch:
@@ -150,7 +153,7 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
 
         return self._source_to_fetcher_id_actual
 
-    def _gather(self, futures: Iterable[Future]) -> SourcePlaceholderTranslations:
+    def _gather(self, futures: Iterable[Future]) -> SourcePlaceholderTranslations[SourceType]:
         ans: SourcePlaceholderTranslations = {}
         source_ranks: Dict[SourceType, int] = {}
 
@@ -162,10 +165,10 @@ class MultiFetcher(Fetcher[NameType, IdType, SourceType]):
 
     def _process_future_result(
         self,
-        translations: SourcePlaceholderTranslations,
+        translations: SourcePlaceholderTranslations[SourceType],
         rank: int,
         source_ranks: Dict[SourceType, int],
-        ans: SourcePlaceholderTranslations,
+        ans: SourcePlaceholderTranslations[SourceType],
     ) -> None:
         for source_translations in translations.values():
             source = source_translations.source
