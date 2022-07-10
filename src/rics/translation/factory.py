@@ -1,25 +1,28 @@
 """Factory functions for translation classes."""
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generic, Iterable, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict
+from typing import Generic as _Generic
+from typing import Iterable, Optional, Tuple, Union
 
 import toml
 
 from rics._internal_support.types import PathLikeType
-from rics.mapping import HeuristicScore, Mapper
-from rics.translation import fetching
-from rics.translation.exceptions import ConfigurationError
-from rics.translation.fetching import AbstractFetcher, Fetcher, MultiFetcher
+from rics.mapping import HeuristicScore as _HeuristicScore
+from rics.mapping import Mapper as _Mapper
+from rics.translation import exceptions, fetching
 from rics.translation.types import IdType, NameType, SourceType
-from rics.utility.collections.dicts import InheritedKeysDict, MakeType
-from rics.utility.misc import get_by_full_name
+from rics.utility import misc
+from rics.utility.collections import dicts
 
 if TYPE_CHECKING:
     from rics.translation._translator import Translator
 
-FetcherFactory = Callable[[str, Dict[str, Any]], AbstractFetcher]
-MapperFactory = Callable[[Dict[str, Any], bool], Optional[Mapper]]
+FetcherFactory = Callable[[str, Dict[str, Any]], fetching.AbstractFetcher]
+"""A callable used to create ``Fetcher`` instances."""
+MapperFactory = Callable[[Dict[str, Any], bool], Optional[_Mapper]]
+"""A callable used to created ``Mapper`` instances."""
 
 
-def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> AbstractFetcher:
+def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> fetching.AbstractFetcher:
     """Create a ``Fetcher`` from a dict config.
 
     Args:
@@ -30,17 +33,17 @@ def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> AbstractFetch
         An AbstractFetcher instance.
 
     Raises:
-        ConfigurationError: If `config` is invalid.
+        exceptions.ConfigurationError: If `config` is invalid.
         TypeError: If `clazz` is not an AbstractFetcher subtype.
     """
-    fetcher_class = get_by_full_name(clazz, default_module=fetching)
+    fetcher_class = misc.get_by_full_name(clazz, default_module=fetching)
     fetcher = fetcher_class(**config)
-    if not isinstance(fetcher, AbstractFetcher):
+    if not isinstance(fetcher, fetching.AbstractFetcher):
         raise TypeError(f"Fetcher of type {fetcher} created from '{clazz}' is not an AbstractFetcher.")
     return fetcher
 
 
-def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optional[Mapper]:
+def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optional[_Mapper]:
     """Create a ``Mapper`` from a dict config.
 
     Args:
@@ -57,7 +60,9 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
         score_function = config.pop("score_function")
 
         if len(score_function) > 1:
-            raise ConfigurationError(f"At most one score function may be specified, but got: {sorted(score_function)}")
+            raise exceptions.ConfigurationError(
+                f"At most one score function may be specified, but got: {sorted(score_function)}"
+            )
 
         score_function, score_function_kwargs = next(iter(score_function.items()))
         config["score_function"] = score_function
@@ -65,17 +70,19 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
 
     if "score_function_heuristics" in config:
         if "score_function" not in config:
-            raise ConfigurationError("Section 'score_function_heuristics' requires an explicit score function.")
+            raise exceptions.ConfigurationError(
+                "Section 'score_function_heuristics' requires an explicit score function."
+            )
 
         heuristics = [
             (heuristic_config.pop("function"), heuristic_config)
             for heuristic_config in config.pop("score_function_heuristics")
         ]
-        if isinstance(config["score_function"], HeuristicScore):
+        if isinstance(config["score_function"], _HeuristicScore):
             for h in heuristics:
                 config["score_function"].add_heuristic(*h)
         else:
-            config["score_function"] = HeuristicScore(config["score_function"], heuristics)
+            config["score_function"] = _HeuristicScore(config["score_function"], heuristics)
 
     if "filter_functions" in config:
         filters = config.pop("filter_functions")
@@ -90,17 +97,17 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
         shared, specific = _split_overrides(overrides)
 
         if specific and not for_fetcher:
-            raise ConfigurationError(
+            raise exceptions.ConfigurationError(
                 "Context-sensitive overrides are not possible (or needed) for "
                 f"Name-to-source mapping, but got {overrides=}."
             )
 
-        config["overrides"] = InheritedKeysDict(specific, default=shared) if for_fetcher else shared
+        config["overrides"] = dicts.InheritedKeysDict(specific, default=shared) if for_fetcher else shared
 
-    return Mapper(**config)
+    return _Mapper(**config)
 
 
-class TranslatorFactory(Generic[NameType, SourceType, IdType]):
+class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
     """Create a ``Translator`` from TOML inputs.
 
     Args:
@@ -136,7 +143,7 @@ class TranslatorFactory(Generic[NameType, SourceType, IdType]):
             A ``Translator`` object.
 
         Raises:
-            ConfigurationError: If the config is invalid.
+            exceptions.ConfigurationError: If the config is invalid.
         """
         from rics.translation import Translator
 
@@ -163,7 +170,7 @@ class TranslatorFactory(Generic[NameType, SourceType, IdType]):
         self,
         config: Dict[str, Any],
         extra_fetchers: Iterable[str],
-    ) -> Fetcher:
+    ) -> fetching.Fetcher:
         fetchers = []
         if config:
             fetchers.append(self._make_fetcher(**config))  # Add primary fetcher
@@ -172,41 +179,49 @@ class TranslatorFactory(Generic[NameType, SourceType, IdType]):
             self._make_fetcher(**toml.load(file_fetcher_file)["fetching"]) for file_fetcher_file in extra_fetchers
         )
         if not fetchers:
-            raise ConfigurationError("Section [fetching] is required when no pre-initialized AbstractFetcher is given.")
+            raise exceptions.ConfigurationError(
+                "Section [fetching] is required when no pre-initialized AbstractFetcher is given."
+            )
 
-        return fetchers[0] if len(fetchers) == 1 else MultiFetcher(*fetchers, duplicate_source_discovered_action="warn")
+        return (
+            fetchers[0]
+            if len(fetchers) == 1
+            else fetching.MultiFetcher(*fetchers, duplicate_source_discovered_action="warn")
+        )
 
-    def _make_mapper(self, parent_section: str, config: Dict[str, Any]) -> Optional[Mapper]:
+    def _make_mapper(self, parent_section: str, config: Dict[str, Any]) -> Optional[_Mapper]:
         if "mapping" not in config:
             return None
 
         config = config.pop("mapping")
         for_fetcher = parent_section.startswith("fetching")
         if for_fetcher:
-            config = {**AbstractFetcher.default_mapper_kwargs(), **config}
+            config = {**fetching.AbstractFetcher.default_mapper_kwargs(), **config}
 
         return self.mapper_factory(config, for_fetcher)
 
-    def _make_fetcher(self, **config: Any) -> Fetcher:
+    def _make_fetcher(self, **config: Any) -> fetching.Fetcher:
         mapper = self._make_mapper("fetching", config) if "mapping" in config else None
 
         if len(config) == 0:
-            raise ConfigurationError("Fetcher implementation section missing.")
+            raise exceptions.ConfigurationError("Fetcher implementation section missing.")
         if len(config) > 1:
-            raise ConfigurationError(f"Multiple fetcher implementations specified in the same file: {sorted(config)}")
+            raise exceptions.ConfigurationError(
+                f"Multiple fetcher implementations specified in the same file: {sorted(config)}"
+            )
 
         clazz, kwargs = next(iter(config.items()))
         kwargs["mapper"] = mapper
         return self.fetcher_factory(clazz, kwargs)
 
 
-def _make_default_translations(**config: Any) -> Tuple[str, Optional[InheritedKeysDict]]:
+def _make_default_translations(**config: Any) -> Tuple[str, Optional[dicts.InheritedKeysDict]]:
     _check_allowed_keys(["fmt", "overrides"], config, toml_path="translator.unknown_ids")
 
     fmt = config.pop("fmt", None)
     if "overrides" in config:
         shared, specific = _split_overrides(config.pop("overrides"))
-        return fmt, InheritedKeysDict(specific, default=shared)
+        return fmt, dicts.InheritedKeysDict(specific, default=shared)
     else:
         return fmt, None
 
@@ -229,7 +244,7 @@ def _check_allowed_keys(allowed: Iterable[str], actual: Iterable[str], toml_path
         raise ValueError(f"Forbidden keys {sorted(bad_keys)} in [{toml_path}]-section.")
 
 
-def _split_overrides(overrides: MakeType):  # noqa: ANN202
+def _split_overrides(overrides: dicts.MakeType):  # noqa: ANN202
     specific = {k: v for k, v in overrides.items() if isinstance(v, dict)}
     shared = {k: v for k, v in overrides.items() if k not in specific}
     return shared, specific

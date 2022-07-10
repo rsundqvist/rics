@@ -2,16 +2,16 @@
 from typing import Any, Collection, List, Sequence
 
 from rics.translation.fetching import exceptions
-from rics.translation.fetching.types import FetchInstruction
-from rics.translation.offline.types import PlaceholderTranslations
+from rics.translation.fetching.types import FetchInstruction as _FetchInstruction
+from rics.translation.offline.types import PlaceholderTranslations as _PlaceholderTranslations
 from rics.translation.types import IdType, SourceType
 
 
 def from_records(
-    instr: FetchInstruction[SourceType, IdType],
+    instr: _FetchInstruction[SourceType, IdType],
     known_placeholders: Collection[str],
     records: Sequence[Sequence[Any]],
-) -> PlaceholderTranslations:
+) -> _PlaceholderTranslations:
     """Create :class:`.PlaceholderTranslations` instance from records.
 
     Convenience method meant for use by implementations.
@@ -32,10 +32,10 @@ def from_records(
         minimum = len(set(instr.ids))
         raise exceptions.ImplementationError(f"Got {actual_len} records, expected at least {minimum}.")
 
-    return PlaceholderTranslations(instr.source, tuple(known_placeholders), records)
+    return _PlaceholderTranslations(instr.source, tuple(known_placeholders), records)
 
 
-def select_placeholders(instr: FetchInstruction[SourceType, IdType], known_placeholders: Collection[str]) -> List[str]:
+def select_placeholders(instr: _FetchInstruction[SourceType, IdType], known_placeholders: Collection[str]) -> List[str]:
     """Select from a subset of known placeholders.
 
     Args:

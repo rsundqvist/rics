@@ -1,9 +1,5 @@
 """String utility methods for Python applications."""
 
-from typing import TypeVar
-
-AnswerType = TypeVar("AnswerType")
-
 
 def without_suffix(arg: str, suffix: str) -> str:
     """Remove `suffix` from the tail of `arg`."""

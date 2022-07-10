@@ -1,12 +1,4 @@
-"""Mapping implementations for matching groups of elements.
-
-Notable members:
-
-    * :class:`Mapper`
-    * :class:`DirectionalMapping`
-    * :class:`Cardinality`
-    * :class:`HeuristicScore`
-"""
+"""Mapping implementations for matching groups of elements."""
 
 from rics.mapping._cardinality import Cardinality
 from rics.mapping._directional_mapping import DirectionalMapping

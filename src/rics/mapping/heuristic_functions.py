@@ -2,7 +2,7 @@
 import re
 from typing import Any, Iterable, List, Optional, Set, Tuple, Union
 
-from rics.mapping.filter_functions import require_regex_match
+from rics.mapping import filter_functions as ff
 from rics.mapping.types import ContextType
 
 
@@ -44,7 +44,7 @@ def short_circuit_to_value(
     Notes:
         This is technically a filter function and may be used as such.
     """
-    return set() if value != target else require_regex_match(value, candidates, context, regex, where="candidate")
+    return set() if value != target else ff.require_regex_match(value, candidates, context, regex, where="candidate")
 
 
 def short_circuit_to_candidate(
@@ -69,7 +69,7 @@ def short_circuit_to_candidate(
     Notes:
         This is technically a filter function and may be used as such.
     """
-    return set() if target not in candidates else require_regex_match(value, [target], context, regex, where="name")
+    return set() if target not in candidates else ff.require_regex_match(value, [target], context, regex, where="name")
 
 
 def force_lower_case(

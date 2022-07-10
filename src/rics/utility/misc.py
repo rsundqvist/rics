@@ -1,16 +1,16 @@
 """Miscellaneous utility methods for Python applications."""
 import os
-from importlib import import_module
-from pathlib import Path
-from types import ModuleType
+from importlib import import_module as _import_module
+from pathlib import Path as _Path
+from types import ModuleType as _ModuleType
 from typing import Any, Callable, Optional, Type, Union
 
 from rics._internal_support import local_or_remote
 from rics._internal_support.types import NO_DEFAULT, NoDefault, PathLikeType
-from rics.utility.strings import without_prefix
+from rics.utility.strings import without_prefix as _without_prefix
 
 
-def get_by_full_name(name: str, default_module: Union[str, ModuleType] = None) -> Any:
+def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) -> Any:
     """Combine :py:func:`~importlib.import_module` and :py:func:`getattr` to retrieve items by name.
 
     Args:
@@ -26,11 +26,11 @@ def get_by_full_name(name: str, default_module: Union[str, ModuleType] = None) -
     """
     if "." in name:
         module_name, _, member = name.rpartition(".")
-        module = import_module(module_name)
+        module = _import_module(module_name)
     else:
         if not default_module:  # pragma: no cover
             raise ValueError("Names must be fully qualified when no default module is given.")
-        module = import_module(default_module) if isinstance(default_module, str) else default_module
+        module = _import_module(default_module) if isinstance(default_module, str) else default_module
         member = name
 
     return getattr(module, member)
@@ -62,7 +62,7 @@ def get_local_or_remote(
     force: bool = False,
     postprocessor: Callable[[str], Any] = None,
     show_progress: bool = local_or_remote.TQDM_INSTALLED,
-) -> Path:
+) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
 
     If `file` is not available at the local root path, it will be downloaded using `requests.get`_. A postprocessor may
@@ -147,7 +147,7 @@ def read_env_or_literal(
     if not arg.startswith(env_marker):
         return arg
 
-    env_var_name = without_prefix(arg, env_marker)
+    env_var_name = _without_prefix(arg, env_marker)
     return os.environ[env_var_name] if default is NO_DEFAULT else os.environ.get(env_var_name, default)
 
 

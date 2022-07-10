@@ -1,13 +1,4 @@
-"""Translation using external sources.
-
-Notable members:
-
-    * :class:`Fetcher`
-    * :class:`AbstractFetcher`
-    * :class:`MultiFetcher`
-
-    * Implementations  :class:`MemoryFetcher`, :class:`PandasFetcher`, and :class:`SqlFetcher`
-"""
+"""Translation using external sources."""
 from rics.translation.fetching._abstract_fetcher import AbstractFetcher
 from rics.translation.fetching._fetcher import Fetcher
 from rics.translation.fetching._memory_fetcher import MemoryFetcher

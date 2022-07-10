@@ -1,12 +1,4 @@
-"""Offline (in-memory) translation classes.
-
-Notable members:
-
-    * :class:`Format`
-    * :class:`FormatApplier` and :class:`DefaultFormatApplier`
-    * :class:`TranslationMap`
-    * :class:`MagicDict`
-"""
+"""Offline (in-memory) translation classes."""
 from rics.translation.offline._format import Format
 from rics.translation.offline._format_applier import DefaultFormatApplier, FormatApplier
 from rics.translation.offline._magic_dict import MagicDict

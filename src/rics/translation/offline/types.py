@@ -1,6 +1,8 @@
 """Types used for offline translation."""
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict, Generic, Sequence, Tuple, Union
+import dataclasses
+from typing import TYPE_CHECKING, Any, Dict
+from typing import Generic as _Generic
+from typing import Sequence, Tuple, Union
 
 import pandas as pd
 
@@ -18,8 +20,8 @@ TranslatedIds = Dict[IdType, str]  # {id: translation}
 SourcePlaceholderTranslations = Dict[SourceType, "PlaceholderTranslations"]  # {source: PlaceholderTranslations}
 
 
-@dataclass
-class PlaceholderTranslations(Generic[SourceType]):
+@dataclasses.dataclass
+class PlaceholderTranslations(_Generic[SourceType]):
     """Matrix of ID translation components returned by fetchers."""
 
     MakeTypes = Union["PlaceholderTranslations", pd.DataFrame, Dict[str, Sequence[Any]]]

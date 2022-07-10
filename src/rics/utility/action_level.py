@@ -1,6 +1,6 @@
 """Action level enumeration types."""
 
-from enum import Enum
+from enum import Enum as _Enum
 from typing import Literal, Optional, Union
 
 ActionLevelTypes = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], "ActionLevel"]
@@ -24,7 +24,7 @@ class BadActionLevelError(ValueError):
         super().__init__(f"Permitted choices{extra} are {accepted}, but got {action=}.")
 
 
-class ActionLevel(Enum):
+class ActionLevel(_Enum):
     """Action level enumeration type for events."""
 
     RAISE = "raise"

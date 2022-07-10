@@ -1,21 +1,25 @@
 """Plotting utility methods."""
 
 import functools
-from typing import Literal, Optional, Protocol, Union
+from typing import Literal, Optional
+from typing import Protocol as _Protocol
+from typing import Union
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import seaborn as sns
-from matplotlib.axis import Axis, XAxis
-from matplotlib.ticker import FuncFormatter, IndexLocator
+from matplotlib.axis import Axis as _Axis
+from matplotlib.axis import XAxis as _XAxis
+from matplotlib.ticker import FuncFormatter as _FuncFormatter
+from matplotlib.ticker import IndexLocator as _IndexLocator
 
 ERROR_BAR_CAPSIZE: float = 0.1
 
 
-class HasXAxis(Protocol):
-    """A type that has an X-axis."""
+class HasXAxis(_Protocol):
+    """Protocol class indicating something that as an X-axis."""
 
-    xaxis: XAxis
+    xaxis: _XAxis
     """X-Axis attribute."""
 
 
@@ -58,7 +62,7 @@ def configure_matplotlib() -> None:
     mtick.PercentFormatter = functools.partial(mtick.PercentFormatter, xmax=1)
 
 
-def pi_ticks(ax: Union[Axis, HasXAxis], half_rep: Literal["frac", "dec"] = None) -> None:
+def pi_ticks(ax: Union[_Axis, HasXAxis], half_rep: Literal["frac", "dec"] = None) -> None:
     """Decorate an axis by setting the labels to multiples of pi.
 
     The `half_rep` must be one of:
@@ -72,7 +76,7 @@ def pi_ticks(ax: Union[Axis, HasXAxis], half_rep: Literal["frac", "dec"] = None)
         half_rep: Controls how fractions of pi are represented on the x-axis.
 
     """
-    axis: Axis = ax.xaxis if hasattr(ax, "xaxis") else ax
+    axis: _Axis = ax.xaxis if hasattr(ax, "xaxis") else ax
 
     start = axis.get_data_interval()[0]
     helper = _PiTickHelper(half_rep, start)
@@ -93,8 +97,8 @@ class _PiTickHelper:
         r = self.HALF_PI if half else self.PI
         self.offset = r * round(start / r) - start  # Offset from nearest (half) multiple of pi.
 
-        self.locator = IndexLocator(base=self.HALF_PI if self.half else self.PI, offset=self.offset)
-        self.formatter = FuncFormatter(self._format)
+        self.locator = _IndexLocator(base=self.HALF_PI if self.half else self.PI, offset=self.offset)
+        self.formatter = _FuncFormatter(self._format)
 
     def _format(self, x: float, _pos: int) -> str:
         n = round(x / self.PI, 1)
