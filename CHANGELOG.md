@@ -10,8 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.13.0] - 2022-07-10
 
 Bump development status to `Development Status :: 3 - Alpha` on PyPi. 
-Switched to the [PyData Sphinx theme](https://github.com/pydata/pydata-sphinx-theme) and automatic summaries (doesn't 
-seem) to work for classes exposed through `__init__`-files.
+Switched to the [PyData Sphinx theme](https://github.com/pydata/pydata-sphinx-theme) and enabled automatic summaries.
 
 ### Changed
 - Name of `OfflineError` changed to `ConnectionStatusError`.
