@@ -36,7 +36,7 @@ _NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
 LOGGER = logging.getLogger(__package__).getChild("Translator")
 
 
-class Translator(Generic[Translatable, NameType, IdType, SourceType]):
+class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     """Translate IDs to human-readable labels.
 
     The `Translator` is the main entry point for all translation tasks. Simplified translation process steps:
@@ -135,8 +135,8 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
     def __init__(
         self,
         fetcher: Union[
-            Fetcher[IdType, SourceType],
-            TranslationMap[NameType, IdType, SourceType],
+            Fetcher[SourceType, IdType],
+            TranslationMap[NameType, SourceType, IdType],
             SourcePlaceholderTranslations[SourceType],
             Dict[SourceType, PlaceholderTranslations.MakeTypes],
         ],
@@ -379,7 +379,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         return hasattr(self, "_fetcher")
 
     @property
-    def fetcher(self) -> Fetcher[IdType, SourceType]:
+    def fetcher(self) -> Fetcher[SourceType, IdType]:
         """Return the ``Fetcher`` instance used to retrieve translations."""
         if not self.online:
             raise ConnectionStatusError("Cannot fetch new translations.")  # pragma: no cover
@@ -392,7 +392,7 @@ class Translator(Generic[Translatable, NameType, IdType, SourceType]):
         return self._mapper
 
     @property
-    def cache(self) -> TranslationMap[NameType, IdType, SourceType]:
+    def cache(self) -> TranslationMap[NameType, SourceType, IdType]:
         """Return a ``TranslationMap`` of cached translations."""
         return self._cached_tmap
 

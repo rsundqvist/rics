@@ -16,7 +16,7 @@ PandasReadFunction = Callable[[PathLikeType, Any, Any], pd.DataFrame]
 FormatFn = Callable[[PathLikeType], str]
 
 
-class PandasFetcher(AbstractFetcher[IdType, str]):
+class PandasFetcher(AbstractFetcher[str, IdType]):
     """Fetcher implementation using pandas DataFrames as the data format.
 
     Fetch data from serialized DataFrames. How this is done is determined by the `read_function`. This is typically a

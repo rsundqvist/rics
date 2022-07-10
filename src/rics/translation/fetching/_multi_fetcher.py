@@ -27,7 +27,7 @@ def _invoke(func: Callable, *args: Any) -> FetchResult:
     return id(func.__self__), func(*args)  # type: ignore
 
 
-class MultiFetcher(Fetcher[IdType, SourceType]):
+class MultiFetcher(Fetcher[SourceType, IdType]):
     """Fetcher which combines the results of other fetchers."""
 
     def __init__(
@@ -70,7 +70,7 @@ class MultiFetcher(Fetcher[IdType, SourceType]):
         }
 
     @property
-    def fetchers(self) -> List[Fetcher[IdType, SourceType]]:
+    def fetchers(self) -> List[Fetcher[SourceType, IdType]]:
         """Return child fetchers."""
         return list(self._id_to_fetcher.values())
 

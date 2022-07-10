@@ -11,7 +11,7 @@ from rics.utility.collections.dicts import InheritedKeysDict, reverse_dict
 from rics.utility.misc import tname
 
 
-class TranslationMap(Mapping, Generic[NameType, IdType, SourceType]):
+class TranslationMap(Mapping, Generic[NameType, SourceType, IdType]):
     """Storage class for fetched translations.
 
     Args:
