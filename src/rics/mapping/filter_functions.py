@@ -18,6 +18,7 @@ def require_regex_match(
     regex: Union[str, re.Pattern],
     where: WhereArg,
     keep_if_match: bool = True,
+    purpose: str = "matching",
 ) -> Set[str]:
     """Require a regex match in `name`, `context`, and/or `candidates`.
 
@@ -28,6 +29,7 @@ def require_regex_match(
         regex: A regex pattern to pass to :py:func:`re.compile`.
         where: Which of ('name', 'candidate', 'context') to match in.
         keep_if_match: If ``False``, require that `regex` does _not_ match to keep candidates.
+        purpose: A purpose-string used for logging.
 
     Returns:
         Approved candidates.
@@ -48,10 +50,10 @@ def require_regex_match(
     if "name" in where:
         match = pattern.match(name)
         if keep_if_match and not match:
-            logger.debug(f"Refuse matching of {name=}: Does not match {pattern=}.")
+            logger.debug(f"Refuse {purpose} for {name=}: Does not match {pattern=}.")
             return set()
         if match and not keep_if_match:
-            logger.debug(f"Refuse matching of {name=}: Matches {pattern=}.")
+            logger.debug(f"Refuse {purpose} for {name=}: Matches {pattern=}.")
             return set()
 
     if "context" in where:
@@ -60,10 +62,10 @@ def require_regex_match(
 
         match = pattern.match(context)
         if keep_if_match and not match:
-            logger.debug(f"Refuse matching of {context=}: Does not match {pattern=}.")
+            logger.debug(f"Refuse {purpose} for {context=}: Does not match {pattern=}.")
             return set()
         if match and not keep_if_match:
-            logger.debug(f"Refuse matching of {context=}: Matches {pattern=}.")
+            logger.debug(f"Refuse {purpose} for {context=}: Matches {pattern=}.")
             return set()
 
     if "candidate" not in where:

@@ -1,4 +1,8 @@
-"""Functions which perform heuristics for score functions."""
+"""Functions which perform heuristics for score functions.
+
+See Also:
+    The :class:`~rics.mapping.HeuristicScore` class.
+"""
 import re
 from typing import Any, Iterable, List, Optional, Set, Tuple, Union
 
@@ -44,7 +48,18 @@ def short_circuit_to_value(
     Notes:
         This is technically a filter function and may be used as such.
     """
-    return set() if value != target else ff.require_regex_match(value, candidates, context, regex, where="candidate")
+    return (
+        set()
+        if value != target
+        else ff.require_regex_match(
+            value,
+            candidates,
+            context,
+            regex,
+            where="candidate",
+            purpose=f"short-circuiting to value-{target=}",
+        )
+    )
 
 
 def short_circuit_to_candidate(
@@ -69,7 +84,18 @@ def short_circuit_to_candidate(
     Notes:
         This is technically a filter function and may be used as such.
     """
-    return set() if target not in candidates else ff.require_regex_match(value, [target], context, regex, where="name")
+    return (
+        set()
+        if target not in candidates
+        else ff.require_regex_match(
+            value,
+            [target],
+            context,
+            regex,
+            where="name",
+            purpose=f"short-circuiting to candidate-{target=}",
+        )
+    )
 
 
 def force_lower_case(

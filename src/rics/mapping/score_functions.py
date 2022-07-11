@@ -1,4 +1,8 @@
-"""Functions which return a likeness score."""
+"""Functions which return a likeness score.
+
+See Also:
+    The :class:`~rics.mapping.HeuristicScore` class.
+"""
 import logging
 from typing import Iterable, Optional
 
@@ -8,7 +12,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 def modified_hamming(name: str, candidates: Iterable[str], context: Optional[ContextType]) -> Iterable[float]:
-    """Compute hamming distance modified by length ratio, from the back.
+    """Compute hamming distance modified by length ratio, from the back. Score range is ``[0, 1]``.
 
     Examples:
         >>> from rics.mapping.score_functions import modified_hamming

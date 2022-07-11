@@ -100,7 +100,7 @@ class MultiCaseTimer:
 
                 def _run_all() -> None:
                     for data in self._data.values():
-                        candidate_func(data)
+                        candidate_func(data)  # noqa: B023
 
                 number, time_taken = Timer(_run_all).autorange()
                 ans[candidate_label] = max(2, int(number * time_allocation / time_taken))
