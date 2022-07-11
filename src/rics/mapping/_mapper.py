@@ -17,7 +17,7 @@ from rics.mapping.types import (
     UserOverrideFunction,
     ValueType,
 )
-from rics.utility.action_level import ActionLevel, ActionLevelTypes
+from rics.utility.action_level import ActionLevel
 from rics.utility.collections.dicts import InheritedKeysDict
 from rics.utility.misc import get_by_full_name, tname
 
@@ -48,8 +48,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         filter_functions: Iterable[Tuple[Union[str, FilterFunction], Dict[str, Any]]] = (),
         min_score: float = 1.00,
         overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = None,
-        unmapped_values_action: ActionLevelTypes = "ignore",
-        unknown_user_override_action: ActionLevelTypes = "raise",
+        unmapped_values_action: ActionLevel = ActionLevel.IGNORE,
+        unknown_user_override_action: ActionLevel = ActionLevel.RAISE,
         cardinality: Optional[Cardinality.ParseType] = Cardinality.ManyToOne,
     ) -> None:
         self._score = get_by_full_name(score_function, sf) if isinstance(score_function, str) else score_function

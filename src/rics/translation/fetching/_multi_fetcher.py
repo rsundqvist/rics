@@ -9,7 +9,7 @@ from rics.translation.fetching import Fetcher, exceptions
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline.types import SourcePlaceholderTranslations
 from rics.translation.types import IdType, SourceType
-from rics.utility.action_level import ActionLevel, ActionLevelHelper, ActionLevelTypes
+from rics.utility.action_level import ActionLevel, ActionLevelHelper
 from rics.utility.collections.dicts import compute_if_absent, reverse_dict
 from rics.utility.misc import tname
 
@@ -34,8 +34,8 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         self,
         *fetchers: Fetcher,
         max_workers: int = 2,
-        duplicate_translation_action: ActionLevelTypes = "warn",
-        duplicate_source_discovered_action: ActionLevelTypes = "ignore",
+        duplicate_translation_action: ActionLevel = ActionLevel.WARN,
+        duplicate_source_discovered_action: ActionLevel = ActionLevel.IGNORE,
     ) -> None:
         for pos, f in enumerate(fetchers):  # pragma: no cover
             if not isinstance(f, Fetcher):

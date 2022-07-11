@@ -24,7 +24,7 @@ class Cardinality(Enum):
     _ignore_ = ["ParseType"]
 
     ParseType = Union[str, "Cardinality"]  # Type checking
-    """Types that may be interpreted as a cardinality."""
+    """Types that may be interpreted as a ``Cardinality``."""
 
     OneToOne = "1:1"
     """One-to-one relationship."""

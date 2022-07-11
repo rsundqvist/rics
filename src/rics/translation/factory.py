@@ -11,6 +11,7 @@ from rics.mapping import Mapper as _Mapper
 from rics.translation import exceptions, fetching
 from rics.translation.types import IdType, NameType, SourceType
 from rics.utility import misc
+from rics.utility.action_level import ActionLevel as _ActionLevel
 from rics.utility.collections import dicts
 
 if TYPE_CHECKING:
@@ -186,7 +187,7 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         return (
             fetchers[0]
             if len(fetchers) == 1
-            else fetching.MultiFetcher(*fetchers, duplicate_source_discovered_action="warn")
+            else fetching.MultiFetcher(*fetchers, duplicate_source_discovered_action=_ActionLevel.WARN)
         )
 
     def _make_mapper(self, parent_section: str, config: Dict[str, Any]) -> Optional[_Mapper]:

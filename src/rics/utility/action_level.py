@@ -3,29 +3,14 @@
 from enum import Enum as _Enum
 from typing import Literal, Optional, Union
 
-ActionLevelTypes = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], "ActionLevel"]
-"""Types which may be interpreted as an ActionLevel."""
-
-
-class BadActionLevelError(ValueError):
-    """Error raised for unknown or disallowed action arguments."""
-
-    def __init__(
-        self,
-        action: ActionLevelTypes,
-        purpose: str = None,
-        forbidden: "ActionLevel" = None,
-    ) -> None:
-        extra = f" for {purpose}" if purpose else ""
-        all_options = {ActionLevel.RAISE, ActionLevel.WARN, ActionLevel.IGNORE}
-        if forbidden:
-            all_options.discard(forbidden)
-        accepted = tuple(a.name.lower() for a in all_options)
-        super().__init__(f"Permitted choices{extra} are {accepted}, but got {action=}.")
-
 
 class ActionLevel(_Enum):
     """Action level enumeration type for events."""
+
+    _ignore_ = ["ParseType"]
+
+    ParseType = Union[str, "ActionLevel"]  # Type checking
+    """Types that may be interpreted as an ``ActionLevel``."""
 
     RAISE = "raise"
     """Raise an error."""
@@ -37,9 +22,9 @@ class ActionLevel(_Enum):
     @classmethod
     def verify(
         cls,
-        action: ActionLevelTypes,
+        action: ParseType,
         purpose: str = None,
-        forbidden: ActionLevelTypes = None,
+        forbidden: ParseType = None,
     ) -> "ActionLevel":
         """Verify an action level.
 
@@ -72,6 +57,9 @@ class ActionLevel(_Enum):
         return action_level
 
 
+ActionLevel.ParseType = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], ActionLevel]
+
+
 class ActionLevelHelper:
     """Helper class for keeping track of per-purpose forbidden actions.
 
@@ -84,12 +72,12 @@ class ActionLevelHelper:
     def __init__(
         self,
         require_purpose: Literal["given", "exists"] = "exists",
-        **forbidden_for_purpose: Optional[ActionLevelTypes],
+        **forbidden_for_purpose: Optional[ActionLevel.ParseType],
     ) -> None:
         self._require = require_purpose
         self._forbidden_for_purpose = forbidden_for_purpose
 
-    def verify(self, action: ActionLevelTypes, purpose: str) -> ActionLevel:
+    def verify(self, action: ActionLevel.ParseType, purpose: str) -> ActionLevel:
         """Verify an action level with constraints.
 
         Args:
@@ -106,3 +94,20 @@ class ActionLevelHelper:
         if self._require == "exists" and purpose not in self._forbidden_for_purpose:
             raise ValueError(f"Unknown {purpose=} given.")
         return ActionLevel.verify(action, purpose, forbidden=self._forbidden_for_purpose.get(purpose))
+
+
+class BadActionLevelError(ValueError):
+    """Error raised for unknown or disallowed action arguments."""
+
+    def __init__(
+        self,
+        action: ActionLevel.ParseType,
+        purpose: str = None,
+        forbidden: "ActionLevel" = None,
+    ) -> None:
+        extra = f" for {purpose}" if purpose else ""
+        all_options = {ActionLevel.RAISE, ActionLevel.WARN, ActionLevel.IGNORE}
+        if forbidden:
+            all_options.discard(forbidden)
+        accepted = tuple(a.name.lower() for a in all_options)
+        super().__init__(f"Permitted choices{extra} are {accepted}, but got {action=}.")
