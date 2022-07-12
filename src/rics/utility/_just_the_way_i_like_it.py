@@ -16,12 +16,6 @@ def configure_stuff(
         level: Root log level.
         matplotlib_level: Matplotlib log level.
         **kwargs: Keyword arguments for :meth:`rics.utility.logs.basic_config`.
-
-    See Also:
-        Methods used:
-
-            * :meth:`rics.utility.logs.basic_config`
-            * :meth:`rics.utility.plotting.configure`
     """
     from rics.utility.logs import basic_config
 

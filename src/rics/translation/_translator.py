@@ -7,7 +7,7 @@ from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Typ
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
-from rics.mapping.exceptions import MappingError, UserMappingError
+from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError
 from rics.performance import format_perf_counter
 from rics.translation import factory
 from rics.translation.dio import DataStructureIO, resolve_io
@@ -38,6 +38,9 @@ LOGGER = logging.getLogger(__package__).getChild("Translator")
 
 class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     """Translate IDs to human-readable labels.
+
+    The recommended way of initializing ``Translator`` instances is the :meth:`from_config` method. For configuration
+    file details, please refer to the :ref:`translator-config` page.
 
     The `Translator` is the main entry point for all translation tasks. Simplified translation process steps:
 
@@ -115,7 +118,6 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     Since we didn't give an explicit `default_fmt`, the regular `fmt` is used instead. Formats can be plain strings,
     in which case tranlation will never explicitly fail unless the name itself fails to map and
     :attr:`.Mapper.unmapped_values_action` is set to :attr:`.ActionLevel.RAISE`.
-
     """
 
     @classmethod
@@ -123,14 +125,23 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         cls,
         path: PathLikeType,
         extra_fetchers: Iterable[str] = (),
-        /,
-        fetcher_factory: factory.FetcherFactory = factory.default_fetcher_factory,
-        mapper_factory: factory.MapperFactory = factory.default_mapper_factory,
     ) -> "Translator":
-        """See :class:`.TranslatorFactory`."""
-        return factory.TranslatorFactory(path, extra_fetchers, fetcher_factory, mapper_factory).create()
+        """Create a ``Translator`` from TOML inputs.
 
-    from_config.__doc__ = factory.TranslatorFactory.__doc__
+        Args:
+            path: Path to a TOML file, or a pre-parsed dict.
+            extra_fetchers: Path to TOML files defining additional fetchers. Useful for fetching from multiple sources
+                or kinds of sources, for example locally stored files in conjunction with one or more databases. The
+                fetchers are ranked by input order, with the fetcher defined in `path` being given the highest priority
+                (rank 0).
+
+        Returns:
+            A ``Translator`` instance.
+
+        See Also:
+            The :ref:`translator-config` page.
+        """
+        return factory.TranslatorFactory(path, extra_fetchers).create()
 
     def __init__(
         self,
@@ -217,7 +228,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             inplace: If ``True``, translation is performed in-place and this function returns ``None``.
             override_function: A callable with inputs (value, candidates, ids) that returns either ``None``, the source
                 to use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched from
-                different sources in spite of being labelled with the same name. Used only for name-to-source mapping.
+                different sources in spite of being labelled with the same name.
             maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
                 raised. 1=disabled. Ignored in `reverse` mode.
             reverse: If ``True``, perform reverse translations back to IDs instead. Offline mode only.
@@ -299,12 +310,12 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 predicate which indicates (returns ``True`` for) derived names to keep.
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns ``True`` for) names to ignore.
-            override_function: A callable with inputs (value, candidates, ids) that returns either ``None``, the source
-                to use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched from
-                different sources in spite of being labelled with the same name. Used only for name-to-source mapping.
+            override_function: A callable with inputs ``(value, candidates, ids)`` that returns either ``None``, the
+                ``source`` to use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched
+                from different sources.
 
         Returns:
-            A mapping of names to translation sources. Returns ``None`` if mapping failed but success was not required.
+            A mapping of names to translation sources. Returns ``None`` if mapping failed.
 
         Raises:
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
@@ -342,8 +353,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 raise MappingError(f"Required names {unmapped} not mapped with {sources=} and {ignore_names=}.")
 
         if not name_to_source.left:
-            msg = f"None of {names=} could not be mapped with {sources=}. Translation aborted"
-            warnings.warn(msg)
+            msg = f"Translation aborted since none of {names=} could be mapped with {sources=}"
+            warnings.warn(msg, MappingWarning)
+            LOGGER.warning(msg)
             return None
 
         return name_to_source
@@ -358,7 +370,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Args:
             translatable: A data structure to translate.
-            name_to_source: Mappings of names in `translatable` to translation sources known the fetcher.
+            name_to_source: Mappings of names in `translatable` to :attr:`~.Fetcher.sources` as they are known to the
+                :attr:`fetcher`.
             data_structure_io: Data Structure IO class used to extract IDs from `translatable`. Derive if ``None``.
 
         Returns:
@@ -437,8 +450,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             translatable: Data from which IDs to fetch will be extracted. Fetch all IDs if ``None``.
             names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
                 predicate which indicates (returns ``True`` for) derived names to keep.
-            ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
-                also be a predicate which indicates (returns ``True`` for) names to ignore.
+            ignore_names: Names _not_ to translate. Always takes precedence over `names`, both explicit and derived. May
+                also be a predicate which indicates names to ignore.
             delete_fetcher: If ``True``, invoke :meth:`.Fetcher.close` and delete the fetcher after retrieving data. The
                 ``Translator`` will still function, but new data cannot be retrieved.
             path: If given, serialize the ``Translator`` to disk after retrieving data.

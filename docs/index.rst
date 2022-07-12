@@ -1,3 +1,7 @@
+rics
+====
+
+My personal little library. Written to help with common Machine Learning and Data Science tasks.
 
 .. toctree::
    :hidden:
@@ -9,6 +13,6 @@
    readme
    changelog
 
-rics
-=====
-My personal little library. Written help with common Machine Learning and Data Science tasks.
+Shortcuts
+---------
+Click an image below to get started, or use the top navigation bar.

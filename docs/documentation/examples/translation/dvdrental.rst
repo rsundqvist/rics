@@ -63,9 +63,11 @@ returned by the query, verifying a random sample of 5 rows.
    :language: python
    :linenos:
 
-The translated rows are:
+Result
+------
+Date columns are not translated, nor is the first (row number/index) column.
 
-.. csv-table:: The rows translated. Dates are not translated, nor is the first (row number/index) column.
+.. csv-table:: Translated data.
    :file: ../../../../tests/translation/dvdrental/translated.csv
    :header-rows: 1
 

@@ -7,23 +7,34 @@ import pytest as pytest
 from rics.utility import misc
 
 
-def test_tname():
-    class Bar:
-        def hi(self):
-            pass
+class Foo:
+    @classmethod
+    def bar(cls) -> str:
+        return "a string"
 
-    assert misc.tname(Bar()) == "Bar"
-    assert misc.tname(Bar) == "Bar"
-    assert misc.tname(Bar().hi) == "hi"  # fmt: off
+    def __call__(self):
+        return None
+
+    def hi(self):
+        pass
+
+
+def test_get_by_full_name():
+    assert Foo == misc.get_by_full_name("tests.utility.test_misc.Foo")
+
+    with pytest.raises(ModuleNotFoundError):
+        assert misc.get_by_full_name("tests.utility.test_misc.Foo.bar")
+
+
+def test_tname():
+    assert misc.tname(Foo()) == "Foo"
+    assert misc.tname(Foo) == "Foo"
+    assert misc.tname(Foo().hi) == "hi"  # fmt: off
 
 
 def test_tname_callable_class():
-    class Bar:
-        def __call__(self):
-            return None
-
-    assert misc.tname(Bar) == "Bar"
-    assert misc.tname(Bar()) == "Bar"
+    assert misc.tname(Foo) == "Foo"
+    assert misc.tname(Foo()) == "Foo"
 
 
 def test_get_local_or_remote():

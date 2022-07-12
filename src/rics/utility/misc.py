@@ -15,8 +15,7 @@ def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) 
 
     Args:
         name: A name or fully qualified name.
-        default_module: A namespace to search for `name` if `name` is not fully qualified, ie it contains no
-            ``'``-characters).
+        default_module: A namespace to search if `name` is not fully qualified (contains no ``'.'``-characters).
 
     Returns:
         An object with the fully qualified name `name`.

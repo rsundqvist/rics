@@ -18,25 +18,43 @@ if TYPE_CHECKING:
     from rics.translation._translator import Translator
 
 FetcherFactory = Callable[[str, Dict[str, Any]], fetching.AbstractFetcher]
-"""A callable used to create ``Fetcher`` instances."""
+"""A callable which creates new ``AbstractFetcher`` instances from a dict config.
+
+Config format is described in :ref:`translator-config-fetching`.
+
+Args:
+    clazz: Type of ``AbstractFetcher`` to create.
+    config: Keyword arguments for the fetcher class.
+
+Returns:
+    A ``Fetcher`` instance.
+
+Raises:
+    exceptions.ConfigurationError: If `config` is invalid.
+    TypeError: If `clazz` is not an AbstractFetcher subtype.
+"""
+
 MapperFactory = Callable[[Dict[str, Any], bool], Optional[_Mapper]]
-"""A callable used to created ``Mapper`` instances."""
+"""A callable which creates new ``Mapper`` instances from a dict config.
+
+Config format is described in :ref:`translator-config-mapping`.
+
+If ``None`` is returned, a suitable default is used instead.
+
+Args:
+    config: Keyword arguments for the ``Mapper``.
+    for_fetcher: Flag indicating that the ``Mapper`` returned will be used by an ``AbstractFetcher`` instance.
+
+Returns:
+    A ``Mapper`` instance or ``None``.
+
+Raises:
+    ConfigurationError: If `config` is invalid.
+"""
 
 
 def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> fetching.AbstractFetcher:
-    """Create a ``Fetcher`` from a dict config.
-
-    Args:
-        clazz: Type of ``Fetcher`` to create.
-        config: Keyword arguments for the fetcher class.
-
-    Returns:
-        An AbstractFetcher instance.
-
-    Raises:
-        exceptions.ConfigurationError: If `config` is invalid.
-        TypeError: If `clazz` is not an AbstractFetcher subtype.
-    """
+    """Create an ``AbstractFetcher`` from config."""
     fetcher_class = misc.get_by_full_name(clazz, default_module=fetching)
     fetcher = fetcher_class(**config)
     if not isinstance(fetcher, fetching.AbstractFetcher):
@@ -45,18 +63,7 @@ def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> fetching.Abst
 
 
 def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optional[_Mapper]:
-    """Create a ``Mapper`` from a dict config.
-
-    Args:
-        config: Keyword arguments for the ``Mapper``.
-        for_fetcher: Flag indicating that the ``Mapper`` returned will be used by an ``AbstractFetcher`` instance.
-
-    Returns:
-        A ``Mapper`` instance.
-
-    Raises:
-        ConfigurationError: If `config` is invalid.
-    """
+    """Create a ``Mapper`` from config."""
     if "score_function" in config and isinstance(config["score_function"], dict):
         score_function = config.pop("score_function")
 
@@ -109,43 +116,24 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
 
 
 class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
-    """Create a ``Translator`` from TOML inputs.
+    """Create a ``Translator`` from TOML inputs."""
 
-    Args:
-        file: Path to a TOML file, or a pre-parsed dict.
-        extra_fetchers: Path to TOML files defining additional fetchers. Useful for fetching from multiple sources or
-            kinds of sources, for example locally stored files in conjunction with one or more databases. The fetchers
-            are ranked by input order, with the fetcher defined in `file` being given the highest priority (rank 0).
-        fetcher_factory: A Fetcher instance, or a callable taking (name, kwargs) which returns an ``AbstractFetcher``.
-        mapper_factory: A ``Mapper`` instance, or a callable taking (kwargs) which returns a ``Mapper``. Used for both
-            ``Translator`` and ``Fetcher`` mapper initialization.
-
-    See Also:
-        The :ref:`translator-config` page.
-    """
+    FETCHER_FACTORY: FetcherFactory = default_fetcher_factory
+    """A callable taking (name, kwargs) which returns an ``AbstractFetcher``."""
+    MAPPER_FACTORY: MapperFactory = default_mapper_factory
+    """A callable taking (kwargs) which returns a ``Mapper``."""
 
     def __init__(
         self,
         file: PathLikeType,
         extra_fetchers: Iterable[PathLikeType],
-        fetcher_factory: FetcherFactory,
-        mapper_factory: MapperFactory,
     ) -> None:
         self.file = str(file)
         self.extra_fetchers = list(map(str, extra_fetchers))
-        self.fetcher_factory = fetcher_factory
-        self.mapper_factory = mapper_factory
-        self.config_string: str = f"Translator.fromConfig({self.file}, extra_fetchers={self.extra_fetchers})"
+        self.config_string: str = f"Translator.fromConfig('{self.file}', extra_fetchers={self.extra_fetchers})"
 
     def create(self) -> "Translator":
-        """Create a ``Translator`` from a TOML file.
-
-        Returns:
-            A ``Translator`` object.
-
-        Raises:
-            exceptions.ConfigurationError: If the config is invalid.
-        """
+        """Create a ``Translator`` from a TOML file."""
         from rics.translation import Translator
 
         config: Dict[str, Any] = toml.load(self.file)
@@ -190,7 +178,8 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
             else fetching.MultiFetcher(*fetchers, duplicate_source_discovered_action=_ActionLevel.WARN)
         )
 
-    def _make_mapper(self, parent_section: str, config: Dict[str, Any]) -> Optional[_Mapper]:
+    @classmethod
+    def _make_mapper(cls, parent_section: str, config: Dict[str, Any]) -> Optional[_Mapper]:
         if "mapping" not in config:
             return None
 
@@ -199,10 +188,11 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         if for_fetcher:
             config = {**fetching.AbstractFetcher.default_mapper_kwargs(), **config}
 
-        return self.mapper_factory(config, for_fetcher)
+        return TranslatorFactory.MAPPER_FACTORY(config, for_fetcher)
 
-    def _make_fetcher(self, **config: Any) -> fetching.Fetcher:
-        mapper = self._make_mapper("fetching", config) if "mapping" in config else None
+    @classmethod
+    def _make_fetcher(cls, **config: Any) -> fetching.AbstractFetcher:
+        mapper = cls._make_mapper("fetching", config) if "mapping" in config else None
 
         if len(config) == 0:
             raise exceptions.ConfigurationError("Fetcher implementation section missing.")
@@ -213,7 +203,7 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
 
         clazz, kwargs = next(iter(config.items()))
         kwargs["mapper"] = mapper
-        return self.fetcher_factory(clazz, kwargs)
+        return TranslatorFactory.FETCHER_FACTORY(clazz, kwargs)
 
 
 def _make_default_translations(**config: Any) -> Tuple[str, Optional[dicts.InheritedKeysDict]]:

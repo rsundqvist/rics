@@ -15,7 +15,7 @@ class Format:
     Translation formats are similar to regular f-strings, with two important exceptions:
 
         1. Positional arguments (``'{}'``) may not be used; correct form is ``'{key-name}'``.
-        2. Substrings surrounded by ``[]`` denote an optional element.
+        2. Substrings surrounded by ``'[]'`` denote an optional element.
 
     Args:
         fmt: A translation fstring.

@@ -1,21 +1,15 @@
 """
-A namespace for logging constants, and a wrapper :meth:`rics.utility.logs.basic_config` for the standard
-:py:func:`logging.basicConfig`-method with defaults which are defined here.
+A namespace for logging constants, and a wrapper or the standard :py:func:`logging.basicConfig`-method with defaults
+which are defined here.
 """  # noqa: D205, D400
 import logging
 from typing import Any, Dict, Tuple, Union
 
 FORMAT: str = "%(asctime)s.%(msecs)03d [%(name)s:%(levelname)s] %(message)s"
-"""Default logging format; ``logging.basicConfig(format=FORMAT)``
-
-Sample: ``<date-format>.378 [rics:DEBUG] I'm a debug message!``
-"""
+"""Default logging format; ``<date-format>.378 [rics:DEBUG] I'm a debug message!``"""
 
 DATE_FORMAT: str = "%Y-%m-%dT%H:%M:%S"
-"""Default logging date format; ``logging.basicConfig(datefmt=DATE_FORMAT)``
-
-Sample: ``2022-02-05T11:17:05<logging-format>``
-"""
+"""Default logging date format; ``2022-02-05T11:17:05<logging-format>``"""
 
 
 def basic_config(rics_level: Union[int, str] = None, force: bool = True, **kwargs: Any) -> None:

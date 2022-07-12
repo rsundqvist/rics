@@ -21,7 +21,7 @@ My personal little ML engineering library.
 * Free software: MIT
 
 ## Setting up for local development
-Assumes a "modern" version of Ubuntu (guide written under `Ubuntu 20.04.2 LTS`) with basic dev dependencies installed.
+Assumes a "modern" version of Ubuntu (I use `Ubuntu 20.04.2 LTS`) with basic dependencies installed.
 
 To get started, run the following commands:
 
@@ -36,11 +36,16 @@ To get started, run the following commands:
    git clone git@github.com:rsundqvist/rics.git
    cd rics
    poetry install -E translation -E plotting
+   
+3. Install commit hooks (optional)
+   ```bash
    inv install-hooks
-   ./run-invocations.sh
    ```
    
-    The last step is optional, but serves to verify that the project is ready-to-run.
+3. Verify installation (optional)
+   ```bash
+   ./run-invocations.sh
+   ```
 
 ## Credits
 

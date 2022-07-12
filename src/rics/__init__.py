@@ -1,7 +1,4 @@
-"""Rics ML Engineering Library.
-
-My personal little library. Written to help with common Machine Learning and Data Science tasks.
-"""
+"""My personal little library."""
 import logging
 
 from .__version__ import __author__  # isort:skip
