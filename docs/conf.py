@@ -123,20 +123,69 @@ html_theme_options = {
     "use_edit_page_button": False,
     "navigation_with_keys": False,
     "show_toc_level": 1,
+    "navbar_end": ["navbar-icon-links"],  # Dark mode doesn't work properly; disable it
 }
 
-# Used py sphinx_rtd_theme
+# Used by pydata_sphinx_theme. Partially stolen from https://mne.tools/stable/index.html
 html_context = {
     "github_user": "rsundqvist",
+    "github_repo": "rics",
+    "github_version": "master",
     "display_github": True,  # Integrate GitHub
-    "github_version": "master",  # Version
     "conf_py_path": "/docs/",  # Path in the checkout to the docs root
+    "default_mode": "light",  # Dark mode doesn't work properly; disable it
+    "carousel": [
+        dict(
+            title="Mapping",
+            text="API documentation for the Mapper and related classes.",
+            url="_autosummary/rics.mapping.html#rics.mapping.Mapper",
+            img="mapping.png",
+            alt="Mapping API documentation.",
+        ),
+        dict(
+            title="ID Translation",
+            text="API documentation for the Translator and related classes.",
+            url="_autosummary/rics.translation.html#rics.translation.Translator.translate",
+            img="covid-europe.png",
+            alt="Translation API documentation.",
+        ),
+        dict(
+            title="Translator Config",
+            text="TOML format documentation.",
+            url="documentation/translator-config.html",
+            img="toml-config.png",
+            alt="Translator TOML config documentation.",
+        ),
+        dict(
+            title="Performance",
+            text="Convenience functions related to performance testing.",
+            url="_autosummary/rics.performance.html",
+            img="performance.png",
+            alt="Performance testing API documentation.",
+        ),
+        dict(
+            title="Logging",
+            text="Convenience functions related to logging.",
+            url="_autosummary/rics.utility.logs.html",
+            img="log-messages.png",
+        ),
+        dict(
+            title="Plotting",
+            text="Convenience functions related to plotting.",
+            url="_autosummary/rics.utility.plotting.html",
+            img="documentation_examples_notebooks_plotting_pi_ticks_3_0.png",
+        ),
+    ],
 }
+# Copy images. This is necessary since many of these are used anywhere else, so
+# sphinx doesn't add them on its own.
+shutil.copytree("_images/", "_build/_images/", dirs_exist_ok=True)
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["style.css"]
 html_logo = "logo-text.png"
 html_favicon = "logo-icon.png"
 
@@ -162,6 +211,12 @@ intersphinx_mapping = {
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
+}
+
+# -- Gallery configuration -------------------------------------------------
+sphinx_gallery_conf = {
+    "sphinx_gallery_conf": "*.png",
+    "gallery_dirs": ["_tiles"],
 }
 
 # -- Nbsphinx
