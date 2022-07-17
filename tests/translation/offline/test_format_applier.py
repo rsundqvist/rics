@@ -9,13 +9,6 @@ def fmt():
     return Format("{foo} {id}[: baz={baz}]")
 
 
-def test_missing_default_placeholder():
-    translations = PlaceholderTranslations("source", ("id", "baz"), [(1, 1), (2, 2)], 0)
-
-    with pytest.raises(ValueError):
-        TranslationMap.FORMAT_APPLIER_TYPE(translations, default={"bar": "default"})
-
-
 def test_no_explicit_placeholders(fmt):
     translations = PlaceholderTranslations("source", ("id", "baz", "foo"), [(1, 1, 3), (2, 2, 4)], 0)
     applier = TranslationMap.FORMAT_APPLIER_TYPE(translations)
@@ -26,7 +19,7 @@ def test_no_explicit_placeholders(fmt):
 
 def test_explicit_placeholders(fmt):
     translations = PlaceholderTranslations("source", ("id", "baz", "foo"), [(1, 1, 3), (2, 2, 4)], 0)
-    applier = TranslationMap.FORMAT_APPLIER_TYPE(translations, {"baz": "default-baz", "foo": "default-baz"})
+    applier = TranslationMap.FORMAT_APPLIER_TYPE(translations)
 
-    ans = applier(fmt, ("foo", "id"))
+    ans = applier(fmt, ("foo", "id"), default_fmt_placeholders={"baz": "default-baz", "foo": "default-baz"})
     assert ans == {1: "3 1", 2: "4 2"}

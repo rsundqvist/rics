@@ -231,6 +231,21 @@ def test_id_only_default(hex_fetcher):
     }
 
 
+def test_extra_placeholder():
+    t = Translator(
+        {"people": {"id": [1999], "name": ["Sofia"]}},
+        default_fmt="{id}:{right}",
+        default_fmt_placeholders=dict(default={"left": "left-value", "right": "right-value"}),
+    )
+    assert "1:right-value" == t(1, names="people")
+
+    t = t.copy(default_fmt="{left}, {right}")
+    assert "left-value, right-value" == t(1, names="people")
+
+    t = t.copy(default_fmt_placeholders=dict(default={"left": "LEFT", "right": "RIGHT"}))
+    assert "LEFT, RIGHT" == t(1, names="people")
+
+
 def test_plain_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "UNKNOWN"

@@ -35,6 +35,13 @@ _NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
 
 LOGGER = logging.getLogger(__package__).getChild("Translator")
 
+FetcherTypes = Union[
+    Fetcher[SourceType, IdType],
+    TranslationMap[NameType, SourceType, IdType],
+    SourcePlaceholderTranslations[SourceType],
+    Dict[SourceType, PlaceholderTranslations.MakeTypes],
+]
+
 
 class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     """Translate IDs to human-readable labels.
@@ -120,6 +127,37 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         :attr:`.Mapper.unmapped_values_action` is set to :attr:`.ActionLevel.RAISE`.
     """
 
+    def __init__(
+        self,
+        fetcher: FetcherTypes,
+        fmt: FormatType = "{id}:{name}",
+        mapper: Mapper[NameType, SourceType, None] = None,
+        default_fmt: FormatType = None,
+        default_fmt_placeholders: MakeType = None,
+    ) -> None:
+        self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
+        self._mapper = mapper or Mapper()
+        self._default_fmt_placeholders, self._default_fmt = _handle_default(
+            self._fmt, default_fmt, default_fmt_placeholders
+        )
+
+        self._cached_tmap: TranslationMap
+        if isinstance(fetcher, Fetcher):
+            self._fetcher: Fetcher = fetcher
+            self._cached_tmap = TranslationMap({})
+        elif isinstance(fetcher, dict):
+            self._cached_tmap = self._to_translation_map(
+                {source: PlaceholderTranslations.make(source, pht) for source, pht in fetcher.items()}
+            )
+        elif isinstance(fetcher, TranslationMap):
+            tmap = fetcher.copy()
+            tmap.fmt = self._fmt
+            tmap.default_fmt = self._default_fmt
+            tmap.default_fmt_placeholders = self._default_fmt_placeholders  # type: ignore
+            self._cached_tmap = tmap
+        else:
+            raise TypeError(type(fetcher))  # pragma: no cover
+
     @classmethod
     def from_config(
         cls,
@@ -143,36 +181,6 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         """
         return factory.TranslatorFactory(path, extra_fetchers).create()
 
-    def __init__(
-        self,
-        fetcher: Union[
-            Fetcher[SourceType, IdType],
-            TranslationMap[NameType, SourceType, IdType],
-            SourcePlaceholderTranslations[SourceType],
-            Dict[SourceType, PlaceholderTranslations.MakeTypes],
-        ],
-        fmt: FormatType = "{id}:{name}",
-        mapper: Mapper[NameType, SourceType, None] = None,
-        default_fmt: FormatType = None,
-        default_translations: MakeType = None,
-    ) -> None:
-        self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
-        self._mapper = mapper or Mapper()
-        self._default, self._default_fmt = _handle_default(self._fmt, default_fmt, default_translations)
-
-        self._cached_tmap: TranslationMap
-        if isinstance(fetcher, Fetcher):
-            self._fetcher: Fetcher = fetcher
-            self._cached_tmap = TranslationMap({})
-        else:  # pragma: no cover
-            self._cached_tmap = (
-                self._to_translation_map(
-                    {source: PlaceholderTranslations.make(source, pht) for source, pht in fetcher.items()}
-                )
-                if isinstance(fetcher, dict)
-                else fetcher
-            )
-
     def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator":
         """Make a copy of this ``Translator``.
 
@@ -188,7 +196,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             NotImplementedError: If ``share_fetcher=False``.
         """
         if not share_fetcher:
-            raise NotImplementedError("Fetcher clone not implemented.")
+            raise NotImplementedError("Fetcher cloning not implemented.")
 
         kwargs: Dict[str, Any] = {
             "fmt": self._fmt,
@@ -202,8 +210,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         if "default_fmt_placeholders" not in kwargs:
             kwargs["default_fmt_placeholders"] = self._default_fmt_placeholders
 
-        if "default_translations" not in kwargs:  # pragma: no cover
-            kwargs["default_translations"] = self._default
+        if "fetcher" not in kwargs:
+            kwargs["fetcher"] = self.fetcher if self.online else self._cached_tmap.copy()
 
         return Translator(**kwargs)
 
@@ -572,8 +580,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         return TranslationMap(
             source_translations,
             fmt=self._fmt,
-            default=self._default,
             default_fmt=self._default_fmt,
+            default_fmt_placeholders=self._default_fmt_placeholders,
         )
 
     @staticmethod
@@ -711,14 +719,5 @@ def _handle_default(
 
     if dfmt is not None:
         dt = dt or InheritedKeysDict()
-
-    if dfmt is not None:
-        extra = set(dfmt.placeholders).difference(fmt.placeholders)
-        extra.discard(ID)
-        if extra:
-            raise ValueError(
-                f"The given fallback translation format {repr(default_fmt)} uses placeholders "
-                f"{sorted(extra)} which are not in the main format, which is not supported."
-            )
 
     return dt, dfmt
