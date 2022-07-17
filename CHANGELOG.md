@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Added home page shortcuts
+- Rename 'default_translations' and 'default' arguments to 'default_fmt_placeholders' 
+
+### Fixed
+- Remove placeholder limitation on default translation format
+- Fixed issue when copying a `Translator` with translation and/or `Format` overrides
+- A number of docstring and under-the-hood fixes
+
 ## [0.13.0] - 2022-07-10
 
 Bump development status to `Development Status :: 3 - Alpha` on PyPi. 
