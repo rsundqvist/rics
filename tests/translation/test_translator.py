@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from rics.mapping import Mapper
-from rics.mapping.exceptions import MappingError
+from rics.mapping.exceptions import MappingError, MappingWarning
 from rics.translation import Translator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
 from rics.translation.exceptions import ConfigurationError, TooManyFailedTranslationsError
@@ -159,29 +159,36 @@ def test_name_predicates(translator, keep_predicate, reject_predicate, expected)
     assert names_to_translate == expected
 
 
-@pytest.mark.filterwarnings("ignore: None of names")
 def test_mapping_nothing_to_translate(translator):
-    translator.map_to_sources({"strange-name": [1, 2, 3]})
+    with pytest.warns(MappingWarning) as w:
+        translator.map_to_sources({"strange-name": [1, 2, 3]})
+    assert len(w) == 1
+    assert "none of names=None" in str(w[0])
 
 
-@pytest.mark.filterwarnings("ignore: No names left to translate")
-@pytest.mark.filterwarnings("ignore: None of names")
 def test_all_name_ignored(translator):
-    translator.map_to_sources({"name": []}, ignore_names="name")
+    with pytest.warns(MappingWarning) as w:
+        translator.map_to_sources({"name": []}, ignore_names="name")
+    assert len(w) == 2
+    assert "No names left" in str(w[0])
+    assert "none of names=None" in str(w[1])
 
 
-@pytest.mark.filterwarnings("ignore: No names left to translate")
-@pytest.mark.filterwarnings("ignore: None of names")
 def test_explicit_name_ignored(translator):
-    with pytest.raises(MappingError):
+    with pytest.warns(UserWarning) as w, pytest.raises(MappingError) as e:
         translator.map_to_sources(0, names=["explicit_name"], ignore_names="explicit_name")
+    assert "Required names" in str(e)
+    assert len(w) == 1
+    assert "No names left" in str(w[0])
 
 
 def test_complex_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} - {hex} - {positive}"
-    default_translations = {"default": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
-    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_translations=default_translations).store()
+    default_fmt_placeholders = {"default": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
+    t = Translator(
+        hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_fmt_placeholders=default_fmt_placeholders
+    ).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -329,3 +336,13 @@ def test_complex_function_overrides(translator):
         translator.translate(1, names="whatever", override_function=lambda *args: {})
 
     assert "https://github.com/rsundqvist/rics/issues/64" in str(e.value)
+
+
+def test_override_fetcher(translator):
+    old_fetcher = translator.fetcher
+    assert "1:0x1, positive=True" == translator.translate(1, names="positive_numbers")
+    expected = old_fetcher.num_fetches
+
+    translator = translator.copy(fetcher={"positive_numbers": {"id": [1], "hex": ["0x1"], "positive": [True]}})
+    assert "1:0x1, positive=True" == translator.translate(1, names="positive_numbers")
+    assert expected == old_fetcher.num_fetches

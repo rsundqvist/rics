@@ -70,5 +70,4 @@ def imdb_translator():
 
 @pytest.fixture(scope="module")
 def translation_map(imdb_translator):
-    imdb_translator.store({"firstTitle": [], "nconst": []})
-    yield imdb_translator._cached_tmap
+    yield imdb_translator.store({"firstTitle": [], "nconst": []}).cache
