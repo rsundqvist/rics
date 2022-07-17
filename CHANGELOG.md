@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2022-07-17
+
 ### Changed
 - Added home page shortcuts
 - Rename 'default_translations' and 'default' arguments to 'default_fmt_placeholders' 
@@ -212,7 +214,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/rsundqvist/rics/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/rsundqvist/rics/compare/v0.12.2...v0.13.0
 [0.12.2]: https://github.com/rsundqvist/rics/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/rsundqvist/rics/compare/v0.12.0...v0.12.1
