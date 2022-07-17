@@ -145,13 +145,13 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         fetcher = self._handle_fetching(config.pop("fetching", {}), self.extra_fetchers)
 
         mapper = self._make_mapper("translator", translator_config)
-        default_fmt, default_translations = _make_default_translations(**config.pop("unknown_ids", {}))
+        default_fmt, default_fmt_placeholders = _make_default_translations(**config.pop("unknown_ids", {}))
 
         return Translator(
             fetcher,
             mapper=mapper,
-            default_translations=default_translations,
             default_fmt=default_fmt,
+            default_fmt_placeholders=default_fmt_placeholders,
             **translator_config,
         )
 

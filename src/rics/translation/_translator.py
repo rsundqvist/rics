@@ -53,11 +53,11 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         fmt: String :class:`.Format` specification for translations.
         mapper: A :class:`.Mapper` instance for binding names to sources.
         default_fmt: Alternative :class:`.Format` to use instead of `fmt` for fallback translation of unknown IDs.
-        default_translations: Shared and/or source-specific default placeholder values for unknown IDs. See
+        default_fmt_placeholders: Shared and/or source-specific default placeholder values for unknown IDs. See
             :meth:`.InheritedKeysDict.make` for details.
 
     Notes:
-        Untranslatable IDs will be ``None`` by default if neither `default_fmt` nor `default_translations` is given.
+        Untranslatable IDs will be ``None`` by default if neither `default_fmt` nor `default_fmt_placeholders` is given.
         Adding the `maximal_untranslated_fraction` option to :meth:`translate` will raise an exceptions if too many IDs
         are left untranslated. Note however that this verifiction step may be expensive.
 
@@ -95,29 +95,29 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Handling unknown IDs.
 
-    >>> default_translations = dict(
-    ...     default={'is_nice': 'Maybe?', 'name': "Bob"},
-    ...     specific={'animals': {'name': 'Fido'}},
-    >>> )
-    >>> useless_database = {
-    ...     'animals': {'id': [], 'name': []},
-    ...     'people': {'id': [], 'name': []}
-    >>> }
-    >>> translator = Translator(useless_database, default_translations=default_translations,
-    ...                         fmt='{id}:{name}[, nice={is_nice}]')
-    >>> data = {'animals': [0], 'people': [0]}
-    >>> for key, translated_table in translator.translate(data).items():
-    >>>     print(f'Translations for {repr(key)}:')
-    >>>     for translated_id in translated_table:
-    >>>         print(f'    {repr(translated_id)}')
-            Translations for 'animals':
-                '0:Fido'
-            Translations for 'people':
-                '0:Bob'
+        >>> default_fmt_placeholders = dict(
+        ...     default={'is_nice': 'Maybe?', 'name': "Bob"},
+        ...     specific={'animals': {'name': 'Fido'}},
+        >>> )
+        >>> useless_database = {
+        ...     'animals': {'id': [], 'name': []},
+        ...     'people': {'id': [], 'name': []}
+        >>> }
+        >>> translator = Translator(useless_database, default_fmt_placeholders=default_fmt_placeholders,
+        ...                         fmt='{id}:{name}[, nice={is_nice}]')
+        >>> data = {'animals': [0], 'people': [0]}
+        >>> for key, translated_table in translator.translate(data).items():
+        >>>     print(f'Translations for {repr(key)}:')
+        >>>     for translated_id in translated_table:
+        >>>         print(f'    {repr(translated_id)}')
+        Translations for 'animals':
+            '0:Fido, nice=Maybe?'
+        Translations for 'people':
+            '0:Bob, nice=Maybe?'
 
-    Since we didn't give an explicit `default_fmt`, the regular `fmt` is used instead. Formats can be plain strings,
-    in which case tranlation will never explicitly fail unless the name itself fails to map and
-    :attr:`.Mapper.unmapped_values_action` is set to :attr:`.ActionLevel.RAISE`.
+        Since we didn't give an explicit `default_fmt_placeholders`, the regular `fmt` is used instead. Formats can be
+        plain strings, in which case tranlation will never explicitly fail unless the name itself fails to map and
+        :attr:`.Mapper.unmapped_values_action` is set to :attr:`.ActionLevel.RAISE`.
     """
 
     @classmethod
@@ -199,8 +199,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         if "mapper" not in kwargs:  # pragma: no cover
             kwargs["mapper"] = self.mapper.copy()
 
-        if "fetcher" not in kwargs:  # pragma: no cover
-            kwargs["fetcher"] = self.fetcher if self.online else self._cached_tmap.copy()  # type: ignore
+        if "default_fmt_placeholders" not in kwargs:
+            kwargs["default_fmt_placeholders"] = self._default_fmt_placeholders
 
         if "default_translations" not in kwargs:  # pragma: no cover
             kwargs["default_translations"] = self._default
@@ -685,17 +685,17 @@ class _IgnoredNamesPredicate(Generic[NameType]):
 def _handle_default(
     fmt: Format,
     default_fmt: Optional[FormatType],
-    default_translations: Optional[MakeType],
+    default_fmt_placeholders: Optional[MakeType],
 ) -> Tuple[Optional[InheritedKeysDict], Optional[Format]]:  # pragma: no cover
-    if default_fmt is None and default_translations is None:
+    if default_fmt is None and default_fmt_placeholders is None:
         return None, None
 
     dt: Optional[InheritedKeysDict] = None
 
-    if isinstance(default_translations, InheritedKeysDict):
-        dt = default_translations
-    elif isinstance(default_translations, dict):
-        dt = InheritedKeysDict.make(default_translations)
+    if isinstance(default_fmt_placeholders, InheritedKeysDict):
+        dt = default_fmt_placeholders
+    elif isinstance(default_fmt_placeholders, dict):
+        dt = InheritedKeysDict.make(default_fmt_placeholders)
 
     dfmt: Optional[Format]
     if default_fmt is None:
