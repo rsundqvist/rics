@@ -139,52 +139,49 @@ html_context = {
             title="Mapping",
             text="API documentation for the Mapper and related classes.",
             url="_autosummary/rics.mapping.html#rics.mapping.Mapper",
-            img="mapping.png",
+            img="_static/mapping.png",
             alt="Mapping API documentation.",
         ),
         dict(
             title="ID Translation",
             text="API documentation for the Translator and related classes.",
             url="_autosummary/rics.translation.html#rics.translation.Translator.translate",
-            img="covid-europe.png",
+            img="_static/covid-europe.png",
             alt="Translation API documentation.",
         ),
         dict(
             title="Translator Config",
             text="TOML format documentation.",
             url="documentation/translator-config.html",
-            img="toml-config.png",
+            img="_static/toml-config.png",
             alt="Translator TOML config documentation.",
         ),
         dict(
             title="Performance",
             text="Convenience functions related to performance testing.",
             url="_autosummary/rics.performance.html",
-            img="performance.png",
+            img="_static/performance.png",
             alt="Performance testing API documentation.",
         ),
         dict(
             title="Logging",
             text="Convenience functions related to logging.",
             url="_autosummary/rics.utility.logs.html",
-            img="log-messages.png",
+            img="_static/log-messages.png",
         ),
         dict(
             title="Plotting",
             text="Convenience functions related to plotting.",
             url="_autosummary/rics.utility.plotting.html",
-            img="documentation_examples_notebooks_plotting_pi_ticks_3_0.png",
+            img="_images/documentation_examples_notebooks_plotting_pi_ticks_3_0.png",
         ),
     ],
 }
-# Copy images. This is necessary since many of these are used anywhere else, so
-# sphinx doesn't add them on its own.
-shutil.copytree("_images/", "_build/_images/", dirs_exist_ok=True)
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ["_static"]
+html_static_path = ["_static", "_images"]
 html_css_files = ["style.css"]
 html_logo = "logo-text.png"
 html_favicon = "logo-icon.png"
