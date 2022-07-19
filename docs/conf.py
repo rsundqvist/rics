@@ -146,7 +146,7 @@ html_context = {
             title="ID Translation",
             text="API documentation for the Translator and related classes.",
             url="_autosummary/rics.translation.html#rics.translation.Translator.translate",
-            img="_static/covid-europe.png",
+            img="_static/translation.png",
             alt="Translation API documentation.",
         ),
         dict(
