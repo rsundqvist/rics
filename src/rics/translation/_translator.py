@@ -234,8 +234,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns ``True`` for) names to ignore.
             inplace: If ``True``, translation is performed in-place and this function returns ``None``.
-            override_function: A callable with inputs (value, candidates, ids) that returns either ``None``, the source
-                to use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched from
+            override_function: A callable with inputs ``(value, candidates, ids)`` that returns either ``None``, the
+                source to use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched from
                 different sources in spite of being labelled with the same name.
             maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
                 raised. 1=disabled. Ignored in `reverse` mode.

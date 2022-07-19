@@ -81,10 +81,10 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             values: Iterable of elements to match to candidates.
             candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
             context: Context in which mapping is being done.
-            override_function: A callable that takes inputs (value, candidates, context) that returns either ``None``
-                (let the regular mapping logic decide) or one of the candidates. Unlike static overrides, override
-                functions may not return non-candidates as matches. How non-candidates returned by override functions is
-                handled is determined by the :attr:`unknown_user_override_action` property.
+            override_function: A callable that takes inputs ``(value, candidates, context)`` that returns either
+                ``None`` (let the regular mapping logic decide) or one of the `candidates`. Unlike static overrides,
+                override functions may not return non-candidates as matches. How non-candidates returned by override
+                functions is handled is determined by the :attr:`unknown_user_override_action` property.
             **kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
                 not known when the ``Mapper`` is initialized.
 
