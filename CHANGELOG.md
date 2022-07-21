@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Performance testing figures updated; now shows best result as well.
+- Updated `MultiCaseTimer.EXPECTED_RUNTIME_WARNING_LIMIT`, added `MultiCaseTimer.EXPECTED_RUNTIME_ERROR_LIMIT`. The old
+  `MultiCaseTimer.run`-argument has been removed.
+
 ## [0.14.0] - 2022-07-17
 
 ### Changed
