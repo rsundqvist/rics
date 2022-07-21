@@ -67,7 +67,7 @@ def plot_run(
         else (("Test data", "Candidate") if x == "data" else ("Candidate", "Test data"))
     )
     y = f"Time [{unit.replace('us', 'μs')}]"
-    if y not in data:
+    if y not in data:  # pragma: no cover
         raise ValueError(f"Bad {unit=}; column '{y}' not present in data.")
 
     fig, (left, right) = plt.subplots(ncols=2, tight_layout=True, figsize=(14, 7), sharey=True)
