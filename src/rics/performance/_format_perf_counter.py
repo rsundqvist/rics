@@ -5,7 +5,7 @@ from time import perf_counter
 def format_perf_counter(start: float, end: float = None) -> str:
     """Format performance counter output.
 
-    This function formats performance counter output based on the time elapsed. For ``t < 60 sec``, accuracy is
+    This function formats performance counter output based on the time elapsed. For ``t < 120 sec``, accuracy is
     increased whereas for durations above one minute a more user-friendly formatting is used.
 
     Args:
@@ -26,9 +26,24 @@ def format_perf_counter(start: float, end: float = None) -> str:
         :py:func:`time.perf_counter`
     """
     t = (end or perf_counter()) - start
+    return format_seconds(t)
+
+
+def format_seconds(t: float) -> str:
+    """Format performance counter output.
+
+    This function formats performance counter output based on the time elapsed. For ``t < 120 sec``, accuracy is
+    increased whereas for durations above one minute a more user-friendly formatting is used.
+
+    Args:
+        t: Time in seconds.
+
+    Returns:
+        A formatted performance counter time.
+    """
     if t < 1.0:
         return f"{t:.6g} sec"
-    if t < 60.0:
+    if t < 120.0:
         return f"{t:.2f} sec"
     else:
         return str(timedelta(seconds=round(t)))
