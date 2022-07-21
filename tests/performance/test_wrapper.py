@@ -19,4 +19,4 @@ def test_run_multivariate_test():
     assert sorted(ans["Test data"].unique()) == ["5 ms", "7.5 ms"]
 
     best = ans.groupby(["Candidate", "Test data"])["Time [ms]"].min()
-    assert all(best["sleep"] * 3 < best["sleep_x5"]) and all(best["sleep_x5"] < best["sleep"] * 6)
+    assert (best["sleep"] < best["sleep_x5"]).all()
