@@ -10,13 +10,13 @@ def test_run_multivariate_test():
             "sleep_x5": lambda t: sleep(t * 5),
         },
         test_data={
-            "50 ms": 0.050,
-            "75 ms": 0.075,
+            "5 ms": 0.0050,
+            "7.5 ms": 0.0075,
         },
-        time_per_candidate=0.5,
+        time_per_candidate=0.1,
     )
     assert sorted(ans["Candidate"].unique()) == ["sleep", "sleep_x5"]
-    assert sorted(ans["Test data"].unique()) == ["50 ms", "75 ms"]
+    assert sorted(ans["Test data"].unique()) == ["5 ms", "7.5 ms"]
 
     best = ans.groupby(["Candidate", "Test data"])["Time [ms]"].min()
     assert all(best["sleep"] * 3 < best["sleep_x5"]) and all(best["sleep_x5"] < best["sleep"] * 6)
