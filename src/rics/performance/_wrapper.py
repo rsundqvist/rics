@@ -35,6 +35,6 @@ def run_multivariate_test(
     run_results = MultiCaseTimer(candidate_method, test_data).run(time_per_candidate=time_per_candidate)
 
     data = to_dataframe(run_results)
-    if plot:
+    if plot:  # pragma: no cover
         plot_run(data, **figure_kwargs)
     return data

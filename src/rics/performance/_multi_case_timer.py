@@ -72,7 +72,7 @@ class MultiCaseTimer:
             The :py:class:`timeit.Timer` class which this implementation depends on.
         """
         per_candidate_number = self._compute_number_of_iterations(number, time_per_candidate)
-        if self._check and number is None:
+        if self._check and number is None:  # pragma: no cover
             self._sanity_check(repeat, time_per_candidate, self.EXPECTED_RUNTIME_ERROR_LIMIT)
 
         run_results = {}
@@ -84,7 +84,7 @@ class MultiCaseTimer:
                 raw_timings = Timer(lambda: func(test_data)).repeat(repeat, candidate_number)  # noqa: B023
                 best, worst = min(raw_timings), max(raw_timings)
                 candidate_results[data_label] = [dt / candidate_number for dt in raw_timings]
-                if worst >= best * 4:
+                if worst >= best * 4:  # pragma: no cover
                     t = (candidate_label, data_label)
                     warnings.warn(
                         f"The test results may be unreliable for {t}. The worst time {fmt_time(worst)} "
@@ -96,7 +96,9 @@ class MultiCaseTimer:
 
         return run_results
 
-    def _compute_number_of_iterations(self, number: Optional[int], time_allocation: float) -> Dict[str, int]:
+    def _compute_number_of_iterations(
+        self, number: Optional[int], time_allocation: float
+    ) -> Dict[str, int]:  # pragma: no cover
         if isinstance(number, int):
             ans = {case: number for case in self._data}
         else:
@@ -112,7 +114,9 @@ class MultiCaseTimer:
 
         return ans
 
-    def _sanity_check(self, repeat: int, time_allocation: float, max_expected_runtime: Optional[float]) -> None:
+    def _sanity_check(
+        self, repeat: int, time_allocation: float, max_expected_runtime: Optional[float]
+    ) -> None:  # pragma: no cover
         expected_runtime = len(self._candidates) * repeat * time_allocation
 
         ert_nice = format_perf_counter(0, expected_runtime)
@@ -129,7 +133,9 @@ class MultiCaseTimer:
         LOGGER.info(f"Expected total runtime: {ert_nice}.")
 
 
-def _process_candidates(candidates: Union[CandFunc, Collection[CandFunc], Dict[str, CandFunc]]) -> Dict[str, CandFunc]:
+def _process_candidates(
+    candidates: Union[CandFunc, Collection[CandFunc], Dict[str, CandFunc]]
+) -> Dict[str, CandFunc]:  # pragma: no cover
     if isinstance(candidates, dict):
         return candidates
     if callable(candidates):
@@ -138,7 +144,7 @@ def _process_candidates(candidates: Union[CandFunc, Collection[CandFunc], Dict[s
     return {tname(c): c for c in candidates}
 
 
-def _process_single_test_datum(test_data: Any) -> Dict[str, Any]:
+def _process_single_test_datum(test_data: Any) -> Dict[str, Any]:  # pragma: no cover
     s = repr(test_data)
     key = f"{s[:32]}..." if len(s) > 32 else s
     return {f"Example: '{key}'": test_data}
