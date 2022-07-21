@@ -40,7 +40,11 @@ def plot_run(
     unit: Literal["s", "ms", "μs", "us"] = "ms",
     **figure_kwargs: Any,
 ) -> None:
-    """Plot the results of a test run.
+    """Plot the results of a performance test.
+
+    .. figure:: ../_images/perf_plot.png
+
+       Comparison of ``time.sleep(t)`` and ``time.sleep(5*t)``.
 
     Args:
         run_results: Output of :meth:`rics.performance.MultiCaseTimer.run`.
@@ -52,6 +56,7 @@ def plot_run(
         ModuleNotFoundError: If Seaborn isn't installed.
         ValueError: For unknown `unit` arguments.
     """
+    import matplotlib.pyplot as plt
     from seaborn import barplot  # type: ignore
 
     data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results
@@ -65,7 +70,14 @@ def plot_run(
     if y not in data:
         raise ValueError(f"Bad {unit=}; column '{y}' not present in data.")
 
-    barplot(data=data, x=x_arg, y=y, hue=hue, **figure_kwargs)
+    fig, (left, right) = plt.subplots(ncols=2, tight_layout=True, figsize=(14, 7), sharey=True)
+    left.set_title("Average")
+    right.set_title("Best")
+    fig.suptitle("Performance", size=24)
+
+    barplot(ax=left, data=data, x=x_arg, y=y, hue=hue, ci="sd", **figure_kwargs)
+    best = data.groupby(["Test data", "Candidate"]).min().reset_index()
+    barplot(ax=right, data=best, x=x_arg, y=y, hue=hue, ci=None, **figure_kwargs)
 
 
 def _smaller_as_hue(data: pd.DataFrame) -> Tuple[str, str]:
