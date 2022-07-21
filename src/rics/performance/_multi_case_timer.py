@@ -4,6 +4,7 @@ from timeit import Timer
 from typing import Any, Callable, Collection, Dict, List, Optional, Union
 
 from rics.performance._format_perf_counter import format_perf_counter
+from rics.performance._format_perf_counter import format_seconds as fmt_time
 from rics.utility.misc import tname
 
 LOGGER = logging.getLogger(__package__)
@@ -66,8 +67,6 @@ class MultiCaseTimer:
 
         Notes:
             * Precomputed runtime is inaccurate for functions where a single call are longer than `time_per_candidate`.
-            * By default, this function reports averages of all runs (repetition), as opposed to the built-in timeit
-              which reports only the best result (in non-verbose mode).
 
         See Also:
             The :py:class:`timeit.Timer` class which this implementation depends on.
@@ -83,9 +82,16 @@ class MultiCaseTimer:
             LOGGER.debug("Run candidate '%s' %dx%d times...", candidate_label, repeat, candidate_number)
             for data_label, test_data in self._data.items():
                 raw_timings = Timer(lambda: func(test_data)).repeat(repeat, candidate_number)  # noqa: B023
+                best, worst = min(raw_timings), max(raw_timings)
                 candidate_results[data_label] = [dt / candidate_number for dt in raw_timings]
-
-            _cache_warning(candidate_results, candidate_label)
+                if worst >= best * 4:
+                    t = (candidate_label, data_label)
+                    warnings.warn(
+                        f"The test results may be unreliable for {t}. The worst time {fmt_time(worst)} "
+                        f"was ~{worst / best:.1f} times slower than the best time ({fmt_time(best)}).",
+                        UserWarning,
+                        stacklevel=0,
+                    )
             run_results[candidate_label] = candidate_results
 
         return run_results
@@ -136,15 +142,3 @@ def _process_single_test_datum(test_data: Any) -> Dict[str, Any]:
     s = repr(test_data)
     key = f"{s[:32]}..." if len(s) > 32 else s
     return {f"Example: '{key}'": test_data}
-
-
-def _cache_warning(candidate_results: Dict[str, List[float]], candidate: str) -> None:
-    # Similar to the warning that's sent by the native timeit module
-    for label, timings in candidate_results.items():
-        best = min(timings)
-        worst = max(timings)
-        if worst >= best * 4:
-            warnings.warn(
-                f"The test results may be unreliable for ('{candidate}', '{label}'). The worst time ({worst} sec) was "
-                f"more than four times slower than the best time ({best}). An intermediate result may be cached."
-            )
