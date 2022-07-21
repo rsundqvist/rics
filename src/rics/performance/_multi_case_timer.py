@@ -21,8 +21,10 @@ class MultiCaseTimer:
         sanity_check: If ``True``, verify total expected runtime.
     """
 
-    EXPECTED_RUNTIME_WARNING_LIMIT = 3 * 60 * 60
-    """Warn of long runtimes above this limit (3 hours)."""
+    EXPECTED_RUNTIME_WARNING_LIMIT = 4 * 60 * 60
+    """Warn of long runtimes above this limit (4 hours)."""
+    EXPECTED_RUNTIME_ERROR_LIMIT: int = 6 * EXPECTED_RUNTIME_WARNING_LIMIT
+    """Raise an exceptions above this limit (six times the ``EXPECTED_RUNTIME_WARNING_LIMIT``)."""
 
     def __init__(
         self,
@@ -40,7 +42,6 @@ class MultiCaseTimer:
         time_per_candidate: float = 6.0,
         repeat: int = 5,
         number: int = None,
-        max_expected_runtime: int = 604_800,
     ) -> ResultsDict:
         """Run for all cases.
 
@@ -52,8 +53,6 @@ class MultiCaseTimer:
             repeat: Number of times to repeat for all candidates per data label.
             number: Number of times to execute each test case, per repetition. Compute based on
                 `per_case_time_allocation` if ``None``.
-            max_expected_runtime: Maximum expected runtime to allow before throwing an exception. `Disabled if `None``.
-                Default is one week (604 800 seconds).
 
         Examples:
             If `repeat=5` and `time_per_candidate=3` for an instance with and 2 candidates, the total
@@ -75,7 +74,7 @@ class MultiCaseTimer:
         """
         per_candidate_number = self._compute_number_of_iterations(number, time_per_candidate)
         if self._check and number is None:
-            self._sanity_check(repeat, time_per_candidate, max_expected_runtime)
+            self._sanity_check(repeat, time_per_candidate, self.EXPECTED_RUNTIME_ERROR_LIMIT)
 
         run_results = {}
         for candidate_label, func in self._candidates.items():
