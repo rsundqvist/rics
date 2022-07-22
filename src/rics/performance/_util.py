@@ -20,10 +20,10 @@ def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
             ans.append(
                 pd.DataFrame(
                     {
-                        "Time [s]": data_results,
-                        "Test data": data_label,
                         "Candidate": candidate_label,
+                        "Test data": data_label,
                         "Run no": range(len(data_results)),
+                        "Time [s]": data_results,
                     }
                 )
             )

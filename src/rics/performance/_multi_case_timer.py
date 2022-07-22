@@ -34,8 +34,12 @@ class MultiCaseTimer:
         sanity_check: bool = True,
     ) -> None:
         self._candidates = _process_candidates(candidate_method)
+        if not self._candidates:  # pragma: no cover
+            raise ValueError("No candidates given.")
 
         self._data = test_data if isinstance(test_data, dict) else _process_single_test_datum(test_data)
+        if not self._data:  # pragma: no cover
+            raise ValueError("No case data given.")
         self._check = sanity_check
 
     def run(
@@ -79,7 +83,7 @@ class MultiCaseTimer:
         for candidate_label, func in self._candidates.items():
             candidate_number = per_candidate_number[candidate_label]
             candidate_results: Dict[str, List[float]] = {}
-            LOGGER.debug("Run candidate '%s' %dx%d times...", candidate_label, repeat, candidate_number)
+            LOGGER.info("Evaluate candidate '%s' %dx%d times...", candidate_label, repeat, candidate_number)
             for data_label, test_data in self._data.items():
                 raw_timings = Timer(lambda: func(test_data)).repeat(repeat, candidate_number)  # noqa: B023
                 best, worst = min(raw_timings), max(raw_timings)

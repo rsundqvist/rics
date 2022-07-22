@@ -28,9 +28,13 @@ classifiers = [
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/rsundqvist/rics/issues"
 
+[tool.poetry.scripts]
+rics-perf = "rics.performance.cli:_main"
+
 [tool.poetry.dependencies]
 python = "<3.11,>=3.8"
 
+click = "*"
 pandas = ">=1.1"
 
 # [tool.poetry.group.translation.dependencies]
