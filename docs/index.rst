@@ -8,10 +8,9 @@ My personal little library. Written to help with common Machine Learning and Dat
 
    API reference <_autosummary/rics>
    documentation/index
-   installation
-   License <license>
-   readme
-   changelog
+   development
+   License <LICENSE>
+   Changelog <CHANGELOG>
 
 Shortcuts
 ---------
