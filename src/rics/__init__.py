@@ -1,4 +1,4 @@
-"""My personal little library."""
+"""My personal little ML engineering library."""
 import logging
 
 from .__version__ import __author__  # isort:skip

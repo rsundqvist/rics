@@ -2,7 +2,7 @@
 
 from typing import Any, Callable, Dict, Hashable, Iterator, List, Mapping, TypeVar, Union
 
-from rics.utility.misc import tname
+from rics.utility.misc import tname as _tname
 
 KT = TypeVar("KT", bound=Hashable)
 """Key type."""
@@ -149,7 +149,7 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
     def __repr__(self) -> str:
         default = self._default
         specific = self._specific
-        return f"{tname(self)}({default=}, {specific=})"
+        return f"{_tname(self)}({default=}, {specific=})"
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, InheritedKeysDict):
@@ -204,7 +204,7 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
         specific = arg.pop("specific", None)
 
         if arg:  # pragma: no cover
-            raise ValueError(f"Invalid {tname(cls)}. Unknown keys: {list(arg)}")
+            raise ValueError(f"Invalid {_tname(cls)}. Unknown keys: {list(arg)}")
 
         return InheritedKeysDict(default=default, specific=specific)
 

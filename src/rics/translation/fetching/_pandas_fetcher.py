@@ -17,10 +17,10 @@ FormatFn = Callable[[PathLikeType], str]
 
 
 class PandasFetcher(AbstractFetcher[str, IdType]):
-    """Fetcher implementation using pandas DataFrames as the data format.
+    """Fetcher implementation using pandas ``DataFrame`` s as the data format.
 
-    Fetch data from serialized DataFrames. How this is done is determined by the `read_function`. This is typically a
-    Pandas function such as :func:`pandas.read_csv` or :func:`pandas.read_pickle`, but any function that accepts a
+    Fetch data from serialized ``DataFrame`` s. How this is done is determined by the `read_function`. This is typically
+    a Pandas function such as :func:`pandas.read_csv` or :func:`pandas.read_pickle`, but any function that accepts a
     string `source` as the  first argument and returns a data frame can be used.
 
     Args:
@@ -53,13 +53,13 @@ class PandasFetcher(AbstractFetcher[str, IdType]):
         self._placeholders: Dict[str, List[str]] = {}
 
     def read(self, source_path: PathLikeType) -> pd.DataFrame:
-        """Read a DataFrame from a source path.
+        """Read a ``DataFrame`` from a source path.
 
         Args:
-            source_path: Path to serialized DataFrame.
+            source_path: Path to serialized ``DataFrame``.
 
         Returns:
-            A deserialized DataFrame.
+            A deserialized `DataFrame``.
         """
         return self._read(source_path, *self._args, **self._kwargs)
 
