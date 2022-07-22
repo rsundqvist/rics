@@ -70,7 +70,9 @@ def plot_run(
     if y not in data:  # pragma: no cover
         raise ValueError(f"Bad {unit=}; column '{y}' not present in data.")
 
-    fig, (left, right) = plt.subplots(ncols=2, tight_layout=True, figsize=(14, 7), sharey=True)
+    fig, (left, right) = plt.subplots(
+        ncols=2, tight_layout=True, figsize=(8 + 4 * data.Candidate.nunique(), 7), sharey=True
+    )
     left.set_title("Average")
     right.set_title("Best")
     fig.suptitle("Performance", size=24)
