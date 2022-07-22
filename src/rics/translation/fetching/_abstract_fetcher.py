@@ -3,6 +3,8 @@ from abc import abstractmethod
 from time import perf_counter
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
+import pandas
+
 from rics.mapping import HeuristicScore, Mapper
 from rics.mapping.score_functions import modified_hamming
 from rics.performance import format_perf_counter
@@ -226,7 +228,7 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
             actual_to_wanted if need_placeholder_mapping else None,
             FetchInstruction(
                 source=itf.source,
-                ids=None if not itf.ids else tuple(itf.ids),
+                ids=None if not itf.ids else tuple(filter(lambda v: not pandas.isna(v), itf.ids)),
                 placeholders=placeholders,
                 required=required_placeholders,
                 all_placeholders=fetch_all_placeholders,
