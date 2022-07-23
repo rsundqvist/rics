@@ -8,9 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Cookbook recipes for translating dict keys and Pandas index types.
 - Translation of `pandas.Index` types.
 - The `translation.testing` module.
-- Experimental and hacky implementation of translation for nested sequences
+- Experimental and hacky implementation of translation for nested sequences.
 - Entry point `rics-perf` for multivariate performance testing, taking candidates from `./candidates.py`
   and test case data from `./test_data.py`.
 
