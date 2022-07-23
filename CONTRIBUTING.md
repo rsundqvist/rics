@@ -51,10 +51,12 @@ trouble.
 
 2. **Installing the project**
    
-   Clone and install the virtual environment used for development.
+   Clone and install the virtual environment used for development. Some material
+   is placed in submodules, so we need to clone recursively.
    ```bash
-   git clone https://github.com/rsundqvist/rics.git
+   git clone --recurse-submodules git@github.com:rsundqvist/rics.git
    cd rics
+   git submodule update --init --recursive
    poetry install -E translation -E plotting
    ```
    

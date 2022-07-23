@@ -6,6 +6,9 @@ build:
 formats:
   - pdf
 
+submodules:
+  include: all
+
 sphinx:
   configuration: docs/conf.py
 
