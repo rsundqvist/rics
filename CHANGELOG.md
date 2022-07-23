@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance testing figures updated; now shows best result as well.
 
 ### Removed
+- Dunder ``Mapper.__call__``
 - Expected runtime checks for perftests
 
 ### Fixed

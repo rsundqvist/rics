@@ -130,8 +130,6 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             _verify=True,
         )
 
-    __call__ = apply
-
     @property
     def unmapped_values_action(self) -> ActionLevel:
         """Return the action to take if mapping fails for any values."""
