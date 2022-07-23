@@ -40,7 +40,15 @@ class SequenceIO(DataStructureIO):
 
 def translate_sequence(s: T, names: List[NameType], tmap: TranslationMap) -> List[Optional[str]]:
     """Return a translated copy of the sequence `s`."""
-    return list(map(tmap[names[0]].get, s)) if len(names) == 1 else [tmap[n].get(idx) for n, idx in zip(names, s)]
+    if len(names) == 1:
+        return list(map(tmap[names[0]].get, s))
+
+    return [
+        translate_sequence(element, [name], tmap)  # type: ignore
+        if SequenceIO.handles_type(element)
+        else tmap[name].get(element)
+        for name, element in zip(names, s)
+    ]
 
 
 def verify_names(data_len: int, names: List[NameType]) -> None:
