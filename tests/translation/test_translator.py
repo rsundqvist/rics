@@ -66,7 +66,7 @@ def test_online(translator, copy):
 
 def test_mapping_error(translator):
     with pytest.raises(MappingError):
-        translator.map_to_sources(0, names="unknown")
+        translator.map(0, names="unknown")
 
 
 def _translate(translator):
@@ -181,14 +181,14 @@ def test_reject_predicates(translator, reject_predicate, expected):
 
 def test_mapping_nothing_to_translate(translator):
     with pytest.warns(MappingWarning) as w:
-        translator.map_to_sources({"strange-name": [1, 2, 3]})
+        translator.map({"strange-name": [1, 2, 3]})
     assert len(w) == 1
     assert "none of names=None" in str(w[0])
 
 
 def test_all_name_ignored(translator):
     with pytest.warns(MappingWarning) as w:
-        translator.map_to_sources({"name": []}, ignore_names="name")
+        translator.map({"name": []}, ignore_names="name")
     assert len(w) == 2
     assert "No names left" in str(w[0])
     assert "none of names=None" in str(w[1])
@@ -196,7 +196,7 @@ def test_all_name_ignored(translator):
 
 def test_explicit_name_ignored(translator):
     with pytest.warns(UserWarning) as w, pytest.raises(MappingError) as e:
-        translator.map_to_sources(0, names=["explicit_name"], ignore_names="explicit_name")
+        translator.map(0, names=["explicit_name"], ignore_names="explicit_name")
     assert "Required names" in str(e)
     assert len(w) == 1
     assert "No names left" in str(w[0])
