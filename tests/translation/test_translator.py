@@ -17,14 +17,14 @@ def test_dummy_translation_doesnt_crash(with_id, with_override, store):
     with pytest.warns(UserWarning):
         t = Translator(fmt="{id}:{first}:{second}:{third}")
 
-    names = list(map("placeholder{}".format, np.random.randint(0, 1000, 3)))
+    names = list(map("placeholder{}".format, range(3)))
     data = np.random.randint(0, 100, (3, 10))
 
     def override_function(name, *args):  # noqa
         return names[0] if name == "id" else None
 
     if with_id:
-        names[np.random.randint(1, 3)] = "id"
+        names[0] = "id"
     if store:
         t.store(data, names=names)
 
