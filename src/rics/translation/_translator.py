@@ -658,7 +658,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                     return cls._dont_ruin_string(attr() if callable(attr) else attr)
 
         raise AttributeError(
-            "Must pass 'names' since type " f"'{type(translatable)}' has none of {_NAME_ATTRIBUTES} as and attribute."
+            "Must pass 'names' since no valid name could be found for data of type "
+            f"'{tname(translatable)}'."
+            f" Attributes checked: {_NAME_ATTRIBUTES}."
         )
 
     @classmethod

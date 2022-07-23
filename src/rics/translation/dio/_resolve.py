@@ -21,7 +21,7 @@ def resolve_io(arg: Translatable) -> Type[DataStructureIO]:
     Raises:
         UntranslatableTypeError: If not IO could be found.
     """
-    for tio_class in (PandasIO, DictIO, SequenceIO, SingleValueIO):
+    for tio_class in DictIO, PandasIO, SequenceIO, SingleValueIO:
         if tio_class.handles_type(arg):
             return tio_class
 
