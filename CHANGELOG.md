@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and test case data from `./test_data.py`.
 
 ### Changed
+- Rename `Translator.map_to_sources` -> `map`.
 - Simplify `Translator.translate` signature.
   - Names must now be explicit names or None (use heuristics to filter names)
   - Simplify multiple docstrings

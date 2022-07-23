@@ -327,7 +327,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
     __call__.__doc__ = translate.__doc__
 
-    def map_to_sources(
+    def map(  # noqa: A003
         self,
         translatable: Translatable,
         names: NameTypes = None,
@@ -554,7 +554,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         """
         translatable_io = resolve_io(translatable)  # Fail fast if untranslatable type
 
-        name_to_source = self.map_to_sources(translatable, names, ignore_names, override_function)
+        name_to_source = self.map(translatable, names, ignore_names, override_function)
         if name_to_source is None:
             # Nothing to translate.
             return None, []  # pragma: no cover
