@@ -346,10 +346,10 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 return res
 
         if override_function is None:
-            name_to_source = self.mapper(names_to_translate, sources)
+            name_to_source = self.mapper.apply(names_to_translate, sources)
         else:
             try:
-                name_to_source = self.mapper(names_to_translate, sources, override_function=func)
+                name_to_source = self.mapper.apply(names_to_translate, sources, override_function=func)
             except UserMappingError as e:
                 raise UnknownSourceError(e.value, e.candidates) from e
 
