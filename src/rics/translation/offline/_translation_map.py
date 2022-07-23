@@ -22,13 +22,11 @@ class TranslationMap(Mapping, Generic[NameType, SourceType, IdType]):
 
     Notes:
         Type checking of `fmt` and `default_fmt_placeholders` attributes may fail due to
-        https://github.com/python/mypy/issues/3004
+        `mypy#3004 <https://github.com/python/mypy/issues/3004>`_
     """
 
-    # TODO: Remove the ignores when https://github.com/python/mypy/issues/3004 (5+ years old..) is fixed.
-
     FORMAT_APPLIER_TYPE: Type[FormatApplier] = DefaultFormatApplier
-    """Format applicator implementation type."""
+    """Format application implementation type. Overwrite attribute to customize."""
 
     def __init__(
         self,
@@ -42,9 +40,7 @@ class TranslationMap(Mapping, Generic[NameType, SourceType, IdType]):
         self.default_fmt_placeholders = default_fmt_placeholders  # type: ignore
         self.fmt = fmt  # type: ignore
         self._source_formatters: Dict[SourceType, FormatApplier] = {
-            source: TranslationMap.FORMAT_APPLIER_TYPE(
-                translations=translations,
-            )
+            source: TranslationMap.FORMAT_APPLIER_TYPE(translations)
             for source, translations in source_translations.items()
         }
         self.name_to_source = name_to_source or {}

@@ -493,11 +493,11 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Raises:
             ForbiddenOperationError: If :meth:`.Fetcher.fetch_all` is disabled and ``translatable=None``.
+            MappingError: If :meth:`map_to_sources` fails (only when `translatable` is given).
 
         Notes:
-            The ``Translator`` is guaranteed to be serializable once offline. Fetchers often aren't as they require
-            things like database connections to function. Serializability can be tested using the
-            :meth:`~rics.utility.misc.serializable` utility method.
+            The ``Translator`` is guaranteed to be :meth:`~rics.utility.misc.serializable` once offline. Fetchers often
+            aren't as they require things like database connections to function.
 
         See Also:
             The :meth:`Translator.restore` method.

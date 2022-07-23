@@ -119,9 +119,9 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
     """Create a ``Translator`` from TOML inputs."""
 
     FETCHER_FACTORY: FetcherFactory = default_fetcher_factory
-    """A callable taking (name, kwargs) which returns an ``AbstractFetcher``."""
+    """A callable ``(name, kwargs) -> AbstractFetcher``. Overwrite attribute to customize."""
     MAPPER_FACTORY: MapperFactory = default_mapper_factory
-    """A callable taking (kwargs) which returns a ``Mapper``."""
+    """A callable ``(kwargs) -> Mapper``. Overwrite attribute to customize."""
 
     def __init__(
         self,
