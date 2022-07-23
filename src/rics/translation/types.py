@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Callable, Dict, Hashable, Iterable, List, Opti
 if TYPE_CHECKING:
     import pandas  # noqa: F401
 
-Translatable = TypeVar("Translatable", "pandas.DataFrame", "pandas.Series", Dict, Sequence, str, int)
+Translatable = TypeVar("Translatable", "pandas.DataFrame", "pandas.Index", "pandas.Series", Dict, Sequence, str, int)
 """Enumeration of translatable types."""
 
 ID: str = "id"

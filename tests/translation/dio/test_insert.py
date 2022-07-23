@@ -10,7 +10,7 @@ from .conftest import TRANSLATED, UNTRANSLATED
 NAME = "nconst"
 
 
-@pytest.mark.parametrize("ttype", [list, tuple, pd.Series, np.array])
+@pytest.mark.parametrize("ttype", [list, tuple, pd.Index, pd.Series, np.array])
 def test_insert(ttype, translation_map):
     actual, ans = _do_insert(translation_map, ttype, copy=True)
     _test_eq(ans, ttype(TRANSLATED[NAME]))
@@ -50,7 +50,7 @@ def _do_insert(translation_map, ttype, copy):
 
 
 def _test_eq(actual, expected):
-    if isinstance(actual, (pd.Series, np.ndarray)):
-        assert all(actual == expected)
-    else:
+    try:
         assert actual == expected
+    except ValueError:
+        assert all(actual == expected)
