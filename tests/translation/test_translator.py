@@ -384,3 +384,13 @@ def test_override_fetcher(translator):
     translator = translator.copy(fetcher={"positive_numbers": {"id": [1], "hex": ["0x1"], "positive": [True]}})
     assert "1:0x1, positive=True" == translator.translate(1, names="positive_numbers")
     assert expected == old_fetcher.num_fetches
+
+
+def test_translate_attribute():
+    translate = Translator().translate
+    df = pd.DataFrame(range(3))
+    df.index.name = "index-name"
+
+    translate(df, attribute="index")
+
+    assert df.index.tolist() == translate(list(range(3)), names=df.index.name)
