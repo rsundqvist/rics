@@ -51,7 +51,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
     The `Translator` is the main entry point for all translation tasks. Simplified translation process steps:
 
-        1. The :attr:`map_to_sources` method performs name-to-source mapping (see :class:`.DirectionalMapping`).
+        1. The :attr:`map` method performs name-to-source mapping (see :class:`.DirectionalMapping`).
         2. The :attr:`fetch` method extracts IDs to translate and retrieves data (see :class:`.TranslationMap`).
         3. Finally, the :attr:`translate` method applies the translations and returns to the caller.
 
@@ -493,7 +493,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Raises:
             ForbiddenOperationError: If :meth:`.Fetcher.fetch_all` is disabled and ``translatable=None``.
-            MappingError: If :meth:`map_to_sources` fails (only when `translatable` is given).
+            MappingError: If :meth:`map` fails (only when `translatable` is given).
 
         Notes:
             The ``Translator`` is guaranteed to be :meth:`~rics.utility.misc.serializable` once offline. Fetchers often
