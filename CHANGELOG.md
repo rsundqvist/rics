@@ -13,8 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Performance testing figures updated; now shows best result as well.
-- Updated `MultiCaseTimer.EXPECTED_RUNTIME_WARNING_LIMIT`, added `MultiCaseTimer.EXPECTED_RUNTIME_ERROR_LIMIT`. The old
-  `MultiCaseTimer.run`-argument has been removed.
+
+### Removed
+- Expected runtime checks for perftests
+
+### Fixed
+- Perftest argument `time_per_candidate` now used correctly.
+- Filter out `NaN` values in `AbstractFetcher`
+
 
 ## [0.14.0] - 2022-07-17
 
