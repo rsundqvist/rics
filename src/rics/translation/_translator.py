@@ -255,22 +255,22 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
             maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
                 raised. 1=disabled. Ignored in `reverse` mode.
-            reverse: If ``True``, perform reverse translations back to IDs instead. Offline mode only.
+            reverse: If ``True``, perform translations back to IDs. Offline mode only.
             attribute: If given, translate ``translatable.attribute`` instead. If ``inplace=False``, the translated
                 attribute will be assigned to `translatable` using
-                ``setattr(translatable, attribute, <translated attribute>)``.
+                ``setattr(translatable, attribute, <translated-attribute>)``.
 
         Returns:
-            A copy of `translatable` with IDs replaced by translations if ``inplace=False``, otherwise ``None``.
+            A copy of translated copy of `translatable` if ``inplace=False``, otherwise ``None``.
 
         Raises:
-            UntranslatableTypeError: If `translatable` is not translatable using any standard IOs.
+            UntranslatableTypeError: If ``type(translatable)`` cannot be translated.
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
             ValueError: If `maximal_untranslated_fraction` is not a valid fraction.
             TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
             ConnectionStatusError: If ``reverse=True`` while the ``Translator`` is online.
-            UnknownSourceError: If `override_function` returns a source which is not known to the ``Translator``.
+            UnknownSourceError: If `override_function` returns a source which is not known.
 
         See Also:
             The :meth:`.Mapper.apply` function, which performs both placeholder and name-to-source mapping.
@@ -341,9 +341,12 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             names: Explicit names to translate. Derive from `translatable` if ``None``.
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns ``True`` for) names to ignore.
-            override_function: A callable with inputs ``(value, candidates, ids)`` that returns either ``None``, the
-                ``source`` to use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched
-                from different sources.
+            override_function: A callable ``(value, candidates, ids)`` returning one of
+
+                * ``None`` (use regular mapping logic)
+                * a ``source`` to use, or
+                * a split mapping ``{source: [ids_for_source..]}``. This forces IDs to be fetched from
+                  different sources in spite of being labelled with the same name.
 
         Returns:
             A mapping of names to translation sources. Returns ``None`` if mapping failed.
@@ -351,7 +354,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         Raises:
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
-            UnknownSourceError: If `override_function` returns a source which is not known to the ``Translator``.
+            UnknownSourceError: If `override_function` returns a source which is not known.
         """
         names_to_translate = self._resolve_names(translatable, names, ignore_names)
         sources = self.fetcher.sources if self.online else self._cached_tmap.sources
@@ -403,10 +406,10 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             translatable: A data structure to translate.
             name_to_source: Mappings of names in `translatable` to :attr:`~.Fetcher.sources` as they are known to the
                 :attr:`fetcher`.
-            data_structure_io: Data Structure IO class used to extract IDs from `translatable`. Derive if ``None``.
+            data_structure_io: Static namespace used to extract IDs from `translatable`.
 
         Returns:
-            A :class:`.TranslationMap`.
+            A ``TranslationMap``.
 
         Raises:
             ConnectionStatusError: If disconnected from the fetcher, ie not :attr:`online`.
@@ -479,10 +482,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Args:
             translatable: Data from which IDs to fetch will be extracted. Fetch all IDs if ``None``.
-            names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
-                predicate which indicates (returns ``True`` for) derived names to keep.
-            ignore_names: Names _not_ to translate. Always takes precedence over `names`, both explicit and derived. May
-                also be a predicate which indicates names to ignore.
+            names: Explicit names to translate. Derive from `translatable` if ``None``.
+            ignore_names: Names **not** to translate, or a predicate ``(str) -> bool``.
             delete_fetcher: If ``True``, invoke :meth:`.Fetcher.close` and delete the fetcher after retrieving data. The
                 ``Translator`` will still function, but new data cannot be retrieved.
             path: If given, serialize the ``Translator`` to disk after retrieving data.
@@ -491,14 +492,12 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             Self, for chained assignment.
 
         Raises:
-            ForbiddenOperationError: If the fetcher does not permit the FETCH_ALL operation (only when `translatable` is
-                ``None``).
-            MappingError: If a `translatable` is given, but no names to translate could be extracted.
+            ForbiddenOperationError: If :meth:`.Fetcher.fetch_all` is disabled and ``translatable=None``.
 
         Notes:
             The ``Translator`` is guaranteed to be serializable once offline. Fetchers often aren't as they require
             things like database connections to function. Serializability can be tested using the
-            :meth:`rics.utility.misc.serializable` method.
+            :meth:`~rics.utility.misc.serializable` utility method.
 
         See Also:
             The :meth:`Translator.restore` method.
