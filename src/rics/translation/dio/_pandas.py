@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Sequence, TypeVar
 import pandas as pd
 
 from rics.translation.dio._data_structure_io import DataStructureIO
-from rics.translation.dio._sequence import translate_sequence
+from rics.translation.dio._sequence import translate_sequence, verify_names
 from rics.translation.offline import TranslationMap
 from rics.translation.types import IdType, NameType
 
@@ -22,7 +22,7 @@ class PandasIO(DataStructureIO):
         if isinstance(translatable, pd.DataFrame):
             return translatable[names].to_dict(orient="list")
         else:
-            return {names[0]: translatable}
+            return {names[0]: translatable} if len(names) == 1 else {k: [v] for k, v in translatable.to_dict()}
 
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
@@ -32,6 +32,7 @@ class PandasIO(DataStructureIO):
             for name in names:
                 translatable[name] = translatable[name].map(tmap[name].get)
         else:
+            verify_names(len(translatable), names)
             translatable.update(pd.Series(translate_sequence(translatable, names, tmap), index=translatable.index))
 
         return translatable if copy else None

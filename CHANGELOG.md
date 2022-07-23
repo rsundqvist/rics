@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expected runtime checks for perftests
 
 ### Fixed
+- It is now possible to use one name per element when translating sequences
 - Perftest argument `time_per_candidate` now used correctly.
 - Filter out `NaN` values in `AbstractFetcher`
 
