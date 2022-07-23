@@ -237,6 +237,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         override_function: ExtendedOverrideFunction = None,
         maximal_untranslated_fraction: float = 1.0,
         reverse: bool = False,
+        attribute: str = None,
     ) -> Optional[Translatable]:
         """Translate IDs to human-readable strings.
 
@@ -253,6 +254,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
                 raised. 1=disabled. Ignored in `reverse` mode.
             reverse: If ``True``, perform reverse translations back to IDs instead. Offline mode only.
+            attribute: If given, translate ``translatable.attribute`` instead. If ``inplace==False``, the translated
+                attribute will be assigned to `translatable` using
+                ``setattr(translatable, attribute, <translated attribute>)``.
 
         Returns:
             A copy of `translatable` with IDs replaced by translations if ``inplace=False``, otherwise ``None``.
@@ -275,6 +279,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         if not (0.0 <= maximal_untranslated_fraction <= 1):  # pragma: no cover
             raise ValueError(f"Argument {maximal_untranslated_fraction=} is not a valid fraction")
 
+        if attribute:
+            obj, translatable = translatable, getattr(translatable, attribute)
+
         translation_map, names_to_translate = self._get_updated_tmap(
             translatable,
             names,
@@ -290,19 +297,21 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 translatable, names_to_translate, translation_map, translatable_io, maximal_untranslated_fraction
             )
 
-        if reverse:
-            translation_map.reverse_mode = True
-            try:
-                return translatable_io.insert(
-                    translatable, names=names_to_translate, tmap=translation_map, copy=not inplace
-                )
-            finally:
-                translation_map.reverse_mode = False
+        translation_map.reverse_mode = reverse
+        try:
+            ans = translatable_io.insert(translatable, names=names_to_translate, tmap=translation_map, copy=not inplace)
+        finally:
+            translation_map.reverse_mode = False
 
-        else:
-            return translatable_io.insert(
-                translatable, names=names_to_translate, tmap=translation_map, copy=not inplace
-            )
+        if attribute and not inplace and ans is not None:
+            setattr(obj, attribute, ans)
+            # Hacky special handling for eg pandas.Index
+            if hasattr(ans, "name") and hasattr(translatable, "name"):  # pragma: no cover
+                # Mypy doesn't understand hasattr?
+                ans.name = translatable.name  # type: ignore
+            return obj
+
+        return ans
 
     def __call__(
         self,

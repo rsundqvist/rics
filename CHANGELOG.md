@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Support for translating an attribute of `translatable` in `Translator.translate`.
 - Cookbook recipes for translating dict keys and Pandas index types.
 - Translation of `pandas.Index` types.
 - The `translation.testing` module.
