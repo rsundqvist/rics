@@ -246,7 +246,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             names: Explicit names to translate. Derive from `translatable` if ``None``.
             ignore_names: Names **not** to translate, or a predicate ``(str) -> bool``.
             inplace: If ``True``, translate in-place and return ``None``.
-            override_function: A callable ``(value, candidates, ids)`` returning one of
+            override_function: A callable ``(name, fetcher.sources, ids) -> ...`` returning one of
 
                 * ``None`` (use regular mapping logic)
                 * a ``source`` to use, or
@@ -340,7 +340,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             translatable: A data structure to map names for.
             names: Explicit names to translate. Derive from `translatable` if ``None``.
             ignore_names: Names **not** to translate, or a predicate ``(str) -> bool``.
-            override_function: A callable ``(value, candidates, ids)`` returning one of
+            override_function: A callable ``(name, fetcher.sources, ids) -> ...`` returning one of
 
                 * ``None`` (use regular mapping logic)
                 * a ``source`` to use, or
