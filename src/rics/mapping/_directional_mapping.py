@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, Hashable, Iterable, Optional, Tuple, TypeVar, Union
+from typing import Any, Dict, Generic, Hashable, Iterable, Mapping, Optional, Tuple, TypeVar
 
 from rics.mapping._cardinality import Cardinality
 from rics.mapping.exceptions import CardinalityError
@@ -27,8 +27,8 @@ class DirectionalMapping(Generic[HL, HR]):
     def __init__(
         self,
         cardinality: Cardinality.ParseType = None,
-        left_to_right: LeftToRight[HL, HR] = None,
-        right_to_left: RightToLeft[HR, HL] = None,
+        left_to_right: Mapping[HL, Iterable[HR]] = None,
+        right_to_left: Mapping[HR, Iterable[HL]] = None,
         _verify: bool = True,
     ) -> None:
         self._left_to_right = self._to_other(left_to_right, right_to_left)
@@ -130,9 +130,9 @@ class DirectionalMapping(Generic[HL, HR]):
     @classmethod
     def _to_other(
         cls,
-        primary_side: Optional[Union[LeftToRight, RightToLeft]],
-        backup_side: Optional[Union[LeftToRight, RightToLeft]],
-    ) -> Union[LeftToRight, RightToLeft]:
+        primary_side,  # noqa: ANN001
+        backup_side,  # noqa: ANN001
+    ):  # noqa: ANN206
         if primary_side is not None:
             return primary_side
 
@@ -148,19 +148,6 @@ class DirectionalMapping(Generic[HL, HR]):
         return {k: tuple(set(m)) for k, m in other_side.items()}
 
     def _select(self, elements: Iterable[HAnySide], left: bool, exclude: bool) -> "DirectionalMapping":
-        """Perform a selection on left-side elements.
-
-        Args:
-            elements: Elements to select.
-            left: If ``True``, select elements from the left side.
-            exclude: If ``True``, return everything **except** the given elements.
-
-        Returns:
-            A new instance for the selection.
-
-        Raises:
-            KeyError: If any of the chosen elements do not exist and ``exclude=False``.
-        """
         items = self._left_to_right if left else self._right_to_left
 
         if not exclude:
