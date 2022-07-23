@@ -7,3 +7,4 @@ Random stuff that I've had enough use for to want to save. Not really related to
    :glob:
 
    ./*
+   ../examples/notebooks/cookbook/*
