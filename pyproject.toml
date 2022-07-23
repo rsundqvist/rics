@@ -127,6 +127,9 @@ flake8-docstrings = ["-D102"]  # Docstrings are inherited
 [tool.flakeheaven.exceptions."src/rics/mapping/score_functions.py"]
 flake8-darglint = ["-DAR101", "-DAR301"]
 
+[tool.flakeheaven.exceptions."src/rics/translation/testing.py"]
+flake8-docstrings = ["-DAR101", "-D102"]
+
 [tool.flakeheaven.exceptions."tests/"]
 # Test modules/classes/functions are never "really" public, and I don't want to typehint/document all of them :).
 flake8-bandit = ["-S101", "-S301", "-S403"]
