@@ -129,22 +129,33 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
     def __init__(
         self,
-        fetcher: FetcherTypes,
+        fetcher: FetcherTypes = None,
         fmt: FormatType = "{id}:{name}",
         mapper: Mapper[NameType, SourceType, None] = None,
         default_fmt: FormatType = None,
         default_fmt_placeholders: MakeType = None,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
-        self._mapper = mapper or Mapper()
         self._default_fmt_placeholders, self._default_fmt = _handle_default(
             self._fmt, default_fmt, default_fmt_placeholders
         )
 
-        self._cached_tmap: TranslationMap
-        if isinstance(fetcher, Fetcher):
-            self._fetcher: Fetcher = fetcher
-            self._cached_tmap = TranslationMap({})
+        self._cached_tmap: TranslationMap = TranslationMap({})
+        self._fetcher: Fetcher[SourceType, IdType]
+        if fetcher is None:
+            from rics.translation.testing import TestFetcher, TestMapper
+
+            self._fetcher = TestFetcher([])  # No explicit sources
+            if mapper:  # pragma: no cover
+                warnings.warn(
+                    f"Mapper instance {mapper} given; consider creating a TestFetcher([sources..])-instance manually.",
+                    UserWarning,
+                )
+            else:
+                mapper = TestMapper()  # type: ignore
+            warnings.warn("No fetcher given. Translation data will be automatically generated.", UserWarning)
+        elif isinstance(fetcher, Fetcher):
+            self._fetcher = fetcher
         elif isinstance(fetcher, dict):
             self._cached_tmap = self._to_translation_map(
                 {source: PlaceholderTranslations.make(source, pht) for source, pht in fetcher.items()}
@@ -157,6 +168,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             self._cached_tmap = tmap
         else:
             raise TypeError(type(fetcher))  # pragma: no cover
+
+        self._mapper: Mapper = mapper or Mapper()
 
     @classmethod
     def from_config(

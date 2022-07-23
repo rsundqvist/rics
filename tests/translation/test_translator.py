@@ -1,3 +1,6 @@
+from itertools import combinations_with_replacement
+
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -7,6 +10,26 @@ from rics.translation import Translator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
 from rics.translation.exceptions import ConfigurationError, TooManyFailedTranslationsError
 from rics.translation.fetching.exceptions import UnknownSourceError
+
+
+@pytest.mark.parametrize("with_id, with_override, store", combinations_with_replacement([False, True], 3))
+def test_dummy_translation_doesnt_crash(with_id, with_override, store):
+    with pytest.warns(UserWarning):
+        t = Translator(fmt="{id}:{first}:{second}:{third}")
+
+    names = list(map("placeholder{}".format, np.random.randint(0, 1000, 3)))
+    data = np.random.randint(0, 100, (3, 10))
+
+    def override_function(name, *args):  # noqa
+        return names[0] if name == "id" else None
+
+    if with_id:
+        names[np.random.randint(1, 3)] = "id"
+    if store:
+        t.store(data, names=names)
+
+    ans = t.translate(data, names=names, override_function=override_function if with_override else None)
+    assert pd.DataFrame(ans.T, columns=names).shape == (10, 3)
 
 
 def test_translate_without_id(hex_fetcher):

@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and test case data from `./test_data.py`.
 
 ### Changed
+- Permit `Translator` instances to be created with explicit fetch data. Translations will be generated based on the 
+  inputs by using a `TestFetcher` instance. Functionality in this mode is limited.
 - Performance testing figures updated; now shows best result as well.
 
 ### Removed
