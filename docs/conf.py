@@ -136,11 +136,17 @@ html_context = {
     "default_mode": "light",  # Dark mode doesn't work properly; disable it
     "carousel": [
         dict(
-            title="Mapping",
-            text="API documentation for the Mapper and related classes.",
-            url="_autosummary/rics.mapping.html#rics.mapping.Mapper",
-            img="_static/mapping.png",
-            alt="Mapping API documentation.",
+            title="Performance",
+            text="Convenience functions related to performance testing.",
+            url="_autosummary/rics.performance.html",
+            img="_static/performance.png",
+            alt="Performance testing API documentation.",
+        ),
+        dict(
+            title="Cookbook",
+            text="Like copy-pasting? Me too!",
+            url="documentation/examples/notebooks/cookbook/translation.html",
+            img="_static/chef.png",
         ),
         dict(
             title="ID Translation",
@@ -150,30 +156,24 @@ html_context = {
             alt="Translation API documentation.",
         ),
         dict(
-            title="Translator Config",
-            text="TOML format documentation.",
-            url="documentation/translator-config.html",
-            img="_static/toml-config.png",
-            alt="Translator TOML config documentation.",
-        ),
-        dict(
-            title="Performance",
-            text="Convenience functions related to performance testing.",
-            url="_autosummary/rics.performance.html",
-            img="_static/performance.png",
-            alt="Performance testing API documentation.",
-        ),
-        dict(
-            title="Logging",
-            text="Convenience functions related to logging.",
-            url="_autosummary/rics.utility.logs.html",
-            img="_static/log-messages.png",
+            title="Mapping",
+            text="API documentation for the Mapper and related classes.",
+            url="_autosummary/rics.mapping.html#rics.mapping.Mapper",
+            img="_static/mapping.png",
+            alt="Mapping API documentation.",
         ),
         dict(
             title="Plotting",
             text="Convenience functions related to plotting.",
             url="_autosummary/rics.utility.plotting.html",
             img="_images/documentation_examples_notebooks_plotting_pi_ticks_3_0.png",
+        ),
+        dict(
+            title="Translator Config",
+            text="TOML format documentation.",
+            url="documentation/translator-config.html",
+            img="_static/toml-config.png",
+            alt="Translator TOML config documentation.",
         ),
     ],
 }

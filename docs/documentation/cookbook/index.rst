@@ -1,10 +1,10 @@
-Cookbook recipes
-================
-Random stuff that I've had enough use for to want to save. Not really related to this package.
+Cookbook
+========
+Various snippets that are nice to copy-and-paste.
 
 .. toctree::
    :hidden:
    :glob:
 
-   ./*
    ../examples/notebooks/cookbook/*
+   ./*
