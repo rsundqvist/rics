@@ -41,26 +41,45 @@ Follow these steps to begin local development. I use Ubuntu LTS and PyCharm
 (both are kept updated), so such environments will usually work without too much
 trouble.
 
-1. Installing Poetry and Invoke
+1. **Installing [Poetry](https://python-poetry.org/docs/) and Invoke**
+   
+   Poetry is an alternative to tools like Pipenv.
    ```bash
    curl -sSL https://install.python-poetry.org/ | python -
    pip install invoke
    ```
 
-2. Installing the project
+2. **Installing the project**
+   
+   Clone and install the virtual environment used for development.
    ```bash
-   git clone git@github.com:rsundqvist/rics.git
+   git clone https://github.com/rsundqvist/rics.git
    cd rics
    poetry install -E translation -E plotting
+   ```
    
-3. Install commit hooks (optional)
+3. **Install commit hooks (optional)**
+   
+   If this step is skipped, use `inv hooks` to run hooks manually.
    ```bash
    inv install-hooks
    ```
    
-3. Verify installation (optional)
+4. **Verify installation (optional)**
+
+   This is similar to what the CI/CD pipeline will run for a single OS and major
+   Python version. It also skips the additional isolation provided by `nox`,
+   which may hide some dependency-gotchas.
    ```bash
    ./run-invocations.sh
+   ```
+   
+5. **Bonus content**
+
+   Quality-of-life packages, especially for notebooks.
+   ```bash
+   extras="tqdm"
+   poetry run pip install $extras
    ```
 
 ## Source template
