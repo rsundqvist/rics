@@ -231,7 +231,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     def translate(
         self,
         translatable: Translatable,
-        names: Names = None,
+        names: NameTypes = None,
         ignore_names: Names = None,
         inplace: bool = False,
         override_function: ExtendedOverrideFunction = None,
@@ -243,18 +243,20 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Args:
             translatable: A data structure to translate.
-            names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
-                predicate which indicates (returns ``True`` for) derived names to keep.
-            ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
-                also be a predicate which indicates (returns ``True`` for) names to ignore.
-            inplace: If ``True``, translation is performed in-place and this function returns ``None``.
-            override_function: A callable with inputs ``(value, candidates, ids)`` that returns either ``None``, the
-                source to use, or a split mapping ``{source: [ids_for_source..]}`` which forces IDs to be fetched from
-                different sources in spite of being labelled with the same name.
+            names: Explicit names to translate. Derive from `translatable` if ``None``.
+            ignore_names: Names **not** to translate, or a predicate ``(str) -> bool``.
+            inplace: If ``True``, translate in-place and return ``None``.
+            override_function: A callable ``(value, candidates, ids)`` returning one of
+
+                * ``None`` (use regular mapping logic)
+                * a ``source`` to use, or
+                * a split mapping ``{source: [ids_for_source..]}``. This forces IDs to be fetched from
+                  different sources in spite of being labelled with the same name.
+
             maximal_untranslated_fraction: The maximum fraction of IDs for which translation may fail before an error is
                 raised. 1=disabled. Ignored in `reverse` mode.
             reverse: If ``True``, perform reverse translations back to IDs instead. Offline mode only.
-            attribute: If given, translate ``translatable.attribute`` instead. If ``inplace==False``, the translated
+            attribute: If given, translate ``translatable.attribute`` instead. If ``inplace=False``, the translated
                 attribute will be assigned to `translatable` using
                 ``setattr(translatable, attribute, <translated attribute>)``.
 
@@ -272,7 +274,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         See Also:
             The :meth:`.Mapper.apply` function, which performs both placeholder and name-to-source mapping.
-        """
+        """  # noqa: DAR101 darglint is bugged here
         if self.online and reverse:  # pragma: no cover
             raise ConnectionStatusError("Reverse translation cannot be performed online.")
 
@@ -328,7 +330,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     def map_to_sources(
         self,
         translatable: Translatable,
-        names: Names = None,
+        names: NameTypes = None,
         ignore_names: Names = None,
         override_function: ExtendedOverrideFunction = None,
     ) -> Optional[DirectionalMapping]:
@@ -336,8 +338,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Args:
             translatable: A data structure to map names for.
-            names: Explicit names to translate. Will try to derive form `translatable` if not given. May also be a
-                predicate which indicates (returns ``True`` for) derived names to keep.
+            names: Explicit names to translate. Derive from `translatable` if ``None``.
             ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
                 also be a predicate which indicates (returns ``True`` for) names to ignore.
             override_function: A callable with inputs ``(value, candidates, ids)`` that returns either ``None``, the
@@ -536,7 +537,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     def _get_updated_tmap(
         self,
         translatable: Translatable,
-        names: Names = None,
+        names: NameTypes = None,
         ignore_names: Names = None,
         override_function: ExtendedOverrideFunction = None,
         force_fetch: bool = False,
@@ -646,24 +647,13 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     def _resolve_names(
         self,
         translatable: Translatable,
-        names: Optional[Names],
+        names: Optional[NameTypes],
         ignored_names: Optional[Names],
     ) -> List[NameType]:
-
-        found_names: NameTypes
-        if names is None or callable(names):
-            found_names = self._extract_from_attribute(translatable)
-            if callable(names):
-                keep_predicate: NamesPredicate = names
-                found_names = list(filter(keep_predicate, found_names))
-        else:
-            found_names = self._dont_ruin_string(names)
-
-        names_to_translate: List[NameType] = self._resolve_names_inner(
-            names=found_names,
+        return self._resolve_names_inner(
+            names=self._extract_from_attribute(translatable) if names is None else self._dont_ruin_string(names),
             ignored_names=ignored_names if callable(ignored_names) else set(self._dont_ruin_string(ignored_names)),
         )
-        return names_to_translate
 
     @classmethod
     def _extract_from_attribute(cls, translatable: Translatable) -> List[NameType]:

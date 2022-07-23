@@ -160,24 +160,21 @@ def test_store_with_explicit_values(hex_fetcher):
 
 
 @pytest.mark.parametrize(
-    "keep_predicate, reject_predicate, expected",
+    "reject_predicate, expected",
     [
-        (lambda s: s.endswith("id"), None, ["ends_with_id", "also_ends_with_id"]),
-        (lambda s: "numeric" not in s, None, ["ends_with_id", "also_ends_with_id", "difficult"]),
-        (lambda s: "numeric" not in s, "difficult", ["ends_with_id", "also_ends_with_id"]),
+        (lambda s: not s.endswith("id"), ["ends_with_id", "also_ends_with_id"]),
+        (lambda s: "numeric" in s, ["ends_with_id", "also_ends_with_id"]),
+        (None, ["ends_with_id", "is_numeric", "also_ends_with_id", "also_numeric"]),
     ],
-    ids=["ENDS_WITH_ID", "NOT_NUMERIC", "NOT_NUMERIC_AND_WITHOUT_DIFFICULT"],
 )
-def test_name_predicates(translator, keep_predicate, reject_predicate, expected):
+def test_reject_predicates(translator, reject_predicate, expected):
     data = {
         "ends_with_id": [1, 2, 3],
         "is_numeric": [3.5, 0.8, 1.1],
         "also_ends_with_id": [1, 2, 3],
         "also_numeric": [3.5, 0.8, 1.1],
-        "difficult": [3.5, 0.8, 1.1],
     }
-
-    names_to_translate = translator._resolve_names(data, keep_predicate, reject_predicate)
+    names_to_translate = translator._resolve_names(data, names=data, ignored_names=reject_predicate)
 
     assert names_to_translate == expected
 
@@ -387,7 +384,8 @@ def test_override_fetcher(translator):
 
 
 def test_translate_attribute():
-    translate = Translator().translate
+    with pytest.warns(UserWarning):
+        translate = Translator().translate
     df = pd.DataFrame(range(3))
     df.index.name = "index-name"
 
