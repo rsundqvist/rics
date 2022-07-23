@@ -1,13 +1,14 @@
 from typing import Any, Dict, List, Optional, Sequence, TypeVar
 
 import numpy as np
+import pandas as pd
 
 from rics.translation.dio import DataStructureIO
 from rics.translation.dio.exceptions import NotInplaceTranslatableError
 from rics.translation.offline import TranslationMap
 from rics.translation.types import IdType, NameType
 
-T = TypeVar("T", list, np.ndarray, tuple)
+T = TypeVar("T", list, np.ndarray, tuple, pd.Index)
 
 
 class SequenceIO(DataStructureIO):
@@ -15,7 +16,7 @@ class SequenceIO(DataStructureIO):
 
     @staticmethod
     def handles_type(arg: Any) -> bool:
-        return isinstance(arg, (list, np.ndarray, tuple))
+        return isinstance(arg, (list, np.ndarray, tuple, pd.Index))
 
     @staticmethod
     def extract(translatable: T, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
@@ -28,8 +29,13 @@ class SequenceIO(DataStructureIO):
         t = translate_sequence(translatable, names, tmap)
 
         if copy:
-            clazz = np.array if isinstance(translatable, np.ndarray) else type(translatable)
-            return clazz(t)
+            if isinstance(translatable, pd.Index):
+                ctor = pd.Index
+            elif isinstance(translatable, np.ndarray):
+                ctor = np.array
+            else:
+                ctor = type(translatable)
+            return ctor(t)
 
         try:
             translatable[:] = t[:]  # type: ignore
