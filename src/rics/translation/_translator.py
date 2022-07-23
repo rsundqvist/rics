@@ -339,8 +339,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         Args:
             translatable: A data structure to map names for.
             names: Explicit names to translate. Derive from `translatable` if ``None``.
-            ignore_names: Names **not** to translate. Always precedence over `names`, both explicit and derived. May
-                also be a predicate which indicates (returns ``True`` for) names to ignore.
+            ignore_names: Names **not** to translate, or a predicate ``(str) -> bool``.
             override_function: A callable ``(value, candidates, ids)`` returning one of
 
                 * ``None`` (use regular mapping logic)
