@@ -1,4 +1,4 @@
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Generator, Iterable, List, Optional, Tuple
 
 import pytest
 
@@ -54,20 +54,20 @@ class HexFetcher(AbstractFetcher[str, int]):
 
 
 @pytest.fixture(scope="session")
-def hex_fetcher():
+def hex_fetcher() -> Generator[HexFetcher, None, None]:
     yield HexFetcher()
 
 
 @pytest.fixture(scope="session")
-def translator(hex_fetcher):
+def translator(hex_fetcher) -> Generator[Translator, None, None]:
     yield Translator(hex_fetcher, fmt="{id}:{hex}[, positive={positive}]")
 
 
 @pytest.fixture(scope="session")
-def imdb_translator():
+def imdb_translator() -> Generator[Translator, None, None]:
     yield Translator.from_config("tests/translation/config.imdb.toml")
 
 
 @pytest.fixture(scope="module")
-def translation_map(imdb_translator):
+def translation_map(imdb_translator) -> Generator[Translator, None, None]:
     yield imdb_translator.store({"firstTitle": [], "nconst": []}).cache
