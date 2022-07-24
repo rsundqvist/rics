@@ -392,3 +392,14 @@ def test_translate_attribute():
     translate(df, attribute="index")
 
     assert df.index.tolist() == translate(list(range(3)), names=df.index.name)
+
+
+def test_inherited_name(translator):
+    assert translator._allow_name_inheritance
+    s = pd.Series([1, 1, 2, 2, 2, 3, 4], name="positive_numbers")
+
+    translator.translate(s, attribute="index")
+
+    s.name = None
+    with pytest.raises(AttributeError):
+        translator.translate(s, attribute="index")

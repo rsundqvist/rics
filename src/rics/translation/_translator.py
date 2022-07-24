@@ -31,7 +31,7 @@ from rics.translation.types import (
 from rics.utility.collections.dicts import InheritedKeysDict, MakeType
 from rics.utility.misc import tname
 
-_NAME_ATTRIBUTES = ("name", "names", "columns", "keys")
+_NAME_ATTRIBUTES = ("name", "columns", "keys")
 
 LOGGER = logging.getLogger(__package__).getChild("Translator")
 
@@ -62,6 +62,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         default_fmt: Alternative :class:`.Format` to use instead of `fmt` for fallback translation of unknown IDs.
         default_fmt_placeholders: Shared and/or source-specific default placeholder values for unknown IDs. See
             :meth:`.InheritedKeysDict.make` for details.
+        allow_name_inheritance: If ``True``, enable name resolution fallback to the parent `translatable` when
+            translating with the ``attribute``-option. Allows namless ``pandas.Index`` instanced to inherit the name of
+            a ``pandas.Series``.
 
     Notes:
         Untranslatable IDs will be ``None`` by default if neither `default_fmt` nor `default_fmt_placeholders` is given.
@@ -134,6 +137,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         mapper: Mapper[NameType, SourceType, None] = None,
         default_fmt: FormatType = None,
         default_fmt_placeholders: MakeType = None,
+        allow_name_inheritance: bool = True,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
         self._default_fmt_placeholders, self._default_fmt = _handle_default(
@@ -170,6 +174,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             raise TypeError(type(fetcher))  # pragma: no cover
 
         self._mapper: Mapper = mapper or Mapper()
+
+        # Misc config
+        self._allow_name_inheritance = allow_name_inheritance
 
     @classmethod
     def from_config(
@@ -283,12 +290,15 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         if attribute:
             obj, translatable = translatable, getattr(translatable, attribute)
+        else:
+            obj = None
 
         translation_map, names_to_translate = self._get_updated_tmap(
             translatable,
             names,
             ignore_names=ignore_names,
             override_function=override_function,
+            parent=obj if (obj is not None and self._allow_name_inheritance) else None,
         )
         if not translation_map:
             return None if inplace else translatable  # pragma: no cover
@@ -355,7 +365,17 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             MappingError: If required (explicitly given) names fail to map to a source.
             UnknownSourceError: If `override_function` returns a source which is not known.
         """
-        names_to_translate = self._resolve_names(translatable, names, ignore_names)
+        return self._map_inner(translatable, names, ignore_names=ignore_names, override_function=override_function)
+
+    def _map_inner(
+        self,
+        translatable: Translatable,
+        names: NameTypes = None,
+        ignore_names: Names = None,
+        override_function: ExtendedOverrideFunction = None,
+        parent: Translatable = None,
+    ) -> Optional[DirectionalMapping]:
+        names_to_translate = self._resolve_names(translatable, names, ignore_names, parent)
         sources = self.fetcher.sources if self.online else self._cached_tmap.sources
 
         def func(value: NameType, candidates: Set[SourceType], _: None) -> Optional[SourceType]:
@@ -539,6 +559,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         ignore_names: Names = None,
         override_function: ExtendedOverrideFunction = None,
         force_fetch: bool = False,
+        parent: Translatable = None,
     ) -> Tuple[Optional[TranslationMap], List[NameType]]:
         """Get an updated translation map.  # noqa
 
@@ -553,7 +574,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         """
         translatable_io = resolve_io(translatable)  # Fail fast if untranslatable type
 
-        name_to_source = self.map(translatable, names, ignore_names, override_function)
+        name_to_source = self._map_inner(translatable, names, ignore_names, override_function, parent)
         if name_to_source is None:
             # Nothing to translate.
             return None, []  # pragma: no cover
@@ -645,13 +666,25 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     def _resolve_names(
         self,
         translatable: Translatable,
-        names: Optional[NameTypes],
-        ignored_names: Optional[Names],
+        names: NameTypes = None,
+        ignored_names: Names = None,
+        parent: Translatable = None,  # This isn't correct; should be different typevars.
     ) -> List[NameType]:
-        return self._resolve_names_inner(
-            names=self._extract_from_attribute(translatable) if names is None else self._dont_ruin_string(names),
-            ignored_names=ignored_names if callable(ignored_names) else set(self._dont_ruin_string(ignored_names)),
-        )
+        if names is None:
+            if parent is None:
+                names = self._extract_from_attribute(translatable)
+            else:
+                try:
+                    names = self._extract_from_attribute(translatable)
+                except AttributeError:
+                    names = self._extract_from_attribute(parent)
+                    LOGGER.debug(
+                        f"Using {names=} from parent of type {tname(parent)} for child of type {tname(translatable)}"
+                    )
+        else:
+            names = self._dont_ruin_string(names)
+        ignored_names = ignored_names if callable(ignored_names) else set(self._dont_ruin_string(ignored_names))
+        return self._resolve_names_inner(names, ignored_names)
 
     @classmethod
     def _extract_from_attribute(cls, translatable: Translatable) -> List[NameType]:
