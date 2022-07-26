@@ -163,10 +163,10 @@ html_context = {
             alt="Mapping API documentation.",
         ),
         dict(
-            title="Plotting",
-            text="Convenience functions related to plotting.",
-            url="_autosummary/rics.utility.plotting.html",
-            img="_images/documentation_examples_notebooks_plotting_pi_ticks_3_0.png",
+            title="Utilities",
+            text="Various utility methods.",
+            url="_autosummary/rics.utility.html",
+            img="_static/toolbox.png",
         ),
         dict(
             title="Translator Config",
