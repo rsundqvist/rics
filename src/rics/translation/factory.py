@@ -1,7 +1,7 @@
 """Factory functions for translation classes."""
 from typing import TYPE_CHECKING, Any, Callable, Dict
 from typing import Generic as _Generic
-from typing import Iterable, Optional, Tuple, Union
+from typing import Iterable, Optional, Tuple
 
 import toml
 
@@ -57,7 +57,7 @@ def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> fetching.Abst
     """Create an ``AbstractFetcher`` from config."""
     fetcher_class = misc.get_by_full_name(clazz, default_module=fetching)
     fetcher = fetcher_class(**config)
-    if not isinstance(fetcher, fetching.AbstractFetcher):
+    if not isinstance(fetcher, fetching.AbstractFetcher):  # pragma: no cover
         raise TypeError(f"Fetcher of type {fetcher} created from '{clazz}' is not an AbstractFetcher.")
     return fetcher
 
@@ -67,7 +67,7 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
     if "score_function" in config and isinstance(config["score_function"], dict):
         score_function = config.pop("score_function")
 
-        if len(score_function) > 1:
+        if len(score_function) > 1:  # pragma: no cover
             raise exceptions.ConfigurationError(
                 f"At most one score function may be specified, but got: {sorted(score_function)}"
             )
@@ -77,30 +77,22 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
         config["score_function_kwargs"] = score_function_kwargs
 
     if "score_function_heuristics" in config:
-        if "score_function" not in config:
+        if "score_function" not in config:  # pragma: no cover
+            section = "fetching" if for_fetcher else "translation"
             raise exceptions.ConfigurationError(
-                "Section 'score_function_heuristics' requires an explicit score function."
+                f"Section [{section}.mapper.score_function_heuristics] requires an explicit score function."
             )
 
         heuristics = [
             (heuristic_config.pop("function"), heuristic_config)
             for heuristic_config in config.pop("score_function_heuristics")
         ]
-        if isinstance(config["score_function"], _HeuristicScore):
-            for h in heuristics:
-                config["score_function"].add_heuristic(*h)
-        else:
-            config["score_function"] = _HeuristicScore(config["score_function"], heuristics)
+        config["score_function"] = _HeuristicScore(config["score_function"], heuristics)
 
     if "filter_functions" in config:
-        filters = config.pop("filter_functions")
+        config["filter_functions"] = [(f.pop("function"), f) for f in config.pop("filter_functions")]
 
-        if len(filters) == 1 and filters[0] == {}:
-            pass  # Allow/ignore empty section
-        else:
-            config["filter_functions"] = [(f.pop("function"), f) for f in filters]
-
-    if "overrides" in config:
+    if "overrides" in config:  # pragma: no cover
         overrides = config.pop("overrides")
         shared, specific = _split_overrides(overrides)
 
@@ -181,7 +173,7 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
     @classmethod
     def _make_mapper(cls, parent_section: str, config: Dict[str, Any]) -> Optional[_Mapper]:
         if "mapping" not in config:
-            return None
+            return None  # pragma: no cover
 
         config = config.pop("mapping")
         for_fetcher = parent_section.startswith("fetching")
@@ -194,9 +186,9 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
     def _make_fetcher(cls, **config: Any) -> fetching.AbstractFetcher:
         mapper = cls._make_mapper("fetching", config) if "mapping" in config else None
 
-        if len(config) == 0:
+        if len(config) == 0:  # pragma: no cover
             raise exceptions.ConfigurationError("Fetcher implementation section missing.")
-        if len(config) > 1:
+        if len(config) > 1:  # pragma: no cover
             raise exceptions.ConfigurationError(
                 f"Multiple fetcher implementations specified in the same file: {sorted(config)}"
             )
@@ -206,7 +198,7 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         return TranslatorFactory.FETCHER_FACTORY(clazz, kwargs)
 
 
-def _make_default_translations(**config: Any) -> Tuple[str, Optional[dicts.InheritedKeysDict]]:
+def _make_default_translations(**config: Any) -> Tuple[str, Optional[dicts.InheritedKeysDict]]:  # pragma: no cover
     _check_allowed_keys(["fmt", "overrides"], config, toml_path="translator.unknown_ids")
 
     fmt = config.pop("fmt", None)
@@ -217,19 +209,7 @@ def _make_default_translations(**config: Any) -> Tuple[str, Optional[dicts.Inher
         return fmt, None
 
 
-def _check_forbidden_keys(forbidden: Union[str, Iterable[str]], actual: Iterable[str], toml_path: str) -> None:
-    if isinstance(forbidden, str):
-        forbidden = [forbidden]
-
-    bad_keys = set(forbidden).intersection(actual)
-    if bad_keys:
-        raise ValueError(f"Forbidden keys {sorted(bad_keys)} in [{toml_path}]-section.")
-
-
-def _check_allowed_keys(allowed: Iterable[str], actual: Iterable[str], toml_path: str) -> None:
-    if isinstance(allowed, str):
-        allowed = [allowed]
-
+def _check_allowed_keys(allowed: Iterable[str], actual: Iterable[str], toml_path: str) -> None:  # pragma: no cover
     bad_keys = set(actual).difference(allowed)
     if bad_keys:
         raise ValueError(f"Forbidden keys {sorted(bad_keys)} in [{toml_path}]-section.")

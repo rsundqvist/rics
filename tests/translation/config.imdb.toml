@@ -9,11 +9,18 @@ fmt = "{id}:{name}[ (original: {original_name})] from: {from}, to: {to}"
 # -> 'my_database.animals'. Overrides take precedence over scoring logic.
 [translator.mapping]
 unmapped_values_action = "raise"
-score_function = "modified_hamming"
 min_score = 3.0
+
+[translator.mapping.score_function.modified_hamming]
+add_length_ratio_term = false
 
 [[translator.mapping.score_function_heuristics]]
 function = "like_database_table"
+
+[[translator.mapping.filter_functions]]
+function = "require_regex_match"
+regex = ".*"
+where = "name"
 
 [translator.mapping.overrides]
 firstTitle = "title_basics"
