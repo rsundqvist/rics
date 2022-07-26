@@ -29,6 +29,7 @@ from rics.translation.types import (
     Translatable,
 )
 from rics.utility.collections.dicts import InheritedKeysDict, MakeType
+from rics.utility.collections.misc import as_list
 from rics.utility.misc import tname
 
 _NAME_ATTRIBUTES = ("name", "columns", "keys")
@@ -400,7 +401,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         # Fail if any of the explicitly given (ie literal, not predicate) names fail to map to a source.
         if isinstance(names, (str, Iterable)):
-            required = set(self._dont_ruin_string(names))
+            required = set(as_list(names))
             unmapped = required.difference(name_to_source.left)
             if unmapped:
                 raise MappingError(f"Required names {unmapped} not mapped with {sources=} and {ignore_names=}.")
@@ -682,8 +683,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                         f"Using {names=} from parent of type {tname(parent)} for child of type {tname(translatable)}"
                     )
         else:
-            names = self._dont_ruin_string(names)
-        ignored_names = ignored_names if callable(ignored_names) else set(self._dont_ruin_string(ignored_names))
+            names = as_list(names)
+        ignored_names = ignored_names if callable(ignored_names) else set(as_list(ignored_names))
         return self._resolve_names_inner(names, ignored_names)
 
     @classmethod
@@ -698,7 +699,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 if attr is None:
                     no_use_keys = True
                 else:
-                    return cls._dont_ruin_string(attr() if callable(attr) else attr)
+                    return as_list(attr() if callable(attr) else attr)
 
         raise AttributeError(
             "Must pass 'names' since no valid name could be found for data of type "
@@ -715,16 +716,6 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         if not names_to_translate and names:
             warnings.warn(f"No names left to translate. Ignored names: {ignored_names}, explicit names: {names}.")
         return names_to_translate
-
-    @classmethod
-    def _dont_ruin_string(cls, arg: Optional[NameTypes]) -> List[NameType]:
-        if arg is None:
-            return []
-        if not isinstance(arg, str) and isinstance(arg, Iterable):
-            return list(arg)
-
-        # https://github.com/python/mypy/issues/10835
-        return [arg]  # type: ignore
 
 
 class _IgnoredNamesPredicate(Generic[NameType]):

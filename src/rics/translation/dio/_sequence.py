@@ -7,6 +7,7 @@ from rics.translation.dio import DataStructureIO
 from rics.translation.dio.exceptions import NotInplaceTranslatableError
 from rics.translation.offline import TranslationMap
 from rics.translation.types import IdType, NameType
+from rics.utility.collections.misc import as_list
 
 T = TypeVar("T", list, np.ndarray, tuple, pd.Index)
 
@@ -21,7 +22,11 @@ class SequenceIO(DataStructureIO):
     @staticmethod
     def extract(translatable: T, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
         verify_names(len(translatable), names)
-        return {names[0]: list(translatable)} if len(names) == 1 else {n: list(r) for n, r in zip(names, translatable)}
+        return (
+            {names[0]: as_list(translatable)}
+            if len(names) == 1
+            else {n: as_list(r) for n, r in zip(names, translatable)}
+        )
 
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
@@ -57,7 +62,7 @@ def translate_sequence(s: T, names: List[NameType], tmap: TranslationMap) -> Lis
     ]
 
 
-def verify_names(data_len: int, names: List[NameType]) -> None:
+def verify_names(data_len: int, names: List[NameType]) -> None:  # pragma: no cover
     """Verify that the length of names is either 1 or equal to the length of the data."""
     num_names = len(names)
     if num_names != 1 and num_names != data_len:

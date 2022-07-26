@@ -18,6 +18,7 @@ type_modules = (
     "rics.translation.types",
     "rics.translation.fetching.types",
     "rics.utility.collections.dicts",
+    "rics.utility.collections.misc",
 )
 
 for tm in type_modules:

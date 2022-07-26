@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- An optional `add_length_ratio_term` argument to `score_functions.modified_hamming`.
+- The `utiltiy.collections.as_list` function for wrapping in/casting to list
 - Support for translating an attribute of `translatable` in `Translator.translate`.
   - Names may be inherited from the parent (ie a pandas `Index` may inherit the name of the series)
 - Cookbook recipes for translating dict keys and Pandas index types.

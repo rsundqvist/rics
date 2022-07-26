@@ -9,14 +9,10 @@ source = rics
 
 [report]
 omit =
-    src/rics/translation/dio/*
     src/rics/_internal*
     src/rics/performance/cli.py
     src/rics/utility/plotting.py
     src/rics/utility/_just_the_way_i_like_it.py
-    src/rics/translation/factory.py
-    */exceptions.py
-    */__init__.py
 
 fail_under = 100
 

@@ -15,14 +15,14 @@ class SingleValueIO(DataStructureIO):
 
     @staticmethod
     def extract(translatable: IdType, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
-        if len(names) != 1:
+        if len(names) != 1:  # pragma: no cover
             raise ValueError("Length of names must be one.")
 
         return {names[0]: (translatable,)}
 
     @staticmethod
     def insert(translatable: IdType, names: List[NameType], tmap: TranslationMap, copy: bool) -> str:
-        if not copy:
+        if not copy:  # pragma: no cover
             raise NotInplaceTranslatableError(translatable)
 
         return tmap[names[0]][translatable]
