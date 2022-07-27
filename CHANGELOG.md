@@ -185,6 +185,7 @@ A large number of changes, bugfixes and stability improvements. Only the most im
 - Allow alternative use of translation format with an ID placeholder, even if the main doesn't include it.
 - Add an option to run `Translator.store` with explicit data to cache.
 - Implement alternative format for unknown IDs.
+- Dict utility methods in `rics.utility.collections`.
 
 ### Changed
 - SqlFetcher: Break out potentially expensive operations into overridable methods
@@ -192,9 +193,6 @@ A large number of changes, bugfixes and stability improvements. Only the most im
 
 ### Fixed
 - Fix name extraction for `pandas.Series`
-
-### Added
-- Dict utility methods in `rics.utility.collections`
 
 ## [0.4.0] - 2022-03-24
 ### Added

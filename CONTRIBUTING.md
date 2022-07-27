@@ -24,7 +24,7 @@ breaking changes unless it makes sense and is needed.
 ### Unchecked requirements
 These requirements are *not* verified in CI/CD.
 
-* User-facing changes should be recorded in the [changelog](CHANGELOG.md).
+* User-facing changes should be recorded in the [changelog](https://github.com/rsundqvist/rics/blob/master/CHANGELOG.md).
 * Summarize the changes being made, and why they're made.
 * Expensive operations (especially related to logging) should only be done if the result is needed.
 * Coverage exceptions should be minimal.
