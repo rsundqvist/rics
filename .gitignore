@@ -8,6 +8,7 @@ codecov
 jupyterlab/data-cache/*
 docs/documentation/examples/notebooks/
 docs/_autosummary/*
+docs/changelog/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

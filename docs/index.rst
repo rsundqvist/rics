@@ -10,7 +10,7 @@ My personal little library. Written to help with common Machine Learning and Dat
    documentation/index
    development
    License <LICENSE>
-   Changelog <CHANGELOG>
+   changelog/index
 
 Shortcuts
 ---------

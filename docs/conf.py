@@ -4,14 +4,13 @@
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-
-
 import shutil
 from importlib import import_module
 
 from docutils.nodes import Text, reference
 
 import rics
+from rics._internal_support.changelog import split_changelog
 
 type_modules = (
     "rics.mapping.types",
@@ -221,3 +220,5 @@ sphinx_gallery_conf = {
 nbsphinx_execute = "never"
 
 shutil.copytree("../jupyterlab/demo/", "documentation/examples/notebooks", dirs_exist_ok=True)
+
+split_changelog("changelog", "../CHANGELOG.md")
