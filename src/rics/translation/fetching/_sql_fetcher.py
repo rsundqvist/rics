@@ -2,7 +2,7 @@ import logging
 import warnings
 from dataclasses import dataclass
 from time import perf_counter
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Dict, Iterable, List, Literal, Optional, Set
 from urllib.parse import quote_plus
 
 import sqlalchemy
@@ -27,17 +27,21 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         password: Password to insert into the connection string. Will be escaped to allow for special characters. If
             given, the connection string must contain a password key, eg; ``dialect://user:{password}@host:port``. Can
             be an environment variable just like `connection_string`.
-        whitelist_tables: The only tables the ``SqlFetcher`` may access.
-        blacklist_tables: The only tables the ``SqlFetcher`` may not access.
+        whitelist_tables: The only tables the ``SqlFetcher`` may access. Mutually exclusive with `blacklist_tables`.
+        blacklist_tables: The only tables the ``SqlFetcher`` may not access. Mutually exclusive with `whitelist_tables`.
         include_views: If ``True``, discover views as well.
-        fetch_in_below: Always use ``IN``-clause when fetching less than `fetch_in_below` IDs.
-        fetch_between_over: Always use ``BETWEEN``-clause when fetching more than `fetch_between_over` IDs.
-        fetch_between_max_overfetch_factor: If number of IDs to fetch is between `fetch_in_below` and
-            `fetch_between_over`, use this factor to choose between ``IN`` and ``BETWEEN`` clause.
         fetch_all_limit: Maximum size of table to allow a fetch all-operation. 0=never allow. Ignore if ``None``.
+        **kwargs: Primarily passed to ``super().__init__``, then used as :meth:`selection_filter_type` kwargs.
 
     Raises:
         ValueError: If both `whitelist_tables` and `blacklist_tables` are given.
+
+    Notes:
+        Inheriting classes may override on or more of the following methods to further customize operation:
+
+            * :meth:`get_approximate_table_size`; default is ``SELECT count(*) FROM table``.
+            * :meth:`make_table_summary`; creates :class:`TableSummary` instances.
+            * :meth:`selection_filter_type`; control what kind of filtering (if any) should be done when selecting IDs.
     """
 
     def __init__(
@@ -47,13 +51,19 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         whitelist_tables: Iterable[str] = None,
         blacklist_tables: Iterable[str] = None,
         include_views: bool = True,
-        fetch_in_below: int = 1200,
-        fetch_between_over: int = 10_000,
-        fetch_between_max_overfetch_factor: float = 2.5,
         fetch_all_limit: Optional[int] = 100_000,
         **kwargs: Any,
     ) -> None:
-        super().__init__(**kwargs)
+        if kwargs:
+            import inspect
+
+            parameters = set(inspect.signature(super().__init__).parameters)
+            super_kwargs = {k: kwargs.pop(k) for k in parameters.intersection(kwargs)}
+            self._select_params = kwargs
+        else:  # pragma: no cover
+            self._select_params = {}
+            super_kwargs = {}
+        super().__init__(**super_kwargs)
 
         if whitelist_tables and blacklist_tables:
             raise ValueError("At most one of whitelist and blacklist may be given.")  # pragma: no cover
@@ -64,10 +74,6 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         self._blacklist = set(blacklist_tables or [])
         self._table_ts_dict: Optional[Dict[str, SqlFetcher.TableSummary]] = None
         self._reflect_views = include_views
-
-        self._in_limit = fetch_in_below
-        self._between_limit = fetch_between_over
-        self._between_overfetch_limit = fetch_between_max_overfetch_factor
         self._fetch_all_limit = fetch_all_limit
 
     @property
@@ -106,26 +112,16 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
                 warnings.warn(f"Fetching {num_ids} unique IDs from table '{ts.name}' which only has {ts.size} rows.")
             return select
 
-        in_clause = select.where(ts.id_column.in_(ids))
-        if num_ids < self._in_limit:
-            return in_clause
+        where = self.selection_filter_type(ids, ts, **self._select_params)
 
-        min_id = min(ids)
-        max_id = max(ids)
-        between_clause = select.where(ts.id_column.between(min_id, max_id))
-        if isinstance(next(iter(ids)), str) or num_ids > self._between_limit:
-            return between_clause
+        if where == "in":
+            return select.where(ts.id_column.in_(ids))
+        if where == "between":
+            return select.where(ts.id_column.between(min(ids), max(ids)))
+        if where is None:  # pragma: no cover
+            return select
 
-        try:
-            overfetch_factor = (max_id - min_id) / num_ids  # type: ignore
-        except TypeError:  # pragma: no cover
-            return between_clause  # Non-numeric ID type
-
-        if LOGGER.isEnabledFor(logging.DEBUG):
-            s = "IN" if overfetch_factor > self._between_overfetch_limit else "BETWEEN"
-            LOGGER.debug(f"Overfetch factor is {overfetch_factor:.2%}: Use {s}-clause.")
-
-        return in_clause if overfetch_factor > self._between_overfetch_limit else between_clause
+        raise ValueError(f"Bad return value {where=} returned by {self.selection_filter_type=}.")  # pragma: no cover
 
     @property
     def online(self) -> bool:
@@ -230,6 +226,51 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         metadata = sqlalchemy.MetaData(self._engine)
         metadata.reflect(only=self._whitelist or None, views=self._reflect_views)
         return metadata
+
+    @classmethod
+    def selection_filter_type(
+        cls,
+        ids: Set[IdType],
+        table_summary: "SqlFetcher.TableSummary",
+        fetch_in_below: int = 1200,
+        fetch_between_over: int = 10_000,
+        fetch_between_max_overfetch_factor: float = 2.5,
+    ) -> Literal["in", "between", None]:
+        """Determine the type of filter (``WHERE``-query) to use, if any.
+
+        Args:
+            ids: IDs to fetch.
+            table_summary: A summary of the table that's about to be queried.
+            fetch_in_below: Always use ``IN``-clause when fetching less than `fetch_in_below` IDs.
+            fetch_between_over: Always use ``BETWEEN``-clause when fetching more than `fetch_between_over` IDs.
+            fetch_between_max_overfetch_factor: If number of IDs to fetch is between `fetch_in_below` and
+                `fetch_between_over`, use this factor to choose between ``IN`` and ``BETWEEN`` clause.
+
+        Returns:
+            One of (``'in', 'between', None``), where ``None`` means bare select (fetch the whole table).
+
+        Notes:
+            Override this function to redefine ``SELECT`` filtering logic.
+        """
+        num_ids = len(ids)
+
+        if num_ids < fetch_in_below:
+            return "in"
+
+        min_id, max_id = min(ids), max(ids)
+
+        if isinstance(next(iter(ids)), str) or num_ids > fetch_between_over:
+            return "between"
+
+        try:
+            overfetch_factor = (max_id - min_id) / num_ids  # type: ignore
+        except TypeError:  # pragma: no cover
+            return "between"  # Non-numeric ID type
+
+        if overfetch_factor > fetch_between_max_overfetch_factor:
+            return "in"
+        else:
+            return "between"
 
     @dataclass(frozen=True)
     class TableSummary:
