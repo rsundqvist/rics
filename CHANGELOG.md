@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Possibility to override select filtering logic; `SqlFetcher.selection_filter_type`.
 - An optional `add_length_ratio_term` argument to `score_functions.modified_hamming`.
 - The `utiltiy.collections.as_list` function for wrapping in/casting to list
 - Support for translating an attribute of `translatable` in `Translator.translate`.
