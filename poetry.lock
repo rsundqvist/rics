@@ -498,7 +498,7 @@ flake8 = "*"
 
 [[package]]
 name = "flakeheaven"
-version = "2.1.2"
+version = "2.1.3"
 description = "FlakeHeaven is a [Flake8](https://gitlab.com/pycqa/flake8) wrapper to make it cool."
 category = "dev"
 optional = false
@@ -2196,7 +2196,7 @@ translation = ["sqlalchemy", "toml"]
 [metadata]
 lock-version = "1.1"
 python-versions = "<3.11,>=3.8"
-content-hash = "e42e0f39939aeb721bdf9648054bd2b9e92494e44a8e124e6b09b57dd15321bf"
+content-hash = "5a69eaafc410a49341eaf8072a0c98ae9787250b4a61a433b8c3eb4ef5f9489f"
 
 [metadata.files]
 alabaster = [
@@ -2530,8 +2530,8 @@ flake8-polyfill = [
     {file = "flake8_polyfill-1.0.2-py2.py3-none-any.whl", hash = "sha256:12be6a34ee3ab795b19ca73505e7b55826d5f6ad7230d31b18e106400169b9e9"},
 ]
 flakeheaven = [
-    {file = "flakeheaven-2.1.2-py3-none-any.whl", hash = "sha256:cd002c2acc1bc8bcdf0c74b38241d42e4ff3e74566ddf46f496a268a8f584519"},
-    {file = "flakeheaven-2.1.2.tar.gz", hash = "sha256:8644da879bbeae7d2acfffa64f0e68994a9f5f67761cba91b7a8b9970f6ffeb1"},
+    {file = "flakeheaven-2.1.3-py3-none-any.whl", hash = "sha256:ccff80ef4eadd5f04b462fc07fa84036863461ebb037e86edd2a6ce84aa25d58"},
+    {file = "flakeheaven-2.1.3.tar.gz", hash = "sha256:737acc42081988e1306e84607015143c37a8ce6c9ebae7e30541d795355f0c63"},
 ]
 fonttools = [
     {file = "fonttools-4.34.4-py3-none-any.whl", hash = "sha256:d73f25b283cd8033367451122aa868a23de0734757a01984e4b30b18b9050c72"},
