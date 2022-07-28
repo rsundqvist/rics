@@ -104,24 +104,16 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
     def _make_query(
         self, ts: "SqlFetcher.TableSummary", select: sqlalchemy.sql.Select, ids: Set[IdType]
     ) -> sqlalchemy.sql.Select:
-        num_ids = len(ids)
-
-        # Just fetch everything if we're getting "most of" the data anyway
-        if ts.size < 25 or num_ids / ts.size > 0.9:
-            if num_ids > ts.size:  # pragma: no cover
-                warnings.warn(f"Fetching {num_ids} unique IDs from table '{ts.name}' which only has {ts.size} rows.")
-            return select
-
         where = self.selection_filter_type(ids, ts, **self._select_params)
 
         if where == "in":
             return select.where(ts.id_column.in_(ids))
         if where == "between":
             return select.where(ts.id_column.between(min(ids), max(ids)))
-        if where is None:  # pragma: no cover
+        if where is None:
             return select
 
-        raise ValueError(f"Bad return value {where=} returned by {self.selection_filter_type=}.")  # pragma: no cover
+        raise ValueError(f"Bad response {where=} returned by {self.selection_filter_type=}.")  # pragma: no cover
 
     @property
     def online(self) -> bool:
@@ -232,15 +224,22 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         cls,
         ids: Set[IdType],
         table_summary: "SqlFetcher.TableSummary",
+        fetch_all_below: int = 25,
+        fetch_all_above_ratio: float = 0.90,
         fetch_in_below: int = 1200,
         fetch_between_over: int = 10_000,
         fetch_between_max_overfetch_factor: float = 2.5,
     ) -> Literal["in", "between", None]:
         """Determine the type of filter (``WHERE``-query) to use, if any.
 
+        In the descriptions below, ``len(table)`` refers to the :attr:`TableSummary.size`-attribute of `table_summary`.
+        Bare select implies fetching the entire table.
+
         Args:
             ids: IDs to fetch.
             table_summary: A summary of the table that's about to be queried.
+            fetch_all_below: Use bare select if ``len(ids) <= len(table)``.
+            fetch_all_above_ratio: Use bare select if ``len(ids) > len(table) * ratio``.
             fetch_in_below: Always use ``IN``-clause when fetching less than `fetch_in_below` IDs.
             fetch_between_over: Always use ``BETWEEN``-clause when fetching more than `fetch_between_over` IDs.
             fetch_between_max_overfetch_factor: If number of IDs to fetch is between `fetch_in_below` and
@@ -253,6 +252,14 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
             Override this function to redefine ``SELECT`` filtering logic.
         """
         num_ids = len(ids)
+        size = float("inf") if table_summary.size <= 0 else table_summary.size
+        table = table_summary.name
+
+        # Just fetch everything if we're getting "most of" the data anyway
+        if size <= fetch_all_below or num_ids / size > fetch_all_above_ratio:
+            if num_ids > size:  # pragma: no cover
+                warnings.warn(f"Fetching {num_ids} unique IDs from {table=} which only has {size} rows.")
+            return None
 
         if num_ids < fetch_in_below:
             return "in"
