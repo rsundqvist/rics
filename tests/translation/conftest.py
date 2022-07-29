@@ -19,9 +19,9 @@ class HexFetcher(AbstractFetcher[str, int]):
 
         placeholders = support.select_placeholders(instr, ["id", "hex", "positive"])
 
-        return support.from_records(
+        return PlaceholderTranslations(
             instr,
-            placeholders,
+            tuple(placeholders),
             tuple(self._run(placeholders, instr.ids)),
         )
 
