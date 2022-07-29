@@ -87,7 +87,13 @@ def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optiona
             (heuristic_config.pop("function"), heuristic_config)
             for heuristic_config in config.pop("score_function_heuristics")
         ]
-        config["score_function"] = _HeuristicScore(config["score_function"], heuristics)
+        score_function = config["score_function"]
+
+        if isinstance(score_function, _HeuristicScore):  # pragma: no cover
+            for h, kwargs in heuristics:
+                score_function.add_heuristic(h, kwargs)
+        else:
+            config["score_function"] = _HeuristicScore(score_function, heuristics)
 
     if "filter_functions" in config:
         config["filter_functions"] = [(f.pop("function"), f) for f in config.pop("filter_functions")]
