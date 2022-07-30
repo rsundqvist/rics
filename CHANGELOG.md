@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Verbosity-flags to control high-volume mapping function invocation logging.
-- Mapping debugging guide.
+- Mapping primer page to the docs.
 - Multiple improvements to the `Mapper` class through a new `mapping.support` module:
   - Improved logging capabilities.
   - Force respecting `cardinality` argument in `Mapper.apply` (fewer errors are raised).
@@ -30,8 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Rename `Translator.map_to_sources` -> `map`.
 - Simplify `Translator.translate` signature.
-  - Names must now be explicit names or None (use heuristics to filter names)
-  - Simplify multiple docstrings
+  - Names must now be explicit names or None (use heuristics to filter names).
+  - Simplify multiple docstrings.
 - Permit `Translator` instances to be created with explicit fetch data. Translations will be generated based on the 
   inputs by using a `TestFetcher` instance. Functionality in this mode is limited.
 - Performance testing figures updated; now shows best result as well.
@@ -43,17 +43,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Expected runtime checks for perftests.
 
 ### Fixed
-- An issue when using integers as explicit names to translate
+- An issue when using integers as explicit names to translate.
 - It is now possible to use one name per element when translating sequences.
 - Perftest argument `time_per_candidate` now used correctly.
-- Filter out `NaN` values in `AbstractFetcher`
+- Filter out `NaN` values in `AbstractFetcher`.
 
 
 ## [0.14.0] - 2022-07-17
 
 ### Changed
-- Added home page shortcuts
-- Rename 'default_translations' and 'default' arguments to 'default_fmt_placeholders' 
+- Added home page shortcuts.
+- Rename 'default_translations' and 'default' arguments to 'default_fmt_placeholders' .
 
 ### Fixed
 - Remove placeholder limitation on default translation format.
@@ -73,11 +73,11 @@ Switched to the [PyData Sphinx theme](https://github.com/pydata/pydata-sphinx-th
 
 ### Added
 - Implement override functions in `Mapper.apply`.
-  - Also: Partial implementation of override functions for name-to-source mapping in `Translator.translate`
+  - Also: Partial implementation of override functions for name-to-source mapping in `Translator.translate`.
 - Implement reverse translations. Added `reverse` argument to `Translator.translate` to translate from translations back to IDs.
 - An option `maximal_untranslated_fraction` to raise an error if translation fails for too many IDs in `Translator.translate`.
 - Make it possible to initialize `Fetcher`s from arbitrary packages in `Translator.from_config`.
-- Make it possible configure `ScoreFunction`s, `FilterFunction`s and `AliasFunction`s from arbitrary modules 
+- Make it possible configure `ScoreFunction`s, `FilterFunction`s and `AliasFunction`s from arbitrary modules .
   (still defaults to package functions).
 - The `py.typed` marker (PEP-561 compliance).
 - Additional `types`-modules for typehint imports.
