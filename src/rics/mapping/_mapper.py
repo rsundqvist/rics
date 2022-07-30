@@ -190,9 +190,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 LOGGER.debug(
                     f"Using override {repr(value)} -> {repr(override_candidate)} returned by {override_function}."
                 )
-                if override_candidate in scores:
-                    scores.loc[value, override_candidate] = np.inf
-                    unmapped_values.discard(value)
+                scores.loc[value, override_candidate] = np.inf
+                unmapped_values.discard(value)
 
         extra = f" in {context=}" if context else ""
         for value in unmapped_values:
@@ -287,19 +286,18 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             user_override = func(value, candidates, context)
             if user_override is None:
                 continue
-            if user_override not in candidates:
+            if self.unknown_user_override_action is not ActionLevel.IGNORE and user_override not in candidates:
                 msg = (
-                    f"The user-defined override function {func} returned an unknown "
-                    f"candidate {repr(user_override)} for {value=}."
+                    f"The user-defined override function {func} returned an unknown candidate {repr(user_override)} for"
+                    f" {value=}. If this is intended behaviour, set unknown_user_override_action='ignore' to allow."
                 )
                 if self.unknown_user_override_action is ActionLevel.RAISE:
                     LOGGER.error(msg)
                     raise UserMappingError(msg, value, candidates)
-                elif self.unknown_user_override_action is ActionLevel.WARN:
+                elif self.unknown_user_override_action is ActionLevel.WARN:  # pragma: no cover
+                    msg += " The override has been ignored."
                     LOGGER.warning(msg)
                     warnings.warn(msg, UserMappingWarning)
-                else:
-                    LOGGER.debug(msg)
                 continue
 
             ans.append((value, user_override))

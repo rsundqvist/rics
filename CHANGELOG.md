@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Performance testing figures updated; now shows best result as well.
 
 ### Removed
+- An unnecessary restriction on runtime override functions in `Mapper`
 - The `fetching.support.from_records` method. Fixes spurious exceptions from `PandasFetcher` (#99).
 - Dunder `Mapper.__call__`.
 - Expected runtime checks for perftests.
