@@ -10,6 +10,13 @@ WHERE_OPTIONS = ("name", "candidate", "context")
 WhereArg = Union[WhereOptions, Iterable[WhereOptions]]
 """Determines how where matches must be found during filtering operations."""
 
+VERBOSE: bool = False
+"""If ``True`` enable optional DEBUG-level log messages on each heuristic function invocation.
+
+Notes:
+    Not all functions have verbose messages.
+"""
+
 
 def require_regex_match(
     name: str,
@@ -50,10 +57,12 @@ def require_regex_match(
     if "name" in where:
         match = pattern.match(name)
         if keep_if_match and not match:
-            logger.debug(f"Refuse {purpose} for {name=}: Does not match {pattern=}.")
+            if VERBOSE:
+                logger.debug(f"Refuse {purpose} for {name=}: Does not match {pattern=}.")
             return set()
         if match and not keep_if_match:
-            logger.debug(f"Refuse {purpose} for {name=}: Matches {pattern=}.")
+            if VERBOSE:
+                logger.debug(f"Refuse {purpose} for {name=}: Matches {pattern=}.")
             return set()
 
     if "context" in where:
@@ -62,10 +71,12 @@ def require_regex_match(
 
         match = pattern.match(context)
         if keep_if_match and not match:
-            logger.debug(f"Refuse {purpose} for {context=}: Does not match {pattern=}.")
+            if VERBOSE:
+                logger.debug(f"Refuse {purpose} for {context=}: Does not match {pattern=}.")
             return set()
         if match and not keep_if_match:
-            logger.debug(f"Refuse {purpose} for {context=}: Matches {pattern=}.")
+            if VERBOSE:
+                logger.debug(f"Refuse {purpose} for {context=}: Matches {pattern=}.")
             return set()
 
     if "candidate" not in where:
@@ -77,7 +88,7 @@ def require_regex_match(
         lst = kept if (bool(pattern.match(cand)) is keep_if_match) else rejected
         lst.append(cand)
 
-    if logger.isEnabledFor(logging.DEBUG):
+    if VERBOSE and logger.isEnabledFor(logging.DEBUG):
         logger.debug(f"Filtering with {keep_if_match=} and {pattern=}; kept {sorted(kept)}, rejected {rejected}.")
 
     return set(kept)

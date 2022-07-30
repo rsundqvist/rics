@@ -97,14 +97,15 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
                     LOGGER.warning(f"Ignoring {mutate=} for filter function {func=}.")
 
                 if res:
-                    base_args = ", ".join([repr(h_value), repr(h_candidates), f"{context=}"])
-                    extra_args = ", ".join(f"{k}={repr(v)}" for k, v, in func_kwargs.items())
-                    info = f"{tname(func)}({', '.join([base_args, extra_args])})"
-                    LOGGER.debug(f"Short circuit {value=} -> candidates={repr(res)}, triggered by {info}.")
+                    if heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG):
+                        base_args = ", ".join([repr(h_value), repr(h_candidates), f"{context=}"])
+                        extra_args = ", ".join(f"{k}={repr(v)}" for k, v, in func_kwargs.items())
+                        info = f"{tname(func)}({', '.join([base_args, extra_args])})"
+                        LOGGER.debug(f"Short-circuit {value=} -> candidates={repr(res)}, triggered by {info}.")
                     yield from (float("inf") if c in res else -float("inf") for c in h_candidates)
                     return  # Short-circuit
 
-        if LOGGER.isEnabledFor(logging.DEBUG):
+        if heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG):
             changes = [
                 f"{repr(cand)}: {score:.2f} -> {heuristic_score:.2f} ({heuristic_score-score:+.2f})"
                 for cand, score, heuristic_score in zip(candidates, base_score, best)

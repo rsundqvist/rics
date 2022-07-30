@@ -8,8 +8,9 @@
 import logging
 import warnings
 from collections import defaultdict as _defaultdict
+from contextlib import contextmanager as _contextmanager
 from dataclasses import dataclass as _dataclass
-from typing import Dict
+from typing import Dict, Generator
 from typing import Generic as _Generic
 from typing import Iterable, List, Optional, Tuple
 
@@ -26,6 +27,19 @@ SUPERSESSION_LOGGER = ACCEPT_LOGGER.getChild("details")
 UNMAPPED_LOGGER = _MAPPER_LOGGER.getChild("unmapped").getChild("details")
 
 warnings.warn("This module is considered an implementation detail, and may change without notice.", UserWarning)
+
+
+@_contextmanager
+def enable_verbose_debug_messages() -> Generator[None, None, None]:  # typing.ContextManager doesn't work?
+    """Temporarily enable verbose DEBUG-level messages."""
+    from rics.mapping import filter_functions, heuristic_functions, score_functions
+
+    before = filter_functions.VERBOSE, heuristic_functions.VERBOSE, score_functions.VERBOSE
+    try:
+        filter_functions.VERBOSE, heuristic_functions.VERBOSE, score_functions.VERBOSE = True, True, True
+        yield
+    finally:
+        filter_functions.VERBOSE, heuristic_functions.VERBOSE, score_functions.VERBOSE = before
 
 
 class MatchScores:
