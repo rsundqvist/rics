@@ -17,7 +17,7 @@ def as_list(arg: Union[ArgType, Iterable[ArgType]] = None, excl_types: Tuple[Typ
         A list representation of `arg`.
 
     Notes:
-        For all zero-length arguments, ie ``len(arg) == 0``, an empty list is returned.
+        For all zero-length arguments, i.e. ``len(arg) == 0``, an empty list is returned.
     """
     # https://github.com/python/mypy/issues/10835
     return list(arg) if isinstance(arg, Iterable) and not isinstance(arg, excl_types) else [arg]  # type: ignore

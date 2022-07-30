@@ -66,7 +66,7 @@ def get_local_or_remote(
 
     If `file` is not available at the local root path, it will be downloaded using `requests.get`_. A postprocessor may
     be given in which case the name of the final file will be ``local_root/<name-of-postprocessor>/file``. Removing
-    a raw local file (ie ``local_root/file``) will invalidate postprocessed files as well.
+    a raw local file (i.e. ``local_root/file``) will invalidate postprocessed files as well.
 
     Args:
         file: A file to retrieve or download.

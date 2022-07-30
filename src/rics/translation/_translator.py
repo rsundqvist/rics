@@ -399,7 +399,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             except UserMappingError as e:
                 raise UnknownSourceError(e.value, e.candidates) from e
 
-        # Fail if any of the explicitly given (ie literal, not predicate) names fail to map to a source.
+        # Fail if any of the explicitly given (i.e. literal, not predicate) names fail to map to a source.
         if isinstance(names, (int, str, Iterable)):
             required = set(as_list(names))
             unmapped = required.difference(name_to_source.left)
@@ -432,7 +432,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             A ``TranslationMap``.
 
         Raises:
-            ConnectionStatusError: If disconnected from the fetcher, ie not :attr:`online`.
+            ConnectionStatusError: If disconnected from the fetcher, i.e. not :attr:`online`.
         """
         ids_to_fetch = self._get_ids_to_fetch(
             name_to_source, translatable, data_structure_io or resolve_io(translatable)

@@ -42,9 +42,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         unmapped_values_action: Action to take if mapping fails for any values.
         unknown_user_override_action: Action to take if a :attr:`~rics.mapping.types.UserOverrideFunction` returns an
             unknown candidate.
-        cardinality: Desired cardinality for mapped values. Disable checks if ``None``. Otherwise, raise an error if the
-            actual cardinality computed for a matching is greater than the desired cardinality (ie the ``Mapper`` made
-            too many matches).
+        cardinality: Desired cardinality for mapped values. Derive for each matching if ``None``.
         enable_verbose_logging: If ``True``, enable verbose logging for the :meth:`apply` function. Has no effect when
             the log level is above ``logging.DEBUG``.
 
