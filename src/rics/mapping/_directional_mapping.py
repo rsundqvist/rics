@@ -196,7 +196,7 @@ class DirectionalMapping(Generic[HL, HR]):
     ) -> Cardinality:
         if not (left and right):
             if expected is None:
-                raise ValueError("Explicit cardinality must be given for empty mapping.")  # pragma: no cover
+                return Cardinality.ManyToMany  # pragma: no cover
             else:
                 return Cardinality.parse(expected)
 
