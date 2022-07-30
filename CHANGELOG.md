@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Verbosity-flags to control high-volume mapping function invocation logging.
 - Mapping debugging guide.
 - Multiple improvements to the `Mapper` class through a new `mapping.support` module:
   - Improved logging capabilities.

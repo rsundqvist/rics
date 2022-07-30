@@ -29,6 +29,7 @@ exclude_lines =
     logger.isEnabledFor
     if not isinstance\(other
     if TYPE_CHECKING
+    if VERBOSE
 
 show_missing = true
 

@@ -26,8 +26,6 @@ from rics.utility.collections.dicts import InheritedKeysDict
 from rics.utility.misc import get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("Mapper")
-FILTER_LOGGER = LOGGER.getChild("filter")
-HEURISTIC_LOGGER = LOGGER.getChild("heuristic")
 
 
 class Mapper(Generic[ValueType, CandidateType, ContextType]):
@@ -47,6 +45,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         cardinality: Desired cardinality for mapped values. Disable checks if ``None``. Otherwise, raise an error if the
             actual cardinality computed for a matching is greater than the desired cardinality (ie the ``Mapper`` made
             too many matches).
+        enable_verbose_logging: If ``True``, enable verbose logging for the :meth:`apply` function. Has no effect when
+            the log level is above ``logging.DEBUG``.
 
     See Also:
         The :ref:`mapping-primer` page.
@@ -62,6 +62,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         unmapped_values_action: ActionLevel.ParseType = ActionLevel.IGNORE,
         unknown_user_override_action: ActionLevel.ParseType = ActionLevel.RAISE,
         cardinality: Optional[Cardinality.ParseType] = Cardinality.ManyToOne,
+        enable_verbose_logging: bool = False,
     ) -> None:
         self._score = get_by_full_name(score_function, sf) if isinstance(score_function, str) else score_function
         self._score_kwargs = score_function_kwargs or {}
@@ -77,6 +78,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             ((get_by_full_name(func, mf) if isinstance(func, str) else func), kwargs)
             for func, kwargs in filter_functions
         ]
+        self._verbose = enable_verbose_logging
 
     def apply(
         self,
@@ -108,7 +110,13 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
             UserMappingError: If `func` returns an unknown candidate.
         """
-        scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
+        if self.verbose:  # pragma: no cover
+            from rics.mapping.support import enable_verbose_debug_messages
+
+            with enable_verbose_debug_messages():
+                scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
+        else:
+            scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
 
         start = perf_counter()
         dm: DirectionalMapping[ValueType, CandidateType] = self.to_directional_mapping(scores)
@@ -241,6 +249,11 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
     def context_sensitive_overrides(self) -> bool:
         """Return ``True`` if overrides are context sensitive."""
         return self._context_sensitive_overrides
+
+    @property
+    def verbose(self) -> bool:
+        """Return ``True`` if verbose debug-level messages are enabled."""
+        return self._verbose
 
     def _get_static_overrides(
         self,

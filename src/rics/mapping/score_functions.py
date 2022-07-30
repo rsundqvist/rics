@@ -7,6 +7,13 @@ from typing import Iterable, Optional
 
 from rics.mapping.types import CandidateType, ContextType, ValueType
 
+VERBOSE: bool = False
+"""If ``True`` enable optional DEBUG-level log messages on each score function invocation.
+
+Notes:
+    Not all functions have verbose messages.
+"""
+
 
 def modified_hamming(
     name: str,

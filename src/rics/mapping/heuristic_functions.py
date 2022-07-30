@@ -9,6 +9,13 @@ from typing import Any, Iterable, List, Optional, Set, Tuple, Union
 from rics.mapping import filter_functions as ff
 from rics.mapping.types import ContextType
 
+VERBOSE: bool = False
+"""If ``True`` enable optional DEBUG-level log messages on each heuristic function invocation.
+
+Notes:
+    Not all functions have verbose messages.
+"""
+
 
 def like_database_table(
     name: str,
