@@ -208,7 +208,7 @@ class MatchScores:
 
         for record in records:
             if record.score < self._min_score or record.value in mvs or record.candidate in mcs:
-                if rejections is not None:
+                if rejections is not None:  # pragma: no cover
                     rejections.append(
                         MatchScores.Reject(
                             record,
@@ -230,7 +230,7 @@ class MatchScores:
 
         for record in records:
             if record.score < self._min_score or record.candidate in mcs:
-                if rejections is not None:
+                if rejections is not None:  # pragma: no cover
                     rejections.append(MatchScores.Reject(record, superseding_candidate=mcs.get(record.candidate)))
                 continue
             mcs[record.candidate] = record
@@ -245,7 +245,7 @@ class MatchScores:
 
         for record in records:
             if record.score < self._min_score or record.value in mvs:
-                if rejections is not None:
+                if rejections is not None:  # pragma: no cover
                     rejections.append(MatchScores.Reject(record, superseding_value=mvs.get(record.value)))
                 continue
             mvs[record.value] = record
@@ -256,7 +256,7 @@ class MatchScores:
         records: Iterable[Record[ValueType, CandidateType]],
         rejections: List[Reject[ValueType, CandidateType]] = None,
     ) -> Iterable[Record[ValueType, CandidateType]]:
-        for record in records:
+        for record in records:  # pragma: no cover
             if record.score < self._min_score:
                 if rejections is not None:
                     rejections.append(MatchScores.Reject(record))
