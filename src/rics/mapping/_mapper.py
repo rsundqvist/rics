@@ -1,6 +1,10 @@
 import logging
 import warnings
+from time import perf_counter
 from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Union
+
+import numpy as np
+import pandas as pd
 
 from rics.mapping import exceptions
 from rics.mapping import filter_functions as mf
@@ -12,20 +16,22 @@ from rics.mapping.types import (
     CandidateType,
     ContextType,
     FilterFunction,
-    MatchTuple,
     ScoreFunction,
     UserOverrideFunction,
     ValueType,
 )
+from rics.performance import format_perf_counter
 from rics.utility.action_level import ActionLevel
 from rics.utility.collections.dicts import InheritedKeysDict
 from rics.utility.misc import get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("Mapper")
+FILTER_LOGGER = LOGGER.getChild("filter")
+HEURISTIC_LOGGER = LOGGER.getChild("heuristic")
 
 
 class Mapper(Generic[ValueType, CandidateType, ContextType]):
-    """Map values and candidates.
+    """Optimal value-candidate matching.
 
     Args:
         score_function: A callable which accepts a value `k` and an ordered collection of candidates `c`, returning a
@@ -38,7 +44,12 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         unmapped_values_action: Action to take if mapping fails for any values.
         unknown_user_override_action: Action to take if a :attr:`~rics.mapping.types.UserOverrideFunction` returns an
             unknown candidate.
-        cardinality: Desired cardinality for mapped values. Derive if ``None``.
+        cardinality: Desired cardinality for mapped values. Disable checks if ``None``. Otherwise, raise an error if the
+            actual cardinality computed for a matching is greater than the desired cardinality (ie the ``Mapper`` made
+            too many matches).
+
+    See Also:
+        The :ref:`mapper-debugging` page.
     """
 
     def __init__(
@@ -97,38 +108,124 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
             UserMappingError: If `func` returns an unknown candidate.
         """
-        candidates = set(candidates)
-        values = set(values)
-        left_to_right = self._create_l2r(values, context)
+        scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
+
+        start = perf_counter()
+        dm: DirectionalMapping[ValueType, CandidateType] = self.to_directional_mapping(scores)
+
+        unmapped = set(scores.index[~np.isinf(scores).all(axis=1)]).difference(dm.left)
+        if unmapped:
+            extra = f" in {context=}" if context else ""
+            candidates = set(scores)
+            self._report_unmapped(f"Could not map {unmapped}{extra} to any of {candidates=}.")
+
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            cardinality = "automatic" if self.cardinality is None else self.cardinality.name
+            LOGGER.debug(f"Match selection with {cardinality=} completed in {format_perf_counter(start)}.")
+
+        return dm
+
+    def _report_unmapped(self, msg: str) -> None:  # pragma: no cover
+        logger = LOGGER.getChild("unmapped")
+        if self.unmapped_values_action is ActionLevel.RAISE:
+            logger.error(msg)
+            raise MappingError(msg)
+        elif self.unmapped_values_action is ActionLevel.WARN:
+            logger.warning(msg)
+            warnings.warn(msg, MappingWarning)
+        else:
+            logger.debug(msg)
+
+    def compute_scores(
+        self,
+        values: Iterable[ValueType],
+        candidates: Iterable[CandidateType],
+        context: ContextType = None,
+        override_function: UserOverrideFunction = None,
+        **kwargs: Any,
+    ) -> pd.DataFrame:
+        """Compute likeness scores.
+
+        Args:
+            values: Iterable of elements to match to candidates.
+            candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
+            context: Context in which mapping is being done.
+            override_function: A callable that takes inputs ``(value, candidates, context)`` that returns either
+                ``None`` (let the regular mapping logic decide) or one of the `candidates`. Unlike static overrides,
+                override functions may not return non-candidates as matches. How non-candidates returned by override
+                functions is handled is determined by the :attr:`unknown_user_override_action` property.
+            **kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
+                not known when the ``Mapper`` is initialized.
+
+        Returns:
+            A ``DataFrame`` of value-candidate match scores, with ``DataFrame.index=values`` and
+            ``DataFrame.columns=candidates``.
+        """
+        start = perf_counter()
+
+        scores = pd.DataFrame(
+            data=-np.inf,
+            columns=pd.Index(set(candidates), name="candidates"),
+            index=pd.Index(set(values), name="values"),
+            dtype=float,
+        )
+
+        unmapped_values = set(scores.index)
+        for value, override_candidate in self._get_static_overrides(scores.index, context):
+            scores.loc[value, override_candidate] = np.inf
+            unmapped_values.discard(value)
 
         if override_function:
-            self._add_function_overrides(override_function, values, candidates, context, left_to_right)
+            for value, override_candidate in self._get_function_overrides(
+                override_function, scores.index, scores.columns, context
+            ):
+                LOGGER.debug(
+                    f"Using override {repr(value)} -> {repr(override_candidate)} returned by {override_function}."
+                )
+                if override_candidate in scores:
+                    scores.loc[value, override_candidate] = np.inf
+                    unmapped_values.discard(value)
 
         extra = f" in {context=}" if context else ""
+        for value in unmapped_values:
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                candidates = set(scores.columns)
+                LOGGER.debug(f"Begin computing match scores for {value=}{extra} to {candidates=} using {self._score}.")
 
-        for value in values.difference(left_to_right):
-            LOGGER.debug(f"Begin mapping {value=}{extra} to {candidates=} using {self._score}.")
-            matches = self._map_value(value, candidates, context, kwargs)
-            if matches is None:
-                continue  # All candidates removed by filtering
-            if matches:
-                left_to_right[value] = matches
-            else:  # pragma: no cover
-                msg = f"Could not map {value=}{extra} to any of {candidates=}."
-                if self.unmapped_values_action is ActionLevel.RAISE:
-                    LOGGER.error(msg)
-                    raise MappingError(msg)
-                elif self.unmapped_values_action is ActionLevel.WARN:
-                    LOGGER.warning(msg)
-                    warnings.warn(msg, MappingWarning)
-                else:
-                    LOGGER.debug(msg)
+            filtered_candidates = self._apply_filters(value, scores.columns, context, kwargs)
+            scores_for_value = self._score(value, filtered_candidates, context, **self._score_kwargs, **kwargs)
+            for score, candidate in zip(scores_for_value, filtered_candidates):
+                scores.loc[value, candidate] = score
 
-        return DirectionalMapping(
-            cardinality=self._cardinality,
-            left_to_right=left_to_right,
-            _verify=True,
-        )
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            LOGGER.debug(f"Computed {scores.size} match scores in {format_perf_counter(start)}:\n{scores.to_string()}")
+        return scores
+
+    def to_directional_mapping(
+        self,
+        scores: pd.DataFrame,
+    ) -> DirectionalMapping[ValueType, CandidateType]:
+        """Create a ``DirectionalMapping`` from match scores.
+
+        Args:
+            scores: A score matrix, where ``scores.index`` are values and ``score.columns`` are treated as the
+                candidates.
+
+        Returns:
+            A ``DirectionalMapping``.
+
+        See Also:
+            :meth:`.MatchScores.to_directional_mapping`
+        """
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            from rics.mapping.support import MatchScores
+        return MatchScores(scores, self._min_score).to_directional_mapping(self.cardinality)
+
+    @property
+    def cardinality(self) -> Optional[Cardinality]:
+        """Return upper cardinality bound during mapping."""
+        return self._cardinality
 
     @property
     def unmapped_values_action(self) -> ActionLevel:
@@ -145,12 +242,11 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         """Return ``True`` if overrides are context sensitive."""
         return self._context_sensitive_overrides
 
-    def _create_l2r(
+    def _get_static_overrides(
         self,
-        values: Set[ValueType],
+        values: Iterable[ValueType],
         context: Optional[ContextType],
-    ) -> Dict[ValueType, MatchTuple]:
-        left_to_right: Dict[ValueType, MatchTuple]
+    ) -> List[Tuple[ValueType, CandidateType]]:
         overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
 
         if context is None:
@@ -162,16 +258,18 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 raise TypeError("Overrides must be of type InheritedKeysDict when context is given.")
             overrides = self._overrides.get(context, {})  # type: ignore
 
-        return {value: (overrides[value],) for value in filter(overrides.__contains__, values)}
+        return [(value, overrides[value]) for value in filter(overrides.__contains__, values)]
 
-    def _add_function_overrides(
+    def _get_function_overrides(
         self,
         func: UserOverrideFunction,
         values: Iterable[ValueType],
-        candidates: Set[CandidateType],
+        candidates: Iterable[CandidateType],
         context: Optional[ContextType],
-        left_to_right: Dict[ValueType, MatchTuple],
-    ) -> None:
+    ) -> List[Tuple[ValueType, CandidateType]]:
+        candidates = set(candidates)
+
+        ans = []
         for value in values:
             user_override = func(value, candidates, context)
             if user_override is None:
@@ -191,19 +289,17 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                     LOGGER.debug(msg)
                 continue
 
-            LOGGER.debug(f"Using override {repr(value)} -> {repr(user_override)} returned by {func}.")
-            left_to_right[value] = (user_override,)
+            ans.append((value, user_override))
 
-    def _map_value(
+        return ans
+
+    def _apply_filters(
         self,
         value: ValueType,
-        candidates: Set[CandidateType],
+        candidates: Iterable[CandidateType],
         context: Optional[ContextType],
         kwargs: Dict[str, Any],
-    ) -> Optional[MatchTuple]:
-        scores = self._score(value, candidates, context, **self._score_kwargs, **kwargs)
-        sorted_candidates = sorted(zip(scores, candidates), key=lambda t: -t[0])
-
+    ) -> Set[CandidateType]:
         filtered_candidates = set(candidates)
         for filter_function, function_kwargs in self._filters:
             filtered_candidates = filter_function(value, filtered_candidates, context, **function_kwargs, **kwargs)
@@ -216,31 +312,9 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 )
 
             if not filtered_candidates:
-                return None
+                break
 
-        ans = []
-        logger = LOGGER.getChild("reject")
-        for score, candidate in sorted_candidates:
-            if candidate not in filtered_candidates:
-                score = -float("inf")
-
-            if score >= self._min_score:
-                ans.append(candidate)
-
-                if LOGGER.isEnabledFor(logging.DEBUG):
-                    cs = " (short-circuited)" if score == float("inf") else ""
-                    extra = "" if self._cardinality == Cardinality.OneToOne else " Looking for more matches.."
-                    LOGGER.debug(
-                        f"Mapped: {repr(value)} -> {repr(candidate)}, {score=:2.3f} >= {self._min_score}{cs}.{extra}"
-                    )
-
-                if self._cardinality == Cardinality.OneToOne:
-                    break
-            elif logger.isEnabledFor(logging.DEBUG):
-                extra = " (removed by filters)" if score == -float("inf") else ""
-                logger.debug(f"Rejected: {repr(value)} -> {repr(candidate)}, {score=:.3f} < {self._min_score}{extra}.")
-
-        return tuple(ans)
+        return filtered_candidates
 
     def __repr__(self) -> str:
         score = self._score
@@ -255,5 +329,5 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             min_score=self._min_score,
             overrides=self._overrides.copy(),
             unmapped_values_action=self.unmapped_values_action,
-            cardinality=self._cardinality,
+            cardinality=self.cardinality,
         )

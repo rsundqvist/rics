@@ -3,12 +3,9 @@
 See Also:
     The :class:`~rics.mapping.HeuristicScore` class.
 """
-import logging
 from typing import Iterable, Optional
 
 from rics.mapping.types import CandidateType, ContextType, ValueType
-
-LOGGER = logging.getLogger(__name__)
 
 
 def modified_hamming(

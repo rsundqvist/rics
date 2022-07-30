@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Multiple improvements to the `Mapper` class through a new `mapping.support` module:
+  - Improved logging capabilities.
+  - Force respecting `cardinality` argument in `Mapper.apply` (fewer errors are raised).
+  - Allow users to retrieve raw score matrices (`Mapper.compute_scores`).
 - Possibility to override select filtering logic; `SqlFetcher.selection_filter_type`.
 - An optional `add_length_ratio_term` argument to `score_functions.modified_hamming`.
 - The `utiltiy.collections.as_list` function for wrapping in/casting to list

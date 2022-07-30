@@ -5,8 +5,14 @@ from typing import Any, Set
 class MappingError(ValueError):
     """Something failed to map."""
 
+    def __init__(self, msg: str) -> None:
+        super().__init__(
+            msg + "\n\nFor help, please refer to the "
+            "https://rics.readthedocs.io/en/latest/documentation/mapper-debugging.html page."
+        )
 
-class UserMappingError(ValueError):
+
+class UserMappingError(MappingError):
     """A user-defined mapping function did something strange."""
 
     def __init__(self, msg: str, value: Any, candidates: Set[Any]) -> None:

@@ -53,6 +53,11 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
             func, kwargs = h if isinstance(h, tuple) else (h, {})
             self.add_heuristic(func, kwargs)
 
+    @property
+    def score_function(self) -> ScoreFunction:
+        """Return the underlying likeness score function."""
+        return self._score
+
     def add_heuristic(self, heuristic: Union[str, HeuristicsTypes], kwargs: Dict[str, Any] = None) -> None:
         """Add a new heuristic."""
         new_heuristic = (_resolve_heuristic(heuristic), kwargs or {})
