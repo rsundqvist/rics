@@ -190,11 +190,11 @@ class MatchScores:
                 ands = []
                 if self.superseding_value:
                     extra = f": {self.superseding_value}" if full else ""
-                    ands.append(f"value {repr(self.superseding_value.value)}{extra}")
+                    ands.append(f"value={repr(self.superseding_value.value)}{extra}")
                 if self.superseding_candidate:
                     extra = f": {self.superseding_candidate}" if full else ""
-                    ands.append(f"candidate {repr(self.superseding_candidate.candidate)}{extra}")
-                why = f" (superseded by {' and '.join(ands)})"
+                    ands.append(f"candidate={repr(self.superseding_candidate.candidate)}{extra}")
+                why = f" (superseded on {' and '.join(ands)})"
 
             return f"{self.record}{why}."
 

@@ -28,12 +28,20 @@ def test_with_overrides(candidates):
     assert mapper.apply(["a", "b"], candidates).left_to_right == {"a": ("fixed",), "b": ("b",)}
 
 
-def test_user_override(candidates):
-    mapper = Mapper(overrides={"a": "fixed"}, unknown_user_override_action="ignore")
-    assert mapper.apply(["a"], candidates, override_function=lambda *args: "ab").left_to_right == {"a": ("ab",)}
-    assert mapper.apply(["a"], candidates, override_function=lambda *args: "ignored").left_to_right == {"a": ("fixed",)}
-    assert mapper.apply(["a"], candidates, override_function=lambda *args: None).left_to_right == {"a": ("fixed",)}
+@pytest.mark.parametrize(
+    "user_override, expected",
+    [
+        ("ab", ("ab",)),
+        (None, ("fixed",)),
+    ],
+)
+def test_user_override(candidates, user_override, expected):
+    mapper = Mapper(overrides={"a": "fixed"})
+    actual = mapper.apply(["a"], candidates, override_function=lambda *args: user_override).left_to_right
+    assert actual == {"a": expected}
 
+
+def test_user_overrides_ignore_unknown(candidates):
     mapper = Mapper(overrides={"a": "fixed"}, unknown_user_override_action="warn")
     with pytest.warns(UserMappingWarning):
         assert mapper.apply(["a"], candidates, override_function=lambda *args: "bad").left_to_right == {"a": ("fixed",)}

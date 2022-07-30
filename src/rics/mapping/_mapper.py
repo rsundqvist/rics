@@ -178,20 +178,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             dtype=float,
         )
 
-        unmapped_values = set(scores.index)
-        for value, override_candidate in self._get_static_overrides(scores.index, context):
-            scores.loc[value, override_candidate] = np.inf
-            unmapped_values.discard(value)
-
-        if override_function:
-            for value, override_candidate in self._get_function_overrides(
-                override_function, scores.index, scores.columns, context
-            ):
-                LOGGER.debug(
-                    f"Using override {repr(value)} -> {repr(override_candidate)} returned by {override_function}."
-                )
-                scores.loc[value, override_candidate] = np.inf
-                unmapped_values.discard(value)
+        unmapped_values = self._handle_overrides(scores, context, override_function)
 
         extra = f" in {context=}" if context else ""
         for value in unmapped_values:
@@ -253,6 +240,36 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
     def verbose(self) -> bool:
         """Return ``True`` if verbose debug-level messages are enabled."""
         return self._verbose
+
+    def _handle_overrides(
+        self,
+        scores: pd.DataFrame,
+        context: Optional[ContextType],
+        override_function: Optional[UserOverrideFunction],
+    ) -> Set[ValueType]:
+        def apply(v: ValueType, oc: CandidateType) -> None:
+            if self.cardinality and self.cardinality.one_left:
+                scores.loc[:, oc] = -np.inf  # Prevent candidate reuse
+            if self.cardinality and self.cardinality.one_right:
+                scores.loc[v, :] = -np.inf  # Prevent value reuse
+
+            scores.loc[v, oc] = np.inf
+            unmapped_values.discard(v)
+
+        unmapped_values = set(scores.index)
+        for value, override_candidate in self._get_static_overrides(scores.index, context):
+            apply(value, override_candidate)
+
+        if override_function:
+            for value, override_candidate in self._get_function_overrides(
+                override_function, scores.index, scores.columns, context
+            ):
+                LOGGER.debug(
+                    f"Using override {repr(value)} -> {repr(override_candidate)} returned by {override_function}."
+                )
+                apply(value, override_candidate)
+
+        return unmapped_values
 
     def _get_static_overrides(
         self,
