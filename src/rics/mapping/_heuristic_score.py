@@ -115,7 +115,7 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
 
     def __str__(self) -> str:
         chain = " | ".join(tname(f) for f, kwargs in self._heuristics)
-        return f"{tname(self)}([{chain}] -> {tname(self._score)})"
+        return f"{tname(self)}([{chain}] -> {tname(self.score_function)})"
 
 
 def _resolve_heuristic(func_or_name: Union[str, HeuristicsTypes]) -> HeuristicsTypes:  # pragma: no cover

@@ -49,7 +49,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             too many matches).
 
     See Also:
-        The :ref:`mapper-debugging` page.
+        The :ref:`mapping-primer` page.
     """
 
     def __init__(
