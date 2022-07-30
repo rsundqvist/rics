@@ -400,7 +400,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 raise UnknownSourceError(e.value, e.candidates) from e
 
         # Fail if any of the explicitly given (ie literal, not predicate) names fail to map to a source.
-        if isinstance(names, (str, Iterable)):
+        if isinstance(names, (int, str, Iterable)):
             required = set(as_list(names))
             unmapped = required.difference(name_to_source.left)
             if unmapped:
