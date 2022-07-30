@@ -8,3 +8,4 @@ Examples and documentation.
    examples/index
    cookbook/index
    translator-config
+   mapping-primer
