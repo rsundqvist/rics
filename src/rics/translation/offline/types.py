@@ -1,8 +1,6 @@
 """Types used for offline translation."""
 import dataclasses
-from typing import TYPE_CHECKING, Any, Dict
-from typing import Generic as _Generic
-from typing import Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Generic as _Generic, Sequence, Tuple, Union
 
 import pandas as pd
 

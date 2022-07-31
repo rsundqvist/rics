@@ -152,6 +152,7 @@ force_grid_wrap = 0
 use_parentheses = true
 line_length = 120
 known_third_party = ["invoke", "nox"]
+combine_as_imports = true
 
 [tool.black]
 line-length = 120

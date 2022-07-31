@@ -3,13 +3,14 @@ from typing import Any, Collection, Dict, Iterable, List, Tuple
 
 import pandas as pd
 
-from rics.mapping import DirectionalMapping as _DirectionalMapping
-from rics.mapping import Mapper as _Mapper
+from rics.mapping import DirectionalMapping as _DirectionalMapping, Mapper as _Mapper
 from rics.mapping.types import ContextType, UserOverrideFunction, ValueType
 from rics.translation.fetching import Fetcher as _Fetcher
 from rics.translation.fetching.types import IdsToFetch as _IdsToFetch
-from rics.translation.offline.types import PlaceholderTranslations as _PlaceholderTranslations
-from rics.translation.offline.types import SourcePlaceholderTranslations as _SourcePlaceholderTranslations
+from rics.translation.offline.types import (
+    PlaceholderTranslations as _PlaceholderTranslations,
+    SourcePlaceholderTranslations as _SourcePlaceholderTranslations,
+)
 from rics.translation.types import IdType, SourceType
 
 

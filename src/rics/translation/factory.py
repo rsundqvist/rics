@@ -1,13 +1,10 @@
 """Factory functions for translation classes."""
-from typing import TYPE_CHECKING, Any, Callable, Dict
-from typing import Generic as _Generic
-from typing import Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generic as _Generic, Iterable, Optional, Tuple
 
 import toml
 
 from rics._internal_support.types import PathLikeType
-from rics.mapping import HeuristicScore as _HeuristicScore
-from rics.mapping import Mapper as _Mapper
+from rics.mapping import HeuristicScore as _HeuristicScore, Mapper as _Mapper
 from rics.translation import exceptions, fetching
 from rics.translation.types import IdType, NameType, SourceType
 from rics.utility import misc

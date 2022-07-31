@@ -6,9 +6,7 @@ from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Uni
 import numpy as np
 import pandas as pd
 
-from rics.mapping import exceptions
-from rics.mapping import filter_functions as mf
-from rics.mapping import score_functions as sf
+from rics.mapping import exceptions, filter_functions as mf, score_functions as sf
 from rics.mapping._cardinality import Cardinality
 from rics.mapping._directional_mapping import DirectionalMapping
 from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError, UserMappingWarning

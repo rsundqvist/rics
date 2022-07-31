@@ -10,15 +10,12 @@ import warnings
 from collections import defaultdict as _defaultdict
 from contextlib import contextmanager as _contextmanager
 from dataclasses import dataclass as _dataclass
-from typing import Dict, Generator
-from typing import Generic as _Generic
-from typing import Iterable, List, Optional, Tuple
+from typing import Dict, Generator, Generic as _Generic, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 
-from rics.mapping import Cardinality as _Cardinality
-from rics.mapping import DirectionalMapping as _DirectionalMapping
+from rics.mapping import Cardinality as _Cardinality, DirectionalMapping as _DirectionalMapping
 from rics.mapping.types import CandidateType, ValueType
 
 _MAPPER_LOGGER = logging.getLogger(__package__).getChild("Mapper")

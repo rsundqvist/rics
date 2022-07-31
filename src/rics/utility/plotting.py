@@ -1,17 +1,13 @@
 """Plotting utility methods."""
 
 import functools
-from typing import Literal, Optional
-from typing import Protocol as _Protocol
-from typing import Union
+from typing import Literal, Optional, Protocol as _Protocol, Union
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import seaborn as sns
-from matplotlib.axis import Axis as _Axis
-from matplotlib.axis import XAxis as _XAxis
-from matplotlib.ticker import FuncFormatter as _FuncFormatter
-from matplotlib.ticker import IndexLocator as _IndexLocator
+from matplotlib.axis import Axis as _Axis, XAxis as _XAxis
+from matplotlib.ticker import FuncFormatter as _FuncFormatter, IndexLocator as _IndexLocator
 
 ERROR_BAR_CAPSIZE: float = 0.1
 
