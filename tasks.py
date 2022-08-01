@@ -187,3 +187,13 @@ def version(c, part, dry_run=False):
     """Bump version."""
     bump_options = ["--dry-run"] if dry_run else []
     _run(c, f"poetry run bump2version {' '.join(bump_options)} {part}")
+
+    if not dry_run and part != "dev":
+        print("Add dev suffix..")
+
+        no_dev = ["CHANGELOG.md"]
+
+        part = "dev"
+        _run(c, f"poetry run bump2version {' '.join(bump_options)} {part} --commit-args='--no-verify'")
+        print(f"Undo changes to release-only files: {' '.join(map(repr, no_dev))}")
+        _run(c, f"git checkout HEAD^ -- {' '.join(no_dev)} && git commit --amend --no-edit --no-verify --quiet")
