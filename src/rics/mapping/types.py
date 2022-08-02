@@ -22,9 +22,6 @@ ContextType = TypeVar("ContextType", bound=Hashable)
 UserOverrideFunction = Callable[[ValueType, Set[CandidateType], Optional[ContextType]], Optional[CandidateType]]
 """Signature for a user-defined override function.
 
-Unlike static overrides, which are always accepted, the return value of an override function must be in `candidates` to
-be considered valid.
-
 Args:
     value: An element to find matches for.
     candidates: Potential matches for `value`.

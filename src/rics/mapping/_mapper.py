@@ -39,7 +39,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             :class:`.InheritedKeysDict`, the context passed to :meth:`apply` is used to retrieve specific overrides.
         unmapped_values_action: Action to take if mapping fails for any values.
         unknown_user_override_action: Action to take if a :attr:`~rics.mapping.types.UserOverrideFunction` returns an
-            unknown candidate.
+            unknown candidate. Unknown candidates, i.e. candidates not in the input `candidates` collection, will not be
+            used unless `'ignore'` is chosen. As such, `'ignore'` should rather be interpreted as `'allow'`.
         cardinality: Desired cardinality for mapped values. Derive for each matching if ``None``.
         enable_verbose_logging: If ``True``, enable verbose logging for the :meth:`apply` function. Has no effect when
             the log level is above ``logging.DEBUG``.
@@ -91,20 +92,21 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
             context: Context in which mapping is being done.
             override_function: A callable that takes inputs ``(value, candidates, context)`` that returns either
-                ``None`` (let the regular mapping logic decide) or one of the `candidates`. Unlike static overrides,
-                override functions may not return non-candidates as matches. How non-candidates returned by override
-                functions is handled is determined by the :attr:`unknown_user_override_action` property.
+                ``None`` (let the regular mapping logic decide) or one of the `candidates`. How non-candidates returned
+                is handled is determined by the :attr:`unknown_user_override_action` property.
             **kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
                 not known when the ``Mapper`` is initialized.
 
         Returns:
-            A :class:`.DirectionalMapping` on the form ``{value: (matched_candidate,)}``. May be turned into a plain
-            ``{value: candidate}`` dict by using the :meth:`.DirectionalMapping.flatten` function.
+            A :class:`.DirectionalMapping` on the form ``{value: [matched_candidates, ...]}``. May be turned into a
+            plain dict ``{value: candidate}`` by using the :meth:`.DirectionalMapping.flatten` function (only if
+            :attr:`.DirectionalMapping.cardinality` is of type :attr:`.Cardinality.one_right`).
 
         Raises:
             MappingError: If any values failed to match and ``unmapped_values_action='raise'``.
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
-            UserMappingError: If `func` returns an unknown candidate.
+            UserMappingError: If `override_function` returns an unknown candidate and
+                ``unknown_user_override_action != 'ignore'``
         """
         if self.verbose:  # pragma: no cover
             from rics.mapping.support import enable_verbose_debug_messages
@@ -155,15 +157,19 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
             context: Context in which mapping is being done.
             override_function: A callable that takes inputs ``(value, candidates, context)`` that returns either
-                ``None`` (let the regular mapping logic decide) or one of the `candidates`. Unlike static overrides,
-                override functions may not return non-candidates as matches. How non-candidates returned by override
-                functions is handled is determined by the :attr:`unknown_user_override_action` property.
+                ``None`` (let the regular mapping logic decide) or one of the `candidates`. How non-candidates returned
+                is handled is determined by the :attr:`unknown_user_override_action` property.
             **kwargs: Runtime keyword arguments for score and filter functions. May be used to add information which is
                 not known when the ``Mapper`` is initialized.
 
         Returns:
             A ``DataFrame`` of value-candidate match scores, with ``DataFrame.index=values`` and
             ``DataFrame.columns=candidates``.
+
+        Raises:
+            BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
+            UserMappingError: If `override_function` returns an unknown candidate and
+                ``unknown_user_override_action != 'ignore'``
         """
         start = perf_counter()
 
@@ -224,7 +230,14 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
     @property
     def unknown_user_override_action(self) -> ActionLevel:
-        """Return the action to take if an override function returns an unknown candidate."""
+        """Return the action to take if an override function returns an unknown candidate.
+
+        Unknown candidates, i.e. candidates not in the input `candidates` collection, will not be used unless `'ignore'`
+        is chosen. As such, `'ignore'` should rather be interpreted as `'allow'`.
+
+        Returns:
+            Action to take if a user-defined override function returns an unknown candidate.
+        """
         return self._bad_candidate_action
 
     @property
@@ -302,7 +315,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             if self.unknown_user_override_action is not ActionLevel.IGNORE and user_override not in candidates:
                 msg = (
                     f"The user-defined override function {func} returned an unknown candidate {repr(user_override)} for"
-                    f" {value=}. If this is intended behaviour, set unknown_user_override_action='ignore' to allow."
+                    f" {value=}. If this is intended behaviour, set unknown_user_override_action = 'ignore' to allow."
                 )
                 if self.unknown_user_override_action is ActionLevel.RAISE:
                     LOGGER.error(msg)

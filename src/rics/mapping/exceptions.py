@@ -8,7 +8,7 @@ class MappingError(ValueError):
     def __init__(self, msg: str) -> None:
         super().__init__(
             msg + "\n\nFor help, please refer to the "
-            "https://rics.readthedocs.io/en/latest/documentation/mapping-primer.html page."
+            "https://rics.readthedocs.io/en/stable/documentation/mapping-primer.html page."
         )
 
 

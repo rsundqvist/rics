@@ -91,9 +91,8 @@ class DirectionalMapping(Generic[HL, HR]):
         Raises:
             CardinalityError: If cardinality is not :attr:`~.Cardinality.OneToOne` or :attr:`~.Cardinality.ManyToOne`.
         """
-        valid = {Cardinality.OneToOne, Cardinality.ManyToOne}
-        if self._cardinality not in valid:
-            raise CardinalityError(f"Must have one of {valid} to flatten.")  # pragma: no cover
+        if not self._cardinality.one_right:  # pragma: no cover
+            raise CardinalityError(f"Must have one of {(Cardinality.OneToOne, Cardinality.ManyToOne)} to flatten.")
 
         return {left: right[0] for left, right in self._left_to_right.items()}
 
