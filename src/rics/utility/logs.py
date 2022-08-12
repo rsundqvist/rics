@@ -1,7 +1,4 @@
-"""
-A namespace for logging constants, and a wrapper or the standard :py:func:`logging.basicConfig`-method with defaults
-which are defined here.
-"""  # noqa: D205, D400
+"""Utility methods for logging tasks."""
 import logging
 from typing import Any, Dict, Tuple, Union
 
@@ -14,6 +11,8 @@ DATE_FORMAT: str = "%Y-%m-%dT%H:%M:%S"
 
 def basic_config(rics_level: Union[int, str] = None, force: bool = True, **kwargs: Any) -> None:
     """Do basic logging configuration with package defaults.
+
+    Simple wrapper for the standard :py:func:`logging.basicConfig`-method, using my personal preferences for defaults.
 
     Args:
         rics_level: Log level for the `rics` package. Inherit if ``None``.

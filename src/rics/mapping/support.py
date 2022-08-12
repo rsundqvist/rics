@@ -87,7 +87,7 @@ class MatchScores:
             unmapped_values = set(self._matrix.index.difference(left_to_right))
             for value in unmapped_values:
                 lst = []
-                for rr in filter(lambda r: r.record.value == value, rejections):
+                for rr in filter(lambda r: r.record.value == value, rejections):  # noqa: B023
                     lst.append(f"    {rr.explain(self._min_score, full=True)}")
                 value_reasons = "\n".join(lst)
                 UNMAPPED_LOGGER.debug(f"Could not map {value=}:\n{value_reasons}")

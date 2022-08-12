@@ -12,7 +12,7 @@ class Fetcher(ABC, Generic[SourceType, IdType]):
     @property
     @abstractmethod
     def allow_fetch_all(self) -> bool:
-        """Flag indicating whether the :meth:`fetch_all` operation is permitted."""
+        """Flag indicating whether the :meth:`~rics.translation.fetching.Fetcher.fetch_all` operation is permitted."""
 
     def close(self) -> None:
         """Close the ``Fetcher``. Does nothing by default."""

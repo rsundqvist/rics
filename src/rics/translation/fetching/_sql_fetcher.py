@@ -129,7 +129,6 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
 
     @property
     def allow_fetch_all(self) -> bool:
-        """:noindex:"""  # noqa: D400
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
     def __repr__(self) -> str:

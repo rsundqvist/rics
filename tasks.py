@@ -1,7 +1,6 @@
-"""
-Tasks for maintaining the project.
+"""Tasks for maintaining the project.
 
-Execute 'invoke --list' for guidance on using Invoke
+Execute 'invoke --list' for guidance on using Invoke.
 """
 import platform
 import webbrowser
