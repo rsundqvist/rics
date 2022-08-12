@@ -9,12 +9,21 @@ DATE_FORMAT: str = "%Y-%m-%dT%H:%M:%S"
 """Default logging date format; ``2022-02-05T11:17:05<logging-format>``"""
 
 
-def basic_config(rics_level: Union[int, str] = None, force: bool = True, **kwargs: Any) -> None:
+def basic_config(
+    *,
+    format: str = FORMAT,  # noqa: A002
+    datefmt: str = DATE_FORMAT,
+    rics_level: Union[int, str] = None,
+    force: bool = True,
+    **kwargs: Any,
+) -> None:
     """Do basic logging configuration with package defaults.
 
     Simple wrapper for the standard :py:func:`logging.basicConfig`-method, using my personal preferences for defaults.
 
     Args:
+        format: Format string for emitted messages; see :attr:`FORMAT`.
+        datefmt: Format string for date/time; see :attr:`DATE_FORMAT`.
         rics_level: Log level for the `rics` package. Inherit if ``None``.
         force: If ``True``, override existing configuration if it exists.
         **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
