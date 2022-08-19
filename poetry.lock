@@ -479,7 +479,7 @@ pydocstyle = ">=2.1"
 
 [[package]]
 name = "flake8-logging-format"
-version = "0.7.4"
+version = "0.7.5"
 description = ""
 category = "dev"
 optional = false
@@ -2195,7 +2195,7 @@ translation = ["sqlalchemy", "toml"]
 [metadata]
 lock-version = "1.1"
 python-versions = "<3.11,>=3.8"
-content-hash = "4473446f1bf5e7bdc88cea7b695e0534888450136cfa71897d727ef63bda6a43"
+content-hash = "3b6a79cadc49f76a2f7fed0a037626c74eece7f71d8a92640f01b3be1a24fc7a"
 
 [metadata.files]
 alabaster = [
@@ -2522,7 +2522,7 @@ flake8-docstrings = [
     {file = "flake8_docstrings-1.6.0-py2.py3-none-any.whl", hash = "sha256:99cac583d6c7e32dd28bbfbef120a7c0d1b6dde4adb5a9fd441c4227a6534bde"},
 ]
 flake8-logging-format = [
-    {file = "flake8-logging-format-0.7.4.tar.gz", hash = "sha256:d867b46a8a2da5d6b70aa115022a104cf6dae6a671637aae2ef3eb6eac4235dd"},
+    {file = "flake8-logging-format-0.7.5.tar.gz", hash = "sha256:54f7e349c934ce5c594f251885bc2240e99f6b48752a672a8fc7e3d1388352bb"},
 ]
 flake8-polyfill = [
     {file = "flake8-polyfill-1.0.2.tar.gz", hash = "sha256:e44b087597f6da52ec6393a709e7108b2905317d0c0b744cdca6208e670d8eda"},
