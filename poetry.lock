@@ -2156,7 +2156,7 @@ python-versions = ">=3.7"
 
 [[package]]
 name = "xdoctest"
-version = "1.0.1"
+version = "1.0.2"
 description = "A rewrite of the builtin doctest module"
 category = "dev"
 optional = false
@@ -2195,7 +2195,7 @@ translation = ["sqlalchemy", "toml"]
 [metadata]
 lock-version = "1.1"
 python-versions = "<3.11,>=3.8"
-content-hash = "56b8a2005c508c4a0c4d8d3201e5f8b52ad20d77e3c4ffc3fe9fb00a28c98e65"
+content-hash = "a0b94aca7a4a843650e01b108a19b60c8b53342cd8c0ad3c8ed610f74e5df71b"
 
 [metadata.files]
 alabaster = [
@@ -3574,8 +3574,8 @@ widgetsnbextension = [
     {file = "widgetsnbextension-4.0.1.tar.gz", hash = "sha256:bfa01945156f2bfd9a386bfc51b54ec5bfa26006d26bb75e5351e226f870fafb"},
 ]
 xdoctest = [
-    {file = "xdoctest-1.0.1-py3-none-any.whl", hash = "sha256:334e422dfd7a889acf17b56db4f42a45f530f7324e3418a5ce9b0df4603babba"},
-    {file = "xdoctest-1.0.1.tar.gz", hash = "sha256:3b90a4b7894dda58c9c8dc673fb61fdceb90fdc838baf1cac475618c8e35975c"},
+    {file = "xdoctest-1.0.2-py3-none-any.whl", hash = "sha256:d036c21daa0475bb6a68c4f03a2456ab06a2a7f15f514051ef3036948b3c161f"},
+    {file = "xdoctest-1.0.2.tar.gz", hash = "sha256:1bbf8de45dadbb31f1e2c9f427b4cc915d6d655c347b03bba6979653939ece34"},
 ]
 zipp = [
     {file = "zipp-3.8.0-py3-none-any.whl", hash = "sha256:c4f6e5bbf48e74f7a38e7cc5b0480ff42b0ae5178957d564d18932525d5cf099"},
