@@ -1,15 +1,11 @@
 import pytest as pytest
 
-from rics.translation.offline.parse_format_string import (
-    BadDelimiterError,
-    Element,
-    UnusedOptionalBlockError,
-    get_elements,
-)
+from rics.translation.offline.parse_format_string import get_elements  # _is_delimiter,
+from rics.translation.offline.parse_format_string import BadDelimiterError, Element, UnusedOptionalBlockError
 
 
 @pytest.mark.parametrize(
-    "s, expected",
+    "fmt, expected",
     [
         (
             "static",
@@ -24,14 +20,14 @@ from rics.translation.offline.parse_format_string import (
             ],
         ),
         (
-            "[{optional-id}] \\[literal-angle-brackets\\]",
+            "[{optional-id}] [[literal-angle-brackets]]",
             [
                 Element(part="{optional-id}", placeholders=["optional-id"], required=False),
                 Element(part=" [literal-angle-brackets]", placeholders=[], required=True),
             ],
         ),
         (
-            "{id} \\[literal-angle-brackets\\]",
+            "{id} [[literal-angle-brackets]]",
             [
                 Element(part="{id} [literal-angle-brackets]", placeholders=["id"], required=True),
             ],
@@ -55,26 +51,24 @@ from rics.translation.offline.parse_format_string import (
         ),
     ],
 )
-def test_get_elements(s, expected):
-    assert get_elements(s) == expected
+def test_get_elements(fmt, expected):
+    actual = get_elements(fmt)
+    assert actual == expected
 
 
 @pytest.mark.parametrize(
-    "s, i, already_open",
+    "fmt, i, msg",
     [
-        ("]", 0, False),
-        ("[[", 1, True),
-        ("[{a}] ]", 6, False),
+        ("]", 0, "no block to close"),
+        ("[", 0, "never closed"),
+        ("  [  ", 2, "never closed"),
+        ("[{a}] ]", 6, "no block to close"),
+        ("[ [", 2, "nested"),
     ],
 )
-def test_improper_brackets(s, i, already_open):
-    with pytest.raises(BadDelimiterError, match=f"{i=}.*{'' if already_open else ''}"):
-        get_elements(s)
-
-
-def test_unterminated_block():
-    with pytest.raises(BadDelimiterError, match="opened at i=2.*never closed"):
-        get_elements("  [  ")
+def test_improper_brackets(fmt, i, msg):
+    with pytest.raises(BadDelimiterError, match=f"{i=}.*{msg}"):
+        get_elements(fmt)
 
 
 def test_optional_block_without_placeholders():

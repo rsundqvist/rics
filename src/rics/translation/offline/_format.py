@@ -15,8 +15,12 @@ class Format:
 
            * `Must` contain at least one placeholder.
            * Are rendered only if `all` of its placeholders are defined.
-           * Are rendered `without` delimiting brackets. Literal angle bracket characters can be added by prefixing with
-             a backslash, i.e. ``'\['`` in configs or ``'\\['`` in code.
+           * Are rendered `without` delimiting brackets.
+
+     .. hint::
+
+        Literal angle brackets are added by doubling the wanted character, as for ``'{'`` and ``'}'`` in plain Python
+        f-strings. For example, ``'[['`` will render a ``'['``-literal.
 
     Args:
         fmt: A translation fstring.
@@ -109,5 +113,8 @@ class Format:
         return parse_format_string.get_elements(format_string)
 
     def __repr__(self) -> str:
-        input_string = tuple(e.part.replace("[", "\\[").replace("]", "\\]") for e in self._elements)
-        return f"{tname(self)}{input_string}"
+        def repr_part(e: parse_format_string.Element) -> str:
+            s = e.part.replace("[", "[[").replace("]", "]]")
+            return s if e.required else f"[{s}]"
+
+        return f"{tname(self)}('{''.join(map(repr_part, self._elements))}')"
