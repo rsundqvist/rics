@@ -1,21 +1,22 @@
-import re
-from dataclasses import dataclass
-from typing import Iterable, List, Tuple
+from typing import Iterable, List
 
+from rics.translation.offline import parse_format_string
 from rics.translation.offline.types import FormatType, PlaceholdersTuple
 from rics.utility.misc import tname
 
-_REQUIRED_ELEMENT_RE = r"{(?P<required>\w+)}"
-_OPTIONAL_ELEMENT_REGEX = r"(?P<optional>\[(?P<left>.*?){(?P<optional_name>\w+)}(?P<right>.*?)\])"
-
 
 class Format:
-    """Format specification for translations strings.
+    r"""Format specification for translations strings.
 
     Translation formats are similar to regular f-strings, with two important exceptions:
 
-        1. Positional arguments (``'{}'``) may not be used; correct form is ``'{key-name}'``.
-        2. Substrings surrounded by ``'[]'`` denote an optional element.
+        1. Positional placeholders (``'{}'``) may not be used; correct form is ``'{placeholder-name}'``.
+        2. Substrings surrounded by ``'[]'`` denote an optional element. Optional elements..
+
+           * `Must` contain at least one placeholder.
+           * Are rendered only if `all` of its placeholders are defined.
+           * Are rendered `without` delimiting brackets. Literal angle bracket characters can be added by prefixing with
+             a backslash, i.e. ``'\['`` in configs or ``'\\['`` in code.
 
     Args:
         fmt: A translation fstring.
@@ -39,16 +40,9 @@ class Format:
         ('{id}:{name}, nice={is_nice}', '1:Morris, nice=True')
     """
 
-    PLACEHOLDER_PATTERN: re.Pattern = re.compile(_OPTIONAL_ELEMENT_REGEX + "|" + _REQUIRED_ELEMENT_RE)
-    """Pattern which denotes placeholder elements in format strings."""
-
     def __init__(self, fmt: str) -> None:
         self._fmt = fmt
-        self._elements = self._parse_format_string(fmt)
-        self._named_elements: List[NamedElement] = []
-        for elem in self._elements:
-            if isinstance(elem, NamedElement):
-                self._named_elements.append(elem)
+        self._elements: List[parse_format_string.Element] = self._parse_format_string(fmt)
 
     def fstring(self, placeholders: Iterable[str] = None, positional: bool = False) -> str:
         """Create a format string for the given placeholders.
@@ -71,14 +65,10 @@ class Format:
         return self._make_fstring(placeholders, positional=positional)
 
     def _make_fstring(self, placeholders: Iterable[str], positional: bool) -> str:
-        parts = []
-        for element in self._elements:
-            if isinstance(element, NamedElement):
-                if element.name in placeholders:
-                    parts.append(element.positional_part if positional else element.part)
-            else:
-                parts.append(element.part)
-        return "".join(parts)
+        def predicate(e: parse_format_string.Element) -> bool:
+            return e.required or set(placeholders).issuperset(e.placeholders)
+
+        return "".join(e.positional_part if positional else e.part for e in filter(predicate, self._elements))
 
     @staticmethod
     def parse(fmt: FormatType) -> "Format":
@@ -95,91 +85,29 @@ class Format:
     @property
     def placeholders(self) -> PlaceholdersTuple:
         """All placeholders in the order in which they appear."""
-        return tuple(e.name for e in self._named_elements)
+        return self._extract_placeholders(self._elements)
 
     @property
     def required_placeholders(self) -> PlaceholdersTuple:
         """All required placeholders in the order in which they appear."""
-        return tuple(e.name for e in filter(lambda e: e.required, self._named_elements))
+        return self._extract_placeholders(filter(lambda e: e.required, self._elements))
 
     @property
     def optional_placeholders(self) -> PlaceholdersTuple:  # pragma: no cover
         """All optional placeholders in the order in which they appear."""
-        return tuple(e.name for e in filter(lambda e: not e.required, self._named_elements))
+        return self._extract_placeholders(filter(lambda e: not e.required, self._elements))
 
-    @classmethod
-    def _parse_format_string(cls, format_string: str) -> Tuple["Element", ...]:
-        """Parse a translation format string.
-
-        Args:
-            format_string: A format string to parse.
-
-        Returns:
-            A tuple of elements.
-        """
+    @staticmethod
+    def _extract_placeholders(elements: Iterable[parse_format_string.Element]) -> PlaceholdersTuple:
         ans = []
-        pos = 0
-        while True:
-            match = Format.PLACEHOLDER_PATTERN.search(format_string, pos=pos)
-            if match is None:
-                break
-            else:
-                if match.start() > pos:
-                    ans.append(Element(format_string[pos : match.start()], True))
-                ans.append(from_match(match))
-                pos = match.end()
-
-        if pos < len(format_string):
-            ans.append(Element(format_string[pos:], True))
+        for e in elements:
+            ans.extend(e.placeholders)
         return tuple(ans)
 
+    @classmethod
+    def _parse_format_string(cls, format_string: str) -> List[parse_format_string.Element]:
+        return parse_format_string.get_elements(format_string)
+
     def __repr__(self) -> str:
-        return f"{tname(self)}{tuple(e.part for e in self._elements)}"
-
-
-_POSITIONAL_PATTERN: re.Pattern = re.compile(_REQUIRED_ELEMENT_RE)
-
-
-@dataclass(frozen=True)
-class Element:
-    """A single translation element."""
-
-    part: str
-    required: bool
-
-    @property
-    def positional_part(self) -> str:
-        """Return a positional copy of `part`."""
-        return _POSITIONAL_PATTERN.sub("{}", self.part, 1)
-
-
-@dataclass(frozen=True)
-class NamedElement(Element):
-    """A single translation element."""
-
-    name: str
-
-
-def from_match(match: re.Match) -> NamedElement:
-    """Initialize an element from a RegEx match instance.
-
-    Args:
-        match: RegEx match instance.
-
-    Returns:
-        A new element.
-    """
-    part, required, key = (
-        (
-            match.group(0),
-            True,
-            match.group("required"),
-        )
-        if match.group("optional") is None
-        else (  # fmt: off
-            match.group("left") + "{" + match.group("optional_name") + "}" + match.group("right"),
-            False,
-            match.group("optional_name"),
-        )
-    )
-    return NamedElement(part, required, key)
+        input_string = tuple(e.part.replace("[", "\\[").replace("]", "\\]") for e in self._elements)
+        return f"{tname(self)}{input_string}"
