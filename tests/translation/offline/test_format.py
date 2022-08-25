@@ -9,20 +9,6 @@ def fmt():
 
 
 @pytest.mark.parametrize(
-    "fmt, expected_parts",
-    [
-        ("!{id}:[:{code}<]:{name}<", ["!", "{id}", ":", ":{code}<", ":", "{name}", "<"]),
-        ("!{id}:[:{code}<][:{name}<]<", ["!", "{id}", ":", ":{code}<", ":{name}<", "<"]),
-        ("!><{id}:[:{code}<][:{name}]", ["!><", "{id}", ":", ":{code}<", ":{name}"]),
-        ("{id}:[:{code}]:{name}", ["{id}", ":", ":{code}", ":", "{name}"]),
-    ],
-)
-def test_parse(fmt, expected_parts):
-    parts = [e.part for e in Format._parse_format_string(fmt)]
-    assert parts == expected_parts
-
-
-@pytest.mark.parametrize(
     "placeholders, expected",
     [
         (("id", "code", "name"), "{id}::{code}:{name}"),
@@ -49,7 +35,6 @@ def test_missing_required(fmt):
         fmt.fstring(("does", "not", "exist"))
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize(
     "kwargs, expected",
     [
@@ -58,6 +43,15 @@ def test_missing_required(fmt):
     ],
 )
 def test_nested(kwargs, expected):
-    fmt = Format("{{{id}}} is required[, '{optional}' is [optional]!]")
+    fmt = Format("{{{id}}} is required[, '{optional}' is \\[optional\\]!]")
     fstring = fmt.fstring(kwargs)
     assert fstring.format(**kwargs) == expected
+
+
+def test_multiple_optional_placeholders():
+    fmt = Format("{required}[ opt0={opt0}, opt1={opt1}]")
+
+    assert fmt.fstring(["required"]) == "{required}"
+    assert fmt.fstring(["required", "opt0"]) == "{required}"
+    assert fmt.fstring(["required", "opt1"]) == "{required}"
+    assert fmt.fstring(["required", "opt0", "opt1"]) == "{required} opt0={opt0}, opt1={opt1}"

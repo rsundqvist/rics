@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Improve handling for optional `Format` blocks (#52). Nested optional blocks are *not* supported.
+
 ## [0.15.0] - 2022-08-01
 
 ### Added
