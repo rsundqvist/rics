@@ -1,18 +1,20 @@
 import logging
 import warnings
 from timeit import Timer
-from typing import Any, Callable, Collection, Dict, List, Optional, Union
+from typing import Callable, Collection, Dict, Generic, List, Optional, TypeVar, Union
 
 from rics.performance._format_perf_counter import format_seconds as fmt_time
 from rics.utility.misc import tname
 
 LOGGER = logging.getLogger(__package__)
 
-CandFunc = Callable[[Any], None]
+DataType = TypeVar("DataType")
+
+CandFunc = Callable[[DataType], None]
 ResultsDict = Dict[str, Dict[str, List[float]]]
 
 
-class MultiCaseTimer:
+class MultiCaseTimer(Generic[DataType]):
     """Performance testing implementation for multiple candidates and data sets.
 
     Args:
@@ -23,7 +25,7 @@ class MultiCaseTimer:
     def __init__(
         self,
         candidate_method: Union[CandFunc, Collection[CandFunc], Dict[str, CandFunc]],
-        test_data: Union[Any, Dict[str, Any]],
+        test_data: Union[DataType, Dict[str, DataType]],
     ) -> None:
         self._candidates = _process_candidates(candidate_method)
         if not self._candidates:  # pragma: no cover
@@ -117,10 +119,13 @@ def _process_candidates(
     if callable(candidates):
         return {tname(candidates): candidates}
 
-    return {tname(c): c for c in candidates}
+    ans = {tname(c): c for c in candidates}
+    if len(ans) != len(candidates):
+        raise ValueError(f"Derived names for input {candidates=} is not unique. Use a dict to assign candidate names.")
+    return ans
 
 
-def _process_single_test_datum(test_data: Any) -> Dict[str, Any]:  # pragma: no cover
+def _process_single_test_datum(test_data: DataType) -> Dict[str, DataType]:  # pragma: no cover
     s = repr(test_data)
     key = f"{s[:29]}..." if len(s) > 32 else s
     return {f"Sample data: '{key}'": test_data}

@@ -36,5 +36,8 @@ def run_multivariate_test(
 
     data = to_dataframe(run_results)
     if plot:  # pragma: no cover
+        from matplotlib.pyplot import show
+
         plot_run(data, **figure_kwargs)
+        show(block=False)
     return data

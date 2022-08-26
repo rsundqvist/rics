@@ -5,6 +5,7 @@ import click
 
 from rics._internal_support.types import PathLikeType
 from rics.performance import run_multivariate_test as _run
+from rics.performance._util import get_best as _get_best
 
 
 def run(
@@ -96,9 +97,7 @@ def run(
         else:
             raise e
 
-    best = result.groupby(["Candidate", "Test data"]).min()
-    best = best[filter(lambda s: "time" in s.lower(), best.columns)]
-    print(best)
+    print(_get_best(result))
 
     fig = plt.gcf()
     fig.suptitle(pretty)

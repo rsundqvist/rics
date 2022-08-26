@@ -34,6 +34,23 @@ def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
     return df
 
 
+def get_best(run_results: Union[ResultsDict, pd.DataFrame]) -> pd.DataFrame:  # pragma: no cover
+    """Get a summarized view of the best run results for each candidate/data pair.
+
+    Args:
+        run_results: Output of :meth:`rics.performance.MultiCaseTimer.run`.
+
+    Returns:
+        The best (lowest) times for each candidate/data pair.
+    """
+    best = (
+        (run_results if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results))
+        .groupby(["Candidate", "Test data"])
+        .min()
+    )
+    return best[filter(lambda s: "time" in s.lower(), best.columns)]
+
+
 def plot_run(
     run_results: Union[ResultsDict, pd.DataFrame],
     x: Literal["candidate", "data"] = None,
