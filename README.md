@@ -16,8 +16,8 @@
 
 ## What is it?
 
-A **collection of utility and convenience functions** that I've written and rewritten over the years, until they become
-so general that it makes sense to have them **documented and tested** for inclusion in the library. The scope is
+A collection of utility and convenience functions that I've written and rewritten over the years, until they become so
+general that it makes sense to have them documented and tested for inclusion in the library. The scope is
 naturally diverse and ranges from basic enum definitions to multivariate performance testing. More advanced features, 
 like element mapping and ID translation, is built on top of basic utilities.
 
