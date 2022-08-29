@@ -1,7 +1,8 @@
 """Dict utility functions."""
-
+import warnings
 from typing import Any, Callable, Dict, Hashable, Iterator, List, Mapping, TypeVar, Union
 
+from rics.utility.action_level import ActionLevel
 from rics.utility.misc import tname as _tname
 
 KT = TypeVar("KT", bound=Hashable)
@@ -31,11 +32,13 @@ def compute_if_absent(d: Dict[KT, VT], key: KT, func: Callable[[KT], VT] = None)
     return d[key]
 
 
-def reverse_dict(d: Mapping[KT, HVT]) -> Dict[HVT, KT]:
+def reverse_dict(d: Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseType = "raise") -> Dict[HVT, KT]:
     """Swap keys and values.
 
     Args:
         d: A dict to reverse.
+        duplicate_key_action: Action to take if the return dict has key collisions in the reversed dict, i.e. there are
+            duplicate values in `d`. Set to `ignore` to allow.
 
     Returns:
         A reversed copy of `d`.
@@ -46,8 +49,24 @@ def reverse_dict(d: Mapping[KT, HVT]) -> Dict[HVT, KT]:
         >>> from rics.utility.collections.dicts import reverse_dict
         >>> reverse_dict({"A": 0, "B": 1})
         {0: 'A', 1: 'B'}
+
+    Raises:
+        ValueError: If there are duplicate values in `d` and ``duplicate_key_action='raise'``.
     """
-    return {value: key for key, value in d.items()}
+    ans = {value: key for key, value in d.items()}
+    action_level = ActionLevel.verify(duplicate_key_action)
+
+    if action_level is not ActionLevel.IGNORE and len(d) != len(ans):  # pragma: no cover
+        msg = (
+            f"Duplicate values in {d}; cannot reverse. Original dict has size {len(d)} != {len(ans)}."
+            f"\nHint: Set duplicate_key_action='ignore' to allow."
+        )
+        if action_level is ActionLevel.WARN:
+            warnings.warn(msg)
+        elif action_level is ActionLevel.RAISE:
+            raise ValueError(msg)
+
+    return ans
 
 
 def flatten_dict(

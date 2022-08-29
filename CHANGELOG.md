@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Added `duplicate_key_action` arg to `utility.dicts.reverse_dict`
+
 ### Fixed
 - Duplicate derived names for candidates in for perftests.
 - Improve handling for optional `Format` blocks (#52). Nested optional blocks are *not* supported.
