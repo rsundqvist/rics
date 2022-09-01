@@ -69,7 +69,7 @@ mypy = "^0.971"
 # description: https://github.com/astropy/astropy/issues/11723
 # https://github.com/astropy/astropy/pull/12270
 sphinx = "^5.1.1"
-pydata-sphinx-theme = "^0.10.1"
+pydata-sphinx-theme = "^0.9.0"
 myst-parser = "^0.18.0"
 nbsphinx = "^0.8.9"
 bump2version = "^1.0.1"
