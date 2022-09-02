@@ -134,7 +134,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
     def _report_unmapped(self, msg: str) -> None:  # pragma: no cover
         logger = LOGGER.getChild("unmapped")
         if self.unmapped_values_action is ActionLevel.RAISE:
-            msg += ("\nHint: set "  # noqa: G003
+            msg += (
+                "\nHint: set "
                 f"unmapped_values_action='{ActionLevel.WARN.value}' or "
                 f"unmapped_values_action='{ActionLevel.IGNORE.value}' "
                 "to allow unmapped values."
