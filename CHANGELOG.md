@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.1] - 2022-09-02
+
 ### Changed
 - Added `duplicate_key_action` arg to `utility.dicts.reverse_dict`
 
@@ -263,7 +265,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.15.1...HEAD
+[0.15.1]: https://github.com/rsundqvist/rics/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/rsundqvist/rics/compare/v0.14.0...v0.15.0
 [0.14.0]: https://github.com/rsundqvist/rics/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/rsundqvist/rics/compare/v0.12.2...v0.13.0
