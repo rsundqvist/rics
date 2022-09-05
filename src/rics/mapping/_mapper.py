@@ -181,8 +181,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
         scores = pd.DataFrame(
             data=-np.inf,
-            columns=pd.Index(set(candidates), name="candidates"),
-            index=pd.Index(set(values), name="values"),
+            columns=pd.Index(list(candidates), name="candidates").drop_duplicates(),
+            index=pd.Index(list(values), name="values").drop_duplicates(),
             dtype=float,
         )
 

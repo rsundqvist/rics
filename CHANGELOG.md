@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Make sure `Mapper.compute_scores` score respects given value/candidate order.
+
 ## [0.15.1] - 2022-09-02
 
 ### Changed
