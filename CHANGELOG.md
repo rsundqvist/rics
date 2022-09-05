@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Respect index order in `MatchScores.to_directional_mapping`.
+
 ## [0.15.2] - 2022-09-05
 
 ### Fixed

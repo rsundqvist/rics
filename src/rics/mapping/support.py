@@ -94,7 +94,9 @@ class MatchScores:
 
         return _DirectionalMapping(
             cardinality=cardinality,
-            left_to_right={value: tuple(matches) for value, matches in left_to_right.items()},
+            left_to_right={
+                value: tuple(left_to_right[value]) for value in self._matrix.index if value in left_to_right
+            },
             _verify=False,
         )
 
