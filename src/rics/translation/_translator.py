@@ -276,6 +276,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             UntranslatableTypeError: If ``type(translatable)`` cannot be translated.
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
+            MappingError: If name-to-source mapping is ambiguous.
             ValueError: If `maximal_untranslated_fraction` is not a valid fraction.
             TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
             ConnectionStatusError: If ``reverse=True`` while the ``Translator`` is online.
@@ -365,6 +366,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         Raises:
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If required (explicitly given) names fail to map to a source.
+            MappingError: If name-to-source mapping is ambiguous.
             UnknownSourceError: If `override_function` returns a source which is not known.
         """
         return self._map_inner(translatable, names, ignore_names=ignore_names, override_function=override_function)
@@ -412,6 +414,14 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             warnings.warn(msg, MappingWarning)
             LOGGER.warning(msg)
             return None
+
+        if name_to_source.cardinality.many_right:  # pragma: no cover
+            for value, candidates in name_to_source.left_to_right.items():
+                if len(candidates) > 1:
+                    raise MappingError(
+                        f"Name-to-source mapping {name_to_source.left_to_right} is ambiguous; {value} -> {candidates}."
+                        f"\nHint: choose a different Mapper cardinality."
+                    )
 
         return name_to_source
 
