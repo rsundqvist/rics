@@ -94,9 +94,9 @@ def plot_run(
     right.set_title("Best")
     fig.suptitle("Performance", size=24)
 
-    barplot(ax=left, data=data, x=x_arg, y=y, hue=hue, ci="sd", **figure_kwargs)
+    barplot(ax=left, data=data, x=x_arg, y=y, hue=hue, errorbar="sd", **figure_kwargs)
     best = data.groupby(["Test data", "Candidate"]).min().reset_index()
-    barplot(ax=right, data=best, x=x_arg, y=y, hue=hue, ci=None, **figure_kwargs)
+    barplot(ax=right, data=best, x=x_arg, y=y, hue=hue, errorbar=None, **figure_kwargs)
 
 
 def _smaller_as_hue(data: pd.DataFrame) -> Tuple[str, str]:

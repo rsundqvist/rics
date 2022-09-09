@@ -1,9 +1,10 @@
 import logging
 import warnings
-from collections import defaultdict
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
+
+import numpy
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
@@ -594,11 +595,15 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         translatable: Translatable,
         dio: Type[DataStructureIO],
     ) -> List[IdsToFetch]:
-
         # Aggregate and remove duplicates.
-        source_to_ids: Dict[SourceType, Set[IdType]] = defaultdict(set)
-        for name, ids in dio.extract(translatable, list(name_to_source.left)).items():
-            source_to_ids[name_to_source.left_to_right[name][0]].update(ids)  # type: ignore
+        source_to_ids: Dict[SourceType, Set[IdType]] = {source: set() for source in name_to_source.right}
+        n2s = name_to_source.flatten()  # Will fail if sources are ambiguous.
+        for name, ids in dio.extract(translatable, list(n2s)).items():
+            if len(ids) == 0:
+                continue
+            # Float IDs aren't officially supported, but is common when using Pandas since int-types cannot be NaN. This
+            # is sometimes a problem for the build-in set. https://github.com/numpy/numpy/issues/9358
+            source_to_ids[n2s[name]].update(numpy.unique(ids) if isinstance(ids[0], float) else ids)
 
         return [IdsToFetch(source, ids) for source, ids in source_to_ids.items()]
 
