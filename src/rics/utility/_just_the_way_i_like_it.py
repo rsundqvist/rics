@@ -21,6 +21,7 @@ def configure_stuff(
 
     pd.options.display.max_columns = 50
     pd.options.display.max_colwidth = 150
+    pd.options.display.max_rows = 250
     pd.options.display.width = 0
 
     basic_config(level=level, matplotlib_level=matplotlib_level, **kwargs)
