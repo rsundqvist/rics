@@ -1,20 +1,19 @@
 import logging
 import warnings
 from timeit import Timer
-from typing import Callable, Collection, Dict, Generic, List, Optional, TypeVar, Union
+from typing import Any, Callable, Collection, Dict, List, Optional, Union
 
 from rics.performance._format_perf_counter import format_seconds as fmt_time
 from rics.utility.misc import tname
 
 LOGGER = logging.getLogger(__package__)
 
-DataType = TypeVar("DataType")
-
+DataType = Any
 CandFunc = Callable[[DataType], None]
 ResultsDict = Dict[str, Dict[str, List[float]]]
 
 
-class MultiCaseTimer(Generic[DataType]):
+class MultiCaseTimer:
     """Performance testing implementation for multiple candidates and data sets.
 
     Args:
