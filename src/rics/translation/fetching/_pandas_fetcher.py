@@ -59,7 +59,7 @@ class PandasFetcher(AbstractFetcher[str, IdType]):
             source_path: Path to serialized ``DataFrame``.
 
         Returns:
-            A deserialized `DataFrame``.
+            A deserialized ``DataFrame``.
         """
         return self._read(source_path, *self._args, **self._kwargs)
 

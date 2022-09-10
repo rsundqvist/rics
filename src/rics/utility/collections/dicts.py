@@ -123,31 +123,39 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
 
     Args:
         default: Shared (fallback) mappings for all contexts.
-        specific: Context-specific translations, backed by default mappings.
+        specific: Context-specific mappings, backed by the default fallback mappings.
 
     Examples:
         A short demonstration.
 
         >>> from rics.utility.collections.dicts import InheritedKeysDict
-        >>> shared = {0: "shared0", 1: "shared1"}
+        >>> shared = {0: 'fallback-for-0', 1: 'fallback-for-1'}
         >>> specific = {
-        ... "ctx0": {0: "c0-v0"},
-        ... "ctx1": {0: "c1-v0", 1: "c1-v1"},
+        ...     'ctx0': {0: 'c0-v0'},
+        ...     'ctx1': {0: 'c1-v0', 1: 'c1-v1', 2: 'c1-v2'},
         ... }
-        >>> d = InheritedKeysDict(default=shared, specific=specific)
-        >>> d
-        InheritedKeysDict(default={0: 'shared0', 1: 'shared1'},
-        specific={'ctx0': {0: 'c0-v0'}, 'ctx1': {0: 'c1-v0', 1: 'c1-v1'}})
-        >>> d["ctx0"]  # Value of key 0 is inherited
-        {0: 'c0-v0', 1: 'shared1'}
-        >>> d["ctx1"]  # Both keys are specified, so nothing is inherited
-        {0: 'c1-v0', 1: 'c1-v1'}
-        >>> "not-in-d" in d  # With defaults, all keys are considered as part of d..
+        >>> ikd = InheritedKeysDict(default=shared, specific=specific); ikd
+        InheritedKeysDict(default={0: 'fallback-for-0', 1: 'fallback-for-1'}, specific={'ctx0': {0: 'c0-v0'},
+        'ctx1': {0: 'c1-v0', 1: 'c1-v1', 2: 'c1-v2'}})
+
+        The value of key `0` is inherited for `'ctx0'`. The `'ctx1'`-context
+        defines all shared keys, as well as a unique key.
+
+        >>> ikd['ctx0']
+        {0: 'c0-v0', 1: 'fallback-for-1'}
+        >>> ikd['ctx1']
+        {0: 'c1-v0', 1: 'c1-v1', 2: 'c1-v2'}
+
+        The ``InheritedKeysDict.__contains__``-method is ``True`` for all keys.
+        Unknown keys simply return the default values. This will be an empty
+        if no specific keys are specified.
+
+        >>> 'unseen-key' in ikd
         True
-        >>> d["not-in-d"]  # ..but, 'not-in-d' unknowns inherit all keys
-        {0: 'shared0', 1: 'shared1'}
-        >>> len(d)  # The length of d is equal to the number of specific contexts
-        2
+        >>> ikd['unseen-key']
+        {0: 'fallback-for-0', 1: 'fallback-for-1'}
+
+        The length of `ikd` is equal to the number of specific contexts (two in this case).
     """
 
     def __init__(
