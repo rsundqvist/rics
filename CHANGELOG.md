@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Improved handling of NaN IDs. Move all NaN handling in `AbstractFetcher` to the `Translator`.
+- Raise a `MappingError` for ambiguous name-to-source mapping.
+
+### Fixed
+- The `AbstractFetcher` no longer treats zero-length ID collections as a fetch-all instruction.
+
 ## [0.15.3] - 2022-09-05
 
 ### Fixed
