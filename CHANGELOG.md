@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - The `AbstractFetcher` no longer treats zero-length ID collections as a fetch-all instruction.
+- Cast `float` to `int` when extracting IDs from a pandas `DataFrame` or `Series`.
 
 ## [0.15.3] - 2022-09-05
 
