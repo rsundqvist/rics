@@ -382,9 +382,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         names_to_translate = self._resolve_names(translatable, names, ignore_names, parent)
         sources = self.fetcher.sources if self.online else self._cached_tmap.sources
 
-        def func(value: NameType, candidates: Set[SourceType], _: None) -> Optional[SourceType]:
+        def func(v: NameType, c: Set[SourceType], _: None) -> Optional[SourceType]:
             assert override_function is not None, "This shouldn't happen"  # noqa: S101
-            res = override_function(value, candidates, [])
+            res = override_function(v, c, [])
             if res is None:
                 return None
             if isinstance(res, dict):
@@ -420,7 +420,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 if len(candidates) > 1:
                     raise MappingError(
                         f"Name-to-source mapping {name_to_source.left_to_right} is ambiguous; {value} -> {candidates}."
-                        f"\nHint: choose a different Mapper cardinality."
+                        f"\nHint: Choose a different cardinality such that Mapper.cardinality.many_right is False."
                     )
 
         return name_to_source
@@ -599,8 +599,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         translation_map.name_to_source = n2s  # Update
         return translation_map, list(n2s)
 
-    @staticmethod
     def _get_ids_to_fetch(
+        self,
         name_to_source: DirectionalMapping,
         translatable: Translatable,
         dio: Type[DataStructureIO],
@@ -608,12 +608,32 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         # Aggregate and remove duplicates.
         source_to_ids: Dict[SourceType, Set[IdType]] = {source: set() for source in name_to_source.right}
         n2s = name_to_source.flatten()  # Will fail if sources are ambiguous.
+
+        float_names: List[str] = []
+        num_coerced = 0
         for name, ids in dio.extract(translatable, list(n2s)).items():
             if len(ids) == 0:
                 continue
-            # Float IDs aren't officially supported, but is common when using Pandas since int-types cannot be NaN. This
-            # is sometimes a problem for the build-in set. https://github.com/numpy/numpy/issues/9358
-            source_to_ids[n2s[name]].update(numpy.unique(ids) if isinstance(ids[0], float) else ids)
+
+            if isinstance(ids[0], float):
+                float_names.append(name)
+                # Float IDs aren't officially supported, but is common when using Pandas since int types cannot be NaN.
+                # This is sometimes a problem for the build-in set (see https://github.com/numpy/numpy/issues/9358), and
+                # for several database drivers.
+                ids = numpy.unique(ids)  # type: ignore
+                keep_mask = ~numpy.isnan(ids)
+                num_coerced += keep_mask.sum()  # Somewhat inaccurate; includes repeat IDs from other names
+                source_to_ids[n2s[name]].update(ids[keep_mask].astype(int, copy=False))  # type: ignore
+            else:
+                source_to_ids[n2s[name]].update(ids)
+
+        if num_coerced > 100 and self.online:  # pragma: no cover
+            warnings.warn(
+                f"To ensure proper fetcher operation, {num_coerced} float-type IDs have been coerced to integers. "
+                f"Enforcing supported data types (str and int) in your {tname(translatable)}-data may improve "
+                f"performance. Affected names ({len(float_names)}): {sorted(float_names)}."
+                "\nHint: Going offline will suppress this warning."
+            )
 
         return [IdsToFetch(source, ids) for source, ids in source_to_ids.items()]
 

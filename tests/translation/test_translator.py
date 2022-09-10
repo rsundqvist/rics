@@ -403,3 +403,17 @@ def test_inherited_name(translator):
     s.name = None
     with pytest.raises(AttributeError):
         translator.translate(s, attribute="index")
+
+
+def test_float_ids(translator):
+    from rics.mapping import DirectionalMapping
+    from rics.translation.dio import resolve_io
+
+    translatable = [0.0, 0, 1, 0.1, float("nan"), np.nan, 3, np.nan]
+    ids_to_fetch = translator._get_ids_to_fetch(
+        DirectionalMapping(left_to_right={"whatever": ("whatever",)}),
+        translatable,
+        resolve_io(translatable),
+    )
+    assert len(ids_to_fetch) == 1
+    assert ids_to_fetch[0].ids == {0, 1, 3}
