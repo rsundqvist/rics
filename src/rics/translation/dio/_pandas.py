@@ -10,6 +10,10 @@ from rics.translation.types import IdType, NameType
 T = TypeVar("T", pd.DataFrame, pd.Series)
 
 
+def _cast_series(series: pd.Series) -> pd.Series:
+    return series.dropna().astype(int) if series.dtype == float else series
+
+
 class PandasIO(DataStructureIO):
     """Implementation for Pandas data types."""
 
@@ -20,9 +24,9 @@ class PandasIO(DataStructureIO):
     @staticmethod
     def extract(translatable: T, names: List[NameType]) -> Dict[NameType, Sequence[IdType]]:
         if isinstance(translatable, pd.DataFrame):
-            return translatable[names].to_dict(orient="list")
+            return {name: _cast_series(translatable[name]).tolist() for name in names}
         else:
-            return SequenceIO.extract(translatable, names)
+            return SequenceIO.extract(_cast_series(translatable), names)
 
     @staticmethod
     def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
