@@ -14,8 +14,6 @@ FormatType = Union[str, "Format"]
 PlaceholdersTuple = Tuple[str, ...]
 NameToSourceDict = Dict[NameType, SourceType]  # {name: source}
 TranslatedIds = Dict[IdType, str]  # {id: translation}
-# {"shared": {from_placeholder: to_placeholder}, "source-specific": {source: {from_placeholder: to_placeholder}}
-SourcePlaceholderTranslations = Dict[SourceType, "PlaceholderTranslations"]  # {source: PlaceholderTranslations}
 
 
 @dataclasses.dataclass
@@ -84,3 +82,6 @@ class PlaceholderTranslations(_Generic[SourceType]):
     def from_dict(cls, source: SourceType, data: Dict[str, Sequence[Any]]) -> "PlaceholderTranslations":
         """Create instance from a dict."""
         return cls.from_dataframe(source, pd.DataFrame.from_dict(data))
+
+
+SourcePlaceholderTranslations = Dict[SourceType, PlaceholderTranslations[SourceType]]
