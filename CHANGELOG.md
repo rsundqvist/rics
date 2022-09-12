@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0] - 2022-09-12
+
 ### Changed
 - Improved handling of NaN IDs. Move all NaN handling in `AbstractFetcher` to the `Translator`.
 - Raise a `MappingError` for ambiguous name-to-source mapping.
@@ -283,7 +285,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.15.3...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/rsundqvist/rics/compare/v0.15.3...v0.16.0
 [0.15.3]: https://github.com/rsundqvist/rics/compare/v0.15.2...v0.15.3
 [0.15.2]: https://github.com/rsundqvist/rics/compare/v0.15.1...v0.15.2
 [0.15.1]: https://github.com/rsundqvist/rics/compare/v0.15.0...v0.15.1
