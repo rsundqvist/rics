@@ -63,7 +63,7 @@ flake8-bandit = "^3.0.0"
 darglint = "^1.8.1"
 isort = "^5.10.1"
 black = { version = "^22", extras = ["jupyter"] }
-safety = "^2.1.1"
+safety = "^2.2.0"
 mypy = "^0.971"
 # duplicate object warnings for sphinx>=4
 # description: https://github.com/astropy/astropy/issues/11723
