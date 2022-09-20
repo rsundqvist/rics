@@ -26,11 +26,20 @@ for tm in type_modules:
 
 def callback(_app, _env, node, _contnode):  # noqa
     reftarget = node.get("reftarget")
+
     for m in type_modules:
         if reftarget.startswith(m):
             ans_hax = reference(refuri=m + ".html#" + reftarget, reftitle=reftarget)
             ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
             return ans_hax
+
+    if reftarget == "rics.mapping.support.Record":
+        ans_hax = reference(
+            refuri="rics.mapping.support.html#rics.mapping.support.MatchScores.Record", reftitle="Record"
+        )
+        ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
+        return ans_hax
+
     return None
 
 

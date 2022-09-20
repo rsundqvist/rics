@@ -102,7 +102,7 @@ class MatchScores:
 
     def _match(
         self, cardinality: _Cardinality = None
-    ) -> Tuple[List["Record[ValueType, CandidateType]"], List["Reject[ValueType, CandidateType]"]]:
+    ) -> Tuple[List["MatchScores.Record[ValueType, CandidateType]"], List["Reject[ValueType, CandidateType]"]]:
         rejections: Optional[List[MatchScores.Reject]] = None
         records: List[MatchScores.Record] = self.above
 
@@ -127,13 +127,13 @@ class MatchScores:
         return sorted_scores
 
     @property
-    def above(self) -> List["Record"]:
+    def above(self) -> List["MatchScores.Record[ValueType, CandidateType]"]:
         """Get all records with scores `above` the threshold."""
         s = self._get_sorted()
         return self._from_series(s[s >= self._min_score])
 
     @property
-    def below(self) -> List["Record"]:
+    def below(self) -> List["MatchScores.Record[ValueType, CandidateType]"]:
         """Get all records with scores `below` the threshold."""
         s = self._get_sorted()
         return self._from_series(s[s < self._min_score])
@@ -154,7 +154,7 @@ class MatchScores:
 
     @classmethod
     def _from_series(cls, s: pd.Series) -> List[Record[ValueType, CandidateType]]:
-        return [MatchScores.Record(value, candidate, score) for (value, candidate), score in s.iteritems()]
+        return [MatchScores.Record(value, candidate, score) for (value, candidate), score in s.items()]
 
     @_dataclass(frozen=True)
     class Reject(_Generic[ValueType, CandidateType]):

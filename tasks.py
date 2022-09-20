@@ -169,7 +169,7 @@ def coverage(c, fmt="report", open_browser=False):
 def docs(c, open_browser=False):
     # type: (Context, bool) -> None
     """Build documentation."""
-    build_docs = f"sphinx-build -a -j auto -b html {DOCS_DIR} {DOCS_BUILD_DIR}"
+    build_docs = f"sphinx-build -T -E -W --keep-going -a -j auto -b html {DOCS_DIR} {DOCS_BUILD_DIR}"
     _run(c, build_docs)
     if open_browser:
         webbrowser.open(DOCS_INDEX.absolute().as_uri())
