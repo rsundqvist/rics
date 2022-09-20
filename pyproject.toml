@@ -27,6 +27,7 @@ classifiers = [
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/rsundqvist/rics/issues"
+"Changelog" = "https://github.com/rsundqvist/rics/blob/master/CHANGELOG.md"
 
 [tool.poetry.scripts]
 rics-perf = "rics.performance.cli:_main"
@@ -37,7 +38,7 @@ python = "<3.11,>=3.8"
 click = "*"
 pandas = ">=1.1"
 
-# [tool.poetry.group.translation.dependencies]
+# translation
 sqlalchemy = { version = ">=1.0.0", optional = true }
 toml = { version = ">=0.10.2", optional = true }
 # [tool.poetry.group.plotting]
@@ -48,11 +49,29 @@ seaborn = { version = "*", optional = true }
 translation = ["sqlalchemy", "toml"]
 plotting = ["matplotlib", "seaborn"]
 
-[tool.poetry.dev-dependencies]
-pre-commit = "^2.20.0"
-invoke = "^1.7.1"
-flake8 = "^4.0.1"
-flakeheaven = "==3.0.0"
+
+[tool.poetry.group.docs]
+optional = true
+[tool.poetry.group.docs.dependencies]
+# duplicate object warnings for sphinx>=4
+# description: https://github.com/astropy/astropy/issues/11723
+# https://github.com/astropy/astropy/pull/12270
+sphinx = "^5.1.1"
+pydata-sphinx-theme = "^0.9.0"
+myst-parser = "^0.18.0"
+nbsphinx = "^0.8.9"
+ipython = "^8.5.0"
+
+[tool.poetry.group.notebooks]
+optional = true
+[tool.poetry.group.notebooks.dependencies]
+jupyterlab = "^3"
+ipywidgets = "*"
+jupyterlab-execute-time = "*"
+tqdm = "*"
+
+[tool.poetry.group.flake8.dependencies]
+flakeheaven = "^3.0.0"
 flake8-builtins = "^1.5.3"
 flake8-blind-except = "^0.2.1"
 flake8-logging-format = "^0.7.5"
@@ -61,36 +80,34 @@ flake8-annotations = "^2.9.1"
 flake8-docstrings = "^1.6.0"
 flake8-bandit = "^3.0.0"
 darglint = "^1.8.1"
+
+[tool.poetry.group.codestyle.dependencies]
 isort = "^5.10.1"
 black = { version = "^22", extras = ["jupyter"] }
-safety = "^2.1.1"
-mypy = "^0.971"
-# duplicate object warnings for sphinx>=4
-# description: https://github.com/astropy/astropy/issues/11723
-# https://github.com/astropy/astropy/pull/12270
-sphinx = "^5.1.1"
-pydata-sphinx-theme = "^0.9.0"
-myst-parser = "^0.18.0"
-nbsphinx = "^0.8.9"
-bump2version = "^1.0.1"
+
+[tool.poetry.group.test.dependencies]
 pytest = "^7.1.2"
 xdoctest = "^1.1.0"
 coverage = "^6.4.3"
 pytest-cov = "^3.0.0"
-watchdog = { version = "^2.1.6", extras = ["watchmedo"] }
+pg8000 = ">=1.29.1"  # Pure-python pgsql driver; used for optional Dvdrental test cases
 
-# Should move the jupyter stuff when possible
-jupyterlab = "^3"
-ipywidgets = "*"
-jupyterlab_execute_time = "*"
-pg8000 = ">=1.29.1"  # Pure-python psql driver
+[tool.poetry.group.misc.dependencies]
+pre-commit = "^2.20.0"
+invoke = "^1.7.1"
+safety = "^2.1.1"
+mypy = "^0.971"
+bump2version = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+
 
 [tool.flakeheaven]
 format = "grouped"
 max_line_length = 120
 show_source = true
-docstring-convention = "google"
-extended_default_ignore = []
+docstring_convention = "google"
+extended-default-ignore = []
 
 [tool.flakeheaven.plugins]
 pyflakes = ["+*"]
@@ -154,9 +171,11 @@ line_length = 120
 known_third_party = ["invoke", "nox"]
 combine_as_imports = true
 
+
 [tool.black]
 line-length = 120
 target-version = ["py38"]
+
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]

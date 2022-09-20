@@ -57,14 +57,14 @@ trouble.
    git clone --recurse-submodules git@github.com:rsundqvist/rics.git
    cd rics
    git submodule update --init --recursive
-   poetry install -E translation -E plotting
+   poetry install --all-extras --with=docs
    ```
    
 3. **Install commit hooks (optional)**
    
    If this step is skipped, use `inv hooks` to run hooks manually.
    ```bash
-   inv install-hooks
+   poetry run inv install-hooks
    ```
    
 4. **Verify installation (optional)**
@@ -78,10 +78,8 @@ trouble.
    
 5. **Bonus content**
 
-   Quality-of-life packages, especially for notebooks.
    ```bash
-   extras="tqdm"
-   poetry run pip install $extras
+   poetry install --with=jupyter
    ```
 
 ## Source template
