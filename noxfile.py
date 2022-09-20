@@ -7,8 +7,7 @@ import nox
 from nox.sessions import Session
 
 nox.options.sessions = ["tests", "mypy"]
-python_versions = ["3.8", "3.9", "3.10"]
-extras = ["translation", "plotting"]
+python_versions = ["3.8", "3.9", "3.10.6"]
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
@@ -30,7 +29,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
         session.run(
             "poetry",
             "export",
-            "--dev",
+            "--with=dev",
             "--without-hashes",
             f"--output={requirements.name}",
             external=True,
@@ -40,11 +39,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
 
 def install_with_project_extras(session: Session) -> None:
     """Install the project using poetry."""
-    extra = []
-    for e in extras:
-        extra.append("-E")
-        extra.append(e)
-    session.run_always("poetry", "install", "--no-interaction", *extra, external=True)
+    session.run_always("poetry", "install", "--no-interaction", "--all-extras", external=True)
     session.install(".")
 
 
