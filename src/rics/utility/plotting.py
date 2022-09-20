@@ -20,11 +20,7 @@ class HasXAxis(_Protocol):
 
 
 def configure() -> None:
-    """Call all configure-functions in this module.
-
-    See this `demo notebook <https://github.com/rsundqvist/rics/blob/master/jupyterlab/demo/plotting/Style.ipynb>`_ for
-    an example of figures rendered using these settings.
-    """
+    """Call all configure-functions in this module."""
     configure_seaborn()
     configure_matplotlib()
 
