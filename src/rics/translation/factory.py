@@ -1,7 +1,12 @@
 """Factory functions for translation classes."""
 from typing import TYPE_CHECKING, Any, Callable, Dict, Generic as _Generic, Iterable, Optional, Tuple
 
-import toml
+try:
+    import tomllib  # type: ignore
+except ModuleNotFoundError:
+    # PEP-680 compatability layer for Python < 3.11, see https://peps.python.org/pep-0680/
+    # Shamelessly stolen from https://github.com/hukkin/tomli#building-a-tomlitomllib-compatibility-layer
+    import tomli as tomllib  # type: ignore
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import HeuristicScore as _HeuristicScore, Mapper as _Mapper
@@ -131,7 +136,8 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         """Create a ``Translator`` from a TOML file."""
         from rics.translation import Translator
 
-        config: Dict[str, Any] = toml.load(self.file)
+        with open(self.file, "rb") as f:
+            config: Dict[str, Any] = tomllib.load(f)
 
         _check_allowed_keys(["translator", "mapping", "fetching", "unknown_ids"], config, "<root>")
 
@@ -159,9 +165,10 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         if config:
             fetchers.append(self._make_fetcher(**config))  # Add primary fetcher
 
-        fetchers.extend(
-            self._make_fetcher(**toml.load(file_fetcher_file)["fetching"]) for file_fetcher_file in extra_fetchers
-        )
+        for file_fetcher_file in extra_fetchers:
+            with open(file_fetcher_file, "rb") as f:
+                fetchers.append(self._make_fetcher(**tomllib.load(f)["fetching"]))
+
         if not fetchers:
             raise exceptions.ConfigurationError(
                 "Section [fetching] is required when no pre-initialized AbstractFetcher is given."

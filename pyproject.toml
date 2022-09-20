@@ -40,13 +40,13 @@ pandas = ">=1.1"
 
 # translation
 sqlalchemy = { version = ">=1.0.0", optional = true }
-toml = { version = ">=0.10.2", optional = true }
-# [tool.poetry.group.plotting]
+tomli = { version = ">=2.0.1", markers = "python_version < '3.11'", optional = true }
+# plotting
 matplotlib = { version = "*", optional = true }
 seaborn = { version = "*", optional = true }
 
 [tool.poetry.extras]
-translation = ["sqlalchemy", "toml"]
+translation = ["sqlalchemy", "tomli"]
 plotting = ["matplotlib", "seaborn"]
 
 
