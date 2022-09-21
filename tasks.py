@@ -141,7 +141,14 @@ def mypy(c):
 def tests(c):
     # type: (Context) -> None
     """Run tests."""
-    pytest_options = ["--xdoctest", "--cov", "--cov-append", "--cov-report=", "--cov-fail-under=0"]
+    pytest_options = [
+        "-W error::Warning",  # Fail on any error which is not expected or explicitly suppressed
+        "--xdoctest",
+        "--cov",
+        "--cov-append",
+        "--cov-report=",
+        "--cov-fail-under=0",
+    ]
     _run(c, f"poetry run pytest {' '.join(pytest_options)} {TEST_DIR} {SOURCE_DIR}")
 
 

@@ -1,8 +1,11 @@
 from time import sleep
 
+import pytest
+
 from rics.performance import run_multivariate_test
 
 
+@pytest.mark.filterwarnings("ignore:Matplotlib is currently using agg:UserWarning")
 def test_run_multivariate_test():
     ans = run_multivariate_test(
         candidate_method={
