@@ -183,7 +183,8 @@ def test_mapping_nothing_to_translate(translator):
     with pytest.warns(MappingWarning) as w:
         translator.map({"strange-name": [1, 2, 3]})
     assert len(w) == 1
-    assert "none of names=None" in str(w[0])
+    assert "aborted; none of the derived names" in str(w[0])
+    assert "['strange-name']" in str(w[0])
 
 
 def test_all_name_ignored(translator):
@@ -191,15 +192,15 @@ def test_all_name_ignored(translator):
         translator.map({"name": []}, ignore_names="name")
     assert len(w) == 2
     assert "No names left" in str(w[0])
-    assert "none of names=None" in str(w[1])
+    assert "aborted; none of the derived names" in str(w[1])
+    assert "['name']" in str(w[1])
+    assert "ignore_names='name'" in str(w[1])
 
 
 def test_explicit_name_ignored(translator):
-    with pytest.warns(UserWarning) as w, pytest.raises(MappingError) as e:
-        translator.map(0, names=["explicit_name"], ignore_names="explicit_name")
+    with pytest.raises(MappingError) as e:
+        translator.map(0, names=["ignored_name", "positive_numbers"], ignore_names="ignored_name")
     assert "Required names" in str(e)
-    assert len(w) == 1
-    assert "No names left" in str(w[0])
 
 
 def test_complex_default(hex_fetcher):

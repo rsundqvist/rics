@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Improve messaging when translation is aborted due to mapping failure.
+
 ## [0.16.1] - 2022-09-23
 
 ### Changed

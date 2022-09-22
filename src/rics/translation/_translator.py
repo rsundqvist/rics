@@ -275,7 +275,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         Raises:
             UntranslatableTypeError: If ``type(translatable)`` cannot be translated.
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
-            MappingError: If required (explicitly given) names fail to map to a source.
+            MappingError: If any required (explicitly given) names fail to map to a source.
             MappingError: If name-to-source mapping is ambiguous.
             ValueError: If `maximal_untranslated_fraction` is not a valid fraction.
             TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
@@ -365,7 +365,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Raises:
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
-            MappingError: If required (explicitly given) names fail to map to a source.
+            MappingError: If any required (explicitly given) names fail to map to a source.
             MappingError: If name-to-source mapping is ambiguous.
             UnknownSourceError: If `override_function` returns a source which is not known.
         """
@@ -402,18 +402,28 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             except UserMappingError as e:
                 raise UnknownSourceError(e.value, e.candidates) from e
 
-        # Fail if any of the explicitly given (i.e. literal, not predicate) names fail to map to a source.
-        if isinstance(names, (int, str, Iterable)):
-            required = set(as_list(names))
-            unmapped = required.difference(name_to_source.left)
-            if unmapped:
-                raise MappingError(f"Required names {unmapped} not mapped with {sources=} and {ignore_names=}.")
+        unmapped = set() if names is None else set(as_list(names)).difference(name_to_source.left)
+        if unmapped or not name_to_source.left:
+            params_info = (
+                f"could not be mapped to {sources=}. "
+                "Additional parameters: ("
+                f"{ignore_names=}, "
+                f"override_function={tname(override_function)}, "
+                f"parent={tname(parent)}"
+                ")"
+            )
 
-        if not name_to_source.left:
-            msg = f"Translation aborted since none of {names=} could be mapped with {sources=}"
-            warnings.warn(msg, MappingWarning)
-            LOGGER.warning(msg)
-            return None
+            if names is None:
+                derived_names = self._extract_from_attribute_or_parent(translatable, parent)
+                msg = f"Translation aborted; none of the derived names {derived_names} {params_info}."
+                warnings.warn(msg, MappingWarning)
+                LOGGER.warning(msg)
+                return None
+            elif unmapped:
+                # Fail if any of the explicitly given names fail to map to a source.
+                msg = f"Required names {unmapped} {params_info}."
+                LOGGER.error(msg)
+                raise MappingError(msg)
 
         if name_to_source.cardinality.many_right:  # pragma: no cover
             for value, candidates in name_to_source.left_to_right.items():
@@ -707,20 +717,26 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         parent: Translatable = None,  # This isn't correct; should be different typevars.
     ) -> List[NameType]:
         if names is None:
-            if parent is None:
-                names = self._extract_from_attribute(translatable)
-            else:
-                try:
-                    names = self._extract_from_attribute(translatable)
-                except AttributeError:
-                    names = self._extract_from_attribute(parent)
-                    LOGGER.debug(
-                        f"Using {names=} from parent of type {tname(parent)} for child of type {tname(translatable)}"
-                    )
+            names = self._extract_from_attribute_or_parent(translatable, parent)
         else:
             names = as_list(names)
         ignored_names = ignored_names if callable(ignored_names) else set(as_list(ignored_names))
         return self._resolve_names_inner(names, ignored_names)
+
+    def _extract_from_attribute_or_parent(
+        self, translatable: Translatable, parent: Optional[Translatable]
+    ) -> List[NameType]:
+        if parent is None:
+            names = self._extract_from_attribute(translatable)
+        else:
+            try:
+                names = self._extract_from_attribute(translatable)
+            except AttributeError:
+                names = self._extract_from_attribute(parent)
+                LOGGER.debug(
+                    f"Using {names=} from parent of type {tname(parent)} for child of type {tname(translatable)}"
+                )
+        return names
 
     @classmethod
     def _extract_from_attribute(cls, translatable: Translatable) -> List[NameType]:
