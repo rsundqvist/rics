@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Improve documentation for troubleshooting mapping issues
+
 ### Fixed
 - The `utility.logs.basic_config`-function now properly uses the `format` and `datefmt` arguments.
 
