@@ -47,10 +47,7 @@ def basic_config(
         The Python :py:mod:`logging` module was imported on the same line to save space.
     """
     wildcard_levels, kwargs = _extract_wildcards(rics_level=rics_level, force=force, **kwargs)
-
-    kwargs["format"] = kwargs.get("format", FORMAT)
-    kwargs["datefmt"] = kwargs.get("datefmt", DATE_FORMAT)
-    logging.basicConfig(**kwargs)
+    logging.basicConfig(format=format, datefmt=datefmt, **kwargs)
 
     for name, level in wildcard_levels.items():
         logging.getLogger(name).setLevel(level)
