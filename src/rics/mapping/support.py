@@ -28,7 +28,14 @@ warnings.warn("This module is considered an implementation detail, and may chang
 
 @_contextmanager
 def enable_verbose_debug_messages() -> Generator[None, None, None]:  # typing.ContextManager doesn't work?
-    """Temporarily enable verbose DEBUG-level messages."""
+    """Temporarily enable verbose DEBUG-level logger messages.
+
+    Returns a context manager. Calling the function without the ``with`` statement does nothing.
+
+    >>> from rics.mapping import Mapper, support
+    >>> with support.enable_verbose_debug_messages():
+    ...     Mapper().apply('ab', candidates='abc')
+    """  # noqa: DAR301
     from rics.mapping import filter_functions, heuristic_functions, score_functions
 
     before = filter_functions.VERBOSE, heuristic_functions.VERBOSE, score_functions.VERBOSE
