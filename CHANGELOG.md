@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Switch from `toml` to `tomli` for reading `Translator` config files.
 - Improve documentation for troubleshooting mapping issues
 
 ### Fixed
