@@ -11,16 +11,16 @@ def test_run_multivariate_test():
     ans = run_multivariate_test(
         candidate_method={
             "sleep": lambda t: sleep(t),
-            "sleep_x5": lambda t: sleep(t * 5),
+            "sleep_x4": lambda t: sleep(t * 4),
         },
         test_data={
-            "5 ms": 0.0050,
-            "7.5 ms": 0.0075,
+            "1 ms": 0.001,
+            "3 ms": 0.003,
         },
         time_per_candidate=0.1,
     )
-    assert sorted(ans["Candidate"].unique()) == ["sleep", "sleep_x5"]
-    assert sorted(ans["Test data"].unique()) == ["5 ms", "7.5 ms"]
+    assert sorted(ans["Candidate"].unique()) == ["sleep", "sleep_x4"]
+    assert sorted(ans["Test data"].unique()) == ["1 ms", "3 ms"]
 
     best = ans.groupby(["Candidate", "Test data"])["Time [ms]"].min()
-    assert (best["sleep"] < best["sleep_x5"]).all()
+    assert (best["sleep"] < best["sleep_x4"]).all()
