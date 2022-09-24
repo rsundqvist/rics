@@ -158,7 +158,7 @@ flake8-docstrings = ["-DAR101", "-D102"]
 flake8-bandit = ["-S101", "-S301", "-S403"]
 flake8-docstrings = ["-D100", "-D101", "-D102", "-D103"]
 flake8-darglint = ["-DAR101"]
-flake8-annotations = ["-ANN001", "-ANN101", "-ANN102", "-ANN201", "-ANN202", "-ANN204"]
+flake8-annotations = ["-ANN001", "-ANN101", "-ANN102", "-ANN201", "-ANN202", "-ANN204", "-ANN205", "-ANN206"]
 
 [tool.flakeheaven.exceptions."jupyterlab/"]
 flake8-annotations = ["-*"]
