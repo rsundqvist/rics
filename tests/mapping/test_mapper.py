@@ -139,3 +139,47 @@ def test_filter(filters, expected, candidates):
 
     actual = mapper.apply("abc", candidates).left_to_right
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    "values, candidates, expected",
+    [
+        ([1, 2], [3, 4], {1: 3, 2: 4}),
+        ([1, 2], [4, 3], {1: 4, 2: 3}),
+        ([2, 1], [3, 4], {2: 3, 1: 4}),
+        ([2, 1], [4, 3], {2: 4, 1: 3}),
+        ([1, 2], [0], {1: 0}),
+        ([2, 1], [0], {2: 0}),
+        ([0], [1, 2], {0: 1}),
+        ([0], [2, 1], {0: 2}),
+    ],
+)
+def test_equal_score_prioritizes_first(values, candidates, expected):
+    mapper = Mapper(score_function=lambda *_: [1, 1], cardinality=Cardinality.OneToOne)
+    assert mapper.apply(values, candidates).flatten() == expected
+
+
+@pytest.mark.parametrize(
+    "values, candidates, expected",
+    [
+        ([1, 2], [], {1: 0}),
+        ([2, 1], [], {2: 0}),
+    ],
+)
+def test_conflicting_overrides_prioritizes_first(values, candidates, expected):
+    mapper = Mapper(score_function=lambda *_: [1, 1], cardinality="1:1", overrides={v: 0 for v in values})
+
+    assert mapper.apply(values, candidates).flatten() == expected
+
+
+@pytest.mark.parametrize(
+    "values, candidates, expected",
+    [
+        ([1, 2], [], {1: 0}),
+        ([2, 1], [], {2: 0}),
+    ],
+)
+def test_conflicting_function_overrides_prioritizes_first(values, candidates, expected):
+    mapper = Mapper(score_function=lambda *_: [1, 1], unknown_user_override_action="ignore", cardinality="1:1")
+
+    assert mapper.apply(values, candidates, override_function=lambda *_: 0).flatten() == expected
