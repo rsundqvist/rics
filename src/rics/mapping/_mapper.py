@@ -191,7 +191,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         extra = f" in {context=}" if context else ""
         for value in unmapped_values:
             if LOGGER.isEnabledFor(logging.DEBUG):
-                candidates = set(scores.columns)
+                candidates = list(scores.columns)
                 LOGGER.debug(f"Begin computing match scores for {value=}{extra} to {candidates=} using {self._score}.")
 
             filtered_candidates = self._apply_filters(value, scores.columns, context, kwargs)
@@ -261,28 +261,26 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         scores: pd.DataFrame,
         context: Optional[ContextType],
         override_function: Optional[UserOverrideFunction],
-    ) -> Set[ValueType]:
+    ) -> List[ValueType]:
         def apply(v: ValueType, oc: CandidateType) -> None:
-            if self.cardinality and self.cardinality.one_left:
-                scores.loc[:, oc] = -np.inf  # Prevent candidate reuse
-            if self.cardinality and self.cardinality.one_right:
-                scores.loc[v, :] = -np.inf  # Prevent value reuse
-
+            scores.loc[v, :] = -np.inf
             scores.loc[v, oc] = np.inf
-            unmapped_values.discard(v)
+            unmapped_values.remove(v)
 
-        unmapped_values = set(scores.index)
-        for value, override_candidate in self._get_static_overrides(scores.index, context):
-            apply(value, override_candidate)
+        unmapped_values = list(scores.index)
 
         if override_function:
             for value, override_candidate in self._get_function_overrides(
                 override_function, scores.index, scores.columns, context
             ):
-                LOGGER.debug(
-                    f"Using override {repr(value)} -> {repr(override_candidate)} returned by {override_function}."
-                )
+                if LOGGER.isEnabledFor(logging.DEBUG):
+                    LOGGER.debug(
+                        f"Using override {repr(value)} -> {repr(override_candidate)} returned by {override_function}."
+                    )
                 apply(value, override_candidate)
+
+        for value, override_candidate in self._get_static_overrides(unmapped_values, context):
+            apply(value, override_candidate)
 
         return unmapped_values
 
@@ -320,8 +318,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 continue
             if self.unknown_user_override_action is not ActionLevel.IGNORE and user_override not in candidates:
                 msg = (
-                    f"The user-defined override function {func} returned an unknown candidate {repr(user_override)} for"
-                    f" {value=}. If this is intended behaviour, set unknown_user_override_action = 'ignore' to allow."
+                    f"The user-defined override function {func} returned an unknown candidate={repr(user_override)} for"
+                    f" {value=}. If this is intended behaviour, set unknown_user_override_action='ignore' to allow."
                 )
                 if self.unknown_user_override_action is ActionLevel.RAISE:
                     LOGGER.error(msg)

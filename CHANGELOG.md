@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Make `Mapper.compute_scores` and `apply` respect the iteration order of its arguments when there are match conflicts.
 - Improve messaging when translation is aborted due to mapping failure.
 
 ## [0.16.1] - 2022-09-23
