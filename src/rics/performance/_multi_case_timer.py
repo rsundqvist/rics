@@ -75,7 +75,7 @@ class MultiCaseTimer:
             candidate_results: Dict[str, List[float]] = {}
             LOGGER.info("Evaluate candidate '%s' %dx%d times..", candidate_label, repeat, candidate_number)
             for data_label, test_data in self._data.items():
-                raw_timings = Timer(lambda: func(test_data)).repeat(repeat, candidate_number)  # noqa: B023
+                raw_timings = self._get_raw_timings(func, test_data, candidate_number, repeat)
                 best, worst = min(raw_timings), max(raw_timings)
                 candidate_results[data_label] = [dt / candidate_number for dt in raw_timings]
                 if worst >= best * 4:  # pragma: no cover
@@ -89,6 +89,11 @@ class MultiCaseTimer:
             run_results[candidate_label] = candidate_results
 
         return run_results
+
+    @staticmethod
+    def _get_raw_timings(func: CandFunc, test_data: Any, repeat: int, number: int) -> List[float]:
+        """Exists so that it can be overridden for testing."""
+        return Timer(lambda: func(test_data)).repeat(repeat, number)  # pragma: no cover
 
     def _compute_number_of_iterations(
         self, number: Optional[int], repeat: int, time_allocation: float

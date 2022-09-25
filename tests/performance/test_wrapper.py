@@ -1,18 +1,32 @@
+from dataclasses import dataclass
 from time import sleep
 
 import pytest
 
-from rics.performance import run_multivariate_test
+from rics.performance import MultiCaseTimer, run_multivariate_test
 
 
-@pytest.mark.xfail(strict=False)  # TODO: This test is flaky, especially on MacOS. Should not rely on sleep.
+@dataclass(frozen=True)
+class CandidateFunction:
+    sleep_multiplier: int
+
+    def __call__(self, time):
+        sleep(time * self.sleep_multiplier)
+
+
+def get_raw_timings(self, func, test_data, repeat, number):
+    return [func.sleep_multiplier * test_data] * repeat
+
+
+MultiCaseTimer._get_raw_timings = get_raw_timings  # type: ignore
+
+
 @pytest.mark.filterwarnings("ignore:Matplotlib is currently using agg:UserWarning")
-@pytest.mark.filterwarnings("ignore:The test results may be unreliable:UserWarning")
 def test_run_multivariate_test():
     ans = run_multivariate_test(
         candidate_method={
-            "sleep": lambda t: sleep(t),
-            "sleep_x4": lambda t: sleep(t * 4),
+            "sleep": CandidateFunction(1),
+            "sleep_x4": CandidateFunction(4),
         },
         test_data={
             "1 ms": 0.001,
