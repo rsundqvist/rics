@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Option to print classname for functions when using `misc.tname`.
 - Property `Translator.sources`
 - The `Translator.map_scores` method. May be used to fetch the raw name-to-source match score matrix.
 
