@@ -91,7 +91,7 @@ class MultiCaseTimer:
         return run_results
 
     @staticmethod
-    def _get_raw_timings(func: CandFunc, test_data: Any, repeat: int, number: int) -> List[float]:
+    def _get_raw_timings(func: CandFunc, test_data: DataType, repeat: int, number: int) -> List[float]:
         """Exists so that it can be overridden for testing."""
         return Timer(lambda: func(test_data)).repeat(repeat, number)  # pragma: no cover
 
