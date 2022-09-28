@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+- Property `Translator.sources`
 
 ### Changed
 - Print less duplicate information in `Mapper.compute_scores` and `Mapper.apply`.

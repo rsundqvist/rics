@@ -371,6 +371,11 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         """
         return self._map_inner(translatable, names, ignore_names=ignore_names, override_function=override_function)
 
+    @property
+    def sources(self) -> List[SourceType]:
+        """Return translation sources."""
+        return self.fetcher.sources if self.online else self._cached_tmap.sources
+
     def _map_inner(
         self,
         translatable: Translatable,
@@ -380,7 +385,6 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         parent: Translatable = None,
     ) -> Optional[DirectionalMapping]:
         names_to_translate = self._resolve_names(translatable, names, ignore_names, parent)
-        sources = self.fetcher.sources if self.online else self._cached_tmap.sources
 
         def func(v: NameType, c: Set[SourceType], _: None) -> Optional[SourceType]:
             assert override_function is not None, "This shouldn't happen"  # noqa: S101
@@ -395,17 +399,17 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 return res
 
         if override_function is None:
-            name_to_source = self.mapper.apply(names_to_translate, sources)
+            name_to_source = self.mapper.apply(names_to_translate, self.sources)
         else:
             try:
-                name_to_source = self.mapper.apply(names_to_translate, sources, override_function=func)
+                name_to_source = self.mapper.apply(names_to_translate, self.sources, override_function=func)
             except UserMappingError as e:
                 raise UnknownSourceError(e.value, e.candidates) from e
 
         unmapped = set() if names is None else set(as_list(names)).difference(name_to_source.left)
         if unmapped or not name_to_source.left:
             params_info = (
-                f"could not be mapped to {sources=}. "
+                f"could not be mapped to sources={self.sources}. "
                 "Additional parameters: ("
                 f"{ignore_names=}, "
                 f"override_function={tname(override_function)}, "
