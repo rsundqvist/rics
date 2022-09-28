@@ -117,11 +117,7 @@ def flake8(c):
 def safety(c):
     # type: (Context) -> None
     """Run safety."""
-    _run(
-        c,
-        "poetry export --all-extras --format=requirements.txt --without-hashes | "
-        "poetry run safety check --stdin --full-report",
-    )
+    _run(c, "poetry export --format=requirements.txt --without-hashes | poetry run safety check --stdin --full-report")
 
 
 @task(pre=[flake8, safety, call(format_, check=True)])
