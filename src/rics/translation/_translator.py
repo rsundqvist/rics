@@ -386,25 +386,11 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     ) -> Optional[DirectionalMapping]:
         names_to_translate = self._resolve_names(translatable, names, ignore_names, parent)
 
-        def func(v: NameType, c: Set[SourceType], _: None) -> Optional[SourceType]:
-            assert override_function is not None, "This shouldn't happen"  # noqa: S101
-            res = override_function(v, c, [])
-            if res is None:
-                return None
-            if isinstance(res, dict):
-                raise NotImplementedError(
-                    "Name splitting is not yet supported. See https://github.com/rsundqvist/rics/issues/64"
-                )
-            else:
-                return res
-
-        if override_function is None:
-            name_to_source = self.mapper.apply(names_to_translate, self.sources)
-        else:
-            try:
-                name_to_source = self.mapper.apply(names_to_translate, self.sources, override_function=func)
-            except UserMappingError as e:
-                raise UnknownSourceError(e.value, e.candidates) from e
+        name_to_source = (
+            self.mapper.apply(names_to_translate, self.sources)
+            if override_function is None
+            else self._map_with_override_function(names_to_translate, override_function)
+        )
 
         unmapped = set() if names is None else set(as_list(names)).difference(name_to_source.left)
         if unmapped or not name_to_source.left:
@@ -438,6 +424,28 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                     )
 
         return name_to_source
+
+    def _map_with_override_function(
+        self, names_to_translate: List[NameType], override_function: ExtendedOverrideFunction
+    ) -> DirectionalMapping[NameType, SourceType]:
+        def func(v: NameType, c: Set[SourceType], _: None) -> Optional[SourceType]:
+            assert override_function is not None, "This shouldn't happen"  # noqa: S101
+            res = override_function(v, c, [])
+            if res is None:
+                return None
+            if isinstance(res, dict):
+                # This will probably be some kind of class in the future, as we need to do bookkeeping to keep track
+                # of where we should fetch our translations later.
+                raise NotImplementedError(
+                    "Name splitting is not yet supported. See https://github.com/rsundqvist/rics/issues/64"
+                )
+            else:
+                return res
+
+        try:
+            return self.mapper.apply(names_to_translate, self.sources, override_function=func)
+        except UserMappingError as e:
+            raise UnknownSourceError(e.value, e.candidates) from e
 
     def fetch(
         self,
