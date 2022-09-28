@@ -107,7 +107,7 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
 
         if heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG):
             changes = [
-                f"{repr(cand)}: {score:.2f} -> {heuristic_score:.2f} ({heuristic_score-score:+.2f})"
+                f"{repr(cand)}: {score:.2f} -> {heuristic_score:.2f} ({heuristic_score - score:+.2f})"
                 for cand, score, heuristic_score in zip(candidates, base_score, best)
             ]
             LOGGER.debug(f"Heuristics scores for {value=}: [{', '.join(changes)}]")
@@ -115,8 +115,10 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         yield from best
 
     def __str__(self) -> str:
-        chain = " | ".join(tname(f) for f, kwargs in self._heuristics)
-        return f"{tname(self)}([{chain}] -> {tname(self.score_function)})"
+        func_names = [
+            tname(f) + str(tuple(f"{k}={repr(v)}" for k, v in kwargs.items())) for f, kwargs in self._heuristics
+        ]
+        return f"{tname(self)}([{' | '.join(func_names)}] -> {tname(self.score_function)})"
 
 
 def _resolve_heuristic(func_or_name: Union[str, HeuristicsTypes]) -> HeuristicsTypes:  # pragma: no cover

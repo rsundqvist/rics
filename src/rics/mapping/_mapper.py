@@ -186,15 +186,21 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             dtype=float,
         )
 
+        extra = f" in {context=}" if context else ""
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            candidates = tuple(scores.columns)
+            values = tuple(scores.index)
+            LOGGER.debug(f"Begin computing match scores for {values=}{extra} to {candidates=} using {self._score}.")
+
         unmapped_values = self._handle_overrides(scores, context, override_function)
 
-        extra = f" in {context=}" if context else ""
         for value in unmapped_values:
-            if LOGGER.isEnabledFor(logging.DEBUG):
-                candidates = list(scores.columns)
-                LOGGER.debug(f"Begin computing match scores for {value=}{extra} to {candidates=} using {self._score}.")
-
+            if self.verbose and LOGGER.isEnabledFor(logging.DEBUG):
+                LOGGER.debug(f"Apply filters for {value=}.")
             filtered_candidates = self._apply_filters(value, scores.columns, context, kwargs)
+
+            if self.verbose and LOGGER.isEnabledFor(logging.DEBUG):
+                LOGGER.debug(f"Compute match scores for {value=}.")
             scores_for_value = self._score(value, filtered_candidates, context, **self._score_kwargs, **kwargs)
             for score, candidate in zip(scores_for_value, filtered_candidates):
                 scores.loc[value, candidate] = score
