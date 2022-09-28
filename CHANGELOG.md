@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 - Property `Translator.sources`
+- The `Translator.map_scores` method. May be used to fetch the raw name-to-source match score matrix.
 
 ### Changed
 - Print less duplicate information in `Mapper.compute_scores` and `Mapper.apply`.
