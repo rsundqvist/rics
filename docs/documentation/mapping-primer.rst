@@ -60,6 +60,10 @@ the index.
 The ``'rental_date'``-value can be seen having only negative-infinity matching scores due to filtering. Mapping would've
 likely failed for this value regardless, but using explicit filters clearly indicates that translation is not wanted.
 
+.. hint::
+
+   The :meth:`Translator.map_scores <rics.translation.Translator.map_scores>`-method returns name-to-source match scores.
+
 Matching procedure
 ------------------
 Given precomputed match scores (see the section above), make as many matches as possible given a ``Cardinality``

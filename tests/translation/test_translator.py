@@ -1,3 +1,5 @@
+import logging
+from contextlib import contextmanager
 from itertools import combinations_with_replacement
 
 import numpy as np
@@ -6,10 +8,34 @@ import pytest
 
 from rics.mapping import Mapper
 from rics.mapping.exceptions import MappingError, MappingWarning
-from rics.translation import Translator
+from rics.translation import Translator as RealTranslator
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
 from rics.translation.exceptions import ConfigurationError, TooManyFailedTranslationsError
 from rics.translation.fetching.exceptions import UnknownSourceError
+
+LOGGER = logging.getLogger("TestTranslator")
+
+
+@contextmanager
+def verification_context(purpose):
+    LOGGER.info(f"{f' Start: {purpose} ':=^80}")
+    yield
+    LOGGER.info(f"{f' Stop: {purpose} ':=^80}")
+
+
+class Translator(RealTranslator):
+    """Test implementation that performs additional verification."""
+
+    def _map_inner(self, translatable, names, ignore_names, override_function, parent):
+        if parent is None:
+            with verification_context("Verify score computations"):
+                """Ensure that map_scores returns correct values."""
+                names_to_translate = self._resolve_names(translatable, names, ignore_names)
+                mapper_scores = self.mapper.compute_scores(names_to_translate, self.sources, None, override_function)
+                translator_scores = self.map_scores(translatable, names, ignore_names, override_function)
+                assert mapper_scores.equals(translator_scores), "Mapper/Translator score mismatch."
+
+        return super()._map_inner(translatable, names, ignore_names, override_function, parent)
 
 
 @pytest.mark.parametrize("with_id, with_override, store", combinations_with_replacement([False, True], 3))

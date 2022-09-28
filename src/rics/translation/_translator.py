@@ -2,13 +2,15 @@ import logging
 import warnings
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
 import numpy
+import pandas as pd
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError
+from rics.mapping.types import UserOverrideFunction
 from rics.performance import format_perf_counter
 from rics.translation import factory
 from rics.translation.dio import DataStructureIO, resolve_io
@@ -43,6 +45,8 @@ FetcherTypes = Union[
     SourcePlaceholderTranslations[SourceType],
     Dict[SourceType, PlaceholderTranslations.MakeTypes],
 ]
+
+ReturnType = TypeVar("ReturnType")
 
 
 class Translator(Generic[Translatable, NameType, SourceType, IdType]):
@@ -371,6 +375,24 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         """
         return self._map_inner(translatable, names, ignore_names=ignore_names, override_function=override_function)
 
+    def map_scores(
+        self,
+        translatable: Translatable,
+        names: NameTypes = None,
+        ignore_names: Names = None,
+        override_function: ExtendedOverrideFunction = None,
+    ) -> pd.DataFrame:
+        """Returns raw match scores for name-to-source mapping. See :meth:`map` for details."""
+        names_to_translate = self._resolve_names(translatable, names, ignore_names)
+
+        return (
+            self.mapper.compute_scores(names_to_translate, self.sources)
+            if override_function is None
+            else self._call_mapper_with_override_function(
+                self.mapper.compute_scores, names_to_translate, override_function
+            )
+        )
+
     @property
     def sources(self) -> List[SourceType]:
         """Return translation sources."""
@@ -389,7 +411,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         name_to_source = (
             self.mapper.apply(names_to_translate, self.sources)
             if override_function is None
-            else self._map_with_override_function(names_to_translate, override_function)
+            else self._call_mapper_with_override_function(self.mapper.apply, names_to_translate, override_function)
         )
 
         unmapped = set() if names is None else set(as_list(names)).difference(name_to_source.left)
@@ -425,9 +447,12 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         return name_to_source
 
-    def _map_with_override_function(
-        self, names_to_translate: List[NameType], override_function: ExtendedOverrideFunction
-    ) -> DirectionalMapping[NameType, SourceType]:
+    def _call_mapper_with_override_function(
+        self,
+        mapper_function: Callable[[List[NameType], List[SourceType], None, UserOverrideFunction], ReturnType],
+        names_to_translate: List[NameType],
+        override_function: ExtendedOverrideFunction,
+    ) -> ReturnType:
         def func(v: NameType, c: Set[SourceType], _: None) -> Optional[SourceType]:
             assert override_function is not None, "This shouldn't happen"  # noqa: S101
             res = override_function(v, c, [])
@@ -443,7 +468,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
                 return res
 
         try:
-            return self.mapper.apply(names_to_translate, self.sources, override_function=func)
+            return mapper_function(names_to_translate, self.sources, None, func)
         except UserMappingError as e:
             raise UnknownSourceError(e.value, e.candidates) from e
 
