@@ -35,23 +35,27 @@ def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) 
     return getattr(module, member)
 
 
-def tname(arg: Optional[Union[Type[Any], Any, Callable]]) -> str:
+def tname(arg: Optional[Union[Type[Any], Any, Callable]], prefix_classname: bool = False) -> str:
     """Get name of method or class.
 
     Args:
         arg: Something get a name for.
+        prefix_classname: If ``True``, prepend the class name if `arg` belongs to a class.
 
     Returns:
-        A type name.
+        A name for `arg`.
+
+    Raises:
+        ValueError: If no name could be derived for `arg`.
     """
     if arg is None:
-        return "None"  # pragma: no cover
-    if isinstance(arg, type):
-        return arg.__name__
-    if hasattr(arg, "__class__") and not callable(arg):
+        return "None"
+    if hasattr(arg, "__qualname__"):
+        return arg.__qualname__ if prefix_classname else arg.__name__
+    if hasattr(arg, "__class__"):
         return arg.__class__.__name__
 
-    return arg.__name__ if hasattr(arg, "__name__") else arg.__class__.__name__
+    raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
 
 
 def get_local_or_remote(

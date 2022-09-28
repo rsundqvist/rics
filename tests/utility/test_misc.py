@@ -19,6 +19,10 @@ class Foo:
         pass
 
 
+def plain_function():
+    pass
+
+
 def test_get_by_full_name():
     assert Foo == misc.get_by_full_name("tests.utility.test_misc.Foo")
 
@@ -27,14 +31,28 @@ def test_get_by_full_name():
 
 
 def test_tname():
+    assert misc.tname(None) == "None"
     assert misc.tname(Foo()) == "Foo"
     assert misc.tname(Foo) == "Foo"
-    assert misc.tname(Foo().hi) == "hi"  # fmt: off
+    assert misc.tname(Foo().hi) == "hi"
+    assert misc.tname(plain_function) == "plain_function"
 
 
 def test_tname_callable_class():
     assert misc.tname(Foo) == "Foo"
     assert misc.tname(Foo()) == "Foo"
+
+
+def test_instance_method_with_classname():
+    print(f"{dir(Foo.hi)=}")
+    assert misc.tname(Foo.hi, prefix_classname=True) == "Foo.hi"
+    assert misc.tname(Foo.hi, prefix_classname=False) == "hi"
+
+
+def test_class_method_with_classname():
+    print(f"{dir(Foo.bar)=}")
+    assert misc.tname(Foo.bar, prefix_classname=True) == "Foo.bar"
+    assert misc.tname(Foo.bar, prefix_classname=False) == "bar"
 
 
 def test_get_local_or_remote():

@@ -118,7 +118,7 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         func_names = [
             tname(f) + str(tuple(f"{k}={repr(v)}" for k, v in kwargs.items())) for f, kwargs in self._heuristics
         ]
-        return f"{tname(self)}([{' | '.join(func_names)}] -> {tname(self.score_function)})"
+        return f"{tname(self)}([{' | '.join(func_names)}] -> {tname(self.score_function, prefix_classname=True)})"
 
 
 def _resolve_heuristic(func_or_name: Union[str, HeuristicsTypes]) -> HeuristicsTypes:  # pragma: no cover
