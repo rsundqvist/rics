@@ -206,7 +206,10 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 scores.loc[value, candidate] = score
 
         if LOGGER.isEnabledFor(logging.DEBUG):
-            LOGGER.debug(f"Computed {scores.size} match scores in {format_perf_counter(start)}:\n{scores.to_string()}")
+            LOGGER.debug(
+                f"Computed {len(scores.index)}x{len(scores.columns)} "
+                f"match scores in {format_perf_counter(start)}:\n{scores.to_string()}"
+            )
         return scores
 
     def to_directional_mapping(

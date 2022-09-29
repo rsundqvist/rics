@@ -115,10 +115,13 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         yield from best
 
     def __str__(self) -> str:
-        func_names = [
-            tname(f) + str(tuple(f"{k}={repr(v)}" for k, v in kwargs.items())) for f, kwargs in self._heuristics
-        ]
-        return f"{tname(self)}([{' | '.join(func_names)}] -> {tname(self.score_function, prefix_classname=True)})"
+        def func(t: Tuple[HeuristicsTypes, Dict[str, Any]]) -> str:
+            f, kwargs = t
+            kwlist = [f"{k}={repr(v)}" for k, v in kwargs.items()]
+            return f"{tname(f)}({', '.join(kwlist)})"
+
+        score_function = tname(self.score_function, prefix_classname=True)
+        return f"{tname(self)}([{' | '.join(map(func, self._heuristics))}] -> {score_function})"
 
 
 def _resolve_heuristic(func_or_name: Union[str, HeuristicsTypes]) -> HeuristicsTypes:  # pragma: no cover
