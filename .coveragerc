@@ -13,6 +13,7 @@ omit =
     src/rics/performance/cli.py
     src/rics/utility/plotting.py
     src/rics/utility/_just_the_way_i_like_it.py
+    src/rics/wip/__init__.py
 
 fail_under = 100
 
