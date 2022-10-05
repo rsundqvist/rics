@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Ability for the perftest CLI program to create and run dummy tests.
 - Utility method `utility.pandas.TimeFold.iter`: Create temporal k-folds from a heterogeneous `DataFrame`.
+
+# Changed
+- Renamed perftest CLI program to `mtimeit` (was: `rics-perf`).
+- Feature gate all CLI functionality behind the new `cli` extra.
 
 ## [0.17.0] - 2022-09-29
 ### Added

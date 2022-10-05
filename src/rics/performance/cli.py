@@ -1,150 +1,210 @@
 """Entry point for the performance testing CLI program."""
 import datetime
+import importlib
+import inspect
+import sys
+from pathlib import Path as _Path
+from typing import Any, Optional
 
 import click
 
-from rics._internal_support.types import PathLikeType
 from rics.performance import run_multivariate_test as _run
 from rics.performance._util import get_best as _get_best
+from rics.utility import configure_stuff as _configure_stuff
 
 
-def run(
-    time_per_candidate: float = 2.0,
-    name: PathLikeType = "performance",
-    save_raw: bool = True,
-) -> None:
-    """Run a multivariate performance test.
-
-    Required files:
-        * candidates.py - Public functions are used as candidates.
-        * test_data.py - Members whose name start with `'case_'` are used as test case data.
-
-    Hint:
-       Define an ``ALL``-attribute to declare explicit members to use.
-
-    Args:
-        time_per_candidate: Time in seconds to allocate to each candidate function.
-        name: Name to use for artifacts produced. Also used as the figure title (stylized).
-        save_raw: If ``True``, write raw performance data to disk.
-
-    Raises:
-        ValueError: If ``candidates.py`` or ``test_data.py`` are missing or empty.
-    """
-    import inspect
-    import pathlib
-    import sys
-
-    import matplotlib.pyplot as plt
-
-    from rics.utility import configure_stuff
-
-    name = pathlib.Path(str(name))
-    pretty = name.stem.replace("-", " ").replace("_", " ").title()
-
-    print(f"{' Begin Performance Evaluation ':=^80}")
-    print(f"|  {f'  {repr(pretty)}  ':^74}  |")
-    print("-" * 80)
-
-    configure_stuff()
-    sys.path.insert(0, ".")
-
-    try:
-        import candidates as candidates_module  # type: ignore
-
-        candidates = (
-            candidates_module.ALL
-            if hasattr(candidates_module, "ALL")
-            else [func for name, func in inspect.getmembers(candidates_module, inspect.isfunction) if name[0] != "_"]
-        )
-    except ModuleNotFoundError:
-        raise ValueError("No file called 'candidates.py' in the current working directory.")
-
+def _get_test_data() -> Any:
     try:
         import test_data as test_data_module  # type: ignore
 
-        test_data = (
-            test_data_module.ALL
-            if hasattr(test_data_module, "ALL")
-            else {
-                name[len("case_") :]: data
+        if hasattr(test_data_module, "ALL"):
+            test_data = test_data_module.ALL
+        else:
+            test_data = {
+                name[len("case_") :].replace("_", " "): data
                 for name, data in inspect.getmembers(test_data_module)
                 if name.lower().startswith("case_")
             }
-        )
     except ModuleNotFoundError:
-        raise ValueError("No file called 'test_data.py' in the current working directory.")
+        raise ValueError(
+            "No file called 'test_data.py' in the current working directory."
+            "\nHint: Create by running with flag --create"
+        )
+    return test_data
 
-    now = datetime.datetime.now()
-    eta_str = (now + datetime.timedelta(seconds=len(candidates) * time_per_candidate)).strftime("%A %d, %H:%M:%S")
-    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{f'| Found {len(candidates)} candidates and {len(test_data)} data variants.':<78} |")
-    print(f"{f'| Started: {now_str}, ETA: {eta_str}':<78} |")
-    print("=" * 80)
 
+def _get_candidates() -> Any:
     try:
-        result = _run(candidates, test_data, time_per_candidate=time_per_candidate)
-    except ValueError as e:
-        if str(e).startswith("No candidates"):
-            raise ValueError(
-                "No candidate functions found. Candidates must be public, "
-                "or you must define the 'ALL'-attribute in 'candidates.py"
-            )
-        if str(e).startswith("No case"):
-            raise ValueError(
-                "No case data found. Case data attributes must start with 'case_', "
-                "or you must define the 'ALL'-attribute in 'test_data.py"
-            )
+        candidates_module = importlib.import_module("candidates")
+
+        if hasattr(candidates_module, "ALL"):
+            candidates = candidates_module.ALL
         else:
-            raise e
-
-    print(_get_best(result))
-
-    fig = plt.gcf()
-    fig.suptitle(pretty)
-    figure_path = name.with_suffix(".png")
-    plt.savefig(figure_path)
-    print(f"Figure saved: '{figure_path}'")
-
-    if save_raw:
-        performance_report_path = name.with_suffix(".txt")
-        result.set_index(["Candidate", "Test data"]).to_string(performance_report_path)
-        print(f"Data saved: '{performance_report_path.absolute()}'")
+            candidates = [func for name, func in inspect.getmembers(candidates_module) if name.startswith("candidate_")]
+    except ModuleNotFoundError:
+        raise ValueError(
+            "No file called 'candidates.py' in the current working directory."
+            "\nHint: Create by running with flag --create"
+        )
+    return candidates
 
 
 @click.command("Multivariate performance test")
 @click.option(
     "--time-per-candidate",
+    default=2.0,
     help="Time in seconds to allocate to each candidate function.",
     type=float,
-    default="2.0",
     show_default=True,
 )
 @click.option(
     "--name",
+    default="performance.png",
     help="Name to use for artifacts produced. Also used as the figure title (stylized).",
     type=click.Path(dir_okay=False, writable=True),
-    default="performance.png",
     show_default=True,
 )
 @click.option(
-    "--save-raw/--no-save-raw",
-    help="If set, write raw performance data to disk.",
-    default=True,
+    "--create/--no-create",
+    default=False,
+    help="Create files 'candidates.py' and 'test_data.py' and run a demo. Will not overwrite existing files.",
     is_flag=True,
     show_default=True,
 )
-def _main(time_per_candidate: float, name: str, save_raw: bool) -> None:
+def main(time_per_candidate: float, name: str, create: bool) -> None:
     """Run a multivariate performance test.
+
+    This is the https://pypi.org/project/rics/ version of the python timeit module. It may be used to run performance
+    tests evaluating one or more candidate functions ('candidates.py') on one or more different kinds of inputs
+    ('test_data.py'). See below for details on these modules.
+
+    \b
+    This script will:
+        1. Evaluate each candidate on all test data.
+        2. Decide how many times to evaluate each candidate, such that the
+           --time-per-candidate argument is respected.
+        3. Print the best times per candidate/test_data
+           combination to stdout.
+        4. Print a performance figure.
+        5. Detailed timings as csv.
 
     \b
     Required files:
-        candidates.py - Public functions are used as candidates.
-        test_data.py - Members whose name start with 'case_' are used as case data.
+        candidates.py - Members starting with 'candidate_' are used as candidates.
+        test_data.py - Members starting with 'case_' are used as the case case data.
 
-    Hint: Define an 'ALL'-attribute to declare explicit members to use.
-    """  # noqa: DAR101, D301
-    run(time_per_candidate, name, save_raw)
+    Hint: Define a 'ALL'-attributes in 'candidates' and 'test_data' to declare explicit members to use.
+    """  # noqa: DAR101, D301, DAR401
+    import matplotlib.pyplot as plt
 
+    if create:
+        time_per_candidate = 0.1
+        name = "create-example-run"
+        for file_name, content in _DEFAULT_MODULES.items():
+            path = _Path().joinpath(file_name).absolute()
+            if path.exists():  # pragma: no cover
+                click.secho(
+                    f"ABORT: Refusing to overwrite existing file '{path}'. "
+                    f"Delete files 'candidates.py' and 'test_data.py' in '{path.parent}' to continue.",
+                    fg="red",
+                    err=True,
+                )
+                sys.exit(1)
+            path.write_text(content.strip())
+
+    name_path = _Path(name).absolute()
+    pretty = name_path.stem.replace("-", " ").replace("_", " ").title()
+
+    click.secho(f"{' Begin Performance Evaluation ':=^80}", fg="green")
+    click.secho(f"|  {f'  {repr(pretty)}  ':^74}  |", fg="green")
+    click.secho("-" * 80, fg="green")
+
+    _configure_stuff()
+
+    try:
+        sys.path.insert(0, str(_Path(".").absolute()))
+        candidates = _get_candidates()
+        test_data = _get_test_data()
+    finally:
+        sys.path.pop(0)
+
+    now = datetime.datetime.now()
+    eta_str = (now + datetime.timedelta(seconds=len(candidates) * time_per_candidate)).strftime("%A %d, %H:%M:%S")
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    click.secho(f"{f'| Found {len(candidates)} candidates and {len(test_data)} data variants.':<78} |", fg="green")
+    click.secho(f"{f'| Started: {now_str}, ETA: {eta_str}':<78} |", fg="green")
+    click.secho("=" * 80, fg="green")
+
+    try:
+        result = _run(candidates, test_data, time_per_candidate=time_per_candidate)
+    except ValueError as e:  # pragma: no cover
+        msg = str(e)
+        file: Optional[_Path] = None
+        if msg.startswith("No candidates"):
+            msg += " Candidate functions must start with 'candidate_'."
+            file = _Path("candidates.py")
+        elif msg.startswith("No case"):
+            msg += " Case data attributes must start with 'case_'."
+            file = _Path("candidates.py")
+
+        if file is not None:
+            file = path.absolute()
+            msg += f" Alternatively, you may define an attribute  'ALL = {{label: ...}}' in '{file}'"
+            click.secho("ABORT: " + msg, fg="red")
+            sys.exit(-1)
+        else:
+            raise e
+
+    click.secho("=" * 80, fg="green")
+    click.secho(f"|  {f'  Best Times  ':^74}  |", fg="green")
+    click.secho(f"|  {f'  {repr(pretty)}  ':^74}  |", fg="green")
+    click.secho("=" * 80, fg="green")
+    click.secho(_get_best(result), fg="cyan")
+    click.secho("=" * 80, fg="green")
+
+    fig = plt.gcf()
+    fig.suptitle(pretty)
+    figure_path = name_path.with_suffix(".png")
+    plt.savefig(figure_path)
+    click.secho(f"Figure saved: '{figure_path}'", fg="green")
+
+    performance_report_path = name_path.with_suffix(".csv")
+    if len(result) > 10000:  # pragma: no cover
+        click.secho(
+            f"WARNING: The full timing report has {len(result)} rows, which may take a while to serialize.", fg="yellow"
+        )
+        if not click.confirm(f"Really print full report to '{performance_report_path}'?"):
+            sys.exit(0)
+
+    result.set_index(["Candidate", "Test data"]).to_csv(performance_report_path)
+    click.secho(f"Data saved: '{performance_report_path}'", fg="green")
+
+
+_DEFAULT_MODULES = {
+    "candidates.py": """
+def candidate_do_nothing(data):
+    pass
+
+
+def candidate_do_something(data):
+    sum(data)
+
+
+def candidate_ignored_since_not_in_ALL(data):
+    pass
+
+
+ALL = [candidate_do_nothing, candidate_do_something]
+        """,
+    "test_data.py": """
+test_data_small_array = [0]
+test_data_big_array = list(range(10**6))
+test_data_ignored_since_not_in_ALL = 0
+
+ALL = {"small_array": test_data_small_array, "big_array": test_data_big_array}
+        """,
+}
 
 if __name__ == "__main__":
-    _main()
+    main()

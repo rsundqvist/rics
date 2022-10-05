@@ -123,9 +123,13 @@ def _process_candidates(
     if callable(candidates):
         return {tname(candidates): candidates}
 
-    ans = {tname(c): c for c in candidates}
+    def make_label(a: Any) -> str:
+        name = tname(a)
+        return name[len("candidate_") :] if name.startswith("candidate_") else name
+
+    ans = {make_label(c): c for c in candidates}
     if len(ans) != len(candidates):
-        raise ValueError(f"Derived names for input {candidates=} is not unique. Use a dict to assign candidate names.")
+        raise ValueError(f"Derived names for input {candidates=} are not unique. Use a dict to assign candidate names.")
     return ans
 
 
