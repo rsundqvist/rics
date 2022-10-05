@@ -10,9 +10,6 @@ class _NoDefault(Enum):
 
     NO_DEFAULT = "<no-default>"
 
-    def __str__(self) -> str:
-        return "No default."
-
 
 NoDefault = Literal[_NoDefault.NO_DEFAULT]
 NO_DEFAULT = _NoDefault.NO_DEFAULT

@@ -168,7 +168,7 @@ def _handle_cron(expr: str, min_data: pd.Timestamp, max_dt: pd.Timestamp) -> pd.
         from croniter import croniter_range
 
         return pd.DatetimeIndex(croniter_range(min_data, max_dt, expr))
-    except ModuleNotFoundError as e:  # pragma: no cover
+    except ModuleNotFoundError as e:
         raise ValueError(f"Install 'croniter' to parse cron expressions such such as '{expr}'.") from e
 
 
