@@ -34,7 +34,7 @@ def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
     return df
 
 
-def get_best(run_results: Union[ResultsDict, pd.DataFrame]) -> pd.DataFrame:  # pragma: no cover
+def get_best(run_results: Union[ResultsDict, pd.DataFrame]) -> pd.DataFrame:
     """Get a summarized view of the best run results for each candidate/data pair.
 
     Args:
@@ -76,7 +76,8 @@ def plot_run(
     import matplotlib.pyplot as plt
     from seaborn import barplot  # type: ignore
 
-    data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results
+    data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results.copy()
+    data[["Test data", "Candidate"]] = data[["Test data", "Candidate"]].astype("category")
 
     x_arg, hue = (
         _smaller_as_hue(data)

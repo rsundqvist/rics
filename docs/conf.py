@@ -1,4 +1,5 @@
 """Sphinx configuration."""
+
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -86,6 +87,7 @@ extensions = [
     "nbsphinx",
     "sphinx.ext.mathjax",
     "myst_parser",
+    "sphinxcontrib.programoutput",
 ]
 autosummary_ignore_module_all = False
 autosummary_imported_members = True
@@ -114,6 +116,7 @@ exclude_patterns = [
     ".DS_Store",
     "**.ipynb_checkpoints",
 ]
+shutil.rmtree("/tmp/example/", ignore_errors=True)  # noqa: 1S108
 
 # -- Options for HTML output ---------------------------------------------------
 
