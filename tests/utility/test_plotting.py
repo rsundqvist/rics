@@ -1,10 +1,18 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from rics.utility.plotting import _PiTickHelper
+from rics.utility.plotting import _PiTickHelper, pi_ticks
 
 PI = _PiTickHelper.PI
 HALF_PI = PI / 2
+
+
+@pytest.mark.parametrize("half", ("frac", "dec", None))
+def test_pi_ticks_doesnt_crash(half):
+    ax = plt.axes()
+    ax.plot(range(10))
+    pi_ticks(ax, half)
 
 
 @pytest.mark.parametrize(
@@ -20,7 +28,7 @@ HALF_PI = PI / 2
         (None, 8.5, 3 * PI, ["3π", "4π", "5π", "6π"]),
     ],
 )
-def test_pi_ticks(half, start, start_rounded_to_pi, expected):
+def test_pi_tick_helper(half, start, start_rounded_to_pi, expected):
     assert len(expected) == 4, "Bad test case"
 
     helper = _PiTickHelper(half, start)

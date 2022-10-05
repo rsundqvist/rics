@@ -9,10 +9,8 @@ source = rics
 
 [report]
 omit =
-    src/rics/_internal*
-    src/rics/performance/cli.py
-    src/rics/utility/plotting.py
-    src/rics/utility/_just_the_way_i_like_it.py
+    src/rics/_internal_support/changelog/*
+    src/rics/_internal_support/_local_or_remote.py
     src/rics/wip/__init__.py
 
 fail_under = 100
@@ -31,6 +29,8 @@ exclude_lines =
     if not isinstance\(other
     if TYPE_CHECKING
     if VERBOSE
+    if __name__ == "__main__"
+    except ModuleNotFoundError
 
 show_missing = true
 
