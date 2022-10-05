@@ -24,6 +24,8 @@ def configure_stuff(
     pd.options.display.max_rows = 250
     pd.options.display.width = 0
 
+    pd.options.display.float_format = "{:.6g}".format
+
     basic_config(level=level, matplotlib_level=matplotlib_level, **kwargs)
 
     try:
