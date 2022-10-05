@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Utility method `utility.pandas.TimeFold.iter`: Create temporal k-folds from a heterogeneous `DataFrame`.
 
 # Changed
+- The `utility.configure_stuff`-method now also sets the pandas `float_format` option.
 - Renamed perftest CLI program to `mtimeit` (was: `rics-perf`).
 - Feature gate all CLI functionality behind the new `cli` extra.
 
