@@ -52,6 +52,8 @@ def tname(arg: Optional[Union[Type[Any], Any, Callable]], prefix_classname: bool
         return "None"
     if hasattr(arg, "__qualname__"):
         return arg.__qualname__ if prefix_classname else arg.__name__
+    if hasattr(arg, "__name__"):
+        return arg.__name__
     if hasattr(arg, "__class__"):
         return arg.__class__.__name__
 
