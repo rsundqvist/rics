@@ -120,7 +120,8 @@ def main(time_per_candidate: float, name: str, create: bool) -> None:
     click.secho(f"|  {f'  {repr(pretty)}  ':^74}  |", fg="green")
     click.secho("-" * 80, fg="green")
 
-    _configure_stuff()
+    # force=False has no effect during normal operation (i.e. when running from CLI), but keeps things tidy for CI/CD.
+    _configure_stuff(force=False)
 
     try:
         sys.path.insert(0, str(_Path(".").absolute()))
