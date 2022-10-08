@@ -13,6 +13,7 @@ from rics.translation.fetching.types import FetchInstruction, IdsToFetch
 from rics.translation.offline.types import PlaceholdersTuple, PlaceholderTranslations, SourcePlaceholderTranslations
 from rics.translation.types import ID, IdType, SourceType
 from rics.utility.collections.dicts import InheritedKeysDict, reverse_dict
+from rics.utility.misc import tname
 
 LOGGER = logging.getLogger(__package__).getChild("AbstractFetcher")
 
@@ -193,7 +194,10 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
             start = perf_counter()
             translations = self.fetch_translations(instr)
             if LOGGER.isEnabledFor(logging.DEBUG):
-                _log_implementation_fetch_performance(translations, start)
+                LOGGER.debug(
+                    f"Fetched {translations.placeholders} for {len(translations.records)} IDS "
+                    f"from '{translations.source}' in {format_perf_counter(start)} using {self}."
+                )
 
             if reverse_mappings:
                 # The mapping is only in reverse from the Fetchers point-of-view; we're mapping back to "proper" values.
@@ -266,7 +270,6 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
         """Compute score for candidates."""
         return modified_hamming(value, candidates, context)
 
-
-def _log_implementation_fetch_performance(pht: PlaceholderTranslations, start: float) -> None:  # pragma: no cover
-    elapsed = format_perf_counter(start)
-    LOGGER.debug(f"Fetched {pht.placeholders} for {len(pht.records)} IDS from '{pht.source}' in {elapsed}.")
+    def __str__(self) -> str:
+        sources = self.sources if self.sources else "<no sources>"
+        return f"{tname(self)}({sources=})"
