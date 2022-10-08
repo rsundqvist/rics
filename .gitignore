@@ -1,6 +1,7 @@
 codecov
 
 # Data
+*.sqlite
 *.pkl
 *.gz
 *.zip
