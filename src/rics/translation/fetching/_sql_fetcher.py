@@ -66,7 +66,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         super().__init__(**super_kwargs)
 
         self._engine = sqlalchemy.create_engine(self.parse_connection_string(connection_string, password))
-        self._engine_str = str(self._engine)
+        self._estr = str(self._engine)
         self._reflect_views = include_views
         self._fetch_all_limit = fetch_all_limit
 
@@ -82,8 +82,8 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
 
             whitelist_tables = set(whitelist_tables)
             if len(whitelist_tables) == 0:
-                LOGGER.warning("Received empty table whitelist; no tables will be available to this fetcher.")
                 self.close()
+                LOGGER.warning(f"Got empty 'whitelist_tables' argument. No tables are available to {self}.")
 
             self._whitelist = set(whitelist_tables)
 
@@ -95,7 +95,9 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
             ts_dict = self._get_summaries()
             if LOGGER.isEnabledFor(logging.INFO):
                 sz = {name: ts.size for name, ts in sorted(ts_dict.items())}
-                LOGGER.info(f"Processed {len(ts_dict)} tables in {format_perf_counter(start)}. Lengths={sz}.")
+                LOGGER.info(
+                    f"{self._estr}: Processed {len(ts_dict)} tables in {format_perf_counter(start)}. Lengths={sz}."
+                )
             self._table_ts_dict = ts_dict
 
         return self._table_ts_dict
@@ -143,14 +145,14 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
     def __str__(self) -> str:
-        disconnected = "<disconnected>" if self._engine is None else ""
-        return f"{tname(self)}({disconnected}: {self._engine_str}, tables={repr(self.sources or '<no tables>')})"
+        disconnected = "<disconnected>: " if self._engine is None else ""
+        return f"{tname(self)}({disconnected}{self._estr}, tables={repr(self.sources or '<no tables>')})"
 
     def close(self) -> None:  # pragma: no cover
         if self._engine is None:
             return
 
-        LOGGER.debug("Dispose %s", self._engine_str)
+        LOGGER.debug("Dispose %s", self._estr)
         self._table_ts_dict = {}
         self._engine.dispose()
         self._engine = None
@@ -167,7 +169,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         start = perf_counter()
         metadata = self.get_metadata()
         if LOGGER.isEnabledFor(logging.DEBUG):
-            LOGGER.debug(f"Metadata created in {format_perf_counter(start)}.")
+            LOGGER.debug(f"{self._estr}: Metadata created in {format_perf_counter(start)}.")
 
         table_names = set(metadata.tables)
         if self._whitelist:
@@ -183,7 +185,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
             else:
                 extra = ""
 
-            LOGGER.warning(f"No sources found{extra}. Available tables: {table_names}")
+            LOGGER.warning(f"{self._estr}: No sources found{extra}. Available tables: {table_names}")
 
         ans = {}
         for name in tables:
@@ -203,7 +205,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         start = perf_counter()
         size = self.get_approximate_table_size(table, id_column)
         if LOGGER.isEnabledFor(logging.DEBUG):
-            LOGGER.debug(f"Size of {table.name}={size} resolved in {format_perf_counter(start)}.")
+            LOGGER.debug(f"{self._estr}: Size of '{table.name}' resolved in {format_perf_counter(start)}: {size} rows.")
         fetch_all_permitted = self._fetch_all_limit is None or size < self._fetch_all_limit
         return SqlFetcher.TableSummary(table.name, size, table.columns, fetch_all_permitted, id_column)
 
