@@ -2,17 +2,23 @@ import pandas as pd
 import pytest
 
 from rics.translation import Translator
-from rics.translation.fetching import MemoryFetcher, MultiFetcher, exceptions
+from rics.translation.fetching import MemoryFetcher, MultiFetcher, SqlFetcher, exceptions
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline.types import PlaceholderTranslations
 
 
 @pytest.fixture(scope="module")
-def multi_fetcher(data):
-    return MultiFetcher(
-        MemoryFetcher({"humans": data["humans"]}),
-        MemoryFetcher(data),
-    )
+def fetchers(data):
+    humans_fetcher = MemoryFetcher({"humans": data["humans"]})
+    empty_fetcher = MemoryFetcher({})
+    everything_fetcher = MemoryFetcher(data)
+    sql_fetcher = SqlFetcher("sqlite://", whitelist_tables=())  # No tables allowed!
+    return humans_fetcher, empty_fetcher, everything_fetcher, sql_fetcher
+
+
+@pytest.fixture(scope="module")
+def multi_fetcher(fetchers):
+    return MultiFetcher(*fetchers)
 
 
 @pytest.fixture(scope="module")
@@ -40,8 +46,8 @@ def test_placeholders(multi_fetcher):
     }
 
 
-def test___process_future():
-    fetcher = MultiFetcher(*(MemoryFetcher({}) for _ in range(10)))
+def test_process_future():
+    fetcher = MultiFetcher(*(MemoryFetcher({f"{i=}": {"id": []}}) for i in range(10)))
 
     ans = {}
     source_ranks = {}
@@ -82,6 +88,17 @@ def test_fetch(multi_fetcher, data):
     actual = multi_fetcher.fetch(sampled, placeholders, required=required)
 
     assert actual == expected
+
+
+def test_ranks(multi_fetcher, fetchers):
+    humans_fetcher, empty_fetcher, everything_fetcher, sql_fetcher = fetchers
+
+    assert len(multi_fetcher.fetchers) == 2
+    assert humans_fetcher in multi_fetcher.fetchers
+    assert everything_fetcher in multi_fetcher.fetchers
+
+    assert multi_fetcher._id_to_rank[id(humans_fetcher)] == 0
+    assert multi_fetcher._id_to_rank[id(everything_fetcher)] == 2
 
 
 def test_from_config():
