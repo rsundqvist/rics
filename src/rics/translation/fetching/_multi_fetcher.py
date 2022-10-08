@@ -2,7 +2,7 @@ import logging
 import warnings
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from time import perf_counter
-from typing import Any, Callable, Dict, Iterable, List, Tuple
+from typing import Dict, Iterable, List, Tuple
 
 from rics.performance import format_perf_counter
 from rics.translation.fetching import Fetcher, exceptions
@@ -10,7 +10,7 @@ from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline.types import SourcePlaceholderTranslations
 from rics.translation.types import IdType, SourceType
 from rics.utility.action_level import ActionLevel, ActionLevelHelper
-from rics.utility.collections.dicts import compute_if_absent, reverse_dict
+from rics.utility.collections.dicts import reverse_dict
 from rics.utility.misc import tname
 
 LOGGER = logging.getLogger(__package__).getChild("MultiFetcher")
@@ -23,12 +23,17 @@ _ACTION_LEVEL_HELPER = ActionLevelHelper(
 )
 
 
-def _invoke(func: Callable, *args: Any) -> FetchResult:
-    return id(func.__self__), func(*args)  # type: ignore
-
-
 class MultiFetcher(Fetcher[SourceType, IdType]):
-    """Fetcher which combines the results of other fetchers."""
+    """Fetcher which combines the results of other fetchers.
+
+    Args:
+        *fetchers: Fetchers to wrap.
+        max_workers: Number of threads to use for fetching. Fetch instructions will be dispatched using a
+             :py:class:`~concurrent.futures.ThreadPoolExecutor`. Individual fetchers will be called at most once per
+             ``fetch()`` or ``fetch_all()`` call made with the ``MultiFetcher``.
+        duplicate_translation_action: Action to take when multiple fetchers return translations for the same source.
+        duplicate_source_discovered_action: Action to take when multiple fetchers claim the same source.
+    """
 
     def __init__(
         self,
@@ -37,8 +42,8 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         duplicate_translation_action: ActionLevel = ActionLevel.WARN,
         duplicate_source_discovered_action: ActionLevel = ActionLevel.IGNORE,
     ) -> None:
-        for pos, f in enumerate(fetchers):  # pragma: no cover
-            if not isinstance(f, Fetcher):
+        for pos, f in enumerate(fetchers):
+            if not isinstance(f, Fetcher):  # pragma: no cover
                 raise TypeError(f"Argument {pos} is of type {type(f)}, expected Fetcher subtype.")
 
         self._id_to_rank: Dict[int, int] = {id(f): rank for rank, f in enumerate(fetchers)}
@@ -52,8 +57,8 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
             duplicate_source_discovered_action, "duplicate_source_discovered_action"
         )
 
-        if len(self) != len(fetchers):  # pragma: no cover
-            raise ValueError("Repeat fetcher instance(s)!")
+        if len(self.fetchers) != len(fetchers):
+            raise ValueError("Repeat fetcher instance(s)!")  # pragma: no cover
 
     @property
     def allow_fetch_all(self) -> bool:
@@ -84,29 +89,27 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
     ) -> SourcePlaceholderTranslations[SourceType]:
-        tasks: Dict[int, List[IdsToFetch]] = {fid: [] for fid in self._id_to_fetcher}
+        tasks: Dict[int, List[IdsToFetch]] = {}
         num_instructions = 0
         for idt in ids_to_fetch:
-            fetcher_id = self._source_to_fetcher_id[idt.source]
-            tasks[fetcher_id].append(idt)
+            tasks.setdefault(self._source_to_fetcher_id[idt.source], []).append(idt)
             num_instructions += 1
 
         placeholders = tuple(placeholders)
         required = tuple(required)
 
         start = perf_counter()
-        LOGGER.debug(
-            f"Dispatch {num_instructions} jobs to {len(self)} " f"different fetchers using {self.max_workers} threads."
-        )
+        LOGGER.debug(f"Dispatch {num_instructions} jobs to {len(tasks)} fetchers using {self.max_workers} threads.")
+
+        def fetch(fid: int) -> FetchResult:
+            return fid, self._id_to_fetcher[fid].fetch(tasks[fid], placeholders, required=required)
 
         with ThreadPoolExecutor(max_workers=self.max_workers, thread_name_prefix=tname(self)) as executor:
-            futures = [
-                executor.submit(_invoke, self._id_to_fetcher[fid].fetch, task_list, placeholders, required)
-                for fid, task_list in tasks.items()
-            ]
+            futures = [executor.submit(fetch, fid) for fid in tasks]
             ans = self._gather(futures)
-            LOGGER.debug(f"All jobs completed in {format_perf_counter(start)}.")
-            return ans
+
+        LOGGER.debug(f"Completed {num_instructions} jobs in {format_perf_counter(start)}.")
+        return ans
 
     def fetch_all(
         self, placeholders: Iterable[str] = (), required: Iterable[str] = ()
@@ -115,15 +118,17 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         required = tuple(required)
 
         start = perf_counter()
-        LOGGER.debug(f"Dispatch FETCH_ALL jobs to {len(self)} " f"different fetchers using {self.max_workers} threads.")
+        LOGGER.debug(f"Dispatch FETCH_ALL jobs to {len(self.fetchers)} fetchers using {self.max_workers} threads.")
+
+        def fetch_all(fetcher: Fetcher) -> FetchResult:
+            return id(fetcher), fetcher.fetch_all(placeholders, required=required)
+
         with ThreadPoolExecutor(max_workers=self.max_workers, thread_name_prefix=tname(self)) as executor:
-            futures = [
-                executor.submit(_invoke, fetcher.fetch_all, placeholders, required)
-                for fetcher in self._id_to_fetcher.values()
-            ]
+            futures = [executor.submit(fetch_all, fetcher) for fetcher in self.fetchers]
             ans = self._gather(futures)
-            LOGGER.debug(f"All FETCH_ALL jobs completed in {format_perf_counter(start)}.")
-            return ans
+
+        LOGGER.debug(f"Completed all FETCH_ALL jobs completed in {format_perf_counter(start)}.")
+        return ans
 
     @property
     def duplicate_translation_action(self) -> ActionLevel:
@@ -141,9 +146,18 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
             source_ranks: Dict[SourceType, int] = {}
             source_to_fetcher_id: Dict[SourceType, int] = {}
 
-            for fid, fetcher in self._id_to_fetcher.items():
+            for fid, fetcher in list(self._id_to_fetcher.items()):
+                sources = fetcher.sources
+
+                if not sources:
+                    LOGGER.warning(f"Discarding {self._fmt_fetcher(fetcher)}: No sources.")
+                    fetcher.close()
+                    del self._id_to_rank[fid]
+                    del self._id_to_fetcher[fid]
+                    continue
+
                 rank = self._id_to_rank[fid]
-                for source in fetcher.sources:
+                for source in sources:
                     if source in source_to_fetcher_id:
                         self._log_rejection(source, rank, source_ranks[source], translation=False)
                     else:
@@ -172,7 +186,7 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
     ) -> None:
         for source_translations in translations.values():
             source = source_translations.source
-            other_rank = compute_if_absent(source_ranks, source, lambda _: rank)
+            other_rank = source_ranks.setdefault(source, rank)
 
             if other_rank != rank:
                 self._log_rejection(source, rank, other_rank, translation=True)
@@ -185,11 +199,8 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         accepted_rank, rejected_rank = (rank0, rank1) if rank0 < rank1 else (rank1, rank0)
 
         rank_to_id = reverse_dict(self._id_to_rank)
-        fmt = "rank-{} fetcher {}@{}"
-        accepted_fetcher = self._id_to_fetcher[rank_to_id[accepted_rank]]
-        accepted = fmt.format(accepted_rank, accepted_fetcher, hex(id(accepted_fetcher)))
-        rejected_fetcher = self._id_to_fetcher[rank_to_id[rejected_rank]]
-        rejected = fmt.format(rejected_rank, rejected_fetcher, hex(id(rejected_fetcher)))
+        accepted = self._fmt_fetcher(self._id_to_fetcher[rank_to_id[accepted_rank]])
+        rejected = self._fmt_fetcher(self._id_to_fetcher[rank_to_id[rejected_rank]])
 
         msg = (
             f"Discarded translations for {source=} retrieved from {rejected} since the {accepted} returned "
@@ -212,11 +223,13 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
                 warnings.warn(msg, exceptions.DuplicateSourceWarning)
                 LOGGER.warning(msg)
 
-    def __len__(self) -> int:
-        return len(self._id_to_fetcher)
-
     def __repr__(self) -> str:
         fetchers = list(self._id_to_fetcher.values())
         max_workers = self.max_workers
-        duplicate_translation_action = self.duplicate_translation_action
-        return f"{tname(self)}({fetchers=}, {max_workers=}, {duplicate_translation_action=})"
+        return f"{tname(self)}({max_workers=}, {fetchers=})"
+
+    def _fmt_fetcher(self, fetcher: Fetcher) -> str:
+        """Format a managed fetcher with rank and hex ID."""
+        fetcher_id = id(fetcher)
+        rank = self._id_to_rank[fetcher_id]
+        return f"rank-{rank} fetcher {fetcher} at {hex(fetcher_id)}"
