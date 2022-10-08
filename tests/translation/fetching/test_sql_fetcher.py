@@ -1,7 +1,13 @@
+from os.path import join
+from tempfile import TemporaryDirectory
+
 import pytest as pytest
+import sqlalchemy
 
 from rics.translation.fetching import SqlFetcher
 from rics.translation.fetching.types import FetchInstruction
+
+ALL_TABLES = {"animals", "humans", "big_table", "huge_table"}
 
 
 def test_table_sizes(sql_fetcher):
@@ -55,24 +61,27 @@ def sql_fetcher(connection_string):
 
 @pytest.fixture(scope="module")
 def connection_string(data):
-    import os
-
-    import sqlalchemy
-
-    db_file = "test-database.sqlite"
-
-    if os.path.exists(db_file):
-        os.remove(db_file)
-
-    connection_string = f"sqlite:///{db_file}"
-    engine = sqlalchemy.create_engine(connection_string)
-    insert_data(engine, data)
-
-    yield connection_string
-
-    os.remove(db_file)
+    with TemporaryDirectory() as tmpdir:
+        db_file = join(tmpdir, "sqlfetcher-test-database.sqlite")
+        connection_string = f"sqlite:///{db_file}"
+        engine = sqlalchemy.create_engine(connection_string)
+        insert_data(engine, data)
+        yield connection_string
 
 
 def insert_data(engine, data):
     for table, table_data in data.items():
         table_data.to_sql(table, engine, index=False)
+
+
+@pytest.mark.parametrize(
+    "whitelist, expected",
+    [
+        (None, ALL_TABLES),
+        (ALL_TABLES, ALL_TABLES),
+        (["animals", "humans"], {"animals", "humans"}),
+        ([], set()),
+    ],
+)
+def test_whitelist(connection_string, whitelist, expected):
+    assert set(SqlFetcher(connection_string, whitelist_tables=whitelist).sources) == expected

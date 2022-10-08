@@ -49,7 +49,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         connection_string: str,
         password: str = None,
         whitelist_tables: Iterable[str] = None,
-        blacklist_tables: Iterable[str] = None,
+        blacklist_tables: Iterable[str] = (),
         include_views: bool = True,
         fetch_all_limit: Optional[int] = 100_000,
         **kwargs: Any,
@@ -65,16 +65,27 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
             super_kwargs = {}
         super().__init__(**super_kwargs)
 
-        if whitelist_tables and blacklist_tables:
-            raise ValueError("At most one of whitelist and blacklist may be given.")  # pragma: no cover
-
         self._engine = sqlalchemy.create_engine(self.parse_connection_string(connection_string, password))
-
-        self._whitelist = set(whitelist_tables or [])
-        self._blacklist = set(blacklist_tables or [])
-        self._table_ts_dict: Optional[Dict[str, SqlFetcher.TableSummary]] = None
+        self._engine_str = str(self._engine)
         self._reflect_views = include_views
         self._fetch_all_limit = fetch_all_limit
+
+        self._blacklist = set(blacklist_tables)
+
+        self._table_ts_dict: Optional[Dict[str, SqlFetcher.TableSummary]] = None
+
+        if whitelist_tables is None:
+            self._whitelist = set()
+        else:
+            if blacklist_tables:
+                raise ValueError("At most one of whitelist and blacklist may be given.")  # pragma: no cover
+
+            whitelist_tables = set(whitelist_tables)
+            if len(whitelist_tables) == 0:
+                LOGGER.warning("Received empty table whitelist; no tables will be available to this fetcher.")
+                self.close()
+
+            self._whitelist = set(whitelist_tables)
 
     @property
     def _summaries(self) -> Dict[str, "SqlFetcher.TableSummary"]:
@@ -131,14 +142,17 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
     def allow_fetch_all(self) -> bool:
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
-    def __repr__(self) -> str:
-        engine = self._engine
-        tables = self.sources
-        return f"{tname(self)}({engine=}, {tables=})"
+    def __str__(self) -> str:
+        disconnected = "<disconnected>" if self._engine is None else ""
+        return f"{tname(self)}({disconnected}: {self._engine_str}, tables={repr(self.sources or '<no tables>')})"
 
     def close(self) -> None:  # pragma: no cover
-        LOGGER.info("Deleting %s", self._engine)
-        del self._engine
+        if self._engine is None:
+            return
+
+        LOGGER.debug("Dispose %s", self._engine_str)
+        self._table_ts_dict = {}
+        self._engine.dispose()
         self._engine = None
 
     @classmethod
@@ -163,13 +177,13 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
 
         if not tables:  # pragma: no cover
             if self._whitelist:
-                extra = " (whitelist)"
+                extra = f" (whitelist: {self._whitelist})"
             elif self._blacklist:
                 extra = f" (blacklist: {self._blacklist})"
             else:
                 extra = ""
 
-            raise ValueError(f"No sources found{extra}. Available tables: {table_names}")
+            LOGGER.warning(f"No sources found{extra}. Available tables: {table_names}")
 
         ans = {}
         for name in tables:
