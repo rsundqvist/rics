@@ -60,6 +60,13 @@ trouble.
    poetry install --all-extras --with=docs
    ```
    
+   Generating documentation has a few dependencies which may need to be installed
+   manually.
+   ```bash
+   sudo apt-get update
+   sudo apt-get install pandoc tree
+   ```
+   
 3. **Install commit hooks (optional)**
    
    If this step is skipped, use `inv hooks` to run hooks manually.
