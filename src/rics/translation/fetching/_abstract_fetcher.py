@@ -256,13 +256,12 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
 
     @classmethod
     def default_mapper_kwargs(cls) -> Dict[str, Any]:
-        """Create a default ``Mapper`` for ``AbstractFetcher`` implementations."""
+        """Return default ``Mapper`` arguments for ``AbstractFetcher`` implementations."""
         return dict(
             score_function=HeuristicScore(
                 cls.default_score_function,  # type: ignore
                 heuristics=[("force_lower_case", {})],
             ),
-            overrides=InheritedKeysDict(),
         )
 
     @classmethod
