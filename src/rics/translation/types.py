@@ -1,22 +1,55 @@
 """Types used for translation."""
-from typing import TYPE_CHECKING, Callable, Dict, Hashable, Iterable, List, Optional, Sequence, Set, TypeVar, Union
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    TypeVar as _TypeVar,
+    Union,
+)
 
 if TYPE_CHECKING:
     import pandas  # noqa: F401
 
-Translatable = TypeVar("Translatable", "pandas.DataFrame", "pandas.Index", "pandas.Series", Dict, Sequence, str, int)
-"""Enumeration of translatable types."""
+Translatable = _TypeVar(
+    "Translatable",
+    # Primitive types
+    str,
+    int,
+    # Sequence types (includes numpy arrays)
+    Sequence[str],
+    Sequence[int],
+    # Dicts
+    Dict[Hashable, Union[int, Sequence[int]]],
+    Dict[Hashable, Union[str, Sequence[str]]],
+    # Pandas types.
+    "pandas.DataFrame",
+    "pandas.Index",
+    "pandas.Series",
+)
+"""Enumeration of translatable types.
+
+The only truly :attr:`~rics.translation.types.Translatable` types are ``int`` and ``str``. Working with single IDs is
+rarely efficient in practice, so collections such as sequences (lists, tuples, :mod:`numpy` arrays) and dict values of
+sequences of primitives (or plain primitives) may be translated as well. Special handling is also implemented for
+:mod:`pandas` types.
+"""
 
 ID: str = "id"
 """Name of the ID placeholder."""
 
-NameType = TypeVar("NameType", bound=Hashable)
+NameType = _TypeVar("NameType", bound=Hashable)
 """Type used to label collections of IDs, such as the column names in a DataFrame or the keys of a dict."""
 
-IdType = TypeVar("IdType", int, str)
+IdType = _TypeVar("IdType", int, str)
 """Type of the value being translated into human-readable labels."""
 
-SourceType = TypeVar("SourceType", bound=Hashable)
+SourceType = _TypeVar("SourceType", bound=Hashable)
 """Type used to describe sources. Typically a string for things like files and database tables."""
 
 ExtendedOverrideFunction = Callable[
