@@ -257,8 +257,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
     @property
     def context_sensitive_overrides(self) -> bool:
-        """Return ``True`` if overrides are context sensitive."""
-        return self._context_sensitive_overrides
+        """Return ``True`` if there are no overrides, or if the overrides are context sensitive."""
+        return not self._overrides or self._context_sensitive_overrides
 
     @property
     def verbose(self) -> bool:
@@ -298,8 +298,10 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         values: Iterable[ValueType],
         context: Optional[ContextType],
     ) -> List[Tuple[ValueType, CandidateType]]:
-        overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
+        if not self._overrides:
+            return []  # pragma: no cover
 
+        overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
         if context is None:
             if self._context_sensitive_overrides:  # pragma: no cover
                 raise TypeError("Must pass a context when using context-sensitive overrides.")

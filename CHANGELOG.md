@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Utility method `utility.pandas.TimeFold.iter`: Create temporal k-folds from a heterogeneous `DataFrame`.
 
 ### Changed
+- Change definition of `Mapper.context_sensitive_overrides`; now also `True` for blank overrides regardless of type.
 - Discard useless (no-source) fetchers in `MultiFetcher`.
 - The `SqlFetcher` class now always includes the engine information in log messages.
 - The `utility.misc.tname`-method now also considers `__name__` before falling back to `__class__.__name__`.
