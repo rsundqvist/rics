@@ -188,16 +188,16 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     def from_config(
         cls,
         path: PathLikeType,
-        extra_fetchers: Iterable[str] = (),
+        extra_fetchers: Iterable[PathLikeType] = (),
     ) -> "Translator":
         """Create a ``Translator`` from TOML inputs.
 
         Args:
-            path: Path to a TOML file, or a pre-parsed dict.
+            path: Path to a TOML file.
             extra_fetchers: Path to TOML files defining additional fetchers. Useful for fetching from multiple sources
                 or kinds of sources, for example locally stored files in conjunction with one or more databases. The
-                fetchers are ranked by input order, with the fetcher defined in `path` being given the highest priority
-                (rank 0).
+                fetchers are ranked by input order, with the fetcher defined in `path` (if any) being given the highest
+                priority (rank 0).
 
         Returns:
             A ``Translator`` instance.
@@ -539,12 +539,12 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         """
         import pickle  # noqa: S403
 
-        path = str(Path(str(path)).expanduser())
-        with open(path, "rb") as f:
+        full_path = Path(str(path)).expanduser()
+        with full_path.open("rb") as f:
             ans = pickle.load(f)  # noqa: S301
 
-        if not isinstance(ans, Translator):  # pragma: no cover
-            raise TypeError(f"Serialized object at at {path=} is a {type(ans)}, not {Translator.__name__}.")
+        if not isinstance(ans, cls):  # pragma: no cover
+            raise TypeError(f"Serialized object at '{full_path}' is a {type(ans)}, not {cls}.")
 
         return ans
 
