@@ -14,13 +14,13 @@ class HexFetcher(AbstractFetcher[str, int]):
         super().__init__()
         self.num_fetches = 0
 
-    def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
+    def fetch_translations(self, instr: FetchInstruction[str, int]) -> PlaceholderTranslations[str]:
         self.num_fetches += 1
 
         placeholders = support.select_placeholders(instr, ["id", "hex", "positive"])
 
         return PlaceholderTranslations(
-            instr,
+            instr.source,
             tuple(placeholders),
             tuple(self._run(placeholders, instr.ids)),
         )

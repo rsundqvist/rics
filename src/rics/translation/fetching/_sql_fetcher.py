@@ -102,7 +102,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
 
         return self._table_ts_dict
 
-    def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
+    def fetch_translations(self, instr: FetchInstruction[str, IdType]) -> PlaceholderTranslations[str]:
         """Fetch columns from a SQL database."""
         ts = self._summaries[instr.source]
         columns = ts.select_columns(instr)

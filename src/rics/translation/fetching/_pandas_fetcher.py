@@ -111,10 +111,11 @@ class PandasFetcher(AbstractFetcher[str, IdType]):
 
         return self._placeholders
 
-    def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
-        source_path = self._source_paths[instr.source]
-        df = self.read(source_path)
-        return PlaceholderTranslations(instr, tuple(df), list(df.to_records(index=False)))
+    def fetch_translations(self, instr: FetchInstruction[str, IdType]) -> PlaceholderTranslations[str]:
+        return PlaceholderTranslations.make(
+            instr.source,
+            self.read(self._source_paths[instr.source]),
+        )
 
     def __repr__(self) -> str:
         read_path_format = self._format_source("{source}")

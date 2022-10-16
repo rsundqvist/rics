@@ -45,7 +45,7 @@ class Fetcher(ABC, Generic[SourceType, IdType]):
         ids_to_fetch: Iterable[IdsToFetch],
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
-    ) -> SourcePlaceholderTranslations:
+    ) -> SourcePlaceholderTranslations[SourceType]:
         """Retrieve placeholder translations from the source.
 
         Args:
@@ -72,7 +72,7 @@ class Fetcher(ABC, Generic[SourceType, IdType]):
         self,
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
-    ) -> SourcePlaceholderTranslations:
+    ) -> SourcePlaceholderTranslations[SourceType]:
         """Fetch as much data as possible.
 
         Args:

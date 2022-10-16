@@ -15,7 +15,7 @@ from rics.utility.misc import tname
 
 LOGGER = logging.getLogger(__package__).getChild("MultiFetcher")
 
-FetchResult = Tuple[int, SourcePlaceholderTranslations]
+FetchResult = Tuple[int, SourcePlaceholderTranslations[SourceType]]
 
 _ACTION_LEVEL_HELPER = ActionLevelHelper(
     duplicate_translation_action=ActionLevel.IGNORE,
@@ -101,7 +101,7 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         start = perf_counter()
         LOGGER.debug(f"Dispatch {num_instructions} jobs to {len(tasks)} fetchers using {self.max_workers} threads.")
 
-        def fetch(fid: int) -> FetchResult:
+        def fetch(fid: int) -> FetchResult[SourceType]:
             return fid, self._id_to_fetcher[fid].fetch(tasks[fid], placeholders, required=required)
 
         with ThreadPoolExecutor(max_workers=self.max_workers, thread_name_prefix=tname(self)) as executor:
@@ -120,7 +120,7 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         start = perf_counter()
         LOGGER.debug(f"Dispatch FETCH_ALL jobs to {len(self.fetchers)} fetchers using {self.max_workers} threads.")
 
-        def fetch_all(fetcher: Fetcher) -> FetchResult:
+        def fetch_all(fetcher: Fetcher) -> FetchResult[SourceType]:
             return id(fetcher), fetcher.fetch_all(placeholders, required=required)
 
         with ThreadPoolExecutor(max_workers=self.max_workers, thread_name_prefix=tname(self)) as executor:
