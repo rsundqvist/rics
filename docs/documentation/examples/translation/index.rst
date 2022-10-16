@@ -13,6 +13,9 @@ Turn meaningless IDs into human-readable labels.
    dvdrental
    ../notebooks/pickle-translation/PickleFetcher
    ../notebooks/sql-translation/SqlFetcher
+   ../notebooks/translation-primer/api
+   ../notebooks/translation-primer/config
+
 
 .. _Covid cases:
     https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide
