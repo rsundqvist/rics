@@ -31,5 +31,5 @@ class MemoryFetcher(AbstractFetcher[SourceType, IdType]):
     def placeholders(self) -> Dict[SourceType, List[str]]:
         return {source: list(pht.placeholders) for source, pht in self._data.items()}
 
-    def fetch_translations(self, instr: FetchInstruction) -> PlaceholderTranslations:
+    def fetch_translations(self, instr: FetchInstruction[SourceType, IdType]) -> PlaceholderTranslations[SourceType]:
         return self._data[instr.source]

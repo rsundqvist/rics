@@ -178,8 +178,8 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
     ) -> SourcePlaceholderTranslations[SourceType]:
 
         return {
-            source: translations
-            for source, translations in self._fetch_translations(ids_to_fetch, placeholders, required_placeholders)
+            translations.source: translations
+            for translations in self._fetch_translations(ids_to_fetch, placeholders, required_placeholders)
         }
 
     def _fetch_translations(
@@ -187,7 +187,7 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
         ids_to_fetch: Iterable[IdsToFetch[SourceType, IdType]],
         placeholders: PlaceholdersTuple,
         required_placeholders: Set[str],
-    ) -> Iterable[Tuple[SourceType, PlaceholderTranslations[SourceType]]]:
+    ) -> Iterable[PlaceholderTranslations[SourceType]]:
         for itf in ids_to_fetch:
             reverse_mappings, instr = self._make_fetch_instruction(itf, placeholders, required_placeholders)
 
@@ -204,7 +204,7 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
                 translations.placeholders = tuple(reverse_mappings.get(p, p) for p in translations.placeholders)
 
             translations.id_pos = translations.placeholders.index(ID)
-            yield instr.source, translations
+            yield translations
 
     def _make_fetch_instruction(
         self,
