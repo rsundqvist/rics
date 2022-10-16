@@ -9,4 +9,5 @@ Examples and documentation.
    cookbook/index
    translator-config
    mapping-primer
+   translation-primer
    cli/index
