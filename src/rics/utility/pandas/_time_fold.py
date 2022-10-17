@@ -1,11 +1,12 @@
-from typing import Iterable, NamedTuple, Optional, Sequence, Tuple, Union
+import itertools
+from typing import Iterable, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 
 from rics.utility.misc import tname
 
 Schedule = Union[pd.DatetimeIndex, pd.Timedelta, Sequence, str]
-Span = Union[str, pd.Timedelta]
+Span = Union[int, str, Literal["all"], pd.Timedelta]
 
 
 class TimeFold(NamedTuple):
@@ -30,6 +31,14 @@ class TimeFold(NamedTuple):
         2022-01-09 12:00:00: len(d)=18, len(fd)=3
         2022-01-12 08:00:00: len(d)=17, len(fd)=4
 
+        Including all data before the scheduled time.
+
+        >>> for fold in TimeFold.iter(df, schedule='68h', before='all'): print(fold)
+        TimeFold('2022-01-01 00:00:00': data.shape=(0, 1), future_data.shape=(10, 1))
+        TimeFold('2022-01-03 20:00:00': data.shape=(10, 1), future_data.shape=(10, 1))
+        TimeFold('2022-01-06 16:00:00': data.shape=(20, 1), future_data.shape=(10, 1))
+        TimeFold('2022-01-09 12:00:00': data.shape=(30, 1), future_data.shape=(9, 1))
+
         Plotting folds using ``TimeFold.plot``.
 
         >>> from rics.utility import configure_stuff; configure_stuff()
@@ -38,8 +47,11 @@ class TimeFold(NamedTuple):
 
         .. image:: ../_images/folds.png
 
-        The expression ``'0 0 * * MON,FRI'`` means `"every Monday and Friday at midnight"`. With ``after=None``
-        (the default), our `Future data` expands until the next scheduled time.
+        The expression ``'0 0 * * MON,FRI'`` means `"every Monday and Friday at midnight"`.
+
+        With ``after=1`` (the default), our `Future data` expands until the next scheduled time. This may be interpreted
+        as `"taking a step forward"` in the schdule. Using integer `before` arguments works analogously, in the
+        opposite direction.
 
     Notes:
        This method may be used to create temporal folds from heterogeneous/unaggregated data, typically used for
@@ -62,10 +74,16 @@ class TimeFold(NamedTuple):
         df: pd.DataFrame,
         schedule: Schedule = "1d",
         before: Span = "5d",
-        after: Span = None,
+        after: Span = 1,
         time_column: Optional[str] = "time",
     ) -> Iterable["TimeFold"]:
         """Create temporal k-folds from a heterogeneous ``DataFrame``.
+
+        The ranges surrounding the scheduled datetimes may be dynamically chosen by setting `before` and/or `after` to:
+
+            * ``'all'``: Include all data before/after the scheduled time, or
+            * An ``int > 0``: Include all data `N` schedule periods before/after the current schedule datetime.
+            * Any other values are passed as-is to the :class:`pandas.Timedelta` class.
 
         Args:
             df: A pandas ``DataFrame``.
@@ -73,8 +91,7 @@ class TimeFold(NamedTuple):
                 ``str``, create schedule from the start of ``df[time_column]``. Alternatively, you may pass a cron
                 expression (requires ``croniter``).
             before: The period before the scheduled datetime to include for each iteration.
-            after: The period after the scheduled datetime to include for each iteration. Set to ``None`` to dynamically
-                adjust such that the after-period lasts until the next scheduled datetime.
+            after: The period after the scheduled datetime to include for each iteration.
             time_column: Column in `df` to base the folds on. Use index if ``None``.
 
         Yields:
@@ -98,10 +115,16 @@ class TimeFold(NamedTuple):
         df: pd.DataFrame,
         schedule: Schedule = "1d",
         before: Span = "5d",
-        after: Span = None,
+        after: Span = 1,
         time_column: Optional[str] = "time",
-    ) -> None:  # pragma: no cover
-        """Plot the periods that would be returned by :meth:`iter` if invoked with the same parameters.
+    ) -> None:
+        """Plot the intervals that would be returned by :meth:`iter` if invoked with the same parameters.
+
+        The ranges surrounding the scheduled datetimes may be dynamically chosen by setting `before` and/or `after` to:
+
+            * ``'all'``: Include all data before/after the scheduled time, or
+            * An ``int > 0``: Include all data `N` schedule periods before/after the current schedule datetime.
+            * Any other values are passed as-is to the :class:`pandas.Timedelta` class.
 
         Args:
             df: A pandas ``DataFrame``.
@@ -109,8 +132,7 @@ class TimeFold(NamedTuple):
                 ``str``, create schedule from the start of ``df[time_column]``. Alternatively, you may pass a cron
                 expression (requires ``croniter``).
             before: The period before the scheduled datetime to include for each iteration.
-            after: The period after the scheduled datetime to include for each iteration. Set to ``None`` to dynamically
-                adjust such that the after-period lasts until the next scheduled datetime.
+            after: The period after the scheduled datetime to include for each iteration.
             time_column: Column in `df` to base the folds on. Use index if ``None``.
 
         Raises:
@@ -122,7 +144,7 @@ class TimeFold(NamedTuple):
         cuts = list(_parse_args(df, schedule, time_column, before, after)[0])
 
         if not cuts:
-            raise ValueError("Cannot plot an empty range.")
+            raise ValueError("Cannot plot an empty range.")  # pragma: no cover
 
         fig, ax = plt.subplots(tight_layout=True)
         xticks = [cuts[0][0]]
@@ -144,7 +166,7 @@ class TimeFold(NamedTuple):
             f"{after=}",
         ]
         if time_column != "time":
-            args.append(f"{time_column=}")
+            args.append(f"{time_column=}")  # pragma: no cover
         ax.set_title(f"TimeFold.iter({', '.join(args)})")
         ax.legend()
         fig.autofmt_xdate()
@@ -200,19 +222,44 @@ def _handle_schedule(
 
 
 def _cuts(
-    schedule: Schedule, time: Union[pd.DatetimeIndex, pd.Series], before: Span, after: Optional[Span]
+    schedule: Schedule, time: Union[pd.DatetimeIndex, pd.Series], before: Span, after: Span
 ) -> Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]]:  # pragma: no cover
     min_dt, max_dt = time.agg(["min", "max"])
     parsed_schedule = _handle_schedule(schedule, min_dt, max_dt)
 
+    if before == "all":
+        before_iter = itertools.cycle([min_dt])
+    elif isinstance(before, int):
+        before_iter = parsed_schedule
+        parsed_schedule = _handle_span(parsed_schedule, before, before=False)
+    else:
+        before_iter = _handle_span(parsed_schedule, before, before=True)
+
     for start, mid, stop in zip(
-        parsed_schedule - pd.Timedelta(before),
+        before_iter,
         parsed_schedule,
-        parsed_schedule[1:] if after is None else parsed_schedule + pd.Timedelta(after),
+        itertools.cycle([max_dt]) if after == "all" else _handle_span(parsed_schedule, after, before=False),
     ):
         if start < min_dt:
             continue
         if stop > max_dt:
             break
+        if start > mid or mid > stop:
+            continue
 
         yield start, mid, stop
+
+
+def _handle_span(schedule: pd.DatetimeIndex, span: Span, before: bool) -> pd.DatetimeIndex:
+    if isinstance(span, int):
+        if span < 0:
+            raise ValueError("Period offset cannot be negative.")  # pragma: no cover
+        assert not before, "This isn't supposed to happen."  # noqa: S101
+
+        return schedule[span:]
+    else:
+        offset = pd.Timedelta(span)
+        if before:
+            return schedule - offset
+        else:
+            return schedule + offset
