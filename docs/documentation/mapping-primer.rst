@@ -2,6 +2,9 @@
 
 Mapping primer
 ==============
+The main entry point for mapping tasks is the :class:`rics.mapping.Mapper` class. Mapping is used extensively by the
+:ref:`translation <translation-primer>` package suite.
+
 There are two principal steps involved in the mapping procedure: The :ref:`Scoring procedure` (see
 :meth:`Mapper.compute_scores <rics.mapping.Mapper.compute_scores>`) and the subsequent :ref:`Matching procedure` (see
 :meth:`Mapper.to_directional_mapping <rics.mapping.Mapper.to_directional_mapping>`). The two are automatically combined

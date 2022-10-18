@@ -1,4 +1,7 @@
-"""Mapping implementations for matching groups of elements."""
+"""Mapping implementations for matching groups of elements.
+
+For and introduction to mapping, see :ref:`mapping-primer`.
+"""
 
 from rics.mapping._cardinality import Cardinality
 from rics.mapping._directional_mapping import DirectionalMapping
