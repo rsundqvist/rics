@@ -52,6 +52,8 @@ ReturnType = TypeVar("ReturnType")
 class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     """Translate IDs to human-readable labels.
 
+    For an introduction to translation, see the :ref:`translation-primer` page.
+
     The recommended way of initializing ``Translator`` instances is the :meth:`from_config` method. For configuration
     file details, please refer to the :ref:`translator-config` page.
 
@@ -201,9 +203,6 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
 
         Returns:
             A ``Translator`` instance.
-
-        See Also:
-            The :ref:`translator-config` page.
         """
         return factory.TranslatorFactory(path, extra_fetchers).create()
 
@@ -254,6 +253,8 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     ) -> Optional[Translatable]:
         """Translate IDs to human-readable strings.
 
+        For an introduction to translation, see the :ref:`translation-primer` page.
+
         Args:
             translatable: A data structure to translate.
             names: Explicit names to translate. Derive from `translatable` if ``None``.
@@ -285,9 +286,6 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
             ConnectionStatusError: If ``reverse=True`` while the ``Translator`` is online.
             UnknownSourceError: If `override_function` returns a source which is not known.
-
-        See Also:
-            The :meth:`.Mapper.apply` function, which performs both placeholder and name-to-source mapping.
         """  # noqa: DAR101 darglint is bugged here
         if self.online and reverse:  # pragma: no cover
             raise ConnectionStatusError("Reverse translation cannot be performed online.")

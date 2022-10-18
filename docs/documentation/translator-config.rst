@@ -2,7 +2,6 @@
 
 Translator Configuration Files
 ==============================
-
 The recommended way of creating and configuring translators is the :meth:`Translator.from_config()
 <rics.translation.Translator.from_config>` method. For an example, see the :ref:`dvdrental` page.
 
@@ -10,6 +9,8 @@ The recommended way of creating and configuring translators is the :meth:`Transl
     For ``Fetcher`` classes and functions used by ``Mapper``, ``rics``-package implementations are used by default. To
     specify an external class or function, use ``'fully.qualified.names'`` in quotation marks. Names are resolved by
     :meth:`~rics.utility.misc.get_by_full_name`, using an appropriate ``default_module`` argument.
+
+For an introduction to the translation process itself, see the :ref:`translation-primer`.
 
 Multiple fetchers
 -----------------

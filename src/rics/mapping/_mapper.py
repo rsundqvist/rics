@@ -29,6 +29,8 @@ LOGGER = logging.getLogger(__package__).getChild("Mapper")
 class Mapper(Generic[ValueType, CandidateType, ContextType]):
     """Optimal value-candidate matching.
 
+    For an introduction to mapping, see the :ref:`mapping-primer` page.
+
     Args:
         score_function: A callable which accepts a value `k` and an ordered collection of candidates `c`, returning a
             score ``s_i`` for each candidate `c_i` in `c`. Default: ``s_i = float(k == c_i)``. Higher=better match.
@@ -44,9 +46,6 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         cardinality: Desired cardinality for mapped values. Derive for each matching if ``None``.
         enable_verbose_logging: If ``True``, enable verbose logging for the :meth:`apply` function. Has no effect when
             the log level is above ``logging.DEBUG``.
-
-    See Also:
-        The :ref:`mapping-primer` page.
     """
 
     def __init__(
