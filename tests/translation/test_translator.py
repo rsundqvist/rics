@@ -367,19 +367,23 @@ def test_untranslated_fraction():
 def test_reverse(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     t = Translator(hex_fetcher, fmt=fmt).store()
-    expected = {"positive_numbers": list(range(-1, 2))}
-    translated = t.translate(expected.copy())
 
-    assert translated == {
+    expected = {"positive_numbers": list(range(-1, 2))}
+    translated = {
         "positive_numbers": [
             "-1:-0x1, positive=False",
             "0:0x0, positive=True",
             "1:0x1, positive=True",
         ]
     }
+    assert translated == t.translate(expected, inplace=False)
 
     actual = t.translate(translated, reverse=True)
-    assert expected == actual
+    assert expected == actual, "Original format"
+
+    translated = {"positive_numbers": ["-0x1", "0x0", "0x1"]}
+    actual = t.copy(fmt="{hex}").translate(translated, reverse=True)
+    assert expected == actual, "New format"
 
 
 def test_simple_function_overrides(translator):
