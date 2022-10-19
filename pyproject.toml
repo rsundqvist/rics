@@ -160,10 +160,10 @@ flake8-docstrings = ["-DAR101", "-D102"]
 
 [tool.flakeheaven.exceptions."tests/"]
 # Test modules/classes/functions are never "really" public, and I don't want to typehint/document all of them :).
+flake8-docstrings = ["-*"]
+flake8-annotations = ["-*"]
 flake8-bandit = ["-S101", "-S301", "-S403"]
-flake8-docstrings = ["-D100", "-D101", "-D102", "-D103"]
 flake8-darglint = ["-DAR101"]
-flake8-annotations = ["-ANN001", "-ANN101", "-ANN102", "-ANN201", "-ANN202", "-ANN204", "-ANN205", "-ANN206"]
 
 [tool.flakeheaven.exceptions."jupyterlab/"]
 flake8-annotations = ["-*"]
