@@ -49,7 +49,7 @@ FetcherTypes = Union[
 ReturnType = TypeVar("ReturnType")
 
 
-class Translator(Generic[Translatable, NameType, SourceType, IdType]):
+class Translator(Generic[NameType, SourceType, IdType]):
     """Translate IDs to human-readable labels.
 
     For an introduction to translation, see the :ref:`translation-primer` page.
@@ -148,11 +148,12 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         allow_name_inheritance: bool = True,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
+        self._default_fmt_placeholders: Optional[InheritedKeysDict[SourceType, str, Any]]
         self._default_fmt_placeholders, self._default_fmt = _handle_default(
             self._fmt, default_fmt, default_fmt_placeholders
         )
 
-        self._cached_tmap: TranslationMap = TranslationMap({})
+        self._cached_tmap: TranslationMap[NameType, SourceType, IdType] = TranslationMap({})
         self._fetcher: Fetcher[SourceType, IdType]
         if fetcher is None:
             from rics.translation.testing import TestFetcher, TestMapper
@@ -191,7 +192,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         cls,
         path: PathLikeType,
         extra_fetchers: Iterable[PathLikeType] = (),
-    ) -> "Translator":
+    ) -> "Translator[NameType, SourceType, IdType]":
         """Create a ``Translator`` from TOML inputs.
 
         Args:
@@ -206,7 +207,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         """
         return factory.TranslatorFactory(path, extra_fetchers).create()
 
-    def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator":
+    def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator[NameType, SourceType, IdType]":
         """Make a copy of this ``Translator``.
 
         Args:
@@ -246,7 +247,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         names: NameTypes = None,
         ignore_names: Names = None,
         inplace: bool = False,
-        override_function: ExtendedOverrideFunction = None,
+        override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
         maximal_untranslated_fraction: float = 1.0,
         reverse: bool = False,
         attribute: str = None,
@@ -347,7 +348,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         translatable: Translatable,
         names: NameTypes = None,
         ignore_names: Names = None,
-        override_function: ExtendedOverrideFunction = None,
+        override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
     ) -> Optional[DirectionalMapping]:
         """Map names to translation sources.
 
@@ -378,7 +379,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         translatable: Translatable,
         names: NameTypes = None,
         ignore_names: Names = None,
-        override_function: ExtendedOverrideFunction = None,
+        override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
     ) -> pd.DataFrame:
         """Returns raw match scores for name-to-source mapping. See :meth:`map` for details."""
         names_to_translate = self._resolve_names(translatable, names, ignore_names)
@@ -401,7 +402,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         translatable: Translatable,
         names: NameTypes = None,
         ignore_names: Names = None,
-        override_function: ExtendedOverrideFunction = None,
+        override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
         parent: Translatable = None,
     ) -> Optional[DirectionalMapping]:
         names_to_translate = self._resolve_names(translatable, names, ignore_names, parent)
@@ -449,7 +450,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         self,
         mapper_function: Callable[[List[NameType], List[SourceType], None, UserOverrideFunction], ReturnType],
         names_to_translate: List[NameType],
-        override_function: ExtendedOverrideFunction,
+        override_function: ExtendedOverrideFunction[NameType, SourceType, IdType],
     ) -> ReturnType:
         def func(v: NameType, c: Set[SourceType], _: None) -> Optional[SourceType]:
             assert override_function is not None, "This shouldn't happen"  # noqa: S101
@@ -579,7 +580,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             The :meth:`Translator.restore` method.
         """
         if translatable is None:
-            source_translations: SourcePlaceholderTranslations = self._fetch(None)
+            source_translations: SourcePlaceholderTranslations[SourceType] = self._fetch(None)
             translation_map = self._to_translation_map(source_translations)
         else:
             maybe_none, _ = self._get_updated_tmap(translatable, names, ignore_names=ignore_names, force_fetch=True)
@@ -614,10 +615,10 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
         translatable: Translatable,
         names: NameTypes = None,
         ignore_names: Names = None,
-        override_function: ExtendedOverrideFunction = None,
+        override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
         force_fetch: bool = False,
         parent: Translatable = None,
-    ) -> Tuple[Optional[TranslationMap], List[NameType]]:
+    ) -> Tuple[Optional[TranslationMap[NameType, SourceType, IdType]], List[NameType]]:
         """Get an updated translation map.  # noqa
 
         Setting ``force_fetch=True`` will ignore the cached translation if there is one.
@@ -699,7 +700,9 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
             else fetcher.fetch(ids_to_fetch, placeholders, required)
         )
 
-    def _to_translation_map(self, source_translations: SourcePlaceholderTranslations) -> TranslationMap:
+    def _to_translation_map(
+        self, source_translations: SourcePlaceholderTranslations[SourceType]
+    ) -> TranslationMap[NameType, SourceType, IdType]:
         return TranslationMap(
             source_translations,
             fmt=self._fmt,
@@ -711,7 +714,7 @@ class Translator(Generic[Translatable, NameType, SourceType, IdType]):
     def _verify_translations(
         translatable: Translatable,
         names_to_translate: List[NameType],
-        translation_map: TranslationMap,
+        translation_map: TranslationMap[NameType, SourceType, IdType],
         translatable_io: Type[DataStructureIO],
         maximal_untranslated_fraction: float,
     ) -> None:
@@ -816,7 +819,7 @@ def _handle_default(
     fmt: Format,
     default_fmt: Optional[FormatType],
     default_fmt_placeholders: Optional[MakeType],
-) -> Tuple[Optional[InheritedKeysDict], Optional[Format]]:  # pragma: no cover
+) -> Tuple[Optional[InheritedKeysDict[SourceType, str, Any]], Optional[Format]]:  # pragma: no cover
     if default_fmt is None and default_fmt_placeholders is None:
         return None, None
 

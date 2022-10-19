@@ -8,7 +8,7 @@ from rics.translation.types import ID, IdType, NameType, SourceType
 from rics.utility.misc import tname
 
 
-class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
+class FormatApplier(ABC, Generic[NameType, SourceType, IdType]):
     """Base class for application of ``Format`` specifications.
 
     Args:
@@ -18,7 +18,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         ValueError: If `default` is given and any placeholder names are missing.
     """
 
-    def __init__(self, translations: PlaceholderTranslations) -> None:
+    def __init__(self, translations: PlaceholderTranslations[SourceType]) -> None:
         self._source = translations.source
         self._placeholder_names = translations.placeholders
         self._n_ids = len(translations.records)
@@ -29,7 +29,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         placeholders: PlaceholdersTuple = None,
         default_fmt: Format = None,
         default_fmt_placeholders: Dict[str, Any] = None,
-    ) -> MagicDict:
+    ) -> MagicDict[IdType]:
         """Translate IDs.
 
         Args:
@@ -60,7 +60,7 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         )
 
     @abstractmethod
-    def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds:
+    def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds[IdType]:
         """Apply fstring to all IDs.
 
         The abstract class delegates ``__apply__``-invocations to this method after some input validation.
@@ -97,17 +97,17 @@ class FormatApplier(ABC, Generic[IdType, NameType, SourceType]):
         return f"{tname(self)}({len(self)} IDs, {placeholders=}, {source=})"
 
 
-class DefaultFormatApplier(FormatApplier):
+class DefaultFormatApplier(FormatApplier[NameType, SourceType, IdType]):
     """Default format applier implementation."""
 
     def __init__(
         self,
-        translations: PlaceholderTranslations,
+        translations: PlaceholderTranslations[SourceType],
     ) -> None:
         super().__init__(translations)
         self._pht = translations
 
-    def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds:
+    def _apply(self, fstring: str, placeholders: PlaceholdersTuple) -> TranslatedIds[IdType]:
         if self._placeholder_names == placeholders:
             return {record[self._pht.id_pos]: fstring.format(*record) for record in self._pht.records}
         else:

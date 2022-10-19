@@ -17,16 +17,16 @@ class MagicDict(Mapping[IdType, str]):
 
     def __init__(
         self,
-        real_translations: TranslatedIds,
+        real_translations: TranslatedIds[IdType],
         default_value: str = None,
     ) -> None:
-        self._real: TranslatedIds = real_translations
+        self._real: TranslatedIds[IdType] = real_translations
         self._default = default_value
 
     @property
     def default_value(self) -> Optional[str]:
         """Return the default string value to return for unknown keys, if any."""
-        return self._default
+        return self._default  # pragma: no cover
 
     def __getitem__(self, key: IdType) -> str:
         if key in self._real or self._default is None:

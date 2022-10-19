@@ -4,15 +4,14 @@ from typing import TYPE_CHECKING, Any, Dict, Generic as _Generic, Sequence, Tupl
 
 import pandas as pd
 
-from rics.translation.types import ID, IdType, NameType, SourceType
+from rics.translation.types import ID, IdType, SourceType
 
 if TYPE_CHECKING:
-    from rics.translation.offline._format import Format
+    from rics.translation.offline import Format
 
 FormatType = Union[str, "Format"]
 
 PlaceholdersTuple = Tuple[str, ...]
-NameToSourceDict = Dict[NameType, SourceType]  # {name: source}
 TranslatedIds = Dict[IdType, str]  # {id: translation}
 
 
@@ -32,7 +31,7 @@ class PlaceholderTranslations(_Generic[SourceType]):
     """Position if the the ID placeholder in `placeholders`."""
 
     @classmethod
-    def make(cls, source: SourceType, data: MakeTypes) -> "PlaceholderTranslations":
+    def make(cls, source: SourceType, data: MakeTypes) -> "PlaceholderTranslations[SourceType]":
         """Try to make in instance from arbitrary input data.
 
         Args:
@@ -62,14 +61,14 @@ class PlaceholderTranslations(_Generic[SourceType]):
 
     @staticmethod
     def to_dicts(
-        source_translations: "SourcePlaceholderTranslations",
+        source_translations: "SourcePlaceholderTranslations[SourceType]",
         max_rows: int = 0,
     ) -> Dict[SourceType, Dict[str, Sequence[Any]]]:
         """Create a nested dict representation of the translations."""
         return {source: translations.to_dict(max_rows) for source, translations in source_translations.items()}
 
     @classmethod
-    def from_dataframe(cls, source: SourceType, data: pd.DataFrame) -> "PlaceholderTranslations":
+    def from_dataframe(cls, source: SourceType, data: pd.DataFrame) -> "PlaceholderTranslations[SourceType]":
         """Create instance from a pandas DataFrame."""
         return cls(
             source,
@@ -79,7 +78,7 @@ class PlaceholderTranslations(_Generic[SourceType]):
         )
 
     @classmethod
-    def from_dict(cls, source: SourceType, data: Dict[str, Sequence[Any]]) -> "PlaceholderTranslations":
+    def from_dict(cls, source: SourceType, data: Dict[str, Sequence[Any]]) -> "PlaceholderTranslations[SourceType]":
         """Create instance from a dict."""
         return cls.from_dataframe(source, pd.DataFrame.from_dict(data))
 
