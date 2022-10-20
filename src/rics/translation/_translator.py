@@ -12,7 +12,7 @@ from rics.mapping import DirectionalMapping, Mapper
 from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError
 from rics.mapping.types import UserOverrideFunction
 from rics.performance import format_perf_counter
-from rics.translation import factory
+from rics.translation import _config_utils, factory
 from rics.translation.dio import DataStructureIO, resolve_io
 from rics.translation.exceptions import ConnectionStatusError, TooManyFailedTranslationsError
 from rics.translation.fetching import Fetcher
@@ -187,11 +187,14 @@ class Translator(Generic[NameType, SourceType, IdType]):
         # Misc config
         self._allow_name_inheritance = allow_name_inheritance
 
+        self._config_metadata: Optional[_config_utils.ConfigMetadata] = None
+
     @classmethod
     def from_config(
         cls,
         path: PathLikeType,
         extra_fetchers: Iterable[PathLikeType] = (),
+        clazz: Union[str, Type["Translator"]] = None,
     ) -> "Translator[NameType, SourceType, IdType]":
         """Create a ``Translator`` from TOML inputs.
 
@@ -201,11 +204,20 @@ class Translator(Generic[NameType, SourceType, IdType]):
                 or kinds of sources, for example locally stored files in conjunction with one or more databases. The
                 fetchers are ranked by input order, with the fetcher defined in `path` (if any) being given the highest
                 priority (rank 0).
+            clazz: Translator implementation to create. If a string is passed, the class is resolved using
+                :meth:`~rics.utility.misc.get_by_full_name` if a string is given. Use ``cls`` if ``None``.
 
         Returns:
-            A ``Translator`` instance.
+            A new ``Translator`` instance with a :attr:`config_metadata` attribute.
         """
-        return factory.TranslatorFactory(path, extra_fetchers).create()
+        return factory.TranslatorFactory(path, extra_fetchers, clazz or cls).create()
+
+    @property
+    def config_metadata(self) -> _config_utils.ConfigMetadata:
+        """Return :func:`from_config` initialization metadata."""
+        if self._config_metadata is None:
+            raise ValueError("Not created using Translator.from_config()")  # pragma: no cover
+        return self._config_metadata
 
     def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator[NameType, SourceType, IdType]":
         """Make a copy of this ``Translator``.
@@ -543,7 +555,11 @@ class Translator(Generic[NameType, SourceType, IdType]):
             ans = pickle.load(f)  # noqa: S301
 
         if not isinstance(ans, cls):  # pragma: no cover
-            raise TypeError(f"Serialized object at '{full_path}' is a {type(ans)}, not {cls}.")
+            raise TypeError(f"Serialized object at at '{full_path}' is a {type(ans)}, not {cls}.")
+
+        if LOGGER.isEnabledFor(logging.DEBUG):
+            extra = "" if ans._config_metadata is None else f" with {ans.config_metadata}"
+            LOGGER.debug(f"Deserialized {ans}{extra}.")
 
         return ans
 
