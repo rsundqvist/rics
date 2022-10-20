@@ -1,5 +1,6 @@
 import logging
 from contextlib import contextmanager
+from dataclasses import dataclass
 from itertools import combinations_with_replacement
 
 import numpy as np
@@ -8,7 +9,7 @@ import pytest
 
 from rics.mapping import Mapper
 from rics.mapping.exceptions import MappingError, MappingWarning
-from rics.translation import Translator as RealTranslator
+from rics.translation import Translator as RealTranslator, _config_utils
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
 from rics.translation.exceptions import ConfigurationError, TooManyFailedTranslationsError
 from rics.translation.fetching.exceptions import UnknownSourceError
@@ -36,6 +37,20 @@ class Translator(RealTranslator):
                 assert mapper_scores.equals(translator_scores), "Mapper/Translator score mismatch."
 
         return super()._map_inner(translatable, names, ignore_names, override_function, parent)
+
+
+@dataclass(frozen=True)
+class ConfigMetadataForTest(_config_utils.ConfigMetadata):
+    def __post_init__(self) -> None:
+        assert self.path.is_absolute(), f"Got non-absolute main configuration path='{self.path}'."
+        for path in self.extra_fetchers:
+            assert path.is_absolute(), f"Got non-absolute auxiliary fetcher configuration path='{path}'."
+
+        assert isinstance(self.clazz, str), f"Got clazz={self.clazz}, expected string."
+        assert "translation." in self.clazz and self.clazz.endswith("Translator")
+
+
+_config_utils.ConfigMetadata = ConfigMetadataForTest
 
 
 @pytest.mark.parametrize("with_id, with_override, store", combinations_with_replacement([False, True], 3))

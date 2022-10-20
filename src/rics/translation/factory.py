@@ -1,5 +1,5 @@
 """Factory functions for translation classes."""
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generic as _Generic, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generic as _Generic, Iterable, Optional, Tuple, Type, Union
 
 try:
     import tomllib  # type: ignore
@@ -10,7 +10,7 @@ except ModuleNotFoundError:
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import HeuristicScore as _HeuristicScore, Mapper as _Mapper
-from rics.translation import exceptions, fetching
+from rics.translation import _config_utils, exceptions, fetching
 from rics.translation.types import IdType, NameType, SourceType
 from rics.utility import misc
 from rics.utility.action_level import ActionLevel as _ActionLevel
@@ -127,15 +127,16 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         self,
         file: PathLikeType,
         extra_fetchers: Iterable[PathLikeType],
+        clazz: Union[str, Type["Translator"]] = "Translator",
     ) -> None:
+        from rics import translation
+
         self.file = str(file)
         self.extra_fetchers = list(map(str, extra_fetchers))
-        self.config_string: str = f"Translator.fromConfig('{self.file}', extra_fetchers={self.extra_fetchers})"
+        self.clazz = misc.get_by_full_name(clazz, translation) if isinstance(clazz, str) else clazz
 
     def create(self) -> "Translator":
         """Create a ``Translator`` from a TOML file."""
-        from rics.translation import Translator
-
         with open(self.file, "rb") as f:
             config: Dict[str, Any] = tomllib.load(f)
 
@@ -148,13 +149,21 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         mapper = self._make_mapper("translator", translator_config)
         default_fmt, default_fmt_placeholders = _make_default_translations(**config.pop("unknown_ids", {}))
 
-        return Translator(
+        ans = self.clazz(
             fetcher,
             mapper=mapper,
             default_fmt=default_fmt,
             default_fmt_placeholders=default_fmt_placeholders,
             **translator_config,
         )
+
+        ans._config_metadata = _config_utils.make_metadata(
+            self.file,
+            self.extra_fetchers,
+            self.clazz,
+        )
+
+        return ans
 
     def _handle_fetching(
         self,
