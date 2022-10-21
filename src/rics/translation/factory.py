@@ -129,11 +129,10 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         extra_fetchers: Iterable[PathLikeType],
         clazz: Union[str, Type["Translator"]] = "Translator",
     ) -> None:
-        from rics import translation
 
         self.file = str(file)
         self.extra_fetchers = list(map(str, extra_fetchers))
-        self.clazz = misc.get_by_full_name(clazz, translation) if isinstance(clazz, str) else clazz
+        self.clazz = self.resolve_class(clazz)
 
     def create(self) -> "Translator":
         """Create a ``Translator`` from a TOML file."""
@@ -164,6 +163,13 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         )
 
         return ans
+
+    @classmethod
+    def resolve_class(cls, clazz: Union[str, Type["Translator"]]) -> Type["Translator"]:
+        """Resolve desired ``Translator`` type."""
+        from rics import translation
+
+        return misc.get_by_full_name(clazz, translation) if isinstance(clazz, str) else clazz
 
     def _handle_fetching(
         self,

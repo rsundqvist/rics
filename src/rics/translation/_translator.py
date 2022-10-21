@@ -1,5 +1,6 @@
 import logging
 import warnings
+from datetime import timedelta
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
@@ -531,6 +532,67 @@ class Translator(Generic[NameType, SourceType, IdType]):
     def cache(self) -> TranslationMap[NameType, SourceType, IdType]:
         """Return a ``TranslationMap`` of cached translations."""
         return self._cached_tmap
+
+    @classmethod
+    def load_persistent_instance(
+        cls,
+        config_path: PathLikeType,
+        extra_fetchers: Iterable[PathLikeType] = (),
+        directory: PathLikeType = None,
+        max_age: Union[str, pd.Timedelta, timedelta] = "7d",
+        clazz: Union[str, Type["Translator"]] = None,
+    ) -> "Translator[NameType, SourceType, IdType]":
+        """Load or create a persistent FETCH_ALL instance from disk.
+
+        .. warning:: Experimental method; may change or disappear without warning.
+
+        Instances are created, stored and loaded as determined by a metadata file located in the given `directory`. A
+        new ``Translator`` will be created if:
+
+        * There is no `'metadata'` file, or
+        * the original ``Translator`` is too old (see `max_age`), or
+        * the current configuration -- as defined by ``(config_path, extra_fetchers, clazz)`` -- has changed in such a
+          way that it is no longer :meth:`equivalent <rics.translation.ConfigMetadata.is_equivalent>` to the
+          configuration used to create the original ``Translator``.
+
+        .. note:: This method is **not** thread safe.
+
+        Args:
+            config_path: Path to a TOML file. See :meth:`from_config` for details.
+            extra_fetchers: Path to TOML files defining additional fetchers. See :meth:`from_config` for details.
+            directory: Root directory where the cached translator and associated metadata is stored. Derive based on
+                `config_path` if ``None``.
+            max_age: The maximum age of the cached ``Translator`` before it must be recreated.
+            clazz: Translator implementation to create. If a string is passed, the class is resolved using
+                :meth:`~rics.utility.misc.get_by_full_name` if a string is given. Use ``cls`` if ``None``.
+
+        Returns:
+            A new or cached ``Translator`` instance with a :attr:`config_metadata` attribute.
+        """
+        warnings.warn("Method 'Translator.load_persistent_instance' is EXPERIMENTAL. Use with caution.", UserWarning)
+
+        path = Path(str(config_path))
+        cache_dir = (
+            Path.home().joinpath(".rics").joinpath("cache").joinpath(path)
+            if directory is None
+            else Path(str(directory))
+        )
+        cache_dir.mkdir(parents=True, exist_ok=True)
+
+        metadata_path = cache_dir.joinpath("metadata.json")
+        cache_path = cache_dir.joinpath("translator.pkl")
+
+        extra_fetcher_paths: List[str] = list(map(str, extra_fetchers))
+
+        reference_metadata = _config_utils.make_metadata(
+            str(path), extra_fetcher_paths, clazz=factory.TranslatorFactory.resolve_class(clazz or cls)
+        )
+        if _config_utils.use_cached_translator(metadata_path, reference_metadata, pd.Timedelta(max_age)):
+            return cls.restore(cache_path)
+        else:
+            ans = cls.from_config(path, extra_fetcher_paths, clazz).store(path=cache_path, delete_fetcher=True)
+            metadata_path.write_text(ans.config_metadata.to_json())
+            return ans
 
     @classmethod
     def restore(cls, path: PathLikeType) -> "Translator":
