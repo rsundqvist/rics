@@ -1,6 +1,4 @@
 import os
-import tempfile
-from pathlib import Path
 
 import pytest as pytest
 
@@ -55,26 +53,24 @@ def test_class_method_with_classname():
     assert misc.tname(Foo.bar, prefix_classname=False) == "bar"
 
 
-def test_get_local_or_remote():
+def test_get_local_or_remote(tmp_path):
     def my_postprocessor(p):
         return ["my-data", {"is": "amazing"}]
 
     remote_root = "doesn't exist"
-    with tempfile.TemporaryDirectory() as tmpdir:
-        base_path = Path(tmpdir)
 
-        with open(base_path.joinpath("foo.txt"), "w") as f:
-            f.write("test")
+    with open(tmp_path.joinpath("foo.txt"), "w") as f:
+        f.write("test")
 
-        path = misc.get_local_or_remote("foo.txt", remote_root, tmpdir)
-        assert path == base_path.joinpath("foo.txt")
+    path = misc.get_local_or_remote("foo.txt", remote_root, tmp_path)
+    assert path == tmp_path.joinpath("foo.txt")
 
-        path = misc.get_local_or_remote("foo.txt", remote_root, tmpdir, postprocessor=my_postprocessor)
-        assert path == base_path.joinpath("my_postprocessor/foo.pkl")
-        with open(path, "rb") as f:
-            import pickle
+    path = misc.get_local_or_remote("foo.txt", remote_root, tmp_path, postprocessor=my_postprocessor)
+    assert path == tmp_path.joinpath("my_postprocessor/foo.pkl")
+    with open(path, "rb") as f:
+        import pickle
 
-            assert ["my-data", {"is": "amazing"}] == pickle.load(f)
+        assert ["my-data", {"is": "amazing"}] == pickle.load(f)
 
 
 def test_read_env_or_literal():

@@ -151,9 +151,7 @@ def test_missing_config():
         Translator.from_config("tests/translation/bad-config.toml")
 
 
-def test_store_and_restore(hex_fetcher):
-    from tempfile import TemporaryDirectory
-
+def test_store_and_restore(hex_fetcher, tmp_path):
     translator = Translator(hex_fetcher, fmt="{id}:{hex}")
 
     data = {
@@ -162,10 +160,9 @@ def test_store_and_restore(hex_fetcher):
     }
     translated_data = translator(data)
 
-    with TemporaryDirectory("test-store-and-restore", "rics") as tmpdir:
-        path = f"{tmpdir}/test-translator.pkl"
-        translator.store(path=path)
-        restored = Translator.restore(path=path)
+    path = tmp_path.joinpath("translator.pkl")
+    translator.store(path=path)
+    restored = Translator.restore(path=path)
 
     translated_by_restored = restored(data)
     assert translated_by_restored == translated_data
