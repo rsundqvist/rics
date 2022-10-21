@@ -538,15 +538,15 @@ class Translator(Generic[NameType, SourceType, IdType]):
         cls,
         config_path: PathLikeType,
         extra_fetchers: Iterable[PathLikeType] = (),
-        directory: PathLikeType = None,
+        cache_dir: PathLikeType = None,
         max_age: Union[str, pd.Timedelta, timedelta] = "7d",
         clazz: Union[str, Type["Translator"]] = None,
     ) -> "Translator[NameType, SourceType, IdType]":
-        """Load or create a persistent FETCH_ALL instance from disk.
+        """Load or create a persistent :attr:`~.Fetcher.fetch_all`-instance.
 
         .. warning:: Experimental method; may change or disappear without warning.
 
-        Instances are created, stored and loaded as determined by a metadata file located in the given `directory`. A
+        Instances are created, stored and loaded as determined by a metadata file located in the given `cache_dir`. A
         new ``Translator`` will be created if:
 
         * There is no `'metadata'` file, or
@@ -560,11 +560,12 @@ class Translator(Generic[NameType, SourceType, IdType]):
         Args:
             config_path: Path to a TOML file. See :meth:`from_config` for details.
             extra_fetchers: Path to TOML files defining additional fetchers. See :meth:`from_config` for details.
-            directory: Root directory where the cached translator and associated metadata is stored. Derive based on
+            cache_dir: Root directory where the cached translator and associated metadata is stored. Derive based on
                 `config_path` if ``None``.
-            max_age: The maximum age of the cached ``Translator`` before it must be recreated.
+            max_age: The maximum age of the cached ``Translator`` before it must be recreated. Pass ``max_age=0`` to
+                force recreation.
             clazz: Translator implementation to create. If a string is passed, the class is resolved using
-                :meth:`~rics.utility.misc.get_by_full_name` if a string is given. Use ``cls`` if ``None``.
+                :meth:`~rics.utility.misc.get_by_full_name`. Use ``cls`` if ``None``.
 
         Returns:
             A new or cached ``Translator`` instance with a :attr:`config_metadata` attribute.
@@ -574,8 +575,8 @@ class Translator(Generic[NameType, SourceType, IdType]):
         path = Path(str(config_path))
         cache_dir = (
             Path.home().joinpath(".rics").joinpath("cache").joinpath(path)
-            if directory is None
-            else Path(str(directory))
+            if cache_dir is None
+            else Path(str(cache_dir))
         )
         cache_dir.mkdir(parents=True, exist_ok=True)
 
