@@ -123,3 +123,32 @@ def make_metadata(
         extra_fetchers=tuple(map(Path.absolute, map(Path, extra_fetchers))),
         clazz=fully_qualified_name(clazz),
     )
+
+
+def use_cached_translator(
+    metadata_path: Path,
+    reference_metadata: ConfigMetadata,
+    max_age: pd.Timedelta,
+) -> bool:
+    """Returns ``True`` if given metadata indicates that the cached ``Translator`` is still viable."""
+    if not metadata_path.exists():
+        LOGGER.info(f"Metadata file '{metadata_path}' does not exist. Create new Translator.")
+        return False
+
+    now = pd.Timestamp.now().round("s")
+
+    metadata = ConfigMetadata.from_json(metadata_path.read_text())
+    LOGGER.debug(f"Metadata found: {metadata}")
+
+    if not reference_metadata.is_equivalent(metadata):
+        return False
+
+    expires_at = metadata.created + max_age
+    age = abs(now - expires_at)
+
+    if expires_at < metadata.created:
+        LOGGER.info(f"Reject cached Translator in '{metadata_path.parent}'. Expired at {expires_at} ({age} ago).")
+        return False
+
+    LOGGER.info(f"Accept cached Translator in '{metadata_path.parent}'. Expires at {expires_at} (in {age}).")
+    return True

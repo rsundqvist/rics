@@ -27,6 +27,10 @@ def verification_context(purpose):
 class Translator(RealTranslator):
     """Test implementation that performs additional verification."""
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.now = pd.Timestamp.now()
+
     def _map_inner(self, translatable, names, ignore_names, override_function, parent):
         if parent is None:
             with verification_context("Verify score computations"):
@@ -50,7 +54,8 @@ class ConfigMetadataForTest(_config_utils.ConfigMetadata):
         assert "translation." in self.clazz and self.clazz.endswith("Translator")
 
 
-_config_utils.ConfigMetadata = ConfigMetadataForTest
+# __post_init__ doesn't play nice with monkey patching
+_config_utils.ConfigMetadata = ConfigMetadataForTest  # type: ignore
 
 
 @pytest.mark.parametrize("with_id, with_override, store", combinations_with_replacement([False, True], 3))
@@ -463,3 +468,28 @@ def test_float_ids(translator):
     )
     assert len(ids_to_fetch) == 1
     assert ids_to_fetch[0].ids == {0, 1, 3}
+
+
+def test_load_persistent_instance(tmp_path):
+    path = "tests/translation/dvdrental/translation.toml"  # Uses an in-memory fetcher.
+    fetchers = ["tests/translation/config.imdb.toml"]
+
+    expected = [None, "1:Action", "2:Animation"]
+    args = dict(translatable=[0, 1, 2], names="category_id")
+
+    with pytest.warns(UserWarning, match="EXPERIMENTAL"):
+        translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator)
+        now = translator.now
+        assert translator.translate(**args) == expected
+
+        translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator)
+        assert translator.now == now
+        assert translator.translate(**args) == expected
+
+        translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator, max_age="-1d")
+        assert translator.now > now
+        assert translator.translate(**args) == expected
+
+        real_translator = RealTranslator.load_persistent_instance(path, fetchers, tmp_path)
+        assert real_translator.translate(**args) == expected
+        assert not isinstance(real_translator, Translator)
