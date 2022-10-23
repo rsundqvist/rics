@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional, Sequence, TypeVar
 
 from rics.translation.dio._data_structure_io import DataStructureIO
 from rics.translation.offline import TranslationMap
-from rics.translation.types import IdType, NameType
+from rics.translation.types import IdType, NameType, SourceType
 
-T = TypeVar("T", bound=Dict)
+T = TypeVar("T", bound=Dict)  # type: ignore[type-arg]  # TODO: Higher-Kinded TypeVars
 
 
 class DictIO(DataStructureIO):
@@ -19,7 +19,9 @@ class DictIO(DataStructureIO):
         return {name: translatable[name] for name in names}
 
     @staticmethod
-    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
+    def insert(
+        translatable: T, names: List[NameType], tmap: TranslationMap[NameType, SourceType, IdType], copy: bool
+    ) -> Optional[T]:
         translatable = dict(translatable) if copy else translatable  # type: ignore
 
         for name in filter(translatable.__contains__, names):

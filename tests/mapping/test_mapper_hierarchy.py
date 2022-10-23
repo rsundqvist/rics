@@ -1,4 +1,5 @@
 from itertools import product
+from typing import Any
 
 import pytest
 
@@ -21,10 +22,10 @@ CASES = list(
 )
 
 
-def make_id(case):
+def make_id(case: Any) -> str:
     cardinality, (override_function, static_override, filters, short_circuit) = case
 
-    x = f"{override_function=},{static_override=},{filters=},{short_circuit=}".split(",")
+    x: Any = f"{override_function=},{static_override=},{filters=},{short_circuit=}".split(",")
     x = " | ".join([s.split("=")[0] for s in filter(lambda s: s.endswith("True"), x)])
     x = x or "baseline"
     return f"{cardinality.name}: <{x}>"

@@ -20,7 +20,7 @@ def test_unknown_sources(fetcher):
 
 
 def test_fetch_all_forbidden(data):
-    fetcher = MemoryFetcher(data)
+    fetcher: AbstractFetcher[str, int] = MemoryFetcher(data)
     fetcher._allow_fetch_all = False
 
     with pytest.raises(exceptions.ForbiddenOperationError) as ec:

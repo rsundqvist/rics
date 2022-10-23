@@ -7,7 +7,7 @@ KEYWORDS = ("or", "ee")
 
 def test__parse_where_arg():
     with pytest.raises(ValueError):
-        mf._parse_where_args("bad-arg")
+        mf._parse_where_args("bad-arg")  # type: ignore[arg-type]
     with pytest.raises(ValueError):
         mf._parse_where_args(())
 

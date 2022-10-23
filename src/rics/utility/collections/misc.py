@@ -1,12 +1,12 @@
 """Miscellaneous utility methods for collections."""
 
-from typing import Iterable, List, Tuple, Type, TypeVar, Union
+from typing import Any, Iterable, List, Tuple, Type, TypeVar, Union
 
 ArgType = TypeVar("ArgType")
 """ArgType generic type."""
 
 
-def as_list(arg: Union[ArgType, Iterable[ArgType]] = None, excl_types: Tuple[Type] = (str,)) -> List[ArgType]:
+def as_list(arg: Union[ArgType, Iterable[ArgType]] = None, excl_types: Tuple[Type[Any]] = (str,)) -> List[ArgType]:
     """Create a list or list-wrapping of `arg`.
 
     Args:

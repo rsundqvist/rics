@@ -6,7 +6,7 @@ import pytest
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=UserWarning)
-    from rics.mapping import Cardinality, support
+    from rics.mapping import Cardinality, DirectionalMapping, support
 
 
 @pytest.mark.parametrize("crash", [True, False])
@@ -47,7 +47,8 @@ def test_enable_verbose_debug_messages(crash):
 def test_natural_number_mapping(cardinality, min_score, expected):
     score = pd.DataFrame(np.arange(0, 20).reshape((4, -1)))
     score.columns = list(map("c{}".format, score))
-    score.columns.name = "candidates"
+    score.columns.name = "candidates"  # type: ignore[attr-defined]
     score.index.name = "values"
-    actual = support.MatchScores(score, min_score).to_directional_mapping(cardinality).left_to_right
+    dm: DirectionalMapping[int, str] = support.MatchScores(score, min_score).to_directional_mapping(cardinality)
+    actual = dm.left_to_right
     assert actual == expected

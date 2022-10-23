@@ -69,8 +69,6 @@ def test_run_multivariate_test(monkeypatch):
 
     from tests.performance.cli_modules.with_all import candidates, test_data
 
-    MultiCaseTimer._get_raw_timings = get_raw_timings  # type: ignore
-
     ans = run_multivariate_test(
         candidate_method=candidates.ALL,
         test_data=test_data.ALL,

@@ -129,7 +129,7 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
         ids_to_fetch: Iterable[IdsToFetch[SourceType, IdType]],
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
-    ) -> SourcePlaceholderTranslations:
+    ) -> SourcePlaceholderTranslations[SourceType]:
         unknown_sources = set(t.source for t in ids_to_fetch).difference(self.sources)
         if unknown_sources:
             raise exceptions.UnknownSourceError(unknown_sources, self.sources)
@@ -147,7 +147,7 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
         if not self.allow_fetch_all:
             raise exceptions.ForbiddenOperationError(self._FETCH_ALL)
 
-        ids_to_fetch: List[IdsToFetch] = [IdsToFetch(source, None) for source in self.sources]
+        ids_to_fetch: List[IdsToFetch[SourceType, IdType]] = [IdsToFetch(source, None) for source in self.sources]
         return self._fetch(ids_to_fetch, tuple(placeholders), set(required))
 
     @abstractmethod
@@ -208,7 +208,7 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
 
     def _make_fetch_instruction(
         self,
-        itf: IdsToFetch,
+        itf: IdsToFetch[SourceType, IdType],
         placeholders: PlaceholdersTuple,
         required_placeholders: Set[str],
     ) -> Tuple[Optional[Dict[str, str]], FetchInstruction[SourceType, IdType]]:

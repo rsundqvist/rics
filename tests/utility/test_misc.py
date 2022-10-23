@@ -67,10 +67,11 @@ def test_get_local_or_remote(tmp_path):
 
     path = misc.get_local_or_remote("foo.txt", remote_root, tmp_path, postprocessor=my_postprocessor)
     assert path == tmp_path.joinpath("my_postprocessor/foo.pkl")
-    with open(path, "rb") as f:
+
+    with open(path, "rb") as f2:
         import pickle
 
-        assert ["my-data", {"is": "amazing"}] == pickle.load(f)
+        assert ["my-data", {"is": "amazing"}] == pickle.load(f2)
 
 
 def test_read_env_or_literal():

@@ -1,15 +1,21 @@
-from typing import Any
+from typing import Any, Callable, Optional
 
 import pytest
 
 from rics.utility.action_level import ActionLevel, ActionLevelHelper, BadActionLevelError
 
 
-def run(func, expected, action, purpose, *args: Any) -> None:
+def run(
+    func: Callable[[ActionLevel.ParseType, Optional[str]], ActionLevel],
+    expected: Optional[ActionLevel],
+    action: ActionLevel.ParseType,
+    purpose: Optional[str],
+    *args: Any,
+) -> None:
     if expected is None:
         with pytest.raises(BadActionLevelError) as rc:
             func(action, purpose, *args)
-        assert purpose in str(rc.value)
+        assert str(purpose) in str(rc.value)
     else:
         actual = func(action, purpose, *args)
         assert isinstance(actual, ActionLevel)

@@ -74,7 +74,7 @@ class MatchScores:
 
         left_to_right = _defaultdict(list)
         for record in list(matches):
-            supersedes: List[MatchScores.Reject] = []
+            supersedes: List[MatchScores.Reject[ValueType, CandidateType]] = []
             if SUPERSESSION_LOGGER.isEnabledFor(logging.DEBUG) and rejections:
                 for rr in rejections:
                     if record in (rr.superseding_value, rr.superseding_candidate):
@@ -110,12 +110,12 @@ class MatchScores:
     def _match(
         self, cardinality: _Cardinality = None
     ) -> Tuple[List["MatchScores.Record[ValueType, CandidateType]"], List["Reject[ValueType, CandidateType]"]]:
-        rejections: Optional[List[MatchScores.Reject]] = None
-        records: List[MatchScores.Record] = self.above
+        rejections: Optional[List[MatchScores.Reject[ValueType, CandidateType]]] = None
+        records: List["MatchScores.Record[ValueType, CandidateType]"] = self.above()
 
         if SUPERSESSION_LOGGER.isEnabledFor(logging.DEBUG) or UNMAPPED_LOGGER.isEnabledFor(logging.DEBUG):
             rejections = []
-            records += self.below
+            records.extend(self.below())
 
         if cardinality is _Cardinality.OneToOne:
             matches = self._select_one_to_one(records, rejections)
@@ -133,13 +133,11 @@ class MatchScores:
         sorted_scores.sort_values(ascending=False, inplace=True)
         return sorted_scores
 
-    @property
     def above(self) -> List["MatchScores.Record[ValueType, CandidateType]"]:
         """Get all records with scores `above` the threshold."""
         s = self._get_sorted()
         return self._from_series(s[s >= self._min_score])
 
-    @property
     def below(self) -> List["MatchScores.Record[ValueType, CandidateType]"]:
         """Get all records with scores `below` the threshold."""
         s = self._get_sorted()

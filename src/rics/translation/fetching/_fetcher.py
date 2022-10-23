@@ -42,7 +42,7 @@ class Fetcher(ABC, Generic[SourceType, IdType]):
     @abstractmethod
     def fetch(
         self,
-        ids_to_fetch: Iterable[IdsToFetch],
+        ids_to_fetch: Iterable[IdsToFetch[SourceType, IdType]],
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
     ) -> SourcePlaceholderTranslations[SourceType]:

@@ -15,19 +15,18 @@ from typing import (
 
 if TYPE_CHECKING:
     import pandas  # noqa: F401
+    from numpy.typing import NDArray
+
+    from rics.translation._translator import Translator
 
 Translatable = _TypeVar(
     "Translatable",
     # Primitive types
     str,
     int,
-    # Sequence types (includes numpy arrays)
-    Sequence[str],
-    Sequence[int],
-    # Dicts
-    Dict[Hashable, Union[int, Sequence[int]]],
-    Dict[Hashable, Union[str, Sequence[str]]],
-    # Pandas types.
+    Dict,  # type: ignore[type-arg]  # TODO: Need Higher-Kinded TypeVars
+    Sequence,  # type: ignore[type-arg]  # TODO: Need Higher-Kinded TypeVars
+    "NDArray",  # type: ignore[type-arg]  # TODO: Need Higher-Kinded TypeVars
     "pandas.DataFrame",
     "pandas.Index",
     "pandas.Series",
@@ -75,5 +74,9 @@ NamesPredicate = Callable[[NameType], bool]
 """A predicate type on names."""
 NameTypes = Union[NameType, Iterable[NameType]]
 """A union of a name type, or an iterable thereof."""
-Names = Union[NameTypes, NamesPredicate]
+Names = Union[NameTypes[NameType], NamesPredicate[NameType]]
 """Acceptable name types."""
+
+
+# TODO: Need "Higher-Kinded TypeVars" from the Python/typing project (opened 2018..)
+TranslatorT = _TypeVar("TranslatorT", bound="Translator", covariant=True)  # type: ignore[type-arg]

@@ -226,7 +226,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         Returns:
             An approximate size for `table`.
         """
-        return self._engine.execute(sqlalchemy.func.count(id_column)).scalar()
+        return int(self._engine.execute(sqlalchemy.func.count(id_column)).scalar())
 
     def get_metadata(self) -> sqlalchemy.MetaData:
         """Create a populated metadata object."""
@@ -309,6 +309,6 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         id_column: sqlalchemy.schema.Column
         """The ID column of the table."""
 
-        def select_columns(self, instr: FetchInstruction) -> List[str]:
+        def select_columns(self, instr: FetchInstruction[str, IdType]) -> List[str]:
             """Return required and optional columns of the table."""
             return support.select_placeholders(instr, self.columns.keys())

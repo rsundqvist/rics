@@ -1,6 +1,6 @@
 import pytest
 
-from rics.translation.offline import Format, TranslationMap
+from rics.translation.offline import DefaultFormatApplier, Format, FormatApplier
 from rics.translation.offline.types import PlaceholderTranslations
 
 
@@ -11,7 +11,7 @@ def fmt():
 
 def test_no_explicit_placeholders(fmt):
     translations = PlaceholderTranslations("source", ("id", "baz", "foo"), [(1, 1, 3), (2, 2, 4)], 0)
-    applier = TranslationMap.FORMAT_APPLIER_TYPE(translations)
+    applier: FormatApplier[str, str, int] = DefaultFormatApplier(translations)
 
     ans = applier(fmt)
     assert ans == {1: "3 1: baz=1", 2: "4 2: baz=2"}
@@ -19,7 +19,7 @@ def test_no_explicit_placeholders(fmt):
 
 def test_explicit_placeholders(fmt):
     translations = PlaceholderTranslations("source", ("id", "baz", "foo"), [(1, 1, 3), (2, 2, 4)], 0)
-    applier = TranslationMap.FORMAT_APPLIER_TYPE(translations)
+    applier: FormatApplier[str, str, int] = DefaultFormatApplier(translations)
 
     ans = applier(fmt, ("foo", "id"), default_fmt_placeholders={"baz": "default-baz", "foo": "default-baz"})
     assert ans == {1: "3 1", 2: "4 2"}

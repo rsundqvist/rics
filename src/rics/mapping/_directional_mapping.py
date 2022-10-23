@@ -6,7 +6,7 @@ from rics.mapping.types import HL, HR, LeftToRight, RightToLeft
 from rics.utility.misc import tname
 
 HAnySide = TypeVar("HAnySide", bound=Hashable)
-MatchTupleAnySide = TypeVar("MatchTupleAnySide", bound=Hashable)
+MatchTupleAnySide = TypeVar("MatchTupleAnySide", bound=Hashable)  # TODO: Higher-Kinded TypeVars
 
 
 class DirectionalMapping(Generic[HL, HR]):
@@ -31,8 +31,8 @@ class DirectionalMapping(Generic[HL, HR]):
         right_to_left: Mapping[HR, Iterable[HL]] = None,
         _verify: bool = True,
     ) -> None:
-        self._left_to_right = self._to_other(left_to_right, right_to_left)
-        self._right_to_left = self._to_other(right_to_left, left_to_right)
+        self._left_to_right: Dict[HL, Tuple[HR, ...]] = self._to_other(left_to_right, right_to_left)
+        self._right_to_left: Dict[HR, Tuple[HL, ...]] = self._to_other(right_to_left, left_to_right)
 
         if left_to_right is not None and right_to_left is not None and _verify:
             self._verify(expected=DirectionalMapping(cardinality, left_to_right=left_to_right, _verify=False))
@@ -96,7 +96,7 @@ class DirectionalMapping(Generic[HL, HR]):
 
         return {left: right[0] for left, right in self._left_to_right.items()}
 
-    def select_left(self, elements: Iterable[HL], exclude: bool = False) -> "DirectionalMapping":
+    def select_left(self, elements: Iterable[HL], exclude: bool = False) -> "DirectionalMapping[HL, HR]":
         """Perform a selection on left-side elements.
 
         Args:
@@ -109,9 +109,9 @@ class DirectionalMapping(Generic[HL, HR]):
         Raises:
             KeyError: If any of the chosen elements do not exist and ``exclude=False``.
         """
-        return self._select(elements, left=True, exclude=exclude)
+        return DirectionalMapping(None, left_to_right=_select(elements, self._left_to_right, exclude))
 
-    def select_right(self, elements: Iterable[HR], exclude: bool = False) -> "DirectionalMapping":
+    def select_right(self, elements: Iterable[HR], exclude: bool = False) -> "DirectionalMapping[HL, HR]":
         """Perform a selection on right-side elements.
 
         Args:
@@ -124,16 +124,16 @@ class DirectionalMapping(Generic[HL, HR]):
         Raises:
             KeyError: If any of the chosen elements do not exist and ``exclude=False``.
         """
-        return self._select(elements, left=False, exclude=exclude)
+        return DirectionalMapping(None, right_to_left=_select(elements, self._right_to_left, exclude))
 
     @classmethod
     def _to_other(
         cls,
-        primary_side,  # noqa: ANN001
-        backup_side,  # noqa: ANN001
-    ):  # noqa: ANN206
+        primary_side: Mapping[Any, Iterable[Any]] = None,
+        backup_side: Mapping[Any, Iterable[Any]] = None,
+    ) -> Dict[Any, Any]:
         if primary_side is not None:
-            return primary_side
+            return primary_side  # type: ignore[return-value]
 
         if backup_side is None:
             raise ValueError("At least one side must be given")
@@ -146,24 +146,8 @@ class DirectionalMapping(Generic[HL, HR]):
                 other_side[m].append(k)
         return {k: tuple(set(m)) for k, m in other_side.items()}
 
-    def _select(self, elements: Iterable[HAnySide], left: bool, exclude: bool) -> "DirectionalMapping":
-        items = self._left_to_right if left else self._right_to_left
-
-        if not exclude:
-            missing_elements = set(elements).difference(items)
-            if missing_elements:
-                raise KeyError(f"Unknown {'left' if left else 'right'}: {', '.join(map(str, missing_elements))}.")
-
-        s = set(elements)
-        chosen_elements = filter(lambda e: e not in s, items) if exclude else filter(s.__contains__, items)
-        one_sided_mapping = {e: items[e] for e in chosen_elements}
-        return (
-            DirectionalMapping(None, left_to_right=one_sided_mapping)
-            if left
-            else DirectionalMapping(None, right_to_left=one_sided_mapping)
-        )
-
-    def _verify(self, expected: "DirectionalMapping") -> None:
+    def _verify(self, expected: "DirectionalMapping[HL, HR]") -> None:
+        # TODO; This should only be done during testing I think
         self._verify_side(self.left, expected.left, "Left")
         self._verify_side(self.right, expected.right, "Right")
 
@@ -189,8 +173,8 @@ class DirectionalMapping(Generic[HL, HR]):
     def _handle_cardinality(
         cls,
         expected: Optional[Cardinality.ParseType],
-        left: LeftToRight,
-        right: RightToLeft,
+        left: LeftToRight[HL, HR],
+        right: RightToLeft[HR, HL],
         verify: bool,
     ) -> Cardinality:
         if not (left and right):
@@ -219,3 +203,14 @@ class DirectionalMapping(Generic[HL, HR]):
     def _verify_side(cls, actual: MatchTupleAnySide, expected: MatchTupleAnySide, name: str) -> None:
         if actual != expected:
             raise ValueError(f"{name}-side mismatch: Got {actual} but expected {expected}.")
+
+
+def _select(elements: Iterable[HAnySide], items: Dict[HL, Tuple[HR, ...]], exclude: bool) -> Dict[HL, Tuple[HR, ...]]:
+    if not exclude:
+        missing_elements = set(elements).difference(items)
+        if missing_elements:
+            raise KeyError(f"Unknown keys {missing_elements} in {items}.")
+
+    s = set(elements)
+    chosen_elements = filter(lambda e: e not in s, items) if exclude else filter(s.__contains__, items)
+    return {e: items[e] for e in chosen_elements}

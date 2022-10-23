@@ -78,5 +78,7 @@ Returns:
     A subset of candidates to keep.
 """
 
-HeuristicsTypes = Union[AliasFunction, FilterFunction]
+HeuristicsTypes = Union[
+    AliasFunction[ValueType, CandidateType, ContextType], FilterFunction[ValueType, CandidateType, ContextType]
+]
 """Types that may be interpreted as a score function heuristic."""

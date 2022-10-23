@@ -1,4 +1,6 @@
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Mapping, Sequence, Union
+
+import pandas as pd
 
 from rics.translation.fetching import AbstractFetcher
 from rics.translation.fetching.types import FetchInstruction
@@ -15,13 +17,18 @@ class MemoryFetcher(AbstractFetcher[SourceType, IdType]):
 
     def __init__(
         self,
-        data: Union[SourcePlaceholderTranslations, Dict[SourceType, PlaceholderTranslations.MakeTypes]],
+        data: Union[
+            SourcePlaceholderTranslations[SourceType],
+            Dict[SourceType, PlaceholderTranslations[SourceType]],
+            Dict[SourceType, pd.DataFrame],
+            Mapping[SourceType, Mapping[str, Sequence[Any]]],
+        ] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
-        self._data: SourcePlaceholderTranslations = {
-            source: PlaceholderTranslations.make(source, pht) for source, pht in data.items()
-        }
+        self._data: SourcePlaceholderTranslations[SourceType] = (
+            {} if not data else {source: PlaceholderTranslations.make(source, pht) for source, pht in data.items()}
+        )
 
     @property
     def sources(self) -> List[SourceType]:

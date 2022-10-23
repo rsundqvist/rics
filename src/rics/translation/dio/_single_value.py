@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Sequence
 from rics.translation.dio import DataStructureIO
 from rics.translation.dio.exceptions import NotInplaceTranslatableError
 from rics.translation.offline import TranslationMap
-from rics.translation.types import IdType, NameType
+from rics.translation.types import IdType, NameType, SourceType
 
 
 class SingleValueIO(DataStructureIO):
@@ -21,7 +21,9 @@ class SingleValueIO(DataStructureIO):
         return {names[0]: (translatable,)}
 
     @staticmethod
-    def insert(translatable: IdType, names: List[NameType], tmap: TranslationMap, copy: bool) -> str:
+    def insert(
+        translatable: IdType, names: List[NameType], tmap: TranslationMap[NameType, SourceType, IdType], copy: bool
+    ) -> str:
         if not copy:  # pragma: no cover
             raise NotInplaceTranslatableError(translatable)
 
