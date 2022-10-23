@@ -21,13 +21,11 @@ Translatable = _TypeVar(
     # Primitive types
     str,
     int,
-    # Sequence types (includes numpy arrays)
-    Sequence[str],
-    Sequence[int],
     # Dicts
-    Dict[Hashable, Union[int, Sequence[int]]],
-    Dict[Hashable, Union[str, Sequence[str]]],
-    # Pandas types.
+    Dict,
+    # Sequence types (includes numpy arrays)
+    Sequence,
+    # Pandas types
     "pandas.DataFrame",
     "pandas.Index",
     "pandas.Series",
