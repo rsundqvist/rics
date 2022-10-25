@@ -110,7 +110,7 @@ def format_(c, check=False):
 def flake8(c):
     # type: (Context) -> None
     """Run flake8."""
-    _run(c, f"poetry run flakeheaven lint {PYTHON_TARGETS_STR}")
+    _run(c, f"poetry run flakeheaven lint {SOURCE_DIR} {TEST_DIR}")
 
 
 @task()
@@ -130,7 +130,7 @@ def lint(c):
 def mypy(c):
     # type: (Context) -> None
     """Run mypy."""
-    _run(c, f"poetry run mypy {PYTHON_TARGETS_STR}")
+    _run(c, f"poetry run mypy {SOURCE_DIR} {TEST_DIR}")
 
 
 @task()
