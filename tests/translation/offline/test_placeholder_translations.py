@@ -17,13 +17,13 @@ def test_from_dict(source):
 
 @pytest.mark.parametrize("source", OPTIONS)
 def test_from_data_frame(source):
-    df = pd.read_json(PATH.format(source), orient="list")
+    df = pd.read_json(PATH.format(source))
     PlaceholderTranslations.from_dataframe(source, df)
 
 
 @pytest.mark.parametrize("source", OPTIONS)
 def test_dict_df_equal(source):
-    from_df = PlaceholderTranslations.make(source, pd.read_json(PATH.format(source), orient="list"))
+    from_df = PlaceholderTranslations.make(source, pd.read_json(PATH.format(source)))
 
     with open(PATH.format(source)) as f:
         from_dict = PlaceholderTranslations.make(source, json.load(f))
@@ -33,14 +33,13 @@ def test_dict_df_equal(source):
 
 def test_to_dict():
     source = OPTIONS[0]
-    df = pd.read_json(PATH.format(source), orient="list")
+    df = pd.read_json(PATH.format(source))
     PlaceholderTranslations.from_dataframe(source, df).to_dict()
 
 
 def test_to_dicts():
     source_translations = {
-        source: PlaceholderTranslations.from_dataframe(source, pd.read_json(PATH.format(source), orient="list"))
-        for source in OPTIONS
+        source: PlaceholderTranslations.from_dataframe(source, pd.read_json(PATH.format(source))) for source in OPTIONS
     }
 
     actual = PlaceholderTranslations.to_dicts(source_translations)

@@ -5,7 +5,7 @@ import pandas as pd
 from rics.translation.dio._data_structure_io import DataStructureIO
 from rics.translation.dio._sequence import SequenceIO, translate_sequence, verify_names
 from rics.translation.offline import TranslationMap
-from rics.translation.types import IdType, NameType
+from rics.translation.types import IdType, NameType, SourceType
 
 T = TypeVar("T", pd.DataFrame, pd.Series)
 
@@ -29,7 +29,9 @@ class PandasIO(DataStructureIO):
             return SequenceIO.extract(_cast_series(translatable), names)
 
     @staticmethod
-    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
+    def insert(
+        translatable: T, names: List[NameType], tmap: TranslationMap[NameType, SourceType, IdType], copy: bool
+    ) -> Optional[T]:
         translatable = translatable.copy() if copy else translatable
 
         if isinstance(translatable, pd.DataFrame):

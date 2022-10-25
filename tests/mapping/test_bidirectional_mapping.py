@@ -1,14 +1,13 @@
 import itertools
-from typing import Dict
 
 import pytest
 
 from rics.mapping import Cardinality, DirectionalMapping
-from rics.translation.offline.types import PlaceholdersTuple
+from rics.mapping.types import LeftToRight
 
 
 @pytest.fixture(scope="module")
-def mappings_dict() -> Dict[str, PlaceholdersTuple]:
+def mappings_dict() -> LeftToRight[str, str]:
     return {
         "ab": ("AB", "A", "B"),
         "a": ("AB", "A"),
@@ -17,8 +16,8 @@ def mappings_dict() -> Dict[str, PlaceholdersTuple]:
 
 
 @pytest.fixture(scope="module")
-def mapping(mappings_dict) -> DirectionalMapping:
-    return DirectionalMapping(Cardinality.ManyToMany, mappings_dict)
+def mapping(mappings_dict: LeftToRight[str, str]) -> DirectionalMapping[str, str]:
+    return DirectionalMapping(Cardinality.ManyToMany, left_to_right=mappings_dict)
 
 
 def _sort(a):

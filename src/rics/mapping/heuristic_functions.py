@@ -3,6 +3,8 @@
 See Also:
     The :class:`~rics.mapping.HeuristicScore` class.
 """
+from __future__ import annotations
+
 import re
 from typing import Any, Iterable, List, Optional, Set, Tuple, Union
 
@@ -37,7 +39,7 @@ def short_circuit_to_value(
     value: str,
     candidates: Iterable[str],
     context: Optional[str],
-    regex: Union[str, re.Pattern],
+    regex: Union[str, re.Pattern[str]],
     target: str,
 ) -> Set[str]:
     """Short circuit candidates which match a given `regex` a given to-value.
@@ -73,7 +75,7 @@ def short_circuit_to_candidate(
     value: str,
     candidates: Iterable[str],
     context: Optional[str],
-    regex: Union[str, re.Pattern],
+    regex: Union[str, re.Pattern[str]],
     target: str,
 ) -> Set[str]:
     """Short circuit candidates which match a given `regex` to a given to-candidate.

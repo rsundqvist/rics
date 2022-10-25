@@ -1,6 +1,6 @@
 """Dict utility functions."""
 import warnings
-from typing import Any, Callable, Dict, Hashable, Iterator, List, Mapping, TypeVar, Union
+from typing import Any, Callable, Dict, Hashable, Iterator, List, Mapping, Optional, TypedDict, TypeVar, Union
 
 from rics.utility.action_level import ActionLevel
 from rics.utility.misc import tname as _tname
@@ -91,28 +91,28 @@ def flatten_dict(
         >>> flatten_dict({"foo": 0, "bar": {"foo": 1, "bar": 2}})
         {'foo': 0, 'bar.foo': 1, 'bar.bar': 2}
     """
-    return _flatten_inner(d, {}, [], join_string, filter_predicate)
+    ans: Dict[str, Any] = {}
+    _flatten_inner(d, ans, [], join_string, filter_predicate)
+    return ans
 
 
 def _flatten_inner(
-    arg: Any,
+    d: Dict[str, Any],
     flattened: Dict[str, Any],
     parents: List[str],
-    join_string: str = ".",
-    filter_predicate: Callable[[str, Any], bool] = None,
-) -> Dict[str, Any]:
-    if isinstance(arg, dict):
-        for key, value in arg.items():
-            if filter_predicate is not None and not filter_predicate(key, value):
-                continue
-            new_parents = parents + [key]
-            flat_key = join_string.join(new_parents)
-            inner = _flatten_inner(value, flattened, new_parents, join_string, filter_predicate)
-            if not isinstance(inner, dict):
-                flattened[flat_key] = inner
-        return flattened
-    else:
-        return arg
+    join_string: str,
+    filter_predicate: Optional[Callable[[str, Any], bool]],
+) -> None:
+    for key, value in d.items():
+        if filter_predicate is not None and not filter_predicate(key, value):
+            continue
+
+        key_hierarchy = parents + [key]
+        if isinstance(value, dict):
+            _flatten_inner(value, flattened, key_hierarchy, join_string, filter_predicate)
+        else:
+            flat_key = join_string.join(key_hierarchy)
+            flattened[flat_key] = value
 
 
 class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
@@ -193,12 +193,12 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
     def __iter__(self) -> Iterator[OKT]:
         yield from self._specific
 
-    def copy(self) -> "InheritedKeysDict":
+    def copy(self) -> "InheritedKeysDict[OKT, KT, VT]":
         """Make a copy of this ``InheritedKeysDict``."""
         return InheritedKeysDict(specific=self._specific.copy(), default=self._default.copy())
 
     @classmethod
-    def make(cls, arg: "MakeType") -> "InheritedKeysDict":
+    def make(cls, arg: "MakeType[OKT, KT, VT]") -> "InheritedKeysDict[OKT, KT, VT]":
         """Create instance from a mapping.
 
         The given argument must be on the format::
@@ -227,8 +227,9 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
         if isinstance(arg, InheritedKeysDict):  # pragma: no cover
             return arg
 
-        default = arg.pop("default", None)
-        specific = arg.pop("specific", None)
+        # TODO: Need 3.11 and MakeDict for these
+        default: Optional[Dict[KT, VT]] = arg.pop("default", None)
+        specific: Optional[Dict[OKT, Dict[KT, VT]]] = arg.pop("specific", None)
 
         if arg:  # pragma: no cover
             raise ValueError(f"Invalid {_tname(cls)}. Unknown keys: {list(arg)}")
@@ -236,5 +237,18 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
         return InheritedKeysDict(default=default, specific=specific)
 
 
-MakeType = Union[Dict[str, Union[Dict[KT, VT], Dict[OKT, Dict[KT, VT]]]], InheritedKeysDict[OKT, KT, VT]]
+class _MakeDict(
+    TypedDict,
+    total=False,
+    # Generic[OKT, KT, VT] # TODO: Requires 3.11
+):
+    default: Dict[KT, VT]  # type: ignore[valid-type]
+    specific: Dict[OKT, Dict[KT, VT]]  # type: ignore[valid-type]
+
+
+MakeType = Union[
+    InheritedKeysDict[OKT, KT, VT],
+    _MakeDict,
+    # MakeDict[OKT, KT, VT],
+]
 """Valid input types for making the :meth:`InheritedKeysDict.make` function."""

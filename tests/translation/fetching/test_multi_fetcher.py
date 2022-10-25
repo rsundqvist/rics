@@ -1,18 +1,20 @@
+from typing import Collection, Dict, List
+
 import pandas as pd
 import pytest
 
 from rics.translation import Translator
-from rics.translation.fetching import MemoryFetcher, MultiFetcher, SqlFetcher, exceptions
+from rics.translation.fetching import AbstractFetcher, MemoryFetcher, MultiFetcher, SqlFetcher, exceptions
 from rics.translation.fetching.types import IdsToFetch
-from rics.translation.offline.types import PlaceholderTranslations
+from rics.translation.offline.types import PlaceholderTranslations, SourcePlaceholderTranslations
 
 
 @pytest.fixture(scope="module")
-def fetchers(data):
-    humans_fetcher = MemoryFetcher({"humans": data["humans"]})
-    empty_fetcher = MemoryFetcher({})
-    everything_fetcher = MemoryFetcher(data)
-    sql_fetcher = SqlFetcher("sqlite://", whitelist_tables=())  # No tables allowed!
+def fetchers(data: Dict[str, pd.DataFrame]) -> Collection[AbstractFetcher[str, int]]:
+    humans_fetcher: MemoryFetcher[str, int] = MemoryFetcher({"humans": data["humans"]})
+    empty_fetcher: MemoryFetcher[str, int] = MemoryFetcher()
+    everything_fetcher: MemoryFetcher[str, int] = MemoryFetcher(data)
+    sql_fetcher: SqlFetcher[int] = SqlFetcher("sqlite://", whitelist_tables=())  # No tables allowed!
     return humans_fetcher, empty_fetcher, everything_fetcher, sql_fetcher
 
 
@@ -47,10 +49,13 @@ def test_placeholders(multi_fetcher):
 
 
 def test_process_future():
-    fetcher = MultiFetcher(*(MemoryFetcher({f"{i=}": {"id": []}}) for i in range(10)))
+    # Dict[str, Dict[str, List[int]]]
+    # Dict[str, Dict[str, Sequence[Any]]]
+    fetchers: List[MemoryFetcher[str, int]] = [MemoryFetcher({f"{i=}": {"id": [1, 2, 3]}}) for i in range(10)]
+    fetcher: MultiFetcher[str, int] = MultiFetcher(*fetchers)
 
-    ans = {}
-    source_ranks = {}
+    ans: SourcePlaceholderTranslations[str] = {}
+    source_ranks: Dict[str, int] = {}
 
     def make_and_process(rank):
         pht = PlaceholderTranslations.make("source", pd.DataFrame([rank], columns=["rank"]))
@@ -79,12 +84,13 @@ def test_fetch_all(multi_fetcher, expected):
     assert actual == expected
 
 
-def test_fetch(multi_fetcher, data):
+def test_fetch(multi_fetcher: MultiFetcher[str, int], data: Dict[str, pd.DataFrame]) -> None:
     required = {"id"}
     placeholders = {"name", "is_nice"}
 
     sampled = [IdsToFetch(source, list(df.id)) for source, df in data.items()]
-    expected = MemoryFetcher(data).fetch(sampled, placeholders, required=required)
+    memory_fetcher: MemoryFetcher[str, int] = MemoryFetcher(data)
+    expected: SourcePlaceholderTranslations[str] = memory_fetcher.fetch(sampled, placeholders, required=required)
     actual = multi_fetcher.fetch(sampled, placeholders, required=required)
 
     assert actual == expected

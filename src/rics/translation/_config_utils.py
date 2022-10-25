@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple, Type
 
+from rics.translation.types import TranslatorT
+
 try:
     import tomllib  # type: ignore
 except ModuleNotFoundError:
@@ -16,7 +18,7 @@ import pandas as pd
 LOGGER = logging.getLogger(__package__).getChild("Translator").getChild("config")
 
 if TYPE_CHECKING:
-    from rics.translation import Translator
+    from rics.translation import Translator  # noqa: F401
 
 
 @dataclass(frozen=True, eq=False)
@@ -108,12 +110,12 @@ class ConfigMetadata:
 def make_metadata(
     path: str,
     extra_fetchers: List[str],
-    clazz: Type["Translator"],
+    clazz: Type[TranslatorT],
 ) -> ConfigMetadata:
     """Convenience class for creating ``ConfigMetadata`` instances."""
     from rics import __version__
 
-    def fully_qualified_name(t: Type) -> str:
+    def fully_qualified_name(t: Type[TranslatorT]) -> str:
         return t.__module__ + "." + t.__qualname__
 
     return ConfigMetadata(

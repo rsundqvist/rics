@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Sequence, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Sequence, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -6,10 +6,10 @@ import pandas as pd
 from rics.translation.dio import DataStructureIO
 from rics.translation.dio.exceptions import NotInplaceTranslatableError
 from rics.translation.offline import TranslationMap
-from rics.translation.types import IdType, NameType
+from rics.translation.types import IdType, NameType, SourceType
 from rics.utility.collections.misc import as_list
 
-T = TypeVar("T", list, np.ndarray, tuple, pd.Index)
+T = TypeVar("T", list, np.ndarray, tuple, pd.Index)  # type: ignore[type-arg]  # TODO: Higher-Kinded TypeVars
 
 
 class SequenceIO(DataStructureIO):
@@ -29,10 +29,13 @@ class SequenceIO(DataStructureIO):
         )
 
     @staticmethod
-    def insert(translatable: T, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[T]:
+    def insert(
+        translatable: T, names: List[NameType], tmap: TranslationMap[NameType, SourceType, IdType], copy: bool
+    ) -> Optional[T]:
         verify_names(len(translatable), names)
         t = translate_sequence(translatable, names, tmap)
 
+        ctor: Callable[[List[Optional[str]]], T]
         if copy:
             if isinstance(translatable, pd.Index):
                 ctor = pd.Index
@@ -49,7 +52,9 @@ class SequenceIO(DataStructureIO):
             raise NotInplaceTranslatableError(translatable) from e
 
 
-def translate_sequence(s: T, names: List[NameType], tmap: TranslationMap) -> List[Optional[str]]:
+def translate_sequence(
+    s: T, names: List[NameType], tmap: TranslationMap[NameType, SourceType, IdType]
+) -> List[Optional[str]]:
     """Return a translated copy of the sequence `s`."""
     if len(names) == 1:
         return list(map(tmap[names[0]].get, s))

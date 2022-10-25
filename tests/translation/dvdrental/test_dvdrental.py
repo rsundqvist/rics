@@ -7,7 +7,7 @@ from .conftest import DATE_COLUMNS, DVD_RENTAL_SKIP_REASON, wait_for_dvdrental
 
 
 @pytest.fixture(scope="module")
-def translator():
+def translator() -> Translator[str, str, int]:
     extra_fetchers = ["tests/translation/dvdrental/sql-fetcher.toml"]
     config = "tests/translation/dvdrental/translation.toml"
     return Translator.from_config(config, extra_fetchers)

@@ -22,7 +22,7 @@ class TestMapper(_Mapper[ValueType, ValueType, ContextType]):
         values: Iterable[ValueType],
         candidates: Iterable[ValueType],
         context: ContextType = None,
-        override_function: UserOverrideFunction = None,
+        override_function: UserOverrideFunction[ValueType, ValueType, ContextType] = None,
         **kwargs: Any,
     ) -> _DirectionalMapping[ValueType, ValueType]:
         """Map values to themselves, unless `override_function` is given."""
@@ -71,12 +71,14 @@ class TestFetcher(_Fetcher[SourceType, IdType]):
         ids_to_fetch: Iterable[_IdsToFetch[SourceType, IdType]],
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
-    ) -> _SourcePlaceholderTranslations:
+    ) -> _SourcePlaceholderTranslations[SourceType]:
         """Return generated translations for all IDs and placeholders."""
         return {itf.source: self._generate_data(itf, list(placeholders)) for itf in ids_to_fetch}
 
     @staticmethod
-    def _generate_data(itf: _IdsToFetch, placeholders: List[str]) -> _PlaceholderTranslations[SourceType]:
+    def _generate_data(
+        itf: _IdsToFetch[SourceType, IdType], placeholders: List[str]
+    ) -> _PlaceholderTranslations[SourceType]:
         if itf.ids is None:
             raise NotImplementedError
 

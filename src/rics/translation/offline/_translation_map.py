@@ -2,9 +2,9 @@ from copy import copy
 from typing import Any, Dict, Generic, Iterator, List, Mapping, Optional, Tuple, Type, Union
 
 from rics.translation.offline import MagicDict
-from rics.translation.offline._format import Format, FormatType
+from rics.translation.offline._format import Format
 from rics.translation.offline._format_applier import DefaultFormatApplier, FormatApplier
-from rics.translation.offline.types import SourcePlaceholderTranslations
+from rics.translation.offline.types import FormatType, SourcePlaceholderTranslations
 from rics.translation.types import IdType, NameType, SourceType
 from rics.utility.collections.dicts import InheritedKeysDict, reverse_dict
 from rics.utility.misc import tname
@@ -63,11 +63,9 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
             ValueError: If ``fmt=None`` and initialized without `fmt`.
             KeyError: If trying to translate `name` which is not known.
         """
-        if fmt is None:  # pragma: no cover
-            if self._fmt is None:
-                raise ValueError("No format specified and none given at initialization.")
-            else:
-                fmt = self._fmt
+        fmt = self._fmt if fmt is None else fmt
+        if fmt is None:
+            raise ValueError("No format specified and None given at initialization.")  # pragma: no cover
 
         fmt = Format.parse(fmt)
         default_fmt = self._default_fmt if default_fmt is None else Format.parse(default_fmt)
@@ -101,14 +99,12 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
 
     @name_to_source.setter
     def name_to_source(self, value: NameToSource[NameType, SourceType]) -> None:
-        """Update bindings. Mappings name->source are always added, but may be overridden by the user."""
-        source_to_source = {source: source for source in self.sources}
-        self._name_to_source: NameToSource = {**source_to_source, **value}
+        self._name_to_source: NameToSource[NameType, SourceType] = value
 
     @property
     def fmt(self) -> Optional[Format]:
         """Return the translation format."""
-        return self._fmt  # pragma: no cover
+        return self._fmt
 
     @fmt.setter
     def fmt(self, value: Optional[FormatType]) -> None:
@@ -117,7 +113,7 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
     @property
     def default_fmt(self) -> Optional[Format]:
         """Return the format specification to use instead of `fmt` for fallback translation."""
-        return self._default_fmt  # pragma: no cover
+        return self._default_fmt
 
     @default_fmt.setter
     def default_fmt(self, value: Optional[FormatType]) -> None:
@@ -159,7 +155,10 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
         return len(self.names)
 
     def __iter__(self) -> Iterator[NameType]:
-        return iter(self.names)  # pragma: no cover
+        return iter(self.names)
+
+    def __bool__(self) -> bool:
+        return bool(self._source_formatters)
 
     def __repr__(self) -> str:
         sources = ", ".join(

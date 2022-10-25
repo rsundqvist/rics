@@ -25,8 +25,8 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
 
     Args:
         score_function: A :attr:`~rics.mapping.types.ScoreFunction` to wrap.
-        heuristics: Iterable of heuristics or tuples (heuristic, kwargs) to apply to the (value, candidates) inputs to
-            the `score_function`.
+        heuristics: Iterable of heuristics or tuples ``(heuristic, kwargs)`` to apply to the ``(value, candidates)``
+            inputs of `score_function`.
 
     Heuristic types:
         * An :const:`~rics.mapping.types.AliasFunction`, which accepts and returns a tuple
@@ -41,24 +41,33 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
 
     def __init__(
         self,
-        score_function: Union[str, ScoreFunction],
-        heuristics: Iterable[Union[Union[str, HeuristicsTypes], Tuple[Union[str, HeuristicsTypes], Dict[str, Any]]]],
+        score_function: Union[str, ScoreFunction[ValueType, CandidateType, ContextType]],
+        heuristics: Iterable[
+            Union[
+                Union[str, HeuristicsTypes[ValueType, CandidateType, ContextType]],
+                Tuple[Union[str, HeuristicsTypes[ValueType, CandidateType, ContextType]], Dict[str, Any]],
+            ]
+        ],
     ) -> None:
-        self._score: ScoreFunction = (
+        self._score: ScoreFunction[ValueType, CandidateType, ContextType] = (
             get_by_full_name(score_function, score_functions) if isinstance(score_function, str) else score_function
         )
-        self._heuristics: List[Tuple[HeuristicsTypes, Dict[str, Any]]] = []
+        self._heuristics: List[Tuple[HeuristicsTypes[ValueType, CandidateType, ContextType], Dict[str, Any]]] = []
 
         for h in heuristics:
             func, kwargs = h if isinstance(h, tuple) else (h, {})
             self.add_heuristic(func, kwargs)
 
     @property
-    def score_function(self) -> ScoreFunction:
+    def score_function(self) -> ScoreFunction[ValueType, CandidateType, ContextType]:
         """Return the underlying likeness score function."""
         return self._score
 
-    def add_heuristic(self, heuristic: Union[str, HeuristicsTypes], kwargs: Dict[str, Any] = None) -> None:
+    def add_heuristic(
+        self,
+        heuristic: Union[str, HeuristicsTypes[ValueType, CandidateType, ContextType]],
+        kwargs: Dict[str, Any] = None,
+    ) -> None:
         """Add a new heuristic."""
         new_heuristic = (_resolve_heuristic(heuristic), kwargs or {})
         self._heuristics.append(new_heuristic)
@@ -115,7 +124,7 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         yield from best
 
     def __str__(self) -> str:
-        def func(t: Tuple[HeuristicsTypes, Dict[str, Any]]) -> str:
+        def func(t: Tuple[HeuristicsTypes[ValueType, CandidateType, ContextType], Dict[str, Any]]) -> str:
             f, kwargs = t
             kwlist = [f"{k}={repr(v)}" for k, v in kwargs.items()]
             return f"{tname(f)}({', '.join(kwlist)})"
@@ -124,16 +133,16 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         return f"{tname(self)}([{' | '.join(map(func, self._heuristics))}] -> {score_function})"
 
 
-def _resolve_heuristic(func_or_name: Union[str, HeuristicsTypes]) -> HeuristicsTypes:  # pragma: no cover
+def _resolve_heuristic(
+    func_or_name: Union[str, HeuristicsTypes[ValueType, CandidateType, ContextType]]
+) -> HeuristicsTypes[ValueType, CandidateType, ContextType]:  # pragma: no cover
     if isinstance(func_or_name, str):
-        try:
-            return get_by_full_name(func_or_name, filter_functions)
-        except AttributeError:
-            pass
-        try:
-            return get_by_full_name(func_or_name, heuristic_functions)
-        except AttributeError:
-            pass
+        function_modules = [filter_functions, heuristic_functions]
+        for m in function_modules:
+            try:
+                return get_by_full_name(func_or_name, m)  # type: ignore[no-any-return]
+            except AttributeError:
+                pass
 
         raise KeyError(func_or_name)
     else:

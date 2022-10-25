@@ -1,4 +1,6 @@
 """Functions that remove candidates."""
+from __future__ import annotations
+
 import logging
 import re
 from typing import Collection, Iterable, List, Literal, Optional, Set, Tuple, Union
@@ -22,7 +24,7 @@ def require_regex_match(
     name: str,
     candidates: Iterable[str],
     context: Optional[str],
-    regex: Union[str, re.Pattern],
+    regex: Union[str, re.Pattern[str]],
     where: WhereArg,
     keep_if_match: bool = True,
     purpose: str = "matching",

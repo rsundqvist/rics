@@ -2,6 +2,7 @@ import pytest
 
 from rics.mapping import Cardinality, Mapper, exceptions
 from rics.mapping.exceptions import UserMappingError, UserMappingWarning
+from rics.mapping.types import MatchTuple
 
 
 def _substring_score(k, c, _):
@@ -10,19 +11,19 @@ def _substring_score(k, c, _):
 
 
 @pytest.fixture(scope="module")
-def candidates():
+def candidates() -> MatchTuple[str]:
     return "a", "ab", "b"
 
 
 def test_default(candidates):
-    mapper = Mapper()
+    mapper: Mapper[str, str, None] = Mapper()
     assert mapper.apply(candidates, ["a"]).left_to_right == {"a": ("a",)}
     assert mapper.apply(candidates, ["b"]).left_to_right == {"b": ("b",)}
     assert mapper.apply(candidates, ["a", "b"]).left_to_right == {"a": ("a",), "b": ("b",)}
 
 
 def test_with_overrides(candidates):
-    mapper = Mapper(overrides={"a": "fixed"})
+    mapper: Mapper[str, str, None] = Mapper(overrides={"a": "fixed"})
     assert mapper.apply(["a"], candidates).left_to_right == {"a": ("fixed",)}
     assert mapper.apply(["b"], candidates).left_to_right == {"b": ("b",)}
     assert mapper.apply(["a", "b"], candidates).left_to_right == {"a": ("fixed",), "b": ("b",)}
@@ -36,13 +37,13 @@ def test_with_overrides(candidates):
     ],
 )
 def test_user_override(candidates, user_override, expected):
-    mapper = Mapper(overrides={"a": "fixed"})
+    mapper: Mapper[str, str, None] = Mapper(overrides={"a": "fixed"})
     actual = mapper.apply(["a"], candidates, override_function=lambda *args: user_override).left_to_right
     assert actual == {"a": expected}
 
 
 def test_user_overrides_ignore_unknown(candidates):
-    mapper = Mapper(overrides={"a": "fixed"}, unknown_user_override_action="warn")
+    mapper: Mapper[str, str, None] = Mapper(overrides={"a": "fixed"}, unknown_user_override_action="warn")
     with pytest.warns(UserMappingWarning):
         assert mapper.apply(["a"], candidates, override_function=lambda *args: "bad").left_to_right == {"a": ("fixed",)}
 
@@ -63,7 +64,7 @@ def test_user_overrides_ignore_unknown(candidates):
     ],
 )
 def test_multiple_matches(values, expected, allow_multiple, candidates):
-    mapper = Mapper(
+    mapper: Mapper[str, str, None] = Mapper(
         min_score=0.1,
         score_function=_substring_score,
         cardinality=None if allow_multiple else Cardinality.OneToOne,
@@ -83,7 +84,7 @@ def test_multiple_matches(values, expected, allow_multiple, candidates):
     ],
 )
 def test_multiple_matches_with_overrides(values, expected, allow_multiple, candidates):
-    mapper = Mapper(
+    mapper: Mapper[str, str, None] = Mapper(
         overrides={"a": "fixed"},
         min_score=0.1,
         score_function=_substring_score,
@@ -93,13 +94,15 @@ def test_multiple_matches_with_overrides(values, expected, allow_multiple, candi
 
 
 def test_mapping_failure(candidates):
+    mapper: Mapper[int, str, None] = Mapper(unmapped_values_action="raise")
     with pytest.raises(exceptions.MappingError):
-        Mapper(unmapped_values_action="raise").apply((3, 4), candidates)
+        mapper.apply((3, 4), candidates)
 
 
 def test_bad_filter(candidates):
+    mapper: Mapper[int, str, None] = Mapper(filter_functions=[(lambda *_: {3, 4}, {})])
     with pytest.raises(exceptions.BadFilterError):
-        Mapper(filter_functions=[(lambda *_: {3, 4}, {})]).apply((3, 4), candidates)
+        mapper.apply((3, 4), candidates)
 
 
 @pytest.mark.parametrize(
@@ -130,7 +133,7 @@ def test_bad_filter(candidates):
     ],
 )
 def test_filter(filters, expected, candidates):
-    mapper = Mapper(
+    mapper: Mapper[str, str, None] = Mapper(
         min_score=0.1,
         score_function=_substring_score,
         filter_functions=filters,
@@ -155,7 +158,7 @@ def test_filter(filters, expected, candidates):
     ],
 )
 def test_equal_score_prioritizes_first(values, candidates, expected):
-    mapper = Mapper(score_function=lambda *_: [1, 1], cardinality=Cardinality.OneToOne)
+    mapper: Mapper[int, int, None] = Mapper(score_function=lambda *_: [1, 1], cardinality=Cardinality.OneToOne)
     assert mapper.apply(values, candidates).flatten() == expected
 
 
@@ -167,7 +170,9 @@ def test_equal_score_prioritizes_first(values, candidates, expected):
     ],
 )
 def test_conflicting_overrides_prioritizes_first(values, candidates, expected):
-    mapper = Mapper(score_function=lambda *_: [1, 1], cardinality="1:1", overrides={v: 0 for v in values})
+    mapper: Mapper[int, int, None] = Mapper(
+        score_function=lambda *_: [1, 1], cardinality="1:1", overrides={v: 0 for v in values}
+    )
 
     assert mapper.apply(values, candidates).flatten() == expected
 
@@ -180,6 +185,8 @@ def test_conflicting_overrides_prioritizes_first(values, candidates, expected):
     ],
 )
 def test_conflicting_function_overrides_prioritizes_first(values, candidates, expected):
-    mapper = Mapper(score_function=lambda *_: [1, 1], unknown_user_override_action="ignore", cardinality="1:1")
+    mapper: Mapper[int, int, None] = Mapper(
+        score_function=lambda *_: [1, 1], unknown_user_override_action="ignore", cardinality="1:1"
+    )
 
     assert mapper.apply(values, candidates, override_function=lambda *_: 0).flatten() == expected

@@ -1,5 +1,5 @@
 """Factory functions for translation classes."""
-from typing import TYPE_CHECKING, Any, Callable, Dict, Generic as _Generic, Iterable, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Generic as _Generic, Iterable, List, Optional, Tuple, Type, Union
 
 try:
     import tomllib  # type: ignore
@@ -11,13 +11,10 @@ except ModuleNotFoundError:
 from rics._internal_support.types import PathLikeType
 from rics.mapping import HeuristicScore as _HeuristicScore, Mapper as _Mapper
 from rics.translation import _config_utils, exceptions, fetching
-from rics.translation.types import IdType, NameType, SourceType
+from rics.translation.types import IdType, NameType, SourceType, TranslatorT
 from rics.utility import misc
 from rics.utility.action_level import ActionLevel as _ActionLevel
 from rics.utility.collections import dicts
-
-if TYPE_CHECKING:
-    from rics.translation._translator import Translator
 
 FetcherFactory = Callable[[str, Dict[str, Any]], fetching.AbstractFetcher]
 """A callable which creates new ``AbstractFetcher`` instances from a dict config.
@@ -55,7 +52,7 @@ Raises:
 """
 
 
-def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> fetching.AbstractFetcher:
+def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> fetching.AbstractFetcher[SourceType, IdType]:
     """Create an ``AbstractFetcher`` from config."""
     fetcher_class = misc.get_by_full_name(clazz, default_module=fetching)
     fetcher = fetcher_class(**config)
@@ -64,7 +61,7 @@ def default_fetcher_factory(clazz: str, config: Dict[str, Any]) -> fetching.Abst
     return fetcher
 
 
-def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optional[_Mapper]:
+def default_mapper_factory(config: Dict[str, Any], for_fetcher: bool) -> Optional[_Mapper[Any, Any, Any]]:
     """Create a ``Mapper`` from config."""
     if "score_function" in config and isinstance(config["score_function"], dict):
         score_function = config.pop("score_function")
@@ -127,14 +124,13 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         self,
         file: PathLikeType,
         extra_fetchers: Iterable[PathLikeType],
-        clazz: Union[str, Type["Translator"]] = "Translator",
+        clazz: Union[str, Type[TranslatorT]] = None,
     ) -> None:
-
         self.file = str(file)
         self.extra_fetchers = list(map(str, extra_fetchers))
         self.clazz = self.resolve_class(clazz)
 
-    def create(self) -> "Translator":
+    def create(self) -> TranslatorT:
         """Create a ``Translator`` from a TOML file."""
         with open(self.file, "rb") as f:
             config: Dict[str, Any] = tomllib.load(f)
@@ -143,9 +139,12 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
 
         translator_config = config.pop("translator", {})
 
-        fetcher = self._handle_fetching(config.pop("fetching", {}), self.extra_fetchers)
+        fetcher: fetching.Fetcher[SourceType, IdType] = self._handle_fetching(
+            config.pop("fetching", {}), self.extra_fetchers
+        )
 
         mapper = self._make_mapper("translator", translator_config)
+        default_fmt_placeholders: Optional[dicts.InheritedKeysDict[SourceType, str, Any]]
         default_fmt, default_fmt_placeholders = _make_default_translations(**config.pop("unknown_ids", {}))
 
         ans = self.clazz(
@@ -165,18 +164,24 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         return ans
 
     @classmethod
-    def resolve_class(cls, clazz: Union[str, Type["Translator"]]) -> Type["Translator"]:
+    def resolve_class(cls, clazz: Union[str, Type[TranslatorT]] = None) -> Type[TranslatorT]:
         """Resolve desired ``Translator`` type."""
-        from rics import translation
+        if clazz is None:
+            from rics import translation
 
-        return misc.get_by_full_name(clazz, translation) if isinstance(clazz, str) else clazz
+            return translation.Translator  # type: ignore[return-value] # TODO: Need "Higher-Kinded TypeVars"
+
+        if isinstance(clazz, str):
+            return misc.get_by_full_name(clazz)  # type: ignore[no-any-return]
+        else:
+            return clazz
 
     def _handle_fetching(
         self,
         config: Dict[str, Any],
         extra_fetchers: Iterable[str],
-    ) -> fetching.Fetcher:
-        fetchers = []
+    ) -> fetching.Fetcher[SourceType, IdType]:
+        fetchers: List[fetching.Fetcher[SourceType, IdType]] = []
         if config:
             fetchers.append(self._make_fetcher(**config))  # Add primary fetcher
 
@@ -196,7 +201,7 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         )
 
     @classmethod
-    def _make_mapper(cls, parent_section: str, config: Dict[str, Any]) -> Optional[_Mapper]:
+    def _make_mapper(cls, parent_section: str, config: Dict[str, Any]) -> Optional[_Mapper[Any, Any, Any]]:
         if "mapping" not in config:
             return None  # pragma: no cover
 
@@ -208,7 +213,7 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         return TranslatorFactory.MAPPER_FACTORY(config, for_fetcher)
 
     @classmethod
-    def _make_fetcher(cls, **config: Any) -> fetching.AbstractFetcher:
+    def _make_fetcher(cls, **config: Any) -> fetching.AbstractFetcher[SourceType, IdType]:
         mapper = cls._make_mapper("fetching", config) if "mapping" in config else None
 
         if len(config) == 0:  # pragma: no cover
@@ -223,7 +228,9 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         return TranslatorFactory.FETCHER_FACTORY(clazz, kwargs)
 
 
-def _make_default_translations(**config: Any) -> Tuple[str, Optional[dicts.InheritedKeysDict]]:  # pragma: no cover
+def _make_default_translations(
+    **config: Any,
+) -> Tuple[str, Optional[dicts.InheritedKeysDict[SourceType, str, Any]]]:  # pragma: no cover
     _check_allowed_keys(["fmt", "overrides"], config, toml_path="translator.unknown_ids")
 
     fmt = config.pop("fmt", None)
@@ -240,7 +247,7 @@ def _check_allowed_keys(allowed: Iterable[str], actual: Iterable[str], toml_path
         raise ValueError(f"Forbidden keys {sorted(bad_keys)} in [{toml_path}]-section.")
 
 
-def _split_overrides(overrides: dicts.MakeType):  # noqa: ANN202
+def _split_overrides(overrides: Any) -> Any:
     specific = {k: v for k, v in overrides.items() if isinstance(v, dict)}
     shared = {k: v for k, v in overrides.items() if k not in specific}
     return shared, specific

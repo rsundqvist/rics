@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import warnings
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
@@ -37,7 +39,7 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
 
     def __init__(
         self,
-        *fetchers: Fetcher,
+        *fetchers: Fetcher[SourceType, IdType],
         max_workers: int = 2,
         duplicate_translation_action: ActionLevel = ActionLevel.WARN,
         duplicate_source_discovered_action: ActionLevel = ActionLevel.IGNORE,
@@ -47,7 +49,7 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
                 raise TypeError(f"Argument {pos} is of type {type(f)}, expected Fetcher subtype.")
 
         self._id_to_rank: Dict[int, int] = {id(f): rank for rank, f in enumerate(fetchers)}
-        self._id_to_fetcher: Dict[int, Fetcher] = {id(f): f for f in fetchers}
+        self._id_to_fetcher: Dict[int, Fetcher[SourceType, IdType]] = {id(f): f for f in fetchers}
         self._source_to_fetcher_id_actual: Dict[SourceType, int] = {}
         self.max_workers: int = max_workers
         self._duplicate_translation_action = _ACTION_LEVEL_HELPER.verify(
@@ -89,7 +91,7 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         placeholders: Iterable[str] = (),
         required: Iterable[str] = (),
     ) -> SourcePlaceholderTranslations[SourceType]:
-        tasks: Dict[int, List[IdsToFetch]] = {}
+        tasks: Dict[int, List[IdsToFetch[SourceType, IdType]]] = {}
         num_instructions = 0
         for idt in ids_to_fetch:
             tasks.setdefault(self._source_to_fetcher_id[idt.source], []).append(idt)
@@ -113,14 +115,14 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
 
     def fetch_all(
         self, placeholders: Iterable[str] = (), required: Iterable[str] = ()
-    ) -> SourcePlaceholderTranslations:
+    ) -> SourcePlaceholderTranslations[SourceType]:
         placeholders = tuple(placeholders)
         required = tuple(required)
 
         start = perf_counter()
         LOGGER.debug(f"Dispatch FETCH_ALL jobs to {len(self.fetchers)} fetchers using {self.max_workers} threads.")
 
-        def fetch_all(fetcher: Fetcher) -> FetchResult[SourceType]:
+        def fetch_all(fetcher: Fetcher[SourceType, IdType]) -> FetchResult[SourceType]:
             return id(fetcher), fetcher.fetch_all(placeholders, required=required)
 
         with ThreadPoolExecutor(max_workers=self.max_workers, thread_name_prefix=tname(self)) as executor:
@@ -167,8 +169,8 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
 
         return self._source_to_fetcher_id_actual
 
-    def _gather(self, futures: Iterable[Future]) -> SourcePlaceholderTranslations[SourceType]:
-        ans: SourcePlaceholderTranslations = {}
+    def _gather(self, futures: Iterable[Future[FetchResult[SourceType]]]) -> SourcePlaceholderTranslations[SourceType]:
+        ans: SourcePlaceholderTranslations[SourceType] = {}
         source_ranks: Dict[SourceType, int] = {}
 
         for future in as_completed(futures):
@@ -228,7 +230,7 @@ class MultiFetcher(Fetcher[SourceType, IdType]):
         max_workers = self.max_workers
         return f"{tname(self)}({max_workers=}, {fetchers=})"
 
-    def _fmt_fetcher(self, fetcher: Fetcher) -> str:
+    def _fmt_fetcher(self, fetcher: Fetcher[SourceType, IdType]) -> str:
         """Format a managed fetcher with rank and hex ID."""
         fetcher_id = id(fetcher)
         rank = self._id_to_rank[fetcher_id]

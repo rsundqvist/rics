@@ -73,7 +73,7 @@ class PlaceholderTranslations(_Generic[SourceType]):
         return cls(
             source,
             placeholders=tuple(data),
-            records=list(map(list, data.to_records(index=False))),
+            records=data.values.tolist(),
             id_pos=data.columns.get_loc(ID) if ID in data else -1,
         )
 

@@ -50,11 +50,15 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
     def __init__(
         self,
-        score_function: Union[str, ScoreFunction] = "equality",
+        score_function: Union[str, ScoreFunction[ValueType, CandidateType, ContextType]] = "equality",
         score_function_kwargs: Dict[str, Any] = None,
-        filter_functions: Iterable[Tuple[Union[str, FilterFunction], Dict[str, Any]]] = (),
+        filter_functions: Iterable[
+            Tuple[Union[str, FilterFunction[ValueType, CandidateType, ContextType]], Dict[str, Any]]
+        ] = (),
         min_score: float = 1.00,
-        overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = None,
+        overrides: Union[
+            InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
+        ] = None,
         unmapped_values_action: ActionLevel.ParseType = ActionLevel.IGNORE,
         unknown_user_override_action: ActionLevel.ParseType = ActionLevel.RAISE,
         cardinality: Optional[Cardinality.ParseType] = Cardinality.ManyToOne,
@@ -63,14 +67,14 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         self._score = get_by_full_name(score_function, sf) if isinstance(score_function, str) else score_function
         self._score_kwargs = score_function_kwargs or {}
         self._min_score = min_score
-        self._overrides: Union[InheritedKeysDict, Dict[ValueType, CandidateType]] = (
-            overrides if isinstance(overrides, InheritedKeysDict) else (overrides or {})
-        )
+        self._overrides: Union[
+            InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
+        ] = (overrides if isinstance(overrides, InheritedKeysDict) else (overrides or {}))
         self._context_sensitive_overrides = isinstance(self._overrides, InheritedKeysDict)
         self._unmapped_action: ActionLevel = ActionLevel.verify(unmapped_values_action)
         self._bad_candidate_action: ActionLevel = ActionLevel.verify(unknown_user_override_action)
         self._cardinality = None if cardinality is None else Cardinality.parse(cardinality, strict=True)
-        self._filters: List[Tuple[FilterFunction, Dict[str, Any]]] = [
+        self._filters: List[Tuple[FilterFunction[ValueType, CandidateType, ContextType], Dict[str, Any]]] = [
             ((get_by_full_name(func, mf) if isinstance(func, str) else func), kwargs)
             for func, kwargs in filter_functions
         ]
@@ -81,7 +85,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         values: Iterable[ValueType],
         candidates: Iterable[CandidateType],
         context: ContextType = None,
-        override_function: UserOverrideFunction = None,
+        override_function: UserOverrideFunction[ValueType, CandidateType, ContextType] = None,
         **kwargs: Any,
     ) -> DirectionalMapping[ValueType, CandidateType]:
         """Map values to candidates.
@@ -152,7 +156,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         values: Iterable[ValueType],
         candidates: Iterable[CandidateType],
         context: ContextType = None,
-        override_function: UserOverrideFunction = None,
+        override_function: UserOverrideFunction[ValueType, CandidateType, ContextType] = None,
         **kwargs: Any,
     ) -> pd.DataFrame:
         """Compute likeness scores.
@@ -268,7 +272,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         self,
         scores: pd.DataFrame,
         context: Optional[ContextType],
-        override_function: Optional[UserOverrideFunction],
+        override_function: Optional[UserOverrideFunction[ValueType, CandidateType, ContextType]],
     ) -> List[ValueType]:
         def apply(v: ValueType, oc: CandidateType) -> None:
             scores.loc[v, :] = -np.inf
@@ -314,7 +318,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
     def _get_function_overrides(
         self,
-        func: UserOverrideFunction,
+        func: UserOverrideFunction[ValueType, CandidateType, ContextType],
         values: Iterable[ValueType],
         candidates: Iterable[CandidateType],
         context: Optional[ContextType],
@@ -371,7 +375,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         score = self._score
         return f"{tname(self)}({score=} >= {self._min_score}, {len(self._filters)} filters)"
 
-    def copy(self) -> "Mapper":
+    def copy(self) -> "Mapper[ValueType, CandidateType, ContextType]":
         """Make a copy of this ``Mapper``."""
         return Mapper(
             score_function=self._score,

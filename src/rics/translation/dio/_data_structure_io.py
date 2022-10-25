@@ -3,7 +3,7 @@ from abc import abstractmethod
 from typing import Any, Dict, List, Optional, Sequence
 
 from rics.translation.offline import TranslationMap
-from rics.translation.types import IdType, NameType
+from rics.translation.types import IdType, NameType, SourceType
 
 
 class DataStructureIO:
@@ -29,7 +29,9 @@ class DataStructureIO:
 
     @staticmethod
     @abstractmethod
-    def insert(c: Any, names: List[NameType], tmap: TranslationMap, copy: bool) -> Optional[Any]:
+    def insert(
+        c: Any, names: List[NameType], tmap: TranslationMap[NameType, SourceType, IdType], copy: bool
+    ) -> Optional[Any]:
         """Insert translations into `c`.
 
         Args:

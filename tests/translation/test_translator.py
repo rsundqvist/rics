@@ -2,17 +2,18 @@ import logging
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import combinations_with_replacement
+from typing import Any, List, Optional
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from rics.mapping import Mapper
-from rics.mapping.exceptions import MappingError, MappingWarning
+from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError
 from rics.translation import Translator as RealTranslator, _config_utils
 from rics.translation.dio.exceptions import NotInplaceTranslatableError, UntranslatableTypeError
 from rics.translation.exceptions import ConfigurationError, TooManyFailedTranslationsError
-from rics.translation.fetching.exceptions import UnknownSourceError
+from rics.translation.types import IdType
 
 LOGGER = logging.getLogger("TestTranslator")
 
@@ -24,7 +25,7 @@ def verification_context(purpose):
     LOGGER.info(f"{f' Stop: {purpose} ':=^80}")
 
 
-class Translator(RealTranslator):
+class Translator(RealTranslator[str, str, IdType]):
     """Test implementation that performs additional verification."""
 
     def __init__(self, *args, **kwargs):
@@ -66,7 +67,7 @@ def test_dummy_translation_doesnt_crash(with_id, with_override, store):
     names = list(map("placeholder{}".format, range(3)))
     data = np.random.randint(0, 100, (3, 10))
 
-    def override_function(name, *args):  # noqa
+    def override_function(name: str, *_: Any) -> Optional[str]:
         return names[0] if name == "id" else None
 
     if with_id:
@@ -75,7 +76,8 @@ def test_dummy_translation_doesnt_crash(with_id, with_override, store):
         t.store(data, names=names)
 
     ans = t.translate(data, names=names, override_function=override_function if with_override else None)
-    assert pd.DataFrame(ans.T, columns=names).shape == (10, 3)
+    assert ans is not None
+    assert ans.shape == (3, 10)
 
 
 def test_translate_without_id(hex_fetcher):
@@ -99,7 +101,7 @@ def test_can_pickle(translator, copy):
 
 @pytest.mark.parametrize("copy", [False, True])
 def test_offline(hex_fetcher, copy):
-    translator = Translator(hex_fetcher, fmt="{id}:{hex}[, positive={positive}]").store()
+    translator: Translator[int] = Translator(hex_fetcher, fmt="{id}:{hex}[, positive={positive}]").store()
     if copy:
         translator = translator.copy()
     _translate(translator)
@@ -152,19 +154,19 @@ def test_missing_config():
 
 
 def test_store_and_restore(hex_fetcher, tmp_path):
-    translator = Translator(hex_fetcher, fmt="{id}:{hex}")
+    translator: Translator[int] = Translator(hex_fetcher, fmt="{id}:{hex}")
 
     data = {
         "positive_numbers": list(range(0, 5)),
         "negative_numbers": list(range(-5, -1)),
     }
-    translated_data = translator(data)
+    translated_data = translator.translate(data)
 
     path = tmp_path.joinpath("translator.pkl")
     translator.store(path=path)
-    restored = Translator.restore(path=path)
+    restored: Translator[int] = Translator.restore(path=path)
 
-    translated_by_restored = restored(data)
+    translated_by_restored = restored.translate(data)
     assert translated_by_restored == translated_data
 
 
@@ -250,7 +252,7 @@ def test_complex_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} - {hex} - {positive}"
     default_fmt_placeholders = {"default": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
-    t = Translator(
+    t: Translator[int] = Translator(
         hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_fmt_placeholders=default_fmt_placeholders
     ).store()
 
@@ -275,7 +277,7 @@ def test_complex_default(hex_fetcher):
 def test_id_only_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} is not known"
-    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
+    t: Translator[int] = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -296,24 +298,24 @@ def test_id_only_default(hex_fetcher):
 
 
 def test_extra_placeholder():
-    t = Translator(
+    t: Translator[int] = Translator(
         {"people": {"id": [1999], "name": ["Sofia"]}},
         default_fmt="{id}:{right}",
         default_fmt_placeholders=dict(default={"left": "left-value", "right": "right-value"}),
     )
-    assert "1:right-value" == t(1, names="people")
+    assert "1:right-value" == t.translate(1, names="people")
 
     t = t.copy(default_fmt="{left}, {right}")
-    assert "left-value, right-value" == t(1, names="people")
+    assert "left-value, right-value" == t.translate(1, names="people")
 
     t = t.copy(default_fmt_placeholders=dict(default={"left": "LEFT", "right": "RIGHT"}))
-    assert "LEFT, RIGHT" == t(1, names="people")
+    assert "LEFT, RIGHT" == t.translate(1, names="people")
 
 
 def test_plain_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "UNKNOWN"
-    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
+    t: Translator[int] = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -330,7 +332,7 @@ def test_plain_default(hex_fetcher):
 
 def test_no_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
-    t = Translator(hex_fetcher, fmt=fmt).store()
+    t: Translator[int] = Translator(hex_fetcher, fmt=fmt).store()
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
         "positive_numbers": [
@@ -383,7 +385,7 @@ def test_untranslated_fraction():
 
 def test_reverse(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
-    t = Translator(hex_fetcher, fmt=fmt).store()
+    t: Translator[int] = Translator(hex_fetcher, fmt=fmt).store()
 
     expected = {"positive_numbers": list(range(-1, 2))}
     translated = {
@@ -399,7 +401,8 @@ def test_reverse(hex_fetcher):
     assert expected == actual, "Original format"
 
     translated = {"positive_numbers": ["-0x1", "0x0", "0x1"]}
-    actual = t.copy(fmt="{hex}").translate(translated, reverse=True)
+    tc: Translator[int] = t.copy(fmt="{hex}")
+    actual = tc.translate(translated, reverse=True)
     assert expected == actual, "New format"
 
 
@@ -410,7 +413,7 @@ def test_simple_function_overrides(translator):
     actual = translator.translate(1, names="positive_numbers", override_function=lambda *args: None)
     assert actual == "1:0x1, positive=True"
 
-    with pytest.raises(UnknownSourceError):
+    with pytest.raises(UserMappingError):
         translator.translate(1, names="whatever", override_function=lambda *args: "bad")
 
 
@@ -472,21 +475,24 @@ def test_load_persistent_instance(tmp_path):
     fetchers = ["tests/translation/config.imdb.toml"]
 
     expected = [None, "1:Action", "2:Animation"]
-    args = dict(translatable=[0, 1, 2], names="category_id")
+    translatable: List[int] = [0, 1, 2]
+    args = (translatable, "category_id")
 
     with pytest.warns(UserWarning, match="EXPERIMENTAL"):
         translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator)
         now = translator.now
-        assert translator.translate(**args) == expected
+        assert translator.translate(*args) == expected
 
         translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator)
         assert translator.now == now
-        assert translator.translate(**args) == expected
+        assert translator.translate(*args) == expected
 
         translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator, max_age="-1d")
         assert translator.now > now
-        assert translator.translate(**args) == expected
+        assert translator.translate(*args) == expected
 
-        real_translator = RealTranslator.load_persistent_instance(path, fetchers, tmp_path)
-        assert real_translator.translate(**args) == expected
+        real_translator: RealTranslator[str, str, int] = RealTranslator.load_persistent_instance(
+            path, fetchers, tmp_path
+        )
+        assert real_translator.translate(*args) == expected
         assert not isinstance(real_translator, Translator)

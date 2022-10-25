@@ -74,7 +74,7 @@ def plot_run(
         ValueError: For unknown `unit` arguments.
     """
     import matplotlib.pyplot as plt
-    from seaborn import barplot  # type: ignore
+    from seaborn import barplot
 
     data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results.copy()
     data[["Test data", "Candidate"]] = data[["Test data", "Candidate"]].astype("category")

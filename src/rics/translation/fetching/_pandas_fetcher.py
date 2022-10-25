@@ -5,11 +5,12 @@ from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
+from rics._internal_support.types import PathLikeType
 from rics.translation.fetching import AbstractFetcher
 from rics.translation.fetching.types import FetchInstruction
 from rics.translation.offline.types import PlaceholderTranslations
 from rics.translation.types import IdType
-from rics.utility.misc import PathLikeType, get_by_full_name, tname
+from rics.utility.misc import get_by_full_name, tname
 
 LOGGER = logging.getLogger(__package__).getChild("PandasFetcher")
 PandasReadFunction = Callable[[PathLikeType, Any, Any], pd.DataFrame]

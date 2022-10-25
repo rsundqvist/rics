@@ -3,21 +3,20 @@ import warnings
 from datetime import timedelta
 from pathlib import Path
 from time import perf_counter
-from typing import Any, Callable, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, Type, Union
 
 import numpy
 import pandas as pd
 
 from rics._internal_support.types import PathLikeType
 from rics.mapping import DirectionalMapping, Mapper
-from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError
+from rics.mapping.exceptions import MappingError, MappingWarning
 from rics.mapping.types import UserOverrideFunction
 from rics.performance import format_perf_counter
 from rics.translation import _config_utils, factory
 from rics.translation.dio import DataStructureIO, resolve_io
 from rics.translation.exceptions import ConnectionStatusError, TooManyFailedTranslationsError
 from rics.translation.fetching import Fetcher
-from rics.translation.fetching.exceptions import UnknownSourceError
 from rics.translation.fetching.types import IdsToFetch
 from rics.translation.offline import Format, TranslationMap
 from rics.translation.offline.types import FormatType, PlaceholderTranslations, SourcePlaceholderTranslations
@@ -31,6 +30,7 @@ from rics.translation.types import (
     NameTypes,
     SourceType,
     Translatable,
+    TranslatorT,
 )
 from rics.utility.collections.dicts import InheritedKeysDict, MakeType
 from rics.utility.collections.misc import as_list
@@ -41,13 +41,11 @@ _NAME_ATTRIBUTES = ("name", "columns", "keys")
 LOGGER = logging.getLogger(__package__).getChild("Translator")
 
 FetcherTypes = Union[
-    Fetcher[SourceType, IdType],
     TranslationMap[NameType, SourceType, IdType],
+    Fetcher[SourceType, IdType],
     SourcePlaceholderTranslations[SourceType],
     Dict[SourceType, PlaceholderTranslations.MakeTypes],
 ]
-
-ReturnType = TypeVar("ReturnType")
 
 
 class Translator(Generic[NameType, SourceType, IdType]):
@@ -141,11 +139,11 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
     def __init__(
         self,
-        fetcher: FetcherTypes = None,
+        fetcher: FetcherTypes[NameType, SourceType, IdType] = None,
         fmt: FormatType = "{id}:{name}",
         mapper: Mapper[NameType, SourceType, None] = None,
         default_fmt: FormatType = None,
-        default_fmt_placeholders: MakeType = None,
+        default_fmt_placeholders: MakeType[SourceType, str, Any] = None,
         allow_name_inheritance: bool = True,
     ) -> None:
         self._fmt = fmt if isinstance(fmt, Format) else Format(fmt)
@@ -183,7 +181,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
         else:
             raise TypeError(type(fetcher))  # pragma: no cover
 
-        self._mapper: Mapper = mapper or Mapper()
+        self._mapper: Mapper[NameType, SourceType, None] = mapper or Mapper()
 
         # Misc config
         self._allow_name_inheritance = allow_name_inheritance
@@ -195,8 +193,8 @@ class Translator(Generic[NameType, SourceType, IdType]):
         cls,
         path: PathLikeType,
         extra_fetchers: Iterable[PathLikeType] = (),
-        clazz: Union[str, Type["Translator"]] = None,
-    ) -> "Translator[NameType, SourceType, IdType]":
+        clazz: Union[str, Type[TranslatorT]] = None,
+    ) -> TranslatorT:
         """Create a ``Translator`` from TOML inputs.
 
         Args:
@@ -211,7 +209,11 @@ class Translator(Generic[NameType, SourceType, IdType]):
         Returns:
             A new ``Translator`` instance with a :attr:`config_metadata` attribute.
         """
-        return factory.TranslatorFactory(path, extra_fetchers, clazz or cls).create()
+        return factory.TranslatorFactory(  # type: ignore[type-var]
+            path,
+            extra_fetchers,
+            clazz or cls,  # TODO: Higher-Kinded TypeVars
+        ).create()
 
     @property
     def config_metadata(self) -> _config_utils.ConfigMetadata:
@@ -220,7 +222,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
             raise ValueError("Not created using Translator.from_config()")  # pragma: no cover
         return self._config_metadata
 
-    def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator[NameType, SourceType, IdType]":
+    def copy(self, share_fetcher: bool = True, **overrides: Any) -> TranslatorT:
         """Make a copy of this ``Translator``.
 
         Args:
@@ -252,13 +254,13 @@ class Translator(Generic[NameType, SourceType, IdType]):
         if "fetcher" not in kwargs:
             kwargs["fetcher"] = self.fetcher if self.online else self._cached_tmap.copy()
 
-        return Translator(**kwargs)
+        return type(self)(**kwargs)  # type: ignore[return-value]  # TODO: Need Higher-Kinded TypeVars
 
     def translate(
         self,
         translatable: Translatable,
-        names: NameTypes = None,
-        ignore_names: Names = None,
+        names: NameTypes[NameType] = None,
+        ignore_names: Names[NameType] = None,
         inplace: bool = False,
         override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
         maximal_untranslated_fraction: float = 1.0,
@@ -299,7 +301,8 @@ class Translator(Generic[NameType, SourceType, IdType]):
             ValueError: If `maximal_untranslated_fraction` is not a valid fraction.
             TooManyFailedTranslationsError: If translation fails for more than `maximal_untranslated_fraction` of IDs.
             ConnectionStatusError: If ``reverse=True`` while the ``Translator`` is online.
-            UnknownSourceError: If `override_function` returns a source which is not known.
+            UserMappingError: If `override_function` returns a source which is not known, and
+                ``self.mapper.unknown_user_override_action != 'ignore'``.
         """  # noqa: DAR101 darglint is bugged here
         if self.online and reverse:  # pragma: no cover
             raise ConnectionStatusError("Reverse translation cannot be performed online.")
@@ -344,25 +347,13 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
         return ans
 
-    def __call__(
-        self,
-        translatable: Translatable,
-        names: Names = None,
-        ignore_names: Names = None,
-        inplace: bool = False,
-    ) -> Optional[Translatable]:
-        """Inherits docstring from self.translate."""
-        return self.translate(translatable, names, ignore_names, inplace)  # pragma: no cover
-
-    __call__.__doc__ = translate.__doc__
-
     def map(  # noqa: A003
         self,
         translatable: Translatable,
-        names: NameTypes = None,
-        ignore_names: Names = None,
+        names: NameTypes[NameType] = None,
+        ignore_names: Names[NameType] = None,
         override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
-    ) -> Optional[DirectionalMapping]:
+    ) -> Optional[DirectionalMapping[NameType, SourceType]]:
         """Map names to translation sources.
 
         Args:
@@ -383,26 +374,25 @@ class Translator(Generic[NameType, SourceType, IdType]):
             AttributeError: If `names` are not given and cannot be derived from `translatable`.
             MappingError: If any required (explicitly given) names fail to map to a source.
             MappingError: If name-to-source mapping is ambiguous.
-            UnknownSourceError: If `override_function` returns a source which is not known.
+            UserMappingError: If `override_function` returns a source which is not known, and
+                ``self.mapper.unknown_user_override_action != 'ignore'``.
         """
         return self._map_inner(translatable, names, ignore_names=ignore_names, override_function=override_function)
 
     def map_scores(
         self,
         translatable: Translatable,
-        names: NameTypes = None,
-        ignore_names: Names = None,
+        names: NameTypes[NameType] = None,
+        ignore_names: Names[NameType] = None,
         override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
     ) -> pd.DataFrame:
         """Returns raw match scores for name-to-source mapping. See :meth:`map` for details."""
         names_to_translate = self._resolve_names(translatable, names, ignore_names)
 
-        return (
-            self.mapper.compute_scores(names_to_translate, self.sources)
-            if override_function is None
-            else self._call_mapper_with_override_function(
-                self.mapper.compute_scores, names_to_translate, override_function
-            )
+        return self.mapper.compute_scores(
+            names_to_translate,
+            self.sources,
+            override_function=None if override_function is None else self._wrap_override_function(override_function),
         )
 
     @property
@@ -413,17 +403,17 @@ class Translator(Generic[NameType, SourceType, IdType]):
     def _map_inner(
         self,
         translatable: Translatable,
-        names: NameTypes = None,
-        ignore_names: Names = None,
+        names: NameTypes[NameType] = None,
+        ignore_names: Names[NameType] = None,
         override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
         parent: Translatable = None,
-    ) -> Optional[DirectionalMapping]:
+    ) -> Optional[DirectionalMapping[NameType, SourceType]]:
         names_to_translate = self._resolve_names(translatable, names, ignore_names, parent)
 
-        name_to_source = (
-            self.mapper.apply(names_to_translate, self.sources)
-            if override_function is None
-            else self._call_mapper_with_override_function(self.mapper.apply, names_to_translate, override_function)
+        name_to_source = self.mapper.apply(
+            names_to_translate,
+            self.sources,
+            override_function=None if override_function is None else self._wrap_override_function(override_function),
         )
 
         unmapped = set() if names is None else set(as_list(names)).difference(name_to_source.left)
@@ -459,12 +449,11 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
         return name_to_source
 
-    def _call_mapper_with_override_function(
-        self,
-        mapper_function: Callable[[List[NameType], List[SourceType], None, UserOverrideFunction], ReturnType],
-        names_to_translate: List[NameType],
+    @classmethod
+    def _wrap_override_function(
+        cls,
         override_function: ExtendedOverrideFunction[NameType, SourceType, IdType],
-    ) -> ReturnType:
+    ) -> UserOverrideFunction[NameType, SourceType, None]:
         def func(v: NameType, c: Set[SourceType], _: None) -> Optional[SourceType]:
             assert override_function is not None, "This shouldn't happen"  # noqa: S101
             res = override_function(v, c, [])
@@ -479,17 +468,14 @@ class Translator(Generic[NameType, SourceType, IdType]):
             else:
                 return res
 
-        try:
-            return mapper_function(names_to_translate, self.sources, None, func)
-        except UserMappingError as e:
-            raise UnknownSourceError(e.value, e.candidates) from e
+        return func
 
     def fetch(
         self,
         translatable: Translatable,
         name_to_source: DirectionalMapping[NameType, SourceType],
         data_structure_io: Type[DataStructureIO] = None,
-    ) -> TranslationMap:
+    ) -> TranslationMap[NameType, SourceType, IdType]:
         """Fetch translations.
 
         Args:
@@ -540,8 +526,8 @@ class Translator(Generic[NameType, SourceType, IdType]):
         extra_fetchers: Iterable[PathLikeType] = (),
         cache_dir: PathLikeType = None,
         max_age: Union[str, pd.Timedelta, timedelta] = "7d",
-        clazz: Union[str, Type["Translator"]] = None,
-    ) -> "Translator[NameType, SourceType, IdType]":
+        clazz: Union[str, Type[TranslatorT]] = None,
+    ) -> TranslatorT:
         """Load or create a persistent :attr:`~.Fetcher.fetch_all`-instance.
 
         .. warning:: Experimental method; may change or disappear without warning.
@@ -585,18 +571,22 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
         extra_fetcher_paths: List[str] = list(map(str, extra_fetchers))
 
-        reference_metadata = _config_utils.make_metadata(
-            str(path), extra_fetcher_paths, clazz=factory.TranslatorFactory.resolve_class(clazz or cls)
+        reference_metadata = _config_utils.make_metadata(  # type: ignore[type-var]
+            str(path),
+            extra_fetcher_paths,
+            clazz=factory.TranslatorFactory.resolve_class(clazz or cls),  # type: ignore[type-var]  # TODO Higher-Kinded TypeVars
         )
         if _config_utils.use_cached_translator(metadata_path, reference_metadata, pd.Timedelta(max_age)):
             return cls.restore(cache_path)
         else:
-            ans = cls.from_config(path, extra_fetcher_paths, clazz).store(path=cache_path, delete_fetcher=True)
+            ans: TranslatorT = cls.from_config(path, extra_fetcher_paths, clazz).store(
+                path=cache_path, delete_fetcher=True
+            )
             metadata_path.write_text(ans.config_metadata.to_json())
             return ans
 
     @classmethod
-    def restore(cls, path: PathLikeType) -> "Translator":
+    def restore(cls, path: PathLikeType) -> TranslatorT:
         """Restore a serialized ``Translator``.
 
         Args:
@@ -606,7 +596,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
             A ``Translator``.
 
         Raises:
-            TypeError: If the object at `path` is not a ``Translator``.
+            TypeError: If the object at `path` is not a ``Translator`` or a subtype thereof.
 
         See Also:
             The :meth:`Translator.store` method.
@@ -624,16 +614,16 @@ class Translator(Generic[NameType, SourceType, IdType]):
             extra = "" if ans._config_metadata is None else f" with {ans.config_metadata}"
             LOGGER.debug(f"Deserialized {ans}{extra}.")
 
-        return ans
+        return ans  # type: ignore[return-value]  # TODO Higher-Kinded TypeVars
 
     def store(
         self,
         translatable: Translatable = None,
-        names: Names = None,
-        ignore_names: Names = None,
+        names: NameTypes[NameType] = None,
+        ignore_names: Names[NameType] = None,
         delete_fetcher: bool = True,
         path: PathLikeType = None,
-    ) -> "Translator":
+    ) -> TranslatorT:
         """Retrieve and store translations in memory.
 
         Args:
@@ -687,13 +677,13 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
             mb_size = os.path.getsize(path) / 1000000
             LOGGER.info(f"Stored {self} of size {mb_size:.3g} MB at path='{path}'.")
-        return self
+        return self  # type: ignore[return-value] # TODO Higher-Kinded TypeVars
 
     def _get_updated_tmap(
         self,
         translatable: Translatable,
-        names: NameTypes = None,
-        ignore_names: Names = None,
+        names: NameTypes[NameType] = None,
+        ignore_names: Names[NameType] = None,
         override_function: ExtendedOverrideFunction[NameType, SourceType, IdType] = None,
         force_fetch: bool = False,
         parent: Translatable = None,
@@ -726,15 +716,15 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
     def _get_ids_to_fetch(
         self,
-        name_to_source: DirectionalMapping,
+        name_to_source: DirectionalMapping[NameType, SourceType],
         translatable: Translatable,
         dio: Type[DataStructureIO],
-    ) -> List[IdsToFetch]:
+    ) -> List[IdsToFetch[SourceType, IdType]]:
         # Aggregate and remove duplicates.
         source_to_ids: Dict[SourceType, Set[IdType]] = {source: set() for source in name_to_source.right}
         n2s = name_to_source.flatten()  # Will fail if sources are ambiguous.
 
-        float_names: List[str] = []
+        float_names: List[NameType] = []
         num_coerced = 0
         for name, ids in dio.extract(translatable, list(n2s)).items():
             if len(ids) == 0:
@@ -755,14 +745,16 @@ class Translator(Generic[NameType, SourceType, IdType]):
         if num_coerced > 100 and self.online:  # pragma: no cover
             warnings.warn(
                 f"To ensure proper fetcher operation, {num_coerced} float-type IDs have been coerced to integers. "
-                f"Enforcing supported data types (str and int) in your {tname(translatable)}-data may improve "
-                f"performance. Affected names ({len(float_names)}): {sorted(float_names)}."
+                f"Enforcing supported data types for IDs (str and int) in your {tname(translatable)}-data may improve "
+                f"performance. Affected names ({len(float_names)}): {float_names}."
                 "\nHint: Going offline will suppress this warning."
             )
 
         return [IdsToFetch(source, ids) for source, ids in source_to_ids.items()]
 
-    def _fetch(self, ids_to_fetch: Optional[List[IdsToFetch]]) -> SourcePlaceholderTranslations:
+    def _fetch(
+        self, ids_to_fetch: Optional[List[IdsToFetch[SourceType, IdType]]]
+    ) -> SourcePlaceholderTranslations[SourceType]:
         fetcher = self.fetcher
 
         placeholders = self._fmt.placeholders
@@ -829,8 +821,8 @@ class Translator(Generic[NameType, SourceType, IdType]):
     def _resolve_names(
         self,
         translatable: Translatable,
-        names: NameTypes = None,
-        ignored_names: Names = None,
+        names: NameTypes[NameType] = None,
+        ignored_names: Names[NameType] = None,
         parent: Translatable = None,  # This isn't correct; should be different typevars.
     ) -> List[NameType]:
         if names is None:
@@ -877,7 +869,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
     @classmethod
     def _resolve_names_inner(
-        cls, names: List[NameType], ignored_names: Union[NamesPredicate, Set[NameType]]
+        cls, names: List[NameType], ignored_names: Union[NamesPredicate[NameType], Set[NameType]]
     ) -> List[NameType]:
         predicate = _IgnoredNamesPredicate(ignored_names).apply
         names_to_translate = list(filter(predicate, names))
@@ -887,8 +879,12 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
 
 class _IgnoredNamesPredicate(Generic[NameType]):
-    def __init__(self, ignored_names: Union[NamesPredicate, Set[NameType]]) -> None:
-        self._func = ignored_names if callable(ignored_names) else ignored_names.__contains__
+    def __init__(self, ignored_names: Union[NamesPredicate[NameType], Set[NameType]]) -> None:
+        self._func: NamesPredicate[NameType]
+        if callable(ignored_names):
+            self._func = ignored_names
+        else:
+            self._func = ignored_names.__contains__
 
     def apply(self, name: NameType) -> bool:
         return not self._func(name)
@@ -897,12 +893,12 @@ class _IgnoredNamesPredicate(Generic[NameType]):
 def _handle_default(
     fmt: Format,
     default_fmt: Optional[FormatType],
-    default_fmt_placeholders: Optional[MakeType],
+    default_fmt_placeholders: Optional[MakeType[SourceType, str, Any]],
 ) -> Tuple[Optional[InheritedKeysDict[SourceType, str, Any]], Optional[Format]]:  # pragma: no cover
     if default_fmt is None and default_fmt_placeholders is None:
         return None, None
 
-    dt: Optional[InheritedKeysDict] = None
+    dt: Optional[InheritedKeysDict[SourceType, str, Any]] = None
 
     if isinstance(default_fmt_placeholders, InheritedKeysDict):
         dt = default_fmt_placeholders

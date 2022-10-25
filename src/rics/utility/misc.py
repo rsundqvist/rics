@@ -35,7 +35,7 @@ def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) 
     return getattr(module, member)
 
 
-def tname(arg: Optional[Union[Type[Any], Any, Callable]], prefix_classname: bool = False) -> str:
+def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) -> str:
     """Get name of method or class.
 
     Args:

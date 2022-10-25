@@ -1,15 +1,9 @@
-import logging as PYTHON_LOGGING_MODULE
+import logging
 
-
-def test_no_overwrite_logging():
-    from rics.utility.logs import logging
-
-    assert PYTHON_LOGGING_MODULE == logging, "This would've been a terrible idea"
+from rics.utility.logs import basic_config
 
 
 def test_set_levels():
-    from rics.utility.logs import basic_config, logging
-
     basic_config(
         level=logging.CRITICAL,
         rics_level=logging.INFO,
