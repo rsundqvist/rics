@@ -1,0 +1,27 @@
+"""Module defining candidate functions.
+
+Any top-level members that start with `"candidate_"` will be automatically
+imported. These are assumed to be callable. The candidates will be evaluated
+for all data defined in ``test_data.py``.
+
+Alternatively, you may define an "`ALL`" attribute of explicit members to use.
+"""
+
+
+def candidate_do_nothing(data):
+    pass
+
+
+def candidate_do_something(data):
+    sum(data)
+
+
+def candidate_ignored_since_not_in_all(data):
+    pass
+
+
+# Explicit members to use. Use a dict to specify names manually.
+ALL = [
+    candidate_do_nothing,
+    candidate_do_something,
+]
