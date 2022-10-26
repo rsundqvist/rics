@@ -37,11 +37,23 @@ jobs:
     needs: linting
     name: ${{ matrix.os }} / ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}-latest
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: true
       matrix:
         os: [ Ubuntu, MacOS, Windows ]
         python-version: [ '3.8', '3.9', '3.10' ]
-      fail-fast: true
+        experimental: [false]
+        include:
+          - os: Ubuntu
+            python-version: 3.11
+            experimental: true
+          - os: MacOS
+            python-version: 3.11
+            experimental: true
+          - os: Windows
+            python-version: 3.11
+            experimental: true
     steps:
       - uses: actions/checkout@v3
 
