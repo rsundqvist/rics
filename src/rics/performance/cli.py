@@ -7,6 +7,7 @@ from pathlib import Path as _Path
 from typing import Any, Optional
 
 import click
+import pkg_resources
 
 from rics.performance import run_multivariate_test as _run
 from rics.performance._util import get_best as _get_best
@@ -101,8 +102,8 @@ def main(time_per_candidate: float, name: str, create: bool) -> None:
     if create:
         time_per_candidate = 0.1
         name = "create-example-run"
-        for file_name, content in _DEFAULT_MODULES.items():
-            path = _Path().joinpath(file_name).absolute()
+        for template_name in "candidates", "test_data":
+            path = _Path().joinpath(template_name).with_suffix(".py").absolute()
             if path.exists():  # pragma: no cover
                 click.secho(
                     f"ABORT: Refusing to overwrite existing file '{path}'. "
@@ -111,7 +112,8 @@ def main(time_per_candidate: float, name: str, create: bool) -> None:
                     err=True,
                 )
                 sys.exit(1)
-            path.write_text(content.strip())
+            data: bytes = pkg_resources.resource_string(__package__, f"templates/{template_name}.py.txt")
+            path.write_bytes(data)
 
     name_path = _Path(name).absolute()
     pretty = name_path.stem.replace("-", " ").replace("_", " ").title()
@@ -182,31 +184,6 @@ def main(time_per_candidate: float, name: str, create: bool) -> None:
     result.set_index(["Candidate", "Test data"]).to_csv(performance_report_path)
     click.secho(f"Data saved: '{performance_report_path}'", fg="green")
 
-
-_DEFAULT_MODULES = {
-    "candidates.py": """
-def candidate_do_nothing(data):
-    pass
-
-
-def candidate_do_something(data):
-    sum(data)
-
-
-def candidate_ignored_since_not_in_ALL(data):
-    pass
-
-
-ALL = [candidate_do_nothing, candidate_do_something]
-        """,
-    "test_data.py": """
-test_data_small_array = [0]
-test_data_big_array = list(range(10**6))
-test_data_ignored_since_not_in_ALL = 0
-
-ALL = {"small_array": test_data_small_array, "big_array": test_data_big_array}
-        """,
-}
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,17 @@
+"""Module defining test data.
+
+Any top-level members that start with `"data_"` will be automatically imported
+and used on all candidates as defined by ``candidates.py``
+
+Alternatively, you may define an "`ALL`" attribute of explicit members to use.
+"""
+
+data_small_array = [0]
+data_big_array = list(range(10**6))
+data_ignored_since_not_in_ALL = 0
+
+# Explicit members to use.
+ALL = {
+    "small_array": data_small_array,
+    "big_array": data_big_array,
+}
