@@ -30,7 +30,6 @@ from rics.translation.types import (
     NameTypes,
     SourceType,
     Translatable,
-    TranslatorT,
 )
 from rics.utility.collections.dicts import InheritedKeysDict, MakeType
 from rics.utility.collections.misc import as_list
@@ -193,8 +192,8 @@ class Translator(Generic[NameType, SourceType, IdType]):
         cls,
         path: PathLikeType,
         extra_fetchers: Iterable[PathLikeType] = (),
-        clazz: Union[str, Type[TranslatorT]] = None,
-    ) -> TranslatorT:
+        clazz: Union[str, Type["Translator[NameType, SourceType, IdType]"]] = None,
+    ) -> "Translator[NameType, SourceType, IdType]":
         """Create a ``Translator`` from TOML inputs.
 
         Args:
@@ -209,7 +208,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
         Returns:
             A new ``Translator`` instance with a :attr:`config_metadata` attribute.
         """
-        return factory.TranslatorFactory(  # type: ignore[type-var]
+        return factory.TranslatorFactory(
             path,
             extra_fetchers,
             clazz or cls,  # TODO: Higher-Kinded TypeVars
@@ -222,7 +221,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
             raise ValueError("Not created using Translator.from_config()")  # pragma: no cover
         return self._config_metadata
 
-    def copy(self, share_fetcher: bool = True, **overrides: Any) -> TranslatorT:
+    def copy(self, share_fetcher: bool = True, **overrides: Any) -> "Translator[NameType, SourceType, IdType]":
         """Make a copy of this ``Translator``.
 
         Args:
@@ -254,7 +253,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
         if "fetcher" not in kwargs:
             kwargs["fetcher"] = self.fetcher if self.online else self._cached_tmap.copy()
 
-        return type(self)(**kwargs)  # type: ignore[return-value]  # TODO: Need Higher-Kinded TypeVars
+        return type(self)(**kwargs)
 
     def translate(
         self,
@@ -526,8 +525,8 @@ class Translator(Generic[NameType, SourceType, IdType]):
         extra_fetchers: Iterable[PathLikeType] = (),
         cache_dir: PathLikeType = None,
         max_age: Union[str, pd.Timedelta, timedelta] = "7d",
-        clazz: Union[str, Type[TranslatorT]] = None,
-    ) -> TranslatorT:
+        clazz: Union[str, Type["Translator[NameType, SourceType, IdType]"]] = None,
+    ) -> "Translator[NameType, SourceType, IdType]":
         """Load or create a persistent :attr:`~.Fetcher.fetch_all`-instance.
 
         .. warning:: Experimental method; may change or disappear without warning.
@@ -571,22 +570,22 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
         extra_fetcher_paths: List[str] = list(map(str, extra_fetchers))
 
-        reference_metadata = _config_utils.make_metadata(  # type: ignore[type-var]
+        reference_metadata = _config_utils.make_metadata(
             str(path),
             extra_fetcher_paths,
-            clazz=factory.TranslatorFactory.resolve_class(clazz or cls),  # type: ignore[type-var]  # TODO Higher-Kinded TypeVars
+            clazz=factory.TranslatorFactory.resolve_class(clazz or cls),
         )
         if _config_utils.use_cached_translator(metadata_path, reference_metadata, pd.Timedelta(max_age)):
             return cls.restore(cache_path)
         else:
-            ans: TranslatorT = cls.from_config(path, extra_fetcher_paths, clazz).store(
+            ans: Translator[NameType, SourceType, IdType] = cls.from_config(path, extra_fetcher_paths, clazz).store(
                 path=cache_path, delete_fetcher=True
             )
             metadata_path.write_text(ans.config_metadata.to_json())
             return ans
 
     @classmethod
-    def restore(cls, path: PathLikeType) -> TranslatorT:
+    def restore(cls, path: PathLikeType) -> "Translator[NameType, SourceType, IdType]":
         """Restore a serialized ``Translator``.
 
         Args:
@@ -614,7 +613,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
             extra = "" if ans._config_metadata is None else f" with {ans.config_metadata}"
             LOGGER.debug(f"Deserialized {ans}{extra}.")
 
-        return ans  # type: ignore[return-value]  # TODO Higher-Kinded TypeVars
+        return ans
 
     def store(
         self,
@@ -623,7 +622,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
         ignore_names: Names[NameType] = None,
         delete_fetcher: bool = True,
         path: PathLikeType = None,
-    ) -> TranslatorT:
+    ) -> "Translator[NameType, SourceType, IdType]":
         """Retrieve and store translations in memory.
 
         Args:
@@ -677,7 +676,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
 
             mb_size = os.path.getsize(path) / 1000000
             LOGGER.info(f"Stored {self} of size {mb_size:.3g} MB at path='{path}'.")
-        return self  # type: ignore[return-value] # TODO Higher-Kinded TypeVars
+        return self
 
     def _get_updated_tmap(
         self,

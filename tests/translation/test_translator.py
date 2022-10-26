@@ -101,7 +101,7 @@ def test_can_pickle(translator, copy):
 
 @pytest.mark.parametrize("copy", [False, True])
 def test_offline(hex_fetcher, copy):
-    translator: Translator[int] = Translator(hex_fetcher, fmt="{id}:{hex}[, positive={positive}]").store()
+    translator = Translator(hex_fetcher, fmt="{id}:{hex}[, positive={positive}]").store()
     if copy:
         translator = translator.copy()
     _translate(translator)
@@ -164,7 +164,7 @@ def test_store_and_restore(hex_fetcher, tmp_path):
 
     path = tmp_path.joinpath("translator.pkl")
     translator.store(path=path)
-    restored: Translator[int] = Translator.restore(path=path)
+    restored = Translator.restore(path=path)
 
     translated_by_restored = restored.translate(data)
     assert translated_by_restored == translated_data
@@ -252,7 +252,7 @@ def test_complex_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} - {hex} - {positive}"
     default_fmt_placeholders = {"default": {"positive": "POSITIVE/NEGATIVE", "hex": "HEX"}}
-    t: Translator[int] = Translator(
+    t = Translator(
         hex_fetcher, fmt=fmt, default_fmt=default_fmt, default_fmt_placeholders=default_fmt_placeholders
     ).store()
 
@@ -277,7 +277,7 @@ def test_complex_default(hex_fetcher):
 def test_id_only_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "{id} is not known"
-    t: Translator[int] = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -298,24 +298,24 @@ def test_id_only_default(hex_fetcher):
 
 
 def test_extra_placeholder():
-    t: Translator[int] = Translator(
+    t = Translator(
         {"people": {"id": [1999], "name": ["Sofia"]}},
         default_fmt="{id}:{right}",
         default_fmt_placeholders=dict(default={"left": "left-value", "right": "right-value"}),
     )
     assert "1:right-value" == t.translate(1, names="people")
 
-    t = t.copy(default_fmt="{left}, {right}")
+    t = t.copy(default_fmt="{left}, {right}")  # type: ignore[assignment]
     assert "left-value, right-value" == t.translate(1, names="people")
 
-    t = t.copy(default_fmt_placeholders=dict(default={"left": "LEFT", "right": "RIGHT"}))
+    t = t.copy(default_fmt_placeholders=dict(default={"left": "LEFT", "right": "RIGHT"}))  # type: ignore[assignment]
     assert "LEFT, RIGHT" == t.translate(1, names="people")
 
 
 def test_plain_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
     default_fmt = "UNKNOWN"
-    t: Translator[int] = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
+    t = Translator(hex_fetcher, fmt=fmt, default_fmt=default_fmt).store()
 
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
@@ -332,7 +332,7 @@ def test_plain_default(hex_fetcher):
 
 def test_no_default(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
-    t: Translator[int] = Translator(hex_fetcher, fmt=fmt).store()
+    t = Translator(hex_fetcher, fmt=fmt).store()
     in_range = t.translate({"positive_numbers": list(range(-1, 2))})
     assert in_range == {
         "positive_numbers": [
@@ -385,7 +385,7 @@ def test_untranslated_fraction():
 
 def test_reverse(hex_fetcher):
     fmt = "{id}:{hex}[, positive={positive}]"
-    t: Translator[int] = Translator(hex_fetcher, fmt=fmt).store()
+    t = Translator(hex_fetcher, fmt=fmt).store()
 
     expected = {"positive_numbers": list(range(-1, 2))}
     translated = {
@@ -401,7 +401,7 @@ def test_reverse(hex_fetcher):
     assert expected == actual, "Original format"
 
     translated = {"positive_numbers": ["-0x1", "0x0", "0x1"]}
-    tc: Translator[int] = t.copy(fmt="{hex}")
+    tc = t.copy(fmt="{hex}")
     actual = tc.translate(translated, reverse=True)
     assert expected == actual, "New format"
 
@@ -480,15 +480,15 @@ def test_load_persistent_instance(tmp_path):
 
     with pytest.warns(UserWarning, match="EXPERIMENTAL"):
         translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator)
-        now = translator.now
+        now = translator.now  # type: ignore[attr-defined]
         assert translator.translate(*args) == expected
 
         translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator)
-        assert translator.now == now
+        assert translator.now == now  # type: ignore[attr-defined]
         assert translator.translate(*args) == expected
 
         translator = Translator.load_persistent_instance(path, fetchers, tmp_path, clazz=Translator, max_age="-1d")
-        assert translator.now > now
+        assert translator.now > now  # type: ignore[attr-defined]
         assert translator.translate(*args) == expected
 
         real_translator: RealTranslator[str, str, int] = RealTranslator.load_persistent_instance(

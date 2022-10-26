@@ -17,7 +17,6 @@ if TYPE_CHECKING:
     import pandas  # noqa: F401
     from numpy.typing import NDArray
 
-    from rics.translation._translator import Translator
 
 Translatable = _TypeVar(
     "Translatable",
@@ -76,7 +75,3 @@ NameTypes = Union[NameType, Iterable[NameType]]
 """A union of a name type, or an iterable thereof."""
 Names = Union[NameTypes[NameType], NamesPredicate[NameType]]
 """Acceptable name types."""
-
-
-# TODO: Need "Higher-Kinded TypeVars" from the Python/typing project (opened 2018..)
-TranslatorT = _TypeVar("TranslatorT", bound="Translator", covariant=True)  # type: ignore[type-arg]

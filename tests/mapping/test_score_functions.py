@@ -9,9 +9,7 @@ with open("tests/mapping/words.txt") as f:
 SCORE_FUNCTIONS = [sf.equality, sf.modified_hamming]
 
 
-@pytest.mark.parametrize(
-    "func, dtype", [(func, str) for func in SCORE_FUNCTIONS] + [(sf.equality, int)]  # type: ignore
-)
+@pytest.mark.parametrize("func, dtype", [(func, str) for func in SCORE_FUNCTIONS] + [(sf.equality, int)])
 def test_stable(func, dtype):
     """Score function should respect input order."""
     candidates = make(12, dtype)
