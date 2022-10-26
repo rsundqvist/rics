@@ -2,9 +2,7 @@ import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Tuple, Type
-
-from rics.translation.types import TranslatorT
+from typing import TYPE_CHECKING, Any, List, Tuple, Type
 
 try:
     import tomllib  # type: ignore
@@ -110,12 +108,12 @@ class ConfigMetadata:
 def make_metadata(
     path: str,
     extra_fetchers: List[str],
-    clazz: Type[TranslatorT],
+    clazz: Type["Translator[Any, Any, Any]"],
 ) -> ConfigMetadata:
     """Convenience class for creating ``ConfigMetadata`` instances."""
     from rics import __version__
 
-    def fully_qualified_name(t: Type[TranslatorT]) -> str:
+    def fully_qualified_name(t: Type["Translator[Any, Any, Any]"]) -> str:
         return t.__module__ + "." + t.__qualname__
 
     return ConfigMetadata(

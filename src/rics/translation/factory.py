@@ -1,5 +1,5 @@
 """Factory functions for translation classes."""
-from typing import Any, Callable, Dict, Generic as _Generic, Iterable, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, Generic as _Generic, Iterable, List, Optional, Tuple, Type, Union
 
 try:
     import tomllib  # type: ignore
@@ -11,10 +11,13 @@ except ModuleNotFoundError:
 from rics._internal_support.types import PathLikeType
 from rics.mapping import HeuristicScore as _HeuristicScore, Mapper as _Mapper
 from rics.translation import _config_utils, exceptions, fetching
-from rics.translation.types import IdType, NameType, SourceType, TranslatorT
+from rics.translation.types import IdType, NameType, SourceType
 from rics.utility import misc
 from rics.utility.action_level import ActionLevel as _ActionLevel
 from rics.utility.collections import dicts
+
+if TYPE_CHECKING:
+    from rics.translation import Translator
 
 FetcherFactory = Callable[[str, Dict[str, Any]], fetching.AbstractFetcher]
 """A callable which creates new ``AbstractFetcher`` instances from a dict config.
@@ -124,13 +127,13 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         self,
         file: PathLikeType,
         extra_fetchers: Iterable[PathLikeType],
-        clazz: Union[str, Type[TranslatorT]] = None,
+        clazz: Union[str, Type["Translator[NameType, SourceType, IdType]"]] = None,
     ) -> None:
         self.file = str(file)
         self.extra_fetchers = list(map(str, extra_fetchers))
-        self.clazz = self.resolve_class(clazz)
+        self.clazz: Type[Translator[NameType, SourceType, IdType]] = self.resolve_class(clazz)
 
-    def create(self) -> TranslatorT:
+    def create(self) -> "Translator[NameType, SourceType, IdType]":
         """Create a ``Translator`` from a TOML file."""
         with open(self.file, "rb") as f:
             config: Dict[str, Any] = tomllib.load(f)
@@ -164,12 +167,14 @@ class TranslatorFactory(_Generic[NameType, SourceType, IdType]):
         return ans
 
     @classmethod
-    def resolve_class(cls, clazz: Union[str, Type[TranslatorT]] = None) -> Type[TranslatorT]:
+    def resolve_class(
+        cls, clazz: Union[str, Type["Translator[NameType, SourceType, IdType]"]] = None
+    ) -> Type["Translator[NameType, SourceType, IdType]"]:
         """Resolve desired ``Translator`` type."""
         if clazz is None:
             from rics import translation
 
-            return translation.Translator  # type: ignore[return-value] # TODO: Need "Higher-Kinded TypeVars"
+            return translation.Translator
 
         if isinstance(clazz, str):
             return misc.get_by_full_name(clazz)  # type: ignore[no-any-return]
