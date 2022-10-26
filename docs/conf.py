@@ -28,6 +28,12 @@ for tm in type_modules:
 def callback(_app, _env, node, _contnode):  # noqa
     reftarget = node.get("reftarget")
 
+    if reftarget in ("NameType", "SourceType", "IdType"):
+        # TODO When are they gonna fix this sh*t? Did they already..?
+        #   Special hack for factory.py, which is a public module. And for some
+        #   reason that breaks. I've no idea why :')
+        reftarget = f"rics.translation.types.{reftarget}"
+
     for m in type_modules:
         if reftarget.startswith(m):
             ans_hax = reference(refuri=m + ".html#" + reftarget, reftitle=reftarget)
