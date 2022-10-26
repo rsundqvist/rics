@@ -89,10 +89,10 @@ isort = "^5.10.1"
 black = { version = "^22", extras = ["jupyter"] }
 
 [tool.poetry.group.test.dependencies]
-pytest = "^7.1.2"
+pytest = "^7.2.0"
 xdoctest = "^1.1.0"
-coverage = "^6.4.3"
-pytest-cov = "^3.0.0"
+coverage = "^6.5.0"
+pytest-cov = "^4.0.0"
 pg8000 = ">=1.29.1"  # Pure-python pgsql driver; used for optional Dvdrental test cases
 croniter = ">=1.2.0"  # Used for tfold tests
 
@@ -100,7 +100,7 @@ croniter = ">=1.2.0"  # Used for tfold tests
 pre-commit = "^2.20.0"
 invoke = "^1.7.1"
 safety = "^2.1.1"
-mypy = "^0.971"
+mypy = "^0.982"
 bump2version = "^1.0.1"
 
 [tool.poetry.group.types.dependencies]
