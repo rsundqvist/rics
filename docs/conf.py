@@ -1,4 +1,8 @@
 """Sphinx configuration."""
+import os
+
+if True:  # E402 hack
+    os.environ["SPHINX_BUILD"] = "true"
 
 # Configuration file for the Sphinx documentation builder.
 #
