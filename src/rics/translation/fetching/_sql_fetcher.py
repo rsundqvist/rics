@@ -22,7 +22,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
 
     Args:
         connection_string: A SQLAlchemy connection string. Read from environment variable if `connection_string` starts
-            with '@' followed by the name. Example: ``@TRANSLATION_DB_CONNECTION_STRING`` reads from
+            with `'@'` followed by the name. Example: ``@TRANSLATION_DB_CONNECTION_STRING`` reads from
             the `TRANSLATION_DB_CONNECTION_STRING` environment variable.
         password: Password to insert into the connection string. Will be escaped to allow for special characters. If
             given, the connection string must contain a password key, eg; ``dialect://user:{password}@host:port``. Can
@@ -31,6 +31,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         blacklist_tables: The only tables the ``SqlFetcher`` may not access. Mutually exclusive with `whitelist_tables`.
         include_views: If ``True``, discover views as well.
         fetch_all_limit: Maximum size of table to allow a fetch all-operation. 0=never allow. Ignore if ``None``.
+        engine_kwargs: A dict of keyword arguments for :func:`sqlalchemy.create_engine`.
         **kwargs: Primarily passed to ``super().__init__``, then used as :meth:`selection_filter_type` kwargs.
 
     Raises:
@@ -52,6 +53,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         blacklist_tables: Iterable[str] = (),
         include_views: bool = True,
         fetch_all_limit: Optional[int] = 100_000,
+        engine_kwargs: Dict[str, Any] = None,
         **kwargs: Any,
     ) -> None:
         if kwargs:
@@ -65,7 +67,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
             super_kwargs = {}
         super().__init__(**super_kwargs)
 
-        self._engine = sqlalchemy.create_engine(self.parse_connection_string(connection_string, password))
+        self._engine = self.create_engine(connection_string, password, engine_kwargs or {})
         self._estr = str(self._engine)
         self._reflect_views = include_views
         self._fetch_all_limit = fetch_all_limit
@@ -158,8 +160,34 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         self._engine = None
 
     @classmethod
+    def create_engine(
+        cls,
+        connection_string: str,
+        password: Optional[str],
+        engine_kwargs: Dict[str, Any],
+    ) -> sqlalchemy.engine.Engine:
+        """Factory method used by ``__init__``.
+
+        For a more detailed description of the arguments and the behaviour of this function, see the
+        :class:`class docstring <SqlFetcher>`.
+
+        Args:
+            connection_string: A SQLAlchemy connection string. Read from environment variable if `connection_string`
+                starts with `'@'` followed by the name.
+            password: Password to insert into the connection string.
+            engine_kwargs: A dict of keyword arguments for :func:`sqlalchemy.create_engine`.
+
+        Returns:
+            A new ``Engine``.
+        """
+        return sqlalchemy.create_engine(
+            cls.parse_connection_string(connection_string, password),
+            **engine_kwargs,
+        )
+
+    @classmethod
     def parse_connection_string(cls, connection_string: str, password: Optional[str]) -> str:  # pragma: no cover
-        """Parse a connection string. Read from environment if `connection_string` starts with '@'."""
+        """Parse a connection string. Read from environment if `connection_string` starts with `'@'`."""
         connection_string = read_env_or_literal(connection_string)
         if password:
             connection_string = connection_string.format(password=quote_plus(read_env_or_literal(password)))
