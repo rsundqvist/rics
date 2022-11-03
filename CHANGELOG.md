@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flesh out description of the `Translatable` type variable.
 - Ability for the perftest CLI program to create and run dummy tests.
 - Utility method `utility.pandas.TimeFold.iter`: Create temporal k-folds from a heterogeneous `DataFrame`.
+- Make SqlFetcher engine creation more customizable.
+  - Add `SqlFetcher.create_engine`, which my be overridden.
+  - Add optional `engine_kwargs` init argument.
 
 ### Changed
 - Change definition of `Mapper.context_sensitive_overrides`; now also `True` for blank overrides regardless of type.
