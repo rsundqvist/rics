@@ -250,7 +250,7 @@ class AbstractFetcher(Fetcher[SourceType, IdType]):
             source = itf.source
             raise exceptions.UnknownPlaceholderError(
                 f"Required placeholders {missing} not recognized."
-                f" For {source=}, known placeholders are: {sorted(ans)}."
+                f" For {source=}, known placeholders are: {sorted(ans)} for {self}."
             )
         return ans
 

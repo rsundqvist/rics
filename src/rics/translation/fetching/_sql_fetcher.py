@@ -68,7 +68,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         super().__init__(**super_kwargs)
 
         self._engine = self.create_engine(connection_string, password, engine_kwargs or {})
-        self._estr = str(self._engine)
+        self._estr = str(self.engine)
         self._reflect_views = include_views
         self._fetch_all_limit = fetch_all_limit
 
@@ -114,7 +114,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
             raise exceptions.ForbiddenOperationError(self._FETCH_ALL, f"disabled for table '{ts.name}'.")
 
         stmt = select if instr.ids is None else self._make_query(ts, select, set(instr.ids))
-        return PlaceholderTranslations(instr.source, tuple(columns), tuple(self._engine.execute(stmt)))
+        return PlaceholderTranslations(instr.source, tuple(columns), tuple(self.engine.execute(stmt)))
 
     def _make_query(
         self, ts: "SqlFetcher.TableSummary", select: sqlalchemy.sql.Select, ids: Set[IdType]
@@ -147,8 +147,18 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         return super().allow_fetch_all and all(s.fetch_all_permitted for s in self._summaries.values())
 
     def __str__(self) -> str:
-        disconnected = "<disconnected>: " if self._engine is None else ""
+        disconnected = "<disconnected>: " if not self.online else ""
         return f"{tname(self)}({disconnected}{self._estr}, tables={repr(self.sources or '<no tables>')})"
+
+    @property
+    def engine(self) -> sqlalchemy.engine.Engine:
+        """Engine used by thes Fetcher.
+
+        Returns:
+            The ``Engine`` used for fetching.
+        """
+        self.assert_online()
+        return self._engine
 
     def close(self) -> None:  # pragma: no cover
         if self._engine is None:
@@ -254,11 +264,11 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
         Returns:
             An approximate size for `table`.
         """
-        return int(self._engine.execute(sqlalchemy.func.count(id_column)).scalar())
+        return int(self.engine.execute(sqlalchemy.func.count(id_column)).scalar())
 
     def get_metadata(self) -> sqlalchemy.MetaData:
         """Create a populated metadata object."""
-        metadata = sqlalchemy.MetaData(self._engine)
+        metadata = sqlalchemy.MetaData(self.engine)
         metadata.reflect(only=self._whitelist or None, views=self._reflect_views)
         return metadata
 
