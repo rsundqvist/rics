@@ -732,7 +732,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
             if isinstance(ids[0], float):
                 float_names.append(name)
                 # Float IDs aren't officially supported, but is common when using Pandas since int types cannot be NaN.
-                # This is sometimes a problem for the build-in set (see https://github.com/numpy/numpy/issues/9358), and
+                # This is sometimes a problem for the built-in set (see https://github.com/numpy/numpy/issues/9358), and
                 # for several database drivers.
                 ids = numpy.unique(ids)  # type: ignore
                 keep_mask = ~numpy.isnan(ids)

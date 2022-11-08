@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Any, Dict, Generic, Iterator, List, Mapping, Optional, Tuple, Type, Union
+from typing import Any, Dict, Generic, Iterator, List, Mapping, Optional, Set, Type, Union
 
 from rics.translation.offline import MagicDict
 from rics.translation.offline._format import Format
@@ -12,7 +12,7 @@ from rics.utility.misc import tname
 NameToSource = Dict[NameType, SourceType]
 
 
-class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, MagicDict[IdType]]):
+class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[Union[NameType, SourceType], MagicDict[IdType]]):
     """Storage class for fetched translations.
 
     Args:
@@ -44,15 +44,18 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
         self._source_formatters: Dict[SourceType, FormatApplier[NameType, SourceType, IdType]] = {
             source: self.FORMAT_APPLIER_TYPE(translations) for source, translations in source_translations.items()
         }
+        self._names_and_sources: Set[Union[NameType, SourceType]] = set()
         self.name_to_source = name_to_source or {}
 
         self._reverse_mode: bool = False
 
-    def apply(self, name: NameType, fmt: FormatType = None, default_fmt: FormatType = None) -> MagicDict[IdType]:
+    def apply(
+        self, name_or_source: Union[NameType, SourceType], fmt: FormatType = None, default_fmt: FormatType = None
+    ) -> MagicDict[IdType]:
         """Create translations for names. Note: ``__getitem__`` delegates to this method.
 
         Args:
-            name: A name to translate.
+            name_or_source: A name or source to translate.
             fmt: Format to use. If ``None``, fall back to init format.
             default_fmt: Alternative format for default translation. Resolution: Arg -> init arg, fmt arg, init fmt arg
 
@@ -69,7 +72,7 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
 
         fmt = Format.parse(fmt)
         default_fmt = self._default_fmt if default_fmt is None else Format.parse(default_fmt)
-        source = self.name_to_source[name]
+        source = self.name_to_source.get(name_or_source, name_or_source)  # type: ignore
         translations: MagicDict[IdType] = self._source_formatters[source](
             fmt, default_fmt=default_fmt, default_fmt_placeholders=self.default_fmt_placeholders.get(source)
         )
@@ -100,6 +103,7 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
     @name_to_source.setter
     def name_to_source(self, value: NameToSource[NameType, SourceType]) -> None:
         self._name_to_source: NameToSource[NameType, SourceType] = value
+        self._names_and_sources = set(value).union(self._source_formatters)
 
     @property
     def fmt(self) -> Optional[Format]:
@@ -147,15 +151,14 @@ class TranslationMap(Generic[NameType, SourceType, IdType], Mapping[NameType, Ma
         """Make a copy of this ``TranslationMap``."""
         return copy(self)
 
-    def __getitem__(self, item: Union[NameType, Tuple[NameType, FormatType]]) -> MagicDict[IdType]:
-        name, fmt = item if isinstance(item, tuple) else (item, self._fmt)
-        return self.apply(name, fmt)
+    def __getitem__(self, name_or_source: Union[NameType, SourceType]) -> MagicDict[IdType]:
+        return self.apply(name_or_source)
 
     def __len__(self) -> int:
-        return len(self.names)
+        return len(self._names_and_sources)
 
-    def __iter__(self) -> Iterator[NameType]:
-        return iter(self.names)
+    def __iter__(self) -> Iterator[Union[NameType, SourceType]]:
+        return iter(self._names_and_sources)
 
     def __bool__(self) -> bool:
         return bool(self._source_formatters)
