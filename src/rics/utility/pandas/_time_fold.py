@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Literal, NamedTuple, Optional, 
 import pandas as pd
 from numpy import ndarray
 
+from rics.utility.logs import disable_temporarily
 from rics.utility.misc import tname
 
 if TYPE_CHECKING or os.environ.get("SPHINX_BUILD"):
@@ -257,15 +258,9 @@ def _handle_schedule(
 def _cuts(
     schedule: Schedule, time: Union[pd.DatetimeIndex, pd.Series], before: Span, after: Span
 ) -> Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]]:
-
-    num_folds = 0
     if LOGGER.isEnabledFor(logging.INFO):
-        disabled_before = LOGGER.disabled
-        try:
-            LOGGER.disabled = True
+        with disable_temporarily(LOGGER):
             num_folds = len(list(_cuts(schedule, time, before, after)))
-        finally:
-            LOGGER.disabled = disabled_before
 
     min_dt, max_dt = time.min(), time.max()
     parsed_schedule = _handle_schedule(schedule, min_dt, max_dt)

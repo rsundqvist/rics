@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- The `logs.disable_temporarily` function (returns a context manager).
 - Permit creation of derived classes with `Translator.from_config`.
 - Flesh out description of the `Translatable` type variable.
 - Ability for the perftest CLI program to create and run dummy tests.

@@ -1,5 +1,6 @@
 """Utility methods for logging tasks."""
 import logging
+from contextlib import contextmanager as _contextmanager
 from typing import Any, Dict, Tuple, Union
 
 FORMAT: str = "%(asctime)s.%(msecs)03d [%(name)s:%(levelname)s] %(message)s"
@@ -43,14 +44,43 @@ def basic_config(
         >>> root_logger.critical("I'm a critical message!") # Doctest: +SKIP
         2022-02-05T11:17:05.378 [rics:DEBUG] I'm a debug message!
         2022-02-05T11:17:05.378 [root:CRITICAL] I'm a critical message!
-
-        The Python :py:mod:`logging` module was imported on the same line to save space.
     """
     wildcard_levels, kwargs = _extract_wildcards(rics_level=rics_level, force=force, **kwargs)
     logging.basicConfig(format=format, datefmt=datefmt, **kwargs)
 
     for name, level in wildcard_levels.items():
         logging.getLogger(name).setLevel(level)
+
+
+@_contextmanager
+def disable_temporarily(logger: logging.Logger, *more_loggers: logging.Logger):  # type: ignore[no-untyped-def]  # noqa: ANN201
+    """Temporarily disable logging.
+
+    Args:
+        logger: A logger to disable.
+        *more_loggers: Additional loggers to disable.
+
+    Yields:
+        Nothing.
+
+    Examples:
+        Disable all logging temporarily.
+
+        >>> import logging
+        >>> logging.basicConfig()
+        >>> with disable_temporarily(logging.root):
+        ...     logging.info("This message is ignored.")
+    """
+    loggers = [logger] + list(more_loggers)
+    states = [lgr.disabled for lgr in loggers]
+
+    try:
+        for lgr in loggers:
+            lgr.disabled = True
+        yield
+    finally:
+        for lgr, old_state in zip(loggers, states):
+            lgr.disabled = old_state
 
 
 _LOG_LEVEL_SUFFIX = "_level"
