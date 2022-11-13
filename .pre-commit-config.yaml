@@ -16,6 +16,11 @@ repos:
     rev: 22.10.0
     hooks:
       - id: black
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.2
+    hooks:
+      - id: codespell
+        files: ^.*\.(py|md|rst|toml)$
   - repo: local
     hooks:
       - id: flakeheaven
