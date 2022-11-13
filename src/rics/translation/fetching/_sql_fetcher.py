@@ -152,7 +152,7 @@ class SqlFetcher(AbstractFetcher[str, IdType]):
 
     @property
     def engine(self) -> sqlalchemy.engine.Engine:
-        """Engine used by thes Fetcher.
+        """Engine used by this fetcher.
 
         Returns:
             The ``Engine`` used for fetching.

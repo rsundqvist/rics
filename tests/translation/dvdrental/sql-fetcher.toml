@@ -20,7 +20,7 @@ fstring = "first_{value}"
 function = "value_fstring_alias"
 fstring = "{context}_{value}"
 
-[fetching.mapping.overrides.addess]
+[fetching.mapping.overrides.address]
 code = "postal_code"
 [fetching.mapping.overrides.film]
 name = "title"
