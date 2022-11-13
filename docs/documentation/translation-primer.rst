@@ -192,7 +192,7 @@ found in the source.
 
 All placeholder names also match exactly, except for the ``'animal_id'`` placeholder in the ``'animals'`` source. The
 easiest solution is to use an override. However, as this kind of naming is common, a more generic solution makes sense.
-There's no suitable build-in function for this, so we'll have to create our own. The result is shown in the snippet below.
+There's no suitable built-in function for this, so we'll have to create our own. The result is shown in the snippet below.
 
 .. code-block:: python
    :caption: A custom :attr:`~rics.mapping.types.AliasFunction` heuristic to turn ``'animal_id'`` into just ``'id'``.

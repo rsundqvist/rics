@@ -88,7 +88,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
                1999 | Sofia   | Female        1 | Morris | true
                1904 | Fred    | Male          2 | Simba  | true
 
-        In most real cases we'd fetch this table from somewhere. In this case, howeever, there's so little data that we
+        In most real cases we'd fetch this table from somewhere. In this case, however, there's so little data that we
         can simply enumerate the components needed for translation ourselves to create a :class:`.MemoryFetcher`.
 
         >>> from rics.translation import Translator
@@ -132,7 +132,7 @@ class Translator(Generic[NameType, SourceType, IdType]):
             '0:Bob, nice=Maybe?'
 
         Since we didn't give an explicit `default_fmt_placeholders`, the regular `fmt` is used instead. Formats can be
-        plain strings, in which case tranlation will never explicitly fail unless the name itself fails to map and
+        plain strings, in which case translation will never explicitly fail unless the name itself fails to map and
         :attr:`.Mapper.unmapped_values_action` is set to :attr:`.ActionLevel.RAISE`.
     """
 

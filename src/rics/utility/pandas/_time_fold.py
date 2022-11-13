@@ -80,7 +80,7 @@ class TimeFold(NamedTuple):
         The expression ``'0 0 * * MON,FRI'`` means `"every Monday and Friday at midnight"`.
 
         With ``after=1`` (the default), our `Future data` expands until the next scheduled time. This may be interpreted
-        as `"taking a step forward"` in the schdule. Using integer `before` arguments works analogously, in the
+        as `"taking a step forward"` in the schedule. Using integer `before` arguments works analogously, in the
         opposite direction. Vertical lines indicate outer limits of `df`.
 
     Notes:
