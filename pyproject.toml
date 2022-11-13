@@ -94,6 +94,7 @@ pytest = "^7.2.0"
 xdoctest = "^1.1.0"
 coverage = "^6.5.0"
 pytest-cov = "^4.0.0"
+codespell = "^2.2.2"
 pg8000 = ">=1.29.1"  # Pure-python pgsql driver; used for optional Dvdrental test cases
 croniter = ">=1.2.0"  # Used for tfold tests
 
