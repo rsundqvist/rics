@@ -2,7 +2,7 @@ import itertools
 import logging
 import os
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Iterable, Literal, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Any, Iterable, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 from numpy import ndarray
@@ -19,10 +19,93 @@ Span = Union[int, str, Literal["all"], pd.Timedelta, timedelta]
 LOGGER = logging.getLogger(__package__).getChild("TimeFold")
 
 
+class DatetimeSplitter:
+    """See :meth:`TimeFold.make_sklearn_splitter`."""
+
+    def __init__(
+        self,
+        schedule: Schedule,
+        before: Span,
+        after: Span,
+        time_column: Optional[str],
+    ) -> None:
+        self._schedule = schedule
+        self._before = before
+        self._after = after
+        self._column = time_column
+
+    def __repr__(self) -> str:
+        before = self._before
+        after = self._after
+        return f"TimeFold.make_sklearn_splitter({self._schedule}, {before=}, {after=})"
+
+    def get_n_splits(self, X: pd.DataFrame = None, y: Union[pd.DataFrame, pd.Series] = None, groups: Any = None) -> int:
+        """Returns the number of splitting iterations with the given arguments."""
+        if X is None and y is None:
+            raise ValueError("At least one of (X, y) must be given.")  # pragma: no cover
+        data, name = (X, "X") if y is None else (y, "y")
+        with disable_temporarily(LOGGER):
+            return len(list(self._parse_args(data, name=name)[0]))
+
+    def split(
+        self, X: pd.DataFrame = None, y: Union[pd.DataFrame, pd.Series] = None, groups: Any = None
+    ) -> Iterable[Tuple[List[int], List[int]]]:
+        """Generate indices to split data into training and test set.
+
+        Args:
+            X: Training data (features). Must be a ``Pandas`` type.
+            y: Target variable. Must be a ``Pandas`` type.
+            groups: Always ignored, exists for compatibility.
+
+        Yields:
+            The training/test set indices for that split.
+
+        Raises:
+            ValueError: If both `X` and `y` are ``None``.
+        """
+        cuts, time = (None, None) if X is None else self._parse_args(X, "X")
+        if y is None:
+            pass  # pragma: no cover
+        else:
+            cuts, time = self._parse_args(y, "y", expected_time=time)
+
+        if cuts is None:
+            raise ValueError("At least one of (X, y) must be given.")  # pragma: no cover
+
+        for start, mid, stop in cuts:
+            train, test = time.between(start, mid, inclusive="left"), time.between(mid, stop, inclusive="left")
+            yield list(time.index[train]), list(time.index[test])
+
+    def _parse_args(
+        self,
+        data: Union[pd.DataFrame, pd.Series],
+        name: str,
+        expected_time: pd.Series = None,
+    ) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
+        if self._column and isinstance(data, pd.Series):
+            raise TypeError(  # pragma: no cover
+                f"Cannot process Series-type '{name}'-argument unless time_column=None."
+            )
+
+        cuts, time = _parse_args(data, self._schedule, time_column=self._column, before=self._before, after=self._after)
+        if expected_time is not None:
+            try:
+                pd.testing.assert_series_equal(expected_time, time)
+            except AssertionError as e:  # pragma: no cover
+                raise ValueError("Indices of X and y must be equal. See trace for details.") from e
+        else:
+            pass  # pragma: no cover
+
+        return cuts, time
+
+
 class TimeFold(NamedTuple):
     """Create temporal k-folds from a ``DataFrame`` for cross-validation.
 
-    Use :meth:`TimeFold.iter` to create folds. Folds are closed on the right side (inclusive left).
+    Folds are closed on the right side (inclusive left).
+
+    Use :meth:`TimeFold.iter` to create folds, or :meth:`TimeFold.make_sklearn_splitter` to create a scikit-learn
+    compatible splitter for cross validation.
 
     The ranges surrounding the :attr:`scheduled times <time>` are determined by the `before` and `after` arguments,
     interpreted as follows based on type:
@@ -116,7 +199,7 @@ class TimeFold(NamedTuple):
                 expression (requires ``croniter``).
             before: The period before the scheduled time to include. See :ref:`ba-args`
             after: The period after the scheduled time to include. See :ref:`ba-args`
-            time_column: Column in `df` to base the folds on. Use index if ``None``.
+            time_column: Column to base the folds on. Use index if ``None``.
 
         Yields:
             Tuples ``TimeFold(time, data, future_data)``.
@@ -132,6 +215,33 @@ class TimeFold(NamedTuple):
                 data=df[time.between(start, mid, inclusive="left").values],
                 future_data=df[time.between(mid, stop, inclusive="left").values],
             )
+
+    @classmethod
+    def make_sklearn_splitter(
+        cls,
+        schedule: Schedule = "1d",
+        before: Span = "5d",
+        after: Span = 1,
+        time_column: str = None,
+    ) -> DatetimeSplitter:
+        """Create a scikit-learn compatible splitter.
+
+        Args:
+            schedule: Timestamps which denote the anchor dates of the folds (e.g. training dates). If a ``Timedelta`` or
+                ``str``, create schedule from the start of ``df[time_column]``. Alternatively, you may pass a cron
+                expression (requires ``croniter``).
+            before: The period before the scheduled time to include. See :ref:`ba-args`
+            after: The period after the scheduled time to include. See :ref:`ba-args`
+            time_column: Column to base the folds on. Use index if ``None``. If given, the returned splitter will not
+                be able to handle y-arguments.
+
+        Returns:
+            A sklearn-compatible splitter backed by :meth:`TimeFold.iter`.
+
+        See Also:
+            The :meth:`TimeFold.plot` method, which may be used to visualize temporal folds.
+        """
+        return DatetimeSplitter(schedule, before=before, after=after, time_column=time_column)
 
     @classmethod
     def plot(
@@ -152,7 +262,7 @@ class TimeFold(NamedTuple):
                 expression (requires ``croniter``).
             before: The period before the scheduled time to include for each iteration. See :ref:`ba-args`
             after: The period after the scheduled time to include for each iteration. See :ref:`ba-args`
-            time_column: Column in `df` to base the folds on. Use index if ``None``.
+            time_column: Column to base the folds on. Use index if ``None``.
             **kwargs: Keyword arguments for :func:`matplotlib.pyplot.subplots`.
 
         Returns:
@@ -211,9 +321,15 @@ class TimeFold(NamedTuple):
 
 
 def _parse_args(
-    df: pd.DataFrame, schedule: Schedule, time_column: Optional[str], before: Span, after: Optional[Span]
-) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], Union[pd.DatetimeIndex, pd.Series]]:
-    time = pd.Series(pd.to_datetime(df.index if time_column is None else df[time_column], infer_datetime_format=True))
+    data: Union[pd.DataFrame, pd.Series],
+    schedule: Schedule,
+    time_column: Optional[str],
+    before: Span,
+    after: Optional[Span],
+) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
+    time = pd.Series(
+        pd.to_datetime(data.index if time_column is None else data[time_column], infer_datetime_format=True)
+    )
 
     cuts = _cuts(schedule, time, before, after)
     return cuts, time

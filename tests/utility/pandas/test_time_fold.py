@@ -121,3 +121,71 @@ def test_iter(use_index, to_str, kwargs_and_expected):
             TimeFold.plot(df, **kwargs, nrows=1, ncols=2, tight_layout=False)
         finally:
             plt.close("all")
+
+
+@pytest.mark.parametrize(
+    "args, time_column",
+    [
+        ("Xy", None),
+        ("X", None),
+        ("X", "time"),
+        ("y", None),
+    ],
+)
+def test_sklearn_equality(args, time_column):
+    assert args in ("X", "y", "Xy")
+
+    time = pd.date_range("2022", "2022-1-15", freq="2h")
+    df = pd.DataFrame({"X0": 0, "X1": 1, "y": 2}, index=range(len(time)))
+    if time_column:
+        df["time"] = time
+    else:
+        df.index = time
+
+    X = df.drop(columns="y") if args[0] == "X" else None
+    y = df.y if args[-1] == "y" else None
+
+    kwargs = dict(schedule="3d", before="all", after=1, time_column=time_column)
+    splitter = TimeFold.make_sklearn_splitter(**kwargs)
+    sklearn_res = list(splitter.split(X, y))
+    assert splitter.get_n_splits(X, y) == len(sklearn_res)
+
+    iter_res = list(TimeFold.iter(df, **kwargs))
+    assert len(iter_res) == len(sklearn_res)
+
+    expected = [
+        ("2022-01-04", range(0, 36), range(36, 72)),
+        ("2022-01-07", range(0, 72), range(72, 108)),
+        ("2022-01-10", range(0, 108), range(108, 144)),
+    ]
+    for (et, ed, efd), (t, d, fd), (idx, fidx) in zip(expected, iter_res, sklearn_res):
+        assert pd.Timestamp(et) == t, t
+        assert df.index[ed].equals(d.index), t
+        assert df.index[efd].equals(fd.index), t
+        assert list(ed) == list(idx), t
+        assert list(efd) == list(fidx), t
+
+        if args == "Xy":
+            pd.testing.assert_frame_equal(d, df.iloc[idx])
+            pd.testing.assert_frame_equal(fd, df.iloc[fidx])
+
+
+def test_bad_xy_index():
+    time = pd.date_range("2022", "2022-1-15", freq="2h")
+    df = pd.DataFrame(
+        {
+            "X0": 0,
+            "X1": 1,
+            "y": 2,
+            "time": time,
+        },
+        index=time,
+    )
+    X = df[["X0", "X1"]]
+    y = df.y.copy()
+    y.index = y.index + pd.Timedelta(days=1)
+
+    assert not y.index.equals(X.index)
+
+    with pytest.raises(ValueError, match="Indices of X and y must be equal"):
+        list(TimeFold.make_sklearn_splitter().split(X, y))
