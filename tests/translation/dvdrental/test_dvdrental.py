@@ -1,29 +1,29 @@
+from pathlib import Path
+
 import pandas as pd
 import pytest
+import sqlalchemy
 
-from rics.translation import Translator
+from .conftest import QUERY, check_status, get_connection_string, get_translator
 
-from .conftest import DATE_COLUMNS, DVD_RENTAL_SKIP_REASON, wait_for_dvdrental
-
-
-@pytest.fixture(scope="module")
-def translator() -> Translator[str, str, int]:
-    extra_fetchers = ["tests/translation/dvdrental/sql-fetcher.toml"]
-    config = "tests/translation/dvdrental/translation.toml"
-    return Translator.from_config(config, extra_fetchers)
+DIALECTS = [
+    "mysql",
+    "postgresql",
+    "mssql",  # Quite slow, mostly since the (pyre-python) driver used doesn't support fast_executemany
+]
 
 
-@pytest.mark.skipif(not wait_for_dvdrental(), reason=DVD_RENTAL_SKIP_REASON)
-def test_dvd_rental(translator):
-    expected = pd.read_csv("tests/translation/dvdrental/translated.csv", index_col=0, parse_dates=DATE_COLUMNS)
+@pytest.mark.filterwarnings("ignore:Did not recognize type:sqlalchemy.exc.SAWarning")
+@pytest.mark.parametrize("dialect", DIALECTS)
+def test_dvd_rental(dialect):
+    check_status(dialect)
+    engine = sqlalchemy.create_engine(get_connection_string(dialect))
+    translator = get_translator(dialect)
+    expected = pd.read_csv(
+        Path(__file__).with_name("translated.csv"), index_col=0, parse_dates=["rental_date", "return_date"]
+    )
+    df: pd.DataFrame = pd.read_sql(QUERY, engine).loc[expected.index]
+    actual = translator.translate(df)
 
-    with open("tests/translation/dvdrental/query.sql") as f:
-        query = f.read()
-
-    engine = translator._fetcher.fetchers[-1]._engine  # The SQL fetcher was given last
-    df: pd.DataFrame = pd.read_sql(query, con=engine)
-    translator.translate(df, inplace=True)
-
-    assert (df.select_dtypes("datetime").columns == DATE_COLUMNS).all()
-    actual = df.sample(len(expected), random_state=0)
-    assert expected.equals(actual), actual.to_string()
+    assert actual is not None
+    pd.testing.assert_frame_equal(actual, expected)

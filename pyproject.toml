@@ -95,8 +95,13 @@ xdoctest = "^1.1.0"
 coverage = "^6.5.0"
 pytest-cov = "^4.0.0"
 codespell = "^2.2.2"
-pg8000 = ">=1.29.1"  # Pure-python pgsql driver; used for optional Dvdrental test cases
 croniter = ">=1.2.0"  # Used for tfold tests
+
+# db drivers and related dependencies
+pg8000 = "^1.29.2"
+pymssql = "^2.2.5"
+pymysql = "^1.0.2"
+cryptography = "^38.0.3"
 
 [tool.poetry.group.misc.dependencies]
 pre-commit = "^2.20.0"
@@ -164,7 +169,7 @@ flake8-docstrings = ["-DAR101", "-D102"]
 # Test modules/classes/functions are never "really" public, and I don't want to typehint/document all of them :).
 flake8-docstrings = ["-*"]
 flake8-annotations = ["-*"]
-flake8-bandit = ["-S101", "-S301", "-S403"]
+flake8-bandit = ["-*"]
 flake8-darglint = ["-DAR101"]
 
 [tool.flakeheaven.exceptions."jupyterlab/"]
