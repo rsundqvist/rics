@@ -1,11 +1,14 @@
-# noqa
-
+from os import getenv
 from pathlib import Path
+from sys import platform
 
 import pandas as pd
 import pytest
 import sqlalchemy
 import yaml  # type: ignore
+
+if getenv("CI") == "true" and platform != "linux":
+    pytest.skip("No Docker for Mac and Windows in CI/CD.", allow_module_level=True)
 
 DIR = Path(__file__).parent
 CREDENTIALS = yaml.safe_load(DIR.parent.joinpath("credentials.yml").read_text())["dialects"]

@@ -80,6 +80,7 @@ trouble.
    Python version. It also skips the additional isolation provided by `nox`,
    which may hide some dependency-gotchas.
    ```bash
+   ./run-docker-dvdrental.sh
    ./run-invocations.sh
    ```
    
@@ -89,8 +90,18 @@ trouble.
    poetry install --with=jupyter
    ```
 
-## Source template
+### Running GitHub Actions locally
+Relying on GitHub actions for new CI/CD features is quite slow. An alternative is to use 
+[act](https://github.com/nektos/act) instead, which allows running pipelines locally (with some limitations, see `act` 
+docs). For example, running
 
+```shell
+act -j tests
+```
+
+will execute the [tests](https://github.com/rsundqvist/rics/blob/master/.github/workflows/tests.yml) workflow.
+
+## Source template
 Originally created with [Cookiecutter] and the [fedejaure/cookiecutter-modern-pypackage]
 template. The repo has changed quite a lot since creation, but some linked
 resources linked are still useful.

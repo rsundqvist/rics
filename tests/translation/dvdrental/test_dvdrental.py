@@ -1,4 +1,6 @@
+from os import getenv
 from pathlib import Path
+from sys import platform
 
 import pandas as pd
 import pytest
@@ -15,6 +17,7 @@ DIALECTS = [
 
 @pytest.mark.filterwarnings("ignore:Did not recognize type:sqlalchemy.exc.SAWarning")
 @pytest.mark.parametrize("dialect", DIALECTS)
+@pytest.mark.skipif(getenv("CI") == "true" and platform != "linux", reason="No Docker for Mac and Windows in CI/CD.")
 def test_dvd_rental(dialect):
     check_status(dialect)
     engine = sqlalchemy.create_engine(get_connection_string(dialect))
