@@ -138,7 +138,6 @@ def tests(c):
     # type: (Context) -> None
     """Run tests."""
     pytest_options = [
-        "-W error::Warning",  # Fail on any error which is not expected or explicitly suppressed
         "--xdoctest",
         "--cov",
         "--cov-append",
