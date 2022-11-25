@@ -12,22 +12,23 @@ Using Docker, start the database by running:
 
 .. code-block::
 
-   docker run -p 5001:5432 moertel/postgresql-sample-dvdrental@sha256:e35f8dc4011d053777631208c85e3976a422b65e12383579d8a856a7849082c5
+   docker run -p 5002:5432 --rm rsundqvist/sakila-preload:postgres
 
 from the terminal. To describe the database, run
 
 .. code-block::
 
-   psql -h localhost -p 5001 -U postgres -d dvdrental -c "\d+"
+   psql -h localhost -p 5001 -U postgres -d sakila -c "\d+"
+   # password: Sofia123!
 
-from a separate terminal window. Leave out the last part (``-c "\d+"``) to query the database manually.
-
+from a separate terminal window. Leave out the last part (``-c "\d+"``) to query the database manually. For details
+about this image, see `rsundqvist/sakila-preload <https://hub.docker.com/r/rsundqvist/sakila-preload>`_ on Docker Hub.
 
 Query to translate
 ------------------
 We will use a small query to describe rental transactions in the database:
 
-.. literalinclude:: ../../../../tests/translation/dvdrental/query.sql
+.. literalinclude:: ../../../../tests/translation/dvdrental/docker/tests/query.sql
    :language: sql
    :caption: Query returning DVD rental transactions.
    :linenos:
@@ -40,7 +41,6 @@ The query above shows who rented what and when, what store they rented from and 
 
 Configuration files
 -------------------
-
 The database has a few quirks, which are managed by configuration. See the :doc:`../../translator-config` page to learn
 more about config files.
 

@@ -1,24 +1,46 @@
 import os
-import time
+from pathlib import Path
 
-DATE_COLUMNS = ["rental_date", "return_date"]
+import pandas as pd
+import sqlalchemy
+import yaml  # type: ignore
 
-DOCKER_COMMAND = (
-    "docker run -p 5001:5432 moertel/postgresql-sample-dvdrental"
-    "@sha256:e35f8dc4011d053777631208c85e3976a422b65e12383579d8a856a7849082c5"
-)
-DVD_RENTAL_SKIP_REASON = f"No database found. Start using '{DOCKER_COMMAND}'"
+from rics.translation import Translator
+
+DIR = Path(__file__).parent.joinpath("docker")
+CREDENTIALS = yaml.safe_load(DIR.joinpath("credentials.yml").read_text())["dialects"]
+for k, v in dict(
+    mysql="pymysql",
+    postgresql="pg8000",
+    mssql="pymssql",
+).items():
+    CREDENTIALS[k]["driver"] = v
+
+QUERY = DIR.joinpath("tests/query.sql").read_text()
 
 
-def wait_for_dvdrental(sleep: float = 0.5, attempts: int = 3) -> bool:
-    if "CI" in os.environ:
-        # https://docs.github.com/en/actions/learn-github-actions/environment-variables
-        return False
+def check_status(dialect: str) -> None:
+    engine = sqlalchemy.create_engine(get_connection_string(dialect))
 
-    for _ in range(attempts):
-        ready = os.system("/usr/bin/pg_isready -h localhost -p 5001 -U postgres -d dvdrental")  # noqa: S605
-        if ready == 0:  # Ready
-            return True
-        time.sleep(sleep)
+    try:
+        pd.read_sql("SELECT * FROM store", engine)
+    except Exception:  # noqa: B902
+        msg = (
+            f"Unable to connect to database for {dialect=}. Start the databases"
+            " by running:\n    ./run-docker-dvdrental.sh"
+        )
+        raise RuntimeError(msg)
 
-    return False or os.environ.get("FORCE_SKIPIF_TESTS", "false").lower() == "true"
+
+def get_connection_string(dialect: str, with_password: bool = True) -> str:
+    kwargs = CREDENTIALS[dialect]
+    ans = "{dialect}+{driver}://{user}:{{password}}@localhost:{port}/sakila".format(dialect=dialect, **kwargs)
+    return ans.format(password=kwargs["password"]) if with_password else ans
+
+
+def get_translator(dialect: str) -> Translator[str, str, int]:
+    os.environ["DVDRENTAL_PASSWORD"] = "Sofia123!"
+    os.environ["DVDRENTAL_CONNECTION_STRING"] = get_connection_string(dialect, with_password=False)
+    extra_fetchers = ["tests/translation/dvdrental/sql-fetcher.toml"]
+    config = "tests/translation/dvdrental/translation.toml"
+    return Translator.from_config(config, extra_fetchers)

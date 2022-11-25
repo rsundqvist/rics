@@ -1,6 +1,10 @@
 [fetching.SqlFetcher]
-connection_string = "postgresql+pg8000://postgres@localhost:5001/dvdrental"
-blacklist_tables = [ "category" ]  # Let's pretend this table is off-limits
+connection_string = "@DVDRENTAL_CONNECTION_STRING"
+password = "@DVDRENTAL_PASSWORD"
+blacklist_tables = ["category"]  # Let's pretend this table is off-limits
+
+[fetching.SqlFetcher.engine_kwargs]
+# fast_executemany = true  # Not supported by the driver
 
 # ------------------------------------------------------------------------------
 # Placeholder mapping configuration. Binds actual names in sources (such as
