@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+- All `rics.translation` modules. Use [id-translation](https://github.com/rsundqvist/id-translation/) instead. 
+
 ## [1.0.1] - 2022-11-26
 
 ### Changed

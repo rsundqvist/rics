@@ -39,16 +39,12 @@ pandas = ">=1.1"
 
 # cli
 click = { version = "*", optional = true }
-# translation
-sqlalchemy = { version = ">=1.0.0", optional = true }
-tomli = { version = ">=2.0.1", markers = "python_version < '3.11'", optional = true }
 # plotting
 matplotlib = { version = "*", optional = true }
 seaborn = { version = "*", optional = true }
 
 [tool.poetry.extras]
 cli = ["click"]
-translation = ["sqlalchemy", "tomli"]
 plotting = ["matplotlib", "seaborn"]
 
 
@@ -153,16 +149,8 @@ flake8-logging-format = ["+*",
     "-G004", # Logging statements should not use fstring. - I think this is fine IFF under enabledFor-guard
 ]
 
-[tool.flakeheaven.exceptions."src/rics/translation/fetching/"]
-flake8-docstrings = ["-D102"]  # Docstrings are inherited
-[tool.flakeheaven.exceptions."src/rics/translation/dio/"]
-flake8-docstrings = ["-D102"]  # Docstrings are inherited
-
 [tool.flakeheaven.exceptions."src/rics/mapping/score_functions.py"]
 flake8-darglint = ["-DAR101", "-DAR301"]
-
-[tool.flakeheaven.exceptions."src/rics/translation/testing.py"]
-flake8-docstrings = ["-DAR101", "-D102"]
 
 [tool.flakeheaven.exceptions."tests/"]
 # Test modules/classes/functions are never "really" public, and I don't want to typehint/document all of them :).

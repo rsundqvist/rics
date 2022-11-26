@@ -6,5 +6,4 @@ Various snippets that are nice to copy-and-paste.
    :hidden:
    :glob:
 
-   ../examples/notebooks/cookbook/*
    ./*
