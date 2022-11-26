@@ -306,13 +306,13 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
         overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
         if context is None:
-            if self._context_sensitive_overrides:  # pragma: no cover
+            if self._context_sensitive_overrides:
                 raise TypeError("Must pass a context when using context-sensitive overrides.")
-            overrides = self._overrides  # type: ignore
+            overrides = self._overrides
         else:
-            if not self._context_sensitive_overrides:  # pragma: no cover
+            if not self._context_sensitive_overrides:
                 raise TypeError("Overrides must be of type InheritedKeysDict when context is given.")
-            overrides = self._overrides.get(context, {})  # type: ignore
+            overrides = self._overrides.get(context, {})
 
         return [(value, overrides[value]) for value in filter(overrides.__contains__, values)]
 

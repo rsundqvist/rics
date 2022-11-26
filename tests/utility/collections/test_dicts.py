@@ -84,12 +84,14 @@ def nested_dict():
 
 @pytest.fixture
 def d():
-    return InheritedKeysDict(
-        default={0: "shared0", 1: "shared1"},
-        specific={
-            "ctx0": {0: "c0-v0"},
-            "ctx1": {0: "c1-v0", 1: "c1-v1"},
-        },
+    return InheritedKeysDict.make(
+        dict(
+            default={0: "shared0", 1: "shared1"},
+            specific={
+                "ctx0": {0: "c0-v0"},
+                "ctx1": {0: "c1-v0", 1: "c1-v1"},
+            },
+        )
     )
 
 

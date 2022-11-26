@@ -23,6 +23,7 @@ exclude_lines =
     if settings.DEBUG:
     raise AssertionError
     raise NotImplementedError
+    raise TypeError
     if 0:
     if __name__ == __main__:
     LOGGER.isEnabledFor
