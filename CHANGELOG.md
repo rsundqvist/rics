@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The `Mapper.copy` method.
+
 ### Fixed
 - Fixed exact value-candidate match short-circuiting in `HeuristicScore`.
 

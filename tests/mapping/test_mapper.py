@@ -216,3 +216,8 @@ def test_context_sensitive_overrides():
 
     with pytest.raises(TypeError, match="Must pass a context"):
         mapper.apply(values, [])
+
+
+def test_copy():
+    assert Mapper() == Mapper()
+    assert Mapper() == Mapper().copy()

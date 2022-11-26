@@ -383,6 +383,22 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             filter_functions=[(func, kwargs.copy()) for func, kwargs in self._filters],
             min_score=self._min_score,
             overrides=self._overrides.copy(),
-            unmapped_values_action=self.unmapped_values_action,
-            cardinality=self.cardinality,
+            unmapped_values_action=self._unmapped_action,
+            cardinality=self._cardinality,
+        )
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Mapper):
+            return False
+
+        return all(
+            (
+                self._score == other._score,
+                self._score_kwargs == other._score_kwargs,
+                self._filters == other._filters,
+                self._min_score == other._min_score,
+                self._overrides == other._overrides,
+                self._unmapped_action == other._unmapped_action,
+                self._cardinality == other._cardinality,
+            )
         )
