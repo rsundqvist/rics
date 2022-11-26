@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - The `Mapper.copy` method.
 
+### Changed
+- `Mapper.apply` now require `context` with `InheritedKeysDict`-type overrides.
+
 ### Fixed
 - Fixed exact value-candidate match short-circuiting in `HeuristicScore`.
 

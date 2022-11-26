@@ -70,7 +70,6 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         self._overrides: Union[
             InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
         ] = (overrides if isinstance(overrides, InheritedKeysDict) else (overrides or {}))
-        self._context_sensitive_overrides = isinstance(self._overrides, InheritedKeysDict)
         self._unmapped_action: ActionLevel = ActionLevel.verify(unmapped_values_action)
         self._bad_candidate_action: ActionLevel = ActionLevel.verify(unknown_user_override_action)
         self._cardinality = None if cardinality is None else Cardinality.parse(cardinality, strict=True)
@@ -93,7 +92,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         Args:
             values: Iterable of elements to match to candidates.
             candidates: Iterable of candidates to match with `value`. Duplicate elements will be discarded.
-            context: Context in which mapping is being done.
+            context: Context in which mapping is being done. Required when using context-sensitive overrides.
             override_function: A callable that takes inputs ``(value, candidates, context)`` that returns either
                 ``None`` (let the regular mapping logic decide) or one of the `candidates`. How non-candidates returned
                 is handled is determined by the :attr:`unknown_user_override_action` property.
@@ -110,7 +109,11 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
             UserMappingError: If `override_function` returns an unknown candidate and
                 ``unknown_user_override_action != 'ignore'``
+            ValueError: If passing ``context=None`` when  :attr:`context_sensitive` is ``True``.
         """
+        if isinstance(self._overrides, InheritedKeysDict) and context is None:
+            raise ValueError("Must pass a context in context-sensitive mode.")
+
         if self.verbose:  # pragma: no cover
             from rics.mapping.support import enable_verbose_debug_messages
 
@@ -260,8 +263,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
     @property
     def context_sensitive_overrides(self) -> bool:
-        """Return ``True`` if there are no overrides, or if the overrides are context sensitive."""
-        return not self._overrides or self._context_sensitive_overrides
+        """Return ``True`` if the overrides are context-sensitive."""
+        return isinstance(self._overrides, InheritedKeysDict)
 
     @property
     def verbose(self) -> bool:
@@ -304,15 +307,15 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         if not self._overrides:
             return []  # pragma: no cover
 
-        overrides: Dict[ValueType, CandidateType]  # Type on override check done during init
-        if context is None:
-            if self._context_sensitive_overrides:
-                raise TypeError("Must pass a context when using context-sensitive overrides.")
-            overrides = self._overrides
-        else:
-            if not self._context_sensitive_overrides:
-                raise TypeError("Overrides must be of type InheritedKeysDict when context is given.")
+        # The assertions are redundant (checked earlier), but makes mypy happy without type-ignores.
+        if self.context_sensitive_overrides:
+            assert isinstance(self._overrides, InheritedKeysDict), "Makes mypy happy."  # noqa: S101
+            assert context is not None, "Makes mypy happy."  # noqa: S101
             overrides = self._overrides.get(context, {})
+        else:
+            assert not isinstance(self._overrides, InheritedKeysDict), "Makes mypy happy."  # noqa: S101
+            assert context is None, "Makes mypy happy."  # noqa: S101
+            overrides = self._overrides
 
         return [(value, overrides[value]) for value in filter(overrides.__contains__, values)]
 

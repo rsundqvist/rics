@@ -194,8 +194,16 @@ def test_conflicting_function_overrides_prioritizes_first(values, candidates, ex
     assert mapper.apply(values, candidates, override_function=lambda *_: 0).flatten() == expected
 
 
-def test_blank_overrides():
-    assert Mapper().context_sensitive_overrides
+@pytest.mark.parametrize(
+    "overrides, expected",
+    [
+        (None, False),
+        ({"foo": "bar"}, False),
+        (InheritedKeysDict(), True),
+    ],
+)
+def test_blank_overrides(overrides, expected):
+    assert Mapper(overrides=overrides).context_sensitive_overrides is expected
 
 
 def test_context_sensitive_overrides():
@@ -214,7 +222,7 @@ def test_context_sensitive_overrides():
     assert mapper.apply(values, [], 1).flatten() == {"value0": "c1-override-0", "value1": "default1"}
     assert mapper.apply(values, [], 1999).flatten() == {"value0": "default0", "value1": "default1"}
 
-    with pytest.raises(TypeError, match="Must pass a context"):
+    with pytest.raises(ValueError, match="Must pass a context"):
         mapper.apply(values, [])
 
 
