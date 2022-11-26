@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Deprecate `rics.translation`. Use [id-translation](https://github.com/rsundqvist/id-translation/) instead.
+
 ## [1.0.0] - 2022-11-26
 ### Added
 - The `logs.disable_temporarily` function (returns a context manager).
