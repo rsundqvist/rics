@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2022-11-26
+
 ### Changed
 - Deprecate `rics.translation`. Use [id-translation](https://github.com/rsundqvist/id-translation/) instead.
 
@@ -331,7 +333,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/rsundqvist/rics/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/rsundqvist/rics/compare/v0.17.0...v1.0.0
 [0.17.0]: https://github.com/rsundqvist/rics/compare/v0.16.1...v0.17.0
 [0.16.1]: https://github.com/rsundqvist/rics/compare/v0.16.0...v0.16.1
