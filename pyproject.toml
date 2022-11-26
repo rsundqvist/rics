@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rics"
-version = "0.17.0.dev1"
+version = "1.0.0"
 description = "My personal little ML engineering library."
 authors = ["Richard Sundqvist <richard.sundqvist@live.se>"]
 
@@ -10,7 +10,6 @@ repository = "https://github.com/rsundqvist/rics"
 documentation = "https://rics.readthedocs.io"
 keywords = ["rics"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Operating System :: POSIX :: Linux",

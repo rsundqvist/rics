@@ -17,10 +17,6 @@ To be merged, all tests (including generating documentation), must be successful
 ## Code requirements
 General requirements which applies to all code in the library.
 
-This is still a **pre-release library** (`version ~ 0.y.z`), meaning that breaking changes [are allowed](https://semver.org/#spec-item-4)
-without a major version bump. But ***be nice to downstream users*** anyway. Don't make major and hard-to-adapt-to
-breaking changes unless it makes sense and is needed.
-
 ### Unchecked requirements
 These requirements are *not* verified in CI/CD.
 
