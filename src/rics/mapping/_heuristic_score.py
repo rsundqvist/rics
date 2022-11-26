@@ -85,6 +85,7 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
 
         if value in candidates:
             yield from (float("inf") if c == value else -float("inf") for c in candidates)
+            return
 
         base_score = list(self._score(value, candidates, context, **kwargs))  # Unmodified score
         best = list(base_score)

@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fixed exact value-candidate match short-circuiting in `HeuristicScore`.
+
 ### Removed
-- All `rics.translation` modules. Use [id-translation](https://github.com/rsundqvist/id-translation/) instead. 
+- All `rics.translation` modules. Use [id-translation](https://github.com/rsundqvist/id-translation/) instead.
 
 ## [1.0.1] - 2022-11-26
 
