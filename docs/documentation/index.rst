@@ -7,7 +7,5 @@ Examples and documentation.
 
    examples/index
    cookbook/index
-   translator-config
    mapping-primer
-   translation-primer
    cli/index

@@ -62,13 +62,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Start Docker databases
-        # No Docker for Mac and Windows in CI/CD.
-        if: matrix.os == 'Ubuntu'
-        shell: bash
-        run: |
-          ./run-docker-dvdrental.sh
-
       - name: Install system deps
         shell: bash
         run: |

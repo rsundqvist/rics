@@ -4,7 +4,7 @@
 
 -----------------
 
-# rics: my personal little ML engineering library. <!-- omit in toc -->
+# RiCS: my personal little ML engineering library. <!-- omit in toc -->
 [![PyPI - Version](https://img.shields.io/pypi/v/rics.svg)](https://pypi.python.org/pypi/rics)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/rics.svg)](https://pypi.python.org/pypi/rics)
 [![Tests](https://github.com/rsundqvist/rics/workflows/tests/badge.svg)](https://github.com/rsundqvist/rics/actions?workflow=tests)
@@ -15,40 +15,30 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 ## What is it?
+An assorted collections of generic functions that used to live in a Dropbox folder where I used to keep useful snippets.
+_RiCS_, pronounced _"rix_", is short for _**Ri**chard's **C**ode **S**tash_. This project started with the purpose of
+learning more about Python best practices, typing and the Python ecosystem.
 
-A collection of utility and convenience functions that I've written and rewritten over the years, until they become so
-general that it makes sense to have them documented and tested for inclusion in the library. The scope is
-naturally diverse and ranges from basic enum definitions to multivariate performance testing. More advanced features, 
-like element mapping and ID translation, is built on top of basic utilities.
+This project has grown organically since then, and now provides a wide variety of utility functions as well as more
+complex functionality like the external [id-translation](https://pypi.org/project/id-translation/) suite, which relies
+heavily on [rics.mapping][mapping]. See below for an overview of provided functions and classes.
 
 ## Highlighted Features
-
-- Multivariate [**performance testing**][perf].
-
-- Highly configurable [**element mapping**][mapping] using a wide variety of filtering, scoring and heuristic functions.
- 
-- A flexible [**ID translation suite**][translation]: Converts meaningless IDs to
-  human-readable labels. Comes with prebuilt [SQL][sql-fetcher] and 
-  [file-system integration][pandas-fetcher], all of which is configurable using 
-  [TOML][translator-config] files.
-
-- Various other [**utilities**][utility], ranging from [logging] to [plotting] to specialized [dict] functions.
+- Multivariate [performance testing][perf].
+- Highly configurable [element mapping][mapping] using a wide variety of filtering, scoring and heuristic functions.
+- Various other [utilities][utility], ranging from [logging] to [plotting] to specialized [dict] functions.
+- Temporal folds ([compatible with sklearn][time-fold]) for heterogeneous `pandas` types, meant for time-series cross validation.
 
 [perf]: https://rics.readthedocs.io/en/latest/_autosummary/rics.performance.html#rics.performance.run_multivariate_test
 [perf-plot]: https://rics.readthedocs.io/en/latest/_autosummary/rics.performance.html#rics.performance.plot_run
 
 [mapping]: https://rics.readthedocs.io/en/latest/_autosummary/rics.mapping.html
 
-[translation]: https://rics.readthedocs.io/en/latest/_autosummary/rics.translation.html
-[sql-fetcher]: https://rics.readthedocs.io/en/latest/_autosummary/rics.translation.fetching.html#rics.translation.fetching.SqlFetcher
-[pandas-fetcher]: https://rics.readthedocs.io/en/latest/_autosummary/rics.translation.fetching.html#rics.translation.fetching.PandasFetcher
-[translator-config]: https://rics.readthedocs.io/en/latest/documentation/translator-config.html
-
 [utility]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.html
 [logging]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.logs.html
 [plotting]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.plotting.html
 [dict]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.collections.dicts.html
-
+[time-fold]: https://rics.readthedocs.io/en/stable/_autosummary/rics.utility.pandas.html#rics.utility.pandas.TimeFold.make_sklearn_splitter
 
 ## Installation
 The package is published through the [Python Package Index (PyPI)]. Source code

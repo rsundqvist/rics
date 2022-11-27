@@ -25,6 +25,7 @@ def heuristic_score():
         ("TARGET_VALUE", ["cand0", "correct_MATCH"], [-inf, inf]),
         ("TARGET_VALUE", ["cand0", "correct_match", "MATCH_but_not_quite_right"], [-inf, inf, -inf]),
         ("VALUE", ["cand0", "prefixed_value", "prefixed", "prefixed_VALUE"], [0, 1, 0, 1]),
+        ("EXACT_MATCH", ["EXACT_MATCH", "correct_match", "correct_MATCH"], [inf, -inf, -inf]),
     ],
 )
 def test_heuristic_score(value, candidates, expected, heuristic_score):

@@ -168,7 +168,7 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
 
     def __getitem__(self, context: OKT) -> Dict[KT, VT]:
         if not self:
-            raise KeyError(context)
+            raise KeyError(context)  # pragma: no cover
 
         specific = self._specific.get(context, {})
         return {**self._default, **specific}

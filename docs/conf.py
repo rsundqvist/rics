@@ -19,8 +19,6 @@ from rics._internal_support.changelog import split_changelog
 
 type_modules = (
     "rics.mapping.types",
-    "rics.translation.types",
-    "rics.translation.fetching.types",
     "rics.utility.collections.dicts",
     "rics.utility.collections.misc",
 )
@@ -31,12 +29,6 @@ for tm in type_modules:
 
 def callback(_app, _env, node, _contnode):  # noqa
     reftarget = node.get("reftarget")
-
-    if reftarget in ("NameType", "SourceType", "IdType"):
-        # TODO When are they gonna fix this sh*t? Did they already..?
-        #   Special hack for factory.py, which is a public module. And for some
-        #   reason that breaks. I've no idea why :')
-        reftarget = f"rics.translation.types.{reftarget}"
 
     for m in type_modules:
         if reftarget.startswith(m):
@@ -167,15 +159,8 @@ html_context = {
         dict(
             title="Cookbook",
             text="Like copy-pasting? Me too!",
-            url="documentation/examples/notebooks/cookbook/translation.html",
+            url="documentation/cookbook/git.html",
             img="_static/chef.png",
-        ),
-        dict(
-            title="ID Translation",
-            text="API documentation for the Translator and related classes.",
-            url="_autosummary/rics.translation.html#rics.translation.Translator.translate",
-            img="_static/translation.png",
-            alt="Translation API documentation.",
         ),
         dict(
             title="Mapping",
@@ -191,11 +176,11 @@ html_context = {
             img="_static/toolbox.png",
         ),
         dict(
-            title="Translator Config",
-            text="TOML format documentation.",
-            url="documentation/translator-config.html",
-            img="_static/toml-config.png",
-            alt="Translator TOML config documentation.",
+            title="ID Translation",
+            text="Documentation for the ID translation suite (external).",
+            url="https://id-translation.readthedocs.io/",
+            img="_static/translation.png",
+            alt="Translation API documentation.",
         ),
     ],
 }
@@ -231,6 +216,7 @@ intersphinx_mapping = {
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
+    "id_translation": ("https://id-translation.readthedocs.io/en/stable/", None),
 }
 
 # -- Gallery configuration -------------------------------------------------
@@ -242,6 +228,6 @@ sphinx_gallery_conf = {
 # -- Nbsphinx
 nbsphinx_execute = "never"
 
-shutil.copytree("../jupyterlab/demo/", "documentation/examples/notebooks", dirs_exist_ok=True)
+shutil.copytree("../jupyterlab/rics/demo/", "documentation/examples/notebooks", dirs_exist_ok=True)
 
 split_changelog("changelog", "../CHANGELOG.md")

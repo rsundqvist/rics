@@ -83,9 +83,7 @@ class DatetimeSplitter:
         expected_time: pd.Series = None,
     ) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
         if self._column and isinstance(data, pd.Series):
-            raise TypeError(  # pragma: no cover
-                f"Cannot process Series-type '{name}'-argument unless time_column=None."
-            )
+            raise TypeError(f"Cannot process Series-type '{name}'-argument unless time_column=None.")
 
         cuts, time = _parse_args(data, self._schedule, time_column=self._column, before=self._before, after=self._after)
         if expected_time is not None:

@@ -84,8 +84,9 @@ def test_read_env_or_literal():
         assert misc.read_env_or_literal("@foo")
 
 
-def test_not_serializable():
+def test_serializable():
     def foo():
         pass
 
     assert not misc.serializable(foo)
+    assert misc.serializable(misc.serializable)

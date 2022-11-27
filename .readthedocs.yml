@@ -22,7 +22,6 @@ python:
     - method: pip
       path: .
       extra_requirements:
-        - translation
         - plotting
         - cli
 
