@@ -1,4 +1,4 @@
-from rics.utility.collections import misc
+from rics.collections import misc
 
 
 def test_as_list():

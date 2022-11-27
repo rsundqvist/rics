@@ -1,9 +1,9 @@
 import pytest
 
+from rics.collections.dicts import InheritedKeysDict
 from rics.mapping import Cardinality, Mapper, exceptions
 from rics.mapping.exceptions import UserMappingError, UserMappingWarning
 from rics.mapping.types import MatchTuple
-from rics.utility.collections.dicts import InheritedKeysDict
 
 
 def _substring_score(k, c, _):

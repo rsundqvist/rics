@@ -3,10 +3,10 @@
 For and introduction to mapping, see :ref:`mapping-primer`.
 """
 
-from rics.mapping._cardinality import Cardinality
-from rics.mapping._directional_mapping import DirectionalMapping
-from rics.mapping._heuristic_score import HeuristicScore
-from rics.mapping._mapper import Mapper
+from ._cardinality import Cardinality
+from ._directional_mapping import DirectionalMapping
+from ._heuristic_score import HeuristicScore
+from ._mapper import Mapper
 
 __all__ = [
     "Cardinality",

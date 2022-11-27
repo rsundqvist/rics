@@ -15,9 +15,9 @@ def configure_stuff(
     Args:
         level: Root log level.
         matplotlib_level: Matplotlib log level.
-        **kwargs: Keyword arguments for :meth:`rics.utility.logs.basic_config`.
+        **kwargs: Keyword arguments for :meth:`rics.logs.basic_config`.
     """
-    from rics.utility.logs import basic_config
+    from .logs import basic_config
 
     pd.options.display.max_columns = 50
     pd.options.display.max_colwidth = 150
@@ -29,7 +29,7 @@ def configure_stuff(
     basic_config(level=level, matplotlib_level=matplotlib_level, **kwargs)
 
     try:
-        from rics.utility.plotting import configure
+        from .plotting import configure
 
         configure()
     except ModuleNotFoundError as e:

@@ -1,7 +1,7 @@
 """Functions which perform heuristics for score functions.
 
 See Also:
-    The :class:`~rics.mapping.HeuristicScore` class.
+    The :class:`~.HeuristicScore` class.
 """
 from __future__ import annotations
 
@@ -9,7 +9,8 @@ import re
 from typing import Any, Iterable, List, Optional, Set, Tuple, Union
 
 from rics.mapping import filter_functions as ff
-from rics.mapping.types import ContextType
+
+from .types import ContextType
 
 VERBOSE: bool = False
 """If ``True`` enable optional DEBUG-level log messages on each heuristic function invocation.

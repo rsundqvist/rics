@@ -1,6 +1,6 @@
 import pytest
 
-from rics.utility.collections.dicts import InheritedKeysDict, compute_if_absent, flatten_dict, reverse_dict
+from rics.collections.dicts import InheritedKeysDict, compute_if_absent, flatten_dict, reverse_dict
 
 
 def test_compute_if_absent():

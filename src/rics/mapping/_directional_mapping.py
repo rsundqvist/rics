@@ -1,9 +1,9 @@
 from typing import Any, Dict, Generic, Hashable, Iterable, Mapping, Optional, Tuple, TypeVar
 
-from rics.mapping._cardinality import Cardinality
-from rics.mapping.exceptions import CardinalityError
-from rics.mapping.types import HL, HR, LeftToRight, RightToLeft
-from rics.utility.misc import tname
+from ..misc import tname
+from ._cardinality import Cardinality
+from .exceptions import CardinalityError
+from .types import HL, HR, LeftToRight, RightToLeft
 
 HAnySide = TypeVar("HAnySide", bound=Hashable)
 MatchTupleAnySide = TypeVar("MatchTupleAnySide", bound=Hashable)  # TODO: Higher-Kinded TypeVars

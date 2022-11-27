@@ -7,21 +7,15 @@ import numpy as np
 import pandas as pd
 
 from rics.mapping import exceptions, filter_functions as mf, score_functions as sf
-from rics.mapping._cardinality import Cardinality
-from rics.mapping._directional_mapping import DirectionalMapping
-from rics.mapping.exceptions import MappingError, MappingWarning, UserMappingError, UserMappingWarning
-from rics.mapping.types import (
-    CandidateType,
-    ContextType,
-    FilterFunction,
-    ScoreFunction,
-    UserOverrideFunction,
-    ValueType,
-)
 from rics.performance import format_perf_counter
-from rics.utility.action_level import ActionLevel
-from rics.utility.collections.dicts import InheritedKeysDict
-from rics.utility.misc import get_by_full_name, tname
+
+from ..action_level import ActionLevel
+from ..collections.dicts import InheritedKeysDict
+from ..misc import get_by_full_name, tname
+from ._cardinality import Cardinality
+from ._directional_mapping import DirectionalMapping
+from .exceptions import MappingError, MappingWarning, UserMappingError, UserMappingWarning
+from .types import CandidateType, ContextType, FilterFunction, ScoreFunction, UserOverrideFunction, ValueType
 
 LOGGER = logging.getLogger(__package__).getChild("Mapper")
 
@@ -115,7 +109,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             raise ValueError("Must pass a context in context-sensitive mode.")
 
         if self.verbose:  # pragma: no cover
-            from rics.mapping.support import enable_verbose_debug_messages
+            from .support import enable_verbose_debug_messages
 
             with enable_verbose_debug_messages():
                 scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
@@ -236,7 +230,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
-            from rics.mapping.support import MatchScores
+            from .support import MatchScores
         return MatchScores(scores, self._min_score).to_directional_mapping(self.cardinality)
 
     @property

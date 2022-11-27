@@ -2,7 +2,7 @@ from typing import Any, Literal, Tuple, Union
 
 import pandas as pd
 
-from rics.performance._multi_case_timer import ResultsDict
+from ._multi_case_timer import ResultsDict
 
 
 def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:

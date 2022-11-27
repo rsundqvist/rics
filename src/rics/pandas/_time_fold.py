@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any, Iterable, List, Literal, NamedTuple, Opti
 import pandas as pd
 from numpy import ndarray
 
-from rics.utility.logs import disable_temporarily
-from rics.utility.misc import tname
+from ..logs import disable_temporarily
+from ..misc import tname
 
 if TYPE_CHECKING or os.environ.get("SPHINX_BUILD"):
     from matplotlib.pyplot import Figure
@@ -152,7 +152,7 @@ class TimeFold(NamedTuple):
 
         Plotting folds using ``TimeFold.plot``.
 
-        >>> from rics.utility import configure_stuff; configure_stuff()
+        >>> from rics import configure_stuff; configure_stuff()
         >>> df = pd.DataFrame({'time': pd.date_range('2022', '2022-1-21')})
         >>> TimeFold.plot(df, schedule='0 0 * * MON,FRI')
 

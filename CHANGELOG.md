@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `Mapper.copy` method.
 
 ### Changed
+- Flatten/remove `rics.utility`; promote all modules to top-level members.
 - `Mapper.apply` now require `context` with `InheritedKeysDict`-type overrides.
 
 ### Fixed

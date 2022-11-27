@@ -1,11 +1,11 @@
 """Functions which return a likeness score.
 
 See Also:
-    The :class:`~rics.mapping.HeuristicScore` class.
+    The :class:`~.HeuristicScore` class.
 """
 from typing import Iterable, Optional
 
-from rics.mapping.types import CandidateType, ContextType, ValueType
+from .types import CandidateType, ContextType, ValueType
 
 VERBOSE: bool = False
 """If ``True`` enable optional DEBUG-level log messages on each score function invocation.
@@ -27,7 +27,7 @@ def modified_hamming(
         add_length_ratio_term: If ``True``, score is divided by ``abs(len(name) - len(candidate))``.
 
     Examples:
-        >>> from rics.mapping.score_functions import modified_hamming
+        >>> from .score_functions import modified_hamming
         >>> print(list(modified_hamming('aa', ['aa', 'a', 'ab'], context=None)))
         [1.0, 0.5, 0.5]
         >>> print(list(modified_hamming('face', ['face', 'FAce', 'race', 'place'], context=None)))
@@ -50,7 +50,7 @@ def equality(value: ValueType, candidates: Iterable[CandidateType], context: Opt
     """Return 1.0 if ``k == c_i``, 0.0 otherwise.
 
     Examples:
-        >>> from rics.mapping.score_functions import equality
+        >>> from .score_functions import equality
         >>> print(list(equality('a', 'aAb', context=None)))
         [1.0, 0.0, 0.0]
     """

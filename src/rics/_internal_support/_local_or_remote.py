@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, BinaryIO, Callable, Iterable, Optional
 from urllib.parse import urljoin
 
-from rics._internal_support.types import PathLikeType
+from .types import PathLikeType
 
 try:
     from tqdm.auto import tqdm
@@ -19,7 +19,7 @@ LOGGER = logging.getLogger("rics.utility.misc")
 _GLOR_LOGGER = LOGGER.getChild("get_local_or_remote")
 
 
-def get(
+def get_local_or_remote(
     file: PathLikeType,
     remote_root: PathLikeType,
     local_root: PathLikeType,
