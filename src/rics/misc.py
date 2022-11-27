@@ -5,9 +5,9 @@ from pathlib import Path as _Path
 from types import ModuleType as _ModuleType
 from typing import Any, Callable, Optional, Type, Union
 
-from rics._internal_support import local_or_remote
-from rics._internal_support.types import NO_DEFAULT, NoDefault, PathLikeType
-from rics.utility.strings import without_prefix as _without_prefix
+from ._internal_support import _local_or_remote
+from ._internal_support.types import NO_DEFAULT, NoDefault, PathLikeType
+from .strings import without_prefix as _without_prefix
 
 
 def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) -> Any:
@@ -66,7 +66,7 @@ def get_local_or_remote(
     local_root: PathLikeType = ".",
     force: bool = False,
     postprocessor: Callable[[str], Any] = None,
-    show_progress: bool = local_or_remote.TQDM_INSTALLED,
+    show_progress: bool = _local_or_remote.TQDM_INSTALLED,
 ) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
 
@@ -93,7 +93,7 @@ def get_local_or_remote(
     Examples:
         Fetch the Title Basics table (a CSV file) of the `IMDb dataset`_.
 
-        >>> from rics.utility.misc import get_local_or_remote
+        >>> from rics.misc import get_local_or_remote
         >>> import pandas as pd
         >>>
         >>> file = "name.basics.tsv.gz"
@@ -118,7 +118,7 @@ def get_local_or_remote(
     .. _tqdm:
         https://pypi.org/project/tqdm/
     """
-    return local_or_remote.get(
+    return _local_or_remote.get_local_or_remote(
         file=file,
         local_root=local_root,
         remote_root=remote_root,

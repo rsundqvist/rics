@@ -16,7 +16,8 @@ import numpy as np
 import pandas as pd
 
 from rics.mapping import Cardinality as _Cardinality, DirectionalMapping as _DirectionalMapping
-from rics.mapping.types import CandidateType, ValueType
+
+from .types import CandidateType, ValueType
 
 _MAPPER_LOGGER = logging.getLogger(__package__).getChild("Mapper")
 ACCEPT_LOGGER = _MAPPER_LOGGER.getChild("accept")
@@ -62,7 +63,7 @@ class MatchScores:
         """Create a ``DirectionalMapping`` with a given target ``Cardinality``.
 
         Args:
-            cardinality: Explicit cardinality to set, see :attr:`~rics.mapping.DirectionalMapping.cardinality`. If
+            cardinality: Explicit cardinality to set, see :attr:`~.DirectionalMapping.cardinality`. If
                 ``None``, use the actual cardinality when selecting all matches with scores :attr:`above` the minimum.
 
         Returns:

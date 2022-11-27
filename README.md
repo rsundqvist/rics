@@ -16,16 +16,17 @@
 
 ## What is it?
 An assorted collections of generic functions that used to live in a Dropbox folder where I used to keep useful snippets.
-_RiCS_, pronounced _"rix_", is short for _**Ri**chard's **C**ode **S**tash_. This project started with the purpose of
-learning more about Python best practices, typing and the Python ecosystem.
-
-This project has grown organically since then, and now provides a wide variety of utility functions as well as more
-complex functionality like the external [id-translation](https://pypi.org/project/id-translation/) suite, which relies
-heavily on [rics.mapping][mapping]. See below for an overview of provided functions and classes.
+RiCS, pronounced _"rix_", is short for _**Ri**chard's **C**ode **S**tash_. I started this project with the purpose of 
+learning more about Python best practices, typing and the Python ecosystem. It has grown organically since then, and now
+provides a wide variety of utility functions. The [id-translation](https://pypi.org/project/id-translation/) suite 
+(installed separately) relies heavily on [rics.mapping][mapping], as well as a number of other functions provided herein.
 
 ## Highlighted Features
 - Multivariate [performance testing][perf].
-- Highly configurable [element mapping][mapping] using a wide variety of filtering, scoring and heuristic functions.
+- Highly configurable [element mapping][mapping];
+  - Provides a wide variety of filtering, scoring and heuristic functions. 
+  - Powers Name-to-source mapping for the [id-translation](https://id-translation.readthedocs.io/en/latest/documentation/translation-primer.html#name-to-source-mapping) 
+    suite (installed separately).
 - Various other [utilities][utility], ranging from [logging] to [plotting] to specialized [dict] functions.
 - Temporal folds ([compatible with sklearn][time-fold]) for heterogeneous `pandas` types, meant for time-series cross validation.
 
@@ -34,11 +35,11 @@ heavily on [rics.mapping][mapping]. See below for an overview of provided functi
 
 [mapping]: https://rics.readthedocs.io/en/latest/_autosummary/rics.mapping.html
 
-[utility]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.html
-[logging]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.logs.html
-[plotting]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.plotting.html
-[dict]: https://rics.readthedocs.io/en/latest/_autosummary/rics.utility.collections.dicts.html
-[time-fold]: https://rics.readthedocs.io/en/stable/_autosummary/rics.utility.pandas.html#rics.utility.pandas.TimeFold.make_sklearn_splitter
+[utility]: https://rics.readthedocs.io/en/latest/_autosummary/rics.misc.html
+[logging]: https://rics.readthedocs.io/en/latest/_autosummary/rics.logs.html
+[plotting]: https://rics.readthedocs.io/en/latest/_autosummary/rics.plotting.html
+[dict]: https://rics.readthedocs.io/en/latest/_autosummary/rics.collections.dicts.html
+[time-fold]: https://rics.readthedocs.io/en/latest/_autosummary/rics.pandas.html#rics.pandas.TimeFold.make_sklearn_splitter
 
 ## Installation
 The package is published through the [Python Package Index (PyPI)]. Source code

@@ -2,7 +2,7 @@ import os
 
 import pytest as pytest
 
-from rics.utility import misc
+from rics import misc
 
 
 class Foo:
@@ -22,10 +22,10 @@ def plain_function():
 
 
 def test_get_by_full_name():
-    assert Foo == misc.get_by_full_name("tests.utility.test_misc.Foo")
+    assert Foo == misc.get_by_full_name("tests.test_misc.Foo")
 
     with pytest.raises(ModuleNotFoundError):
-        assert misc.get_by_full_name("tests.utility.test_misc.Foo.bar")
+        assert misc.get_by_full_name("tests.test_misc.Foo.bar")
 
 
 def test_tname():

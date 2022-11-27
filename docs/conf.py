@@ -19,8 +19,8 @@ from rics._internal_support.changelog import split_changelog
 
 type_modules = (
     "rics.mapping.types",
-    "rics.utility.collections.dicts",
-    "rics.utility.collections.misc",
+    "rics.collections.dicts",
+    "rics.collections.misc",
 )
 
 for tm in type_modules:
@@ -172,12 +172,18 @@ html_context = {
         dict(
             title="Utilities",
             text="Various utility methods.",
-            url="_autosummary/rics.utility.html",
+            url="_autosummary/rics.misc.html",
             img="_static/toolbox.png",
         ),
         dict(
+            title="Cross Validation",
+            text="Temporal folds from pandas types. Scikit-learn compatible.",
+            url="_autosummary/rics.pandas.html#rics.pandas.TimeFold",
+            img="_static/folds.png",
+        ),
+        dict(
             title="ID Translation",
-            text="Documentation for the ID translation suite (external).",
+            text="Documentation for the ID translation suite.",
             url="https://id-translation.readthedocs.io/",
             img="_static/translation.png",
             alt="Translation API documentation.",

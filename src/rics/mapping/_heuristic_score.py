@@ -1,9 +1,9 @@
 import logging
 from typing import Any, Dict, Generic, Iterable, List, Optional, Tuple, Union
 
-from rics.mapping import filter_functions, heuristic_functions, score_functions
-from rics.mapping.types import CandidateType, ContextType, HeuristicsTypes, ScoreFunction, ValueType
-from rics.utility.misc import get_by_full_name, tname
+from ..misc import get_by_full_name, tname
+from . import filter_functions, heuristic_functions, score_functions
+from .types import CandidateType, ContextType, HeuristicsTypes, ScoreFunction, ValueType
 
 LOGGER = logging.getLogger(__package__).getChild("HeuristicScore")
 
@@ -87,7 +87,7 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
             yield from (float("inf") if c == value else -float("inf") for c in candidates)
             return
 
-        base_score = list(self._score(value, candidates, context, **kwargs))  # Unmodified score
+        base_score = list(self.score_function(value, candidates, context, **kwargs))  # Unmodified score
         best = list(base_score)
 
         h_value = value

@@ -1,6 +1,6 @@
 import pytest
 
-from rics.utility import strings
+from rics import strings
 
 
 def test_without_suffix():

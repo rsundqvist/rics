@@ -3,8 +3,8 @@ import warnings
 from timeit import Timer
 from typing import Any, Callable, Collection, Dict, List, Optional, Union
 
-from rics.performance._format_perf_counter import format_seconds as fmt_time
-from rics.utility.misc import tname
+from ..misc import tname
+from ._format_perf_counter import format_seconds as fmt_time
 
 LOGGER = logging.getLogger(__package__)
 

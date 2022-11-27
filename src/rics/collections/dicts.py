@@ -2,8 +2,8 @@
 import warnings
 from typing import Any, Callable, Dict, Hashable, Iterator, List, Mapping, Optional, TypedDict, TypeVar, Union
 
-from rics.utility.action_level import ActionLevel
-from rics.utility.misc import tname as _tname
+from ..action_level import ActionLevel
+from ..misc import tname as _tname
 
 KT = TypeVar("KT", bound=Hashable)
 """Key type."""
@@ -46,7 +46,7 @@ def reverse_dict(d: Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseTyp
     Examples:
         Reversing a dict with two elements.
 
-        >>> from rics.utility.collections.dicts import reverse_dict
+        >>> from rics.collections.dicts import reverse_dict
         >>> reverse_dict({"A": 0, "B": 1})
         {0: 'A', 1: 'B'}
 
@@ -87,7 +87,7 @@ def flatten_dict(
     Examples:
         Flattening a shallow nested dict.
 
-        >>> from rics.utility.collections.dicts import flatten_dict
+        >>> from rics.collections.dicts import flatten_dict
         >>> flatten_dict({"foo": 0, "bar": {"foo": 1, "bar": 2}})
         {'foo': 0, 'bar.foo': 1, 'bar.bar': 2}
     """
@@ -128,7 +128,7 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
     Examples:
         A short demonstration.
 
-        >>> from rics.utility.collections.dicts import InheritedKeysDict
+        >>> from rics.collections.dicts import InheritedKeysDict
         >>> shared = {0: 'fallback-for-0', 1: 'fallback-for-1'}
         >>> specific = {
         ...     'ctx0': {0: 'c0-v0'},

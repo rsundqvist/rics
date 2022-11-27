@@ -2,7 +2,7 @@ from typing import Any, Callable, Optional
 
 import pytest
 
-from rics.utility.action_level import ActionLevel, ActionLevelHelper, BadActionLevelError
+from rics.action_level import ActionLevel, ActionLevelHelper, BadActionLevelError
 
 
 def run(

@@ -9,9 +9,9 @@ from typing import Any, Optional
 import click
 import pkg_resources
 
-from rics.performance import run_multivariate_test as _run
-from rics.performance._util import get_best as _get_best
-from rics.utility import configure_stuff as _configure_stuff
+from .._just_the_way_i_like_it import configure_stuff as _configure_stuff
+from ._util import get_best as _get_best
+from ._wrapper import run_multivariate_test as _run
 
 
 def _get_test_data() -> Any:

@@ -36,7 +36,7 @@ def basic_config(
     Examples:
         Basic usage.
 
-        >>> from rics.utility.logs import basic_config, logging
+        >>> from rics.logs import basic_config, logging
         >>> root_logger = logging.getLogger()
         >>> basic_config(level=logging.INFO, rics_level=logging.DEBUG)
         >>> logging.getLogger("rics").debug("I'm a debug message!")

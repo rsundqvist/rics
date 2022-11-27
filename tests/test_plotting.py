@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from rics.utility.plotting import _PiTickHelper, pi_ticks
+from rics.plotting import _PiTickHelper, pi_ticks
 
 PI = _PiTickHelper.PI
 HALF_PI = PI / 2
