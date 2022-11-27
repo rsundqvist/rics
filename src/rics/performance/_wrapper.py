@@ -1,4 +1,4 @@
-from typing import Any, Collection, Dict, Union
+from typing import Any, Collection, Mapping, Union
 
 import pandas as pd
 
@@ -7,8 +7,8 @@ from ..performance._util import plot_run, to_dataframe
 
 
 def run_multivariate_test(
-    candidate_method: Union[CandFunc, Collection[CandFunc], Dict[str, CandFunc]],
-    test_data: Union[Any, Dict[str, Any]],
+    candidate_method: Union[CandFunc, Collection[CandFunc], Mapping[str, CandFunc]],
+    test_data: Union[Any, Mapping[str, Any]],
     time_per_candidate: float = 6.0,
     plot: bool = True,
     **figure_kwargs: Any,

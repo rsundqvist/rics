@@ -1,7 +1,7 @@
 import logging
 import warnings
 from timeit import Timer
-from typing import Any, Callable, Collection, Dict, List, Optional, Union
+from typing import Any, Callable, Collection, Dict, List, Mapping, Optional, Union
 
 from ..misc import tname
 from ._format_perf_counter import format_seconds as fmt_time
@@ -23,8 +23,8 @@ class MultiCaseTimer:
 
     def __init__(
         self,
-        candidate_method: Union[CandFunc, Collection[CandFunc], Dict[str, CandFunc]],
-        test_data: Union[DataType, Dict[str, DataType]],
+        candidate_method: Union[CandFunc, Collection[CandFunc], Mapping[str, CandFunc]],
+        test_data: Union[DataType, Mapping[str, DataType]],
     ) -> None:
         self._candidates = _process_candidates(candidate_method)
         if not self._candidates:  # pragma: no cover
@@ -116,7 +116,7 @@ class MultiCaseTimer:
 
 
 def _process_candidates(
-    candidates: Union[CandFunc, Collection[CandFunc], Dict[str, CandFunc]]
+    candidates: Union[CandFunc, Collection[CandFunc], Mapping[str, CandFunc]]
 ) -> Dict[str, CandFunc]:  # pragma: no cover
     if isinstance(candidates, dict):
         return candidates
@@ -130,7 +130,7 @@ def _process_candidates(
     ans = {make_label(c): c for c in candidates}
     if len(ans) != len(candidates):
         raise ValueError(f"Derived names for input {candidates=} are not unique. Use a dict to assign candidate names.")
-    return ans
+    return ans  # type: ignore[return-value]
 
 
 def _process_single_test_datum(test_data: DataType) -> Dict[str, DataType]:  # pragma: no cover

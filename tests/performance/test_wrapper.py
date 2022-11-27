@@ -39,7 +39,7 @@ def test_cli(monkeypatch, with_all):
     unload_modules()
 
     if with_all:
-        from tests.performance.cli_modules.with_all import candidates, test_data  # type: ignore
+        from tests.performance.cli_modules.with_all import candidates, test_data
     else:
         from tests.performance.cli_modules.without_all import candidates, test_data  # type: ignore
 
