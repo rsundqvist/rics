@@ -109,7 +109,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             BadFilterError: If a filter returns candidates that are not a subset of the original candidates.
             UserMappingError: If `override_function` returns an unknown candidate and
                 ``unknown_user_override_action != 'ignore'``
-            ValueError: If passing ``context=None`` when  :attr:`context_sensitive` is ``True``.
+            ValueError: If passing ``context=None`` (the default) when  :attr:`context_sensitive_overrides` is ``True``.
         """
         if isinstance(self._overrides, InheritedKeysDict) and context is None:
             raise ValueError("Must pass a context in context-sensitive mode.")
