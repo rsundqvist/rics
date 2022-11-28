@@ -14,6 +14,7 @@ ROOT_DIR = Path(__file__).parent
 DOCS_DIR = ROOT_DIR.joinpath("docs")
 DOCS_BUILD_DIR = DOCS_DIR.joinpath("_build")
 DOCS_GEN_DIR = DOCS_DIR.joinpath("_autosummary")
+DOCS_NOTEBOOK_DIR = DOCS_DIR.joinpath("documentation/examples/notebooks")
 DOCS_INDEX = DOCS_BUILD_DIR.joinpath("index.html")
 COVERAGE_FILE = ROOT_DIR.joinpath(".coverage")
 COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
@@ -70,6 +71,7 @@ def clean_docs(c):
     """Clean up files from documentation builds."""
     _run(c, f"rm -fr {DOCS_BUILD_DIR}")
     _run(c, f"rm -fr {DOCS_GEN_DIR}")
+    _run(c, f"rm -fr {DOCS_NOTEBOOK_DIR}")
 
 
 @task(pre=[clean_build, clean_python, clean_tests, clean_docs])

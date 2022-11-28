@@ -1,4 +1,20 @@
-"""Entry point for the performance testing CLI program."""
+"""Multivariate performance testing from the command line.
+
+.. command-output:: mtimeit --help
+
+Output when running ``mtimeit --create``. This flag may be used to initialize working dummy implementations of the
+required `candidates.py` and `test_data.py` modules.
+
+.. command-output:: (mkdir /tmp/example && cd /tmp/example/ && (echo y | mtimeit --create))
+   :shell:
+   :caption: Run the --create toy example in a temporary folder.
+   :name: Run the --create toy example in a temporary folder.
+
+.. command-output:: (tree /tmp/example/ -L 1)
+   :shell:
+   :caption: Contents of /tmp/example/
+   :name: Contents of /tmp/example/
+"""
 import datetime
 import importlib
 import inspect
