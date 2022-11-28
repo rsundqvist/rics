@@ -7,13 +7,13 @@ The main entry point for mapping tasks is the :class:`rics.mapping.Mapper` class
 .. seealso::
    Mapping is used extensively by the (external) :ref:`id-translation <translation-primer>` package suite.
 
-There are two principal steps involved in the mapping procedure: The :ref:`Scoring procedure` (see
-:meth:`Mapper.compute_scores <rics.mapping.Mapper.compute_scores>`) and the subsequent :ref:`Matching procedure` (see
-:meth:`Mapper.to_directional_mapping <rics.mapping.Mapper.to_directional_mapping>`). The two are automatically combined
+There are two principal steps involved in the mapping procedure: The :ref:`Step 1/2: Scoring procedure` (see
+:meth:`Mapper.compute_scores <rics.mapping.Mapper.compute_scores>`) and the subsequent :ref:`Step 2/2: Matching procedure`
+(see :meth:`Mapper.to_directional_mapping <rics.mapping.Mapper.to_directional_mapping>`). The two are automatically combined
 when using the :meth:`Mapper.apply <rics.mapping.Mapper.apply>`-function, though they may be invoked separately by users.
 
-Scoring procedure
------------------
+Step 1/2: Scoring procedure
+---------------------------
 The ``Mapper`` first applies :ref:`Overrides and filtering`, after which the actual :ref:`Score computations` are
 performed.
 
@@ -57,21 +57,19 @@ Score computations
 The final output is a score matrix (type: :class:`pandas.DataFrame`), where columns are candidates and values make up
 the index.
 
-.. csv-table:: Partial mapping scores for the :ref:`dvdrental` example.
+.. csv-table:: Partial mapping scores for the :ref:`dvdrental` ID translation example.
    :file: dvdrental-scores.csv
    :header-rows: 1
    :stub-columns: 1
 
-The ``'rental_date'``-value can be seen having only negative-infinity matching scores due to filtering. Mapping would've
-likely failed for this value regardless, but using explicit filters clearly indicates that translation is not wanted.
+The ``'rental_date'``-value can be seen having only negative-infinity matching scores due to filtering.
 
 .. hint::
 
-   The :meth:`id_translationTranslator.map_scores <id_translation.Translator.map_scores>`-method returns Name-to-source
-   match scores.
+   The :meth:`Translator.map_scores <id_translation.Translator.map_scores>`-method returns Name-to-source mapping scores.
 
-Matching procedure
-------------------
+Step 2/2: Matching procedure
+----------------------------
 Given precomputed match scores (see the section above), make as many matches as possible given a ``Cardinality``
 restriction. These may be summarized as:
 
@@ -81,8 +79,8 @@ restriction. These may be summarized as:
   mapped (i.e. to a single candidate). This is the **default option** for new ``Mapper`` instances.
 * :attr:`~rics.mapping.Cardinality.ManyToMany` = *'M:N'*: All matches above the score limit are kept.
 
-In theory, ``OneToMany`` and ``ManyToOne`` are equally restrictive. During mapping however, the goal is usually to
-find **matches for values**, not candidates. With that in mind, the ordering above may considered strictly decreasing
+In theory, ``OneToMany`` and ``ManyToOne`` are equally restrictive. During mapping however, *the goal is usually to
+find matches for values, not candidates*. With that in mind, the ordering above may considered strictly decreasing
 in preciseness.
 
 Conflict resolution
@@ -158,10 +156,3 @@ procedure, describing the internal operation of the ``Mapper`` in great detail.
    rics.mapping.filter_functions.require_regex_match: Refuse matching for name='return_date': Does not match pattern=re.compile('.*_id$', re.IGNORECASE).
 
 To permanently enable verbose logging, initialize with ``enable_verbose_logging=True``.
-
-.. warning::
-
-   Verbose mode may emit a large number of records and should be avoided except when required. For that reason, using
-   ``enable_verbose_logging`` is not recommended.
-
-.. rubric:: Footnotes
