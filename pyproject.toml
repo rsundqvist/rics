@@ -10,6 +10,7 @@ repository = "https://github.com/rsundqvist/rics"
 documentation = "https://rics.readthedocs.io"
 keywords = ["rics"]
 classifiers = [
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Operating System :: POSIX :: Linux",
