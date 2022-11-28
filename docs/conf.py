@@ -73,6 +73,7 @@ release = rics.__version__
 # The short X.Y version.
 version = ".".join(release.split(".")[:2])
 
+id_translation_docs = f"https://id-translation.readthedocs.io/en/{'latest' if 'dev' in release else 'stable'}/"
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -154,7 +155,6 @@ html_context = {
             text="Convenience functions related to performance testing.",
             url="_autosummary/rics.performance.html",
             img="_static/performance.png",
-            alt="Performance testing API documentation.",
         ),
         dict(
             title="Cookbook",
@@ -164,10 +164,9 @@ html_context = {
         ),
         dict(
             title="Mapping",
-            text="API documentation for the Mapper and related classes.",
-            url="_autosummary/rics.mapping.html#rics.mapping.Mapper",
+            text="An introduction to the mapping framework.",
+            url="documentation/mapping-primer.html",
             img="_static/mapping.png",
-            alt="Mapping API documentation.",
         ),
         dict(
             title="Utilities",
@@ -184,9 +183,8 @@ html_context = {
         dict(
             title="ID Translation",
             text="Documentation for the ID translation suite.",
-            url="https://id-translation.readthedocs.io/",
+            url=id_translation_docs,
             img="_static/translation.png",
-            alt="Translation API documentation.",
         ),
     ],
 }
@@ -222,7 +220,7 @@ intersphinx_mapping = {
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
-    "id_translation": ("https://id-translation.readthedocs.io/en/stable/", None),
+    "id_translation": (id_translation_docs, None),
 }
 
 # -- Gallery configuration -------------------------------------------------
