@@ -1,6 +1,6 @@
-from rics._internal_support.changelog._patch_notes import PatchNotes
-from rics._internal_support.changelog._write_changelog import write_changelog
-from rics._internal_support.types import PathLikeType
+from ..types import PathLikeType
+from ._patch_notes import PatchNotes
+from ._write_changelog import write_changelog
 
 
 def split_changelog(output_dir: PathLikeType, changelog: PathLikeType = "CHANGELOG.md") -> None:

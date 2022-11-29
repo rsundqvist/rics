@@ -53,7 +53,7 @@ trouble.
    git clone --recurse-submodules git@github.com:rsundqvist/rics.git
    cd rics
    git submodule update --init --recursive
-   poetry install --all-extras --with=docs
+   poetry install --all-extras --with=docs,notebooks
    ```
    
    Generating documentation has a few dependencies which may need to be installed
@@ -78,12 +78,6 @@ trouble.
    ```bash
    ./run-docker-dvdrental.sh
    ./run-invocations.sh
-   ```
-   
-5. **Bonus content**
-
-   ```bash
-   poetry install --with=jupyter
    ```
 
 ### Running GitHub Actions locally
