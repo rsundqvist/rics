@@ -14,7 +14,6 @@ def unload_modules():
 
 
 @pytest.mark.filterwarnings("ignore:The test results may be unreliable:UserWarning")
-@pytest.mark.filterwarnings("ignore:Matplotlib is currently using agg:UserWarning")
 def test_cli_create():
     unload_modules()
 
@@ -33,7 +32,6 @@ def get_raw_timings(self, func, test_data, repeat, number):
 
 
 @pytest.mark.parametrize("with_all", (False, True))
-@pytest.mark.filterwarnings("ignore:Matplotlib is currently using agg:UserWarning")
 def test_cli(monkeypatch, with_all):
     monkeypatch.setattr(MultiCaseTimer, "_get_raw_timings", get_raw_timings)
     unload_modules()
@@ -62,7 +60,6 @@ def test_cli(monkeypatch, with_all):
         verify_ans(pd.read_csv(csv))
 
 
-@pytest.mark.filterwarnings("ignore:Matplotlib is currently using agg:UserWarning")
 def test_run_multivariate_test(monkeypatch):
     monkeypatch.setattr(MultiCaseTimer, "_get_raw_timings", get_raw_timings)
     unload_modules()
