@@ -2,8 +2,8 @@ from typing import Any, Collection, Mapping, Union
 
 import pandas as pd
 
-from ..performance._multi_case_timer import CandFunc, MultiCaseTimer
-from ..performance._util import plot_run, to_dataframe
+from ._multi_case_timer import CandFunc, MultiCaseTimer
+from ._util import plot_run, to_dataframe
 
 
 def run_multivariate_test(

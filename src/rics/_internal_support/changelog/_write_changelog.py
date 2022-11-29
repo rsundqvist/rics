@@ -2,8 +2,8 @@ import shutil
 from pathlib import Path
 from typing import Dict, List
 
-from rics._internal_support.changelog._patch_notes import PatchNotes
-from rics._internal_support.types import PathLikeType
+from ..types import PathLikeType
+from ._patch_notes import PatchNotes
 
 BASE_LINES: List[str] = [
     "Changelog",

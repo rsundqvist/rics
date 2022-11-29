@@ -8,8 +8,7 @@ from __future__ import annotations
 import re
 from typing import Any, Iterable, List, Optional, Set, Tuple, Union
 
-from rics.mapping import filter_functions as ff
-
+from . import filter_functions as ff
 from .types import ContextType
 
 VERBOSE: bool = False
