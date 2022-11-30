@@ -8,7 +8,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/rics.svg)](https://pypi.python.org/pypi/rics)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/rics.svg)](https://pypi.python.org/pypi/rics)
 [![Tests](https://github.com/rsundqvist/rics/workflows/tests/badge.svg)](https://github.com/rsundqvist/rics/actions?workflow=tests)
-[![Codecov](https://codecov.io/gh/rsundqvist/rics/branch/main/graph/badge.svg)](https://codecov.io/gh/rsundqvist/rics)
+[![Codecov](https://codecov.io/gh/rsundqvist/rics/branch/master/graph/badge.svg)](https://codecov.io/gh/rsundqvist/rics)
 [![Read the Docs](https://readthedocs.org/projects/rics/badge/)](https://rics.readthedocs.io/)
 [![PyPI - License](https://img.shields.io/pypi/l/rics.svg)](https://pypi.python.org/pypi/rics)
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
