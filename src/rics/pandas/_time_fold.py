@@ -273,7 +273,8 @@ class TimeFold(NamedTuple):
         from matplotlib.dates import AutoDateFormatter
 
         cuts, time = _parse_args(df, schedule, time_column, before, after)
-        cuts = list(cuts)
+        with disable_temporarily(LOGGER):
+            cuts = list(cuts)
 
         if not cuts:
             raise ValueError("Cannot plot an empty range.")  # pragma: no cover
