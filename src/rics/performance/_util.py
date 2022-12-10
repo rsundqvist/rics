@@ -6,7 +6,7 @@ from ._multi_case_timer import ResultsDict
 
 
 def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
-    """Create a DataFrame from performance run output.
+    """Create a DataFrame from performance run output, adding derived values.
 
     Args:
         run_results: Output from :meth:`rics.performance.MultiCaseTimer.run`.
@@ -31,24 +31,27 @@ def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
     df = pd.concat(ans, ignore_index=True)
     df["Time [ms]"] = df["Time [s]"] * 1000
     df["Time [μs]"] = df["Time [ms]"] * 1000
+
+    groupby = df.groupby("Test data")["Time [s]"]
+    df["Times min"] = df["Time [s]"] / df["Test data"].map(groupby.min())
+    df["Times mean"] = df["Time [s]"] / df["Test data"].map(groupby.mean())
+
     return df
 
 
-def get_best(run_results: Union[ResultsDict, pd.DataFrame]) -> pd.DataFrame:
+def get_best(run_results: Union[ResultsDict, pd.DataFrame], per_candidate: bool = False) -> pd.DataFrame:
     """Get a summarized view of the best run results for each candidate/data pair.
 
     Args:
         run_results: Output of :meth:`rics.performance.MultiCaseTimer.run`.
+        per_candidate: If ``True``, show the best times for all candidate/data pairs. Otherwise, just show the best
+            candidate per data label.
 
     Returns:
         The best (lowest) times for each candidate/data pair.
     """
-    best = (
-        (run_results if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results))
-        .groupby(["Candidate", "Test data"])
-        .min()
-    )
-    return best[filter(lambda s: "time" in s.lower(), best.columns)]
+    df = run_results if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results)
+    return df.sort_values("Time [s]").groupby(["Candidate", "Test data"] if per_candidate else "Test data").head(1)
 
 
 def plot_run(
@@ -74,7 +77,7 @@ def plot_run(
         ValueError: For unknown `unit` arguments.
     """
     import matplotlib.pyplot as plt
-    from seaborn import barplot
+    from seaborn import barplot, move_legend
 
     data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results.copy()
     data[["Test data", "Candidate"]] = data[["Test data", "Candidate"]].astype("category")
@@ -98,6 +101,9 @@ def plot_run(
     barplot(ax=left, data=data, x=x_arg, y=y, hue=hue, errorbar="sd", **figure_kwargs)
     best = data.groupby(["Test data", "Candidate"]).min().reset_index()
     barplot(ax=right, data=best, x=x_arg, y=y, hue=hue, errorbar=None, **figure_kwargs)
+
+    move_legend(right, "upper left", bbox_to_anchor=(1, 1))
+    left.get_legend().remove()
 
 
 def _smaller_as_hue(data: pd.DataFrame) -> Tuple[str, str]:
