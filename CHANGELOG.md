@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Add optional `ax` argument to `TimeFold.plot()`.
+
 ### Fixed
+- Fixed behaviour of `TimeFold.plot()` in Jupyter notebooks. This function now returns an `Axes` object instead of a
+  `Figure`, which prevents figures from being shown twice in notebooks. Technically a breaking changes, but will be 
+  treated as a bugfix.
 - Adjust figure height based on number of folds in `TimeFold.plot()`, unless `figsize` is given.
 - Suppress fold log messages in `TimeFold.plot()`.
 
