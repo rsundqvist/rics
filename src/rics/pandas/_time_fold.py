@@ -1,6 +1,7 @@
 import itertools
 import logging
 import os
+import warnings
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, Iterable, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
@@ -11,7 +12,7 @@ from ..logs import disable_temporarily
 from ..misc import tname
 
 if TYPE_CHECKING or os.environ.get("SPHINX_BUILD"):
-    from matplotlib.pyplot import Figure
+    from matplotlib.pyplot import Axes
 
 Schedule = Union[pd.DatetimeIndex, pd.Timedelta, timedelta, Sequence, str]
 Span = Union[int, str, Literal["all"], pd.Timedelta, timedelta]
@@ -249,8 +250,9 @@ class TimeFold(NamedTuple):
         before: Span = "5d",
         after: Span = 1,
         time_column: Optional[str] = "time",
+        ax: "Axes" = None,
         **kwargs: Any,
-    ) -> "Figure":
+    ) -> "Axes":
         """Plot the intervals that would be returned by :meth:`TimeFold.iter` if invoked with the same parameters.
 
         Args:
@@ -261,7 +263,9 @@ class TimeFold(NamedTuple):
             before: The period before the scheduled time to include for each iteration. See :ref:`ba-args`
             after: The period after the scheduled time to include for each iteration. See :ref:`ba-args`
             time_column: Column to base the folds on. Use index if ``None``.
-            **kwargs: Keyword arguments for :func:`matplotlib.pyplot.subplots`.
+            ax: Axis to use for plotting. Creates a new figure using :func:`matplotlib.pyplot.subplots` if ``None``.
+            **kwargs: Keyword arguments for :func:`matplotlib.pyplot.subplots`. Default arguments:
+                ``{"tight_layout": True, "figsize": (<default-width>, 3 + 0.5 * num_folds)}``
 
         Returns:
             A ``Figure``  object.
@@ -273,15 +277,28 @@ class TimeFold(NamedTuple):
         from matplotlib.dates import AutoDateFormatter
 
         cuts, time = _parse_args(df, schedule, time_column, before, after)
-        cuts = list(cuts)
+        with disable_temporarily(LOGGER):
+            cuts = list(cuts)
 
         if not cuts:
             raise ValueError("Cannot plot an empty range.")  # pragma: no cover
 
-        fig, ax = plt.subplots(**{"tight_layout": True, **kwargs})
-
-        if isinstance(ax, ndarray):
-            ax = ax.flatten()[0]
+        if ax is None:
+            user_axis = False
+            default_figure_kwargs = {
+                "tight_layout": True,
+                "figsize": (plt.rcParams.get("figure.figsize")[0], 3 + len(cuts) * 0.5),
+            }
+            _, ax = plt.subplots(**{**default_figure_kwargs, **kwargs})
+            if isinstance(ax, ndarray):
+                ax = ax.flatten()[0]
+        else:
+            user_axis = True
+            if kwargs:
+                warnings.warn(
+                    f"Keyword arguments {kwargs} for matplotlib.pyplot.subplots"
+                    " are ignored since an explicit axis is given."
+                )
 
         xticks = [cuts[0][0]]
         for i, (start, mid, stop) in enumerate(cuts):
@@ -308,9 +325,11 @@ class TimeFold(NamedTuple):
             args.append(f"{time_column=}")  # pragma: no cover
         ax.set_title(f"TimeFold.iter({', '.join(args)})")
         ax.legend(loc="upper left")
-        fig.autofmt_xdate()
 
-        return fig
+        if not user_axis:
+            ax.figure.autofmt_xdate()
+
+        return ax
 
     def __str__(self) -> str:
         data = self.data

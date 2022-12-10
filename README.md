@@ -25,21 +25,21 @@ provides a wide variety of utility functions. The [id-translation](https://pypi.
 - Multivariate [performance testing][perf].
 - Highly configurable [element mapping][mapping];
   - Provides a wide variety of filtering, scoring and heuristic functions. 
-  - Powers Name-to-source mapping for the [id-translation](https://id-translation.readthedocs.io/en/latest/documentation/translation-primer.html#name-to-source-mapping) 
+  - Powers Name-to-source mapping for the [id-translation](https://id-translation.readthedocs.io/en/stable/documentation/translation-primer.html#name-to-source-mapping) 
     suite (installed separately).
 - Various other [utilities][utility], ranging from [logging] to [plotting] to specialized [dict] functions.
 - Temporal folds ([compatible with sklearn][time-fold]) for heterogeneous `pandas` types, meant for time-series cross validation.
 
-[perf]: https://rics.readthedocs.io/en/latest/_autosummary/rics.performance.html#rics.performance.run_multivariate_test
-[perf-plot]: https://rics.readthedocs.io/en/latest/_autosummary/rics.performance.html#rics.performance.plot_run
+[perf]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.run_multivariate_test
+[perf-plot]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.plot_run
 
-[mapping]: https://rics.readthedocs.io/en/latest/_autosummary/rics.mapping.html
+[mapping]: https://rics.readthedocs.io/en/stable/_autosummary/rics.mapping.html
 
-[utility]: https://rics.readthedocs.io/en/latest/_autosummary/rics.misc.html
-[logging]: https://rics.readthedocs.io/en/latest/_autosummary/rics.logs.html
-[plotting]: https://rics.readthedocs.io/en/latest/_autosummary/rics.plotting.html
-[dict]: https://rics.readthedocs.io/en/latest/_autosummary/rics.collections.dicts.html
-[time-fold]: https://rics.readthedocs.io/en/latest/_autosummary/rics.pandas.html#rics.pandas.TimeFold.make_sklearn_splitter
+[utility]: https://rics.readthedocs.io/en/stable/_autosummary/rics.misc.html
+[logging]: https://rics.readthedocs.io/en/stable/_autosummary/rics.logs.html
+[plotting]: https://rics.readthedocs.io/en/stable/_autosummary/rics.plotting.html
+[dict]: https://rics.readthedocs.io/en/stable/_autosummary/rics.collections.dicts.html
+[time-fold]: https://rics.readthedocs.io/en/stable/_autosummary/rics.pandas.html#rics.pandas.TimeFold.make_sklearn_splitter
 
 ## Installation
 The package is published through the [Python Package Index (PyPI)]. Source code
@@ -68,4 +68,4 @@ started, see the [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](COD
 
 [Python Package Index (PyPI)]: https://pypi.org/project/rics
 [pip]: https://pip.pypa.io
-[Python installation guide]: http://docs.python-guide.org/en/latest/starting/installation/
+[Python installation guide]: http://docs.python-guide.org/en/stable/starting/installation/
