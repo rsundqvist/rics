@@ -1,19 +1,6 @@
 """Multivariate performance testing from the command line.
 
-.. command-output:: mtimeit --help
-
-Output when running ``mtimeit --create``. This flag may be used to initialize working dummy implementations of the
-required `candidates.py` and `test_data.py` modules.
-
-.. command-output:: (mkdir /tmp/example && cd /tmp/example/ && (echo y | mtimeit --create))
-   :shell:
-   :caption: Run the --create toy example in a temporary folder.
-   :name: Run the --create toy example in a temporary folder.
-
-.. command-output:: (tree /tmp/example/ -L 1)
-   :shell:
-   :caption: Contents of /tmp/example/
-   :name: Contents of /tmp/example/
+For details, see the CLI docs.
 """
 import datetime
 import importlib
@@ -88,7 +75,14 @@ def _get_candidates() -> Any:
     is_flag=True,
     show_default=True,
 )
-def main(time_per_candidate: float, name: str, create: bool) -> None:
+@click.option(
+    "--per-candidate/--no-per-candidate",
+    default=True,
+    help="Enable to print per-candidate best times. Just shows the best overall per data if disabled.",
+    is_flag=True,
+    show_default=True,
+)
+def main(time_per_candidate: float, name: str, create: bool, per_candidate: bool) -> None:
     """Run a multivariate performance test.
 
     This is the https://pypi.org/project/rics/ version of the python timeit module. It may be used to run performance
@@ -104,7 +98,7 @@ def main(time_per_candidate: float, name: str, create: bool) -> None:
         3. Print the best times per candidate/test_data
            combination to stdout.
         4. Save a performance overview figure to disk.
-        5. Save raw timing data to disk as csv.
+        5. Save raw timing data to disk as CSV.
 
     \b
     Required files:
@@ -180,7 +174,7 @@ def main(time_per_candidate: float, name: str, create: bool) -> None:
     click.secho(f"|  {f'  Best Times  ':^74}  |", fg="green")
     click.secho(f"|  {f'  {repr(pretty)}  ':^74}  |", fg="green")
     click.secho("=" * 80, fg="green")
-    click.secho(_get_best(result), fg="cyan")
+    click.secho(_get_best(result, per_candidate=per_candidate), fg="red")
     click.secho("=" * 80, fg="green")
 
     fig = plt.gcf()

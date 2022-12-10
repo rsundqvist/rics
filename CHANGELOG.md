@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Move legend outside figure in `rics.performance.plot_run()`
+- Only show the best overall candidates (per dataset) when using `mtimeit` / `run_multivariate_test()` by default.
 - Add optional `ax` argument to `TimeFold.plot()`.
 
 ### Fixed

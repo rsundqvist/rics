@@ -73,7 +73,7 @@ class MultiCaseTimer:
         for candidate_label, func in self._candidates.items():
             candidate_number = per_candidate_number[candidate_label]
             candidate_results: Dict[str, List[float]] = {}
-            LOGGER.info("Evaluate candidate '%s' %dx%d times..", candidate_label, repeat, candidate_number)
+            LOGGER.info(f"Evaluate candidate {candidate_label!r} {repeat}x{candidate_number} times..")
             for data_label, test_data in self._data.items():
                 raw_timings = self._get_raw_timings(func, test_data, candidate_number, repeat)
                 best, worst = min(raw_timings), max(raw_timings)
