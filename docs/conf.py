@@ -90,7 +90,6 @@ extensions = [
     "nbsphinx",
     "sphinx.ext.mathjax",
     "myst_parser",
-    "sphinxcontrib.programoutput",
 ]
 autosummary_ignore_module_all = False
 autosummary_imported_members = True
@@ -233,5 +232,6 @@ sphinx_gallery_conf = {
 nbsphinx_execute = "never"
 
 shutil.copytree("../jupyterlab/rics/demo/", "documentation/examples/notebooks", dirs_exist_ok=True)
+shutil.copytree("../jupyterlab/rics/cli/", "documentation/cli/notebooks", dirs_exist_ok=True)
 
 split_changelog("changelog", "../CHANGELOG.md")
