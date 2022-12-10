@@ -115,12 +115,11 @@ def test_iter(use_index, to_str, kwargs_and_expected):
 
     # Test plotting doesn't crash
     if expected:
-        try:
-            TimeFold.plot(df, **kwargs)
-            TimeFold.plot(df, **kwargs, nrows=1, ncols=2)
-            TimeFold.plot(df, **kwargs, nrows=1, ncols=2, tight_layout=False)
-        finally:
-            plt.close("all")
+        with pytest.warns(UserWarning, match="figsize.*ignored"):
+            TimeFold.plot(df, **kwargs, ax=plt.axes(), figsize=(-1, -1))
+        TimeFold.plot(df, **kwargs, nrows=1, ncols=2)
+        TimeFold.plot(df, **kwargs, nrows=1, ncols=2, tight_layout=False)
+        plt.close("all")
 
 
 @pytest.mark.parametrize(
