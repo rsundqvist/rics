@@ -261,7 +261,8 @@ class TimeFold(NamedTuple):
             before: The period before the scheduled time to include for each iteration. See :ref:`ba-args`
             after: The period after the scheduled time to include for each iteration. See :ref:`ba-args`
             time_column: Column to base the folds on. Use index if ``None``.
-            **kwargs: Keyword arguments for :func:`matplotlib.pyplot.subplots`.
+            **kwargs: Keyword arguments for :func:`matplotlib.pyplot.subplots`. Default arguments:
+                ``{"tight_layout": True, "figsize": (<default-width>, 3 + 0.5 * num_folds)}``
 
         Returns:
             A ``Figure``  object.
@@ -279,7 +280,11 @@ class TimeFold(NamedTuple):
         if not cuts:
             raise ValueError("Cannot plot an empty range.")  # pragma: no cover
 
-        fig, ax = plt.subplots(**{"tight_layout": True, **kwargs})
+        default_figure_kwargs = {
+            "tight_layout": True,
+            "figsize": (plt.rcParams.get("figure.figsize")[0], 3 + len(cuts) * 0.5),
+        }
+        fig, ax = plt.subplots(**{**default_figure_kwargs, **kwargs})
 
         if isinstance(ax, ndarray):
             ax = ax.flatten()[0]

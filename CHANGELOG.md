@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Adjust figure height based on number of folds in `TimeFold.plot()`, unless `figsize` is given.
 - Suppress fold log messages in `TimeFold.plot()`.
 
 ## [2.0.0] - 2022-11-30
