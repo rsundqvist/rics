@@ -7,4 +7,4 @@ may be required for some tools.
    :hidden:
    :glob:
 
-   ../../_autosummary/rics.*.cli
+   notebooks/*

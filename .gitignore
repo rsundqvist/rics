@@ -7,7 +7,7 @@ codecov
 *.zip
 *.csv
 jupyterlab/data-cache/*
-docs/documentation/examples/notebooks/
+docs/**/notebooks/
 docs/_autosummary/*
 docs/changelog/*
 
