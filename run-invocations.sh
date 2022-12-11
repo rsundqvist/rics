@@ -12,8 +12,7 @@ poetry run inv lint
 echo "5/7: Typecheck (mypy) -------------------"
 poetry run inv mypy
 echo "6/7: Coverage report --------------------"
-poetry run inv coverage -f=html
-poetry run inv coverage
+poetry run inv coverage --fmt=html
 echo "7/7: Generate docs ----------------------"
 poetry run inv docs
 echo "---------------- Finished ---------------"
