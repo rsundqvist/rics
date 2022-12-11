@@ -294,13 +294,11 @@ class TimeFold(NamedTuple):
                 ax = ax.flatten()[0]
         else:
             user_axis = True
-            if kwargs:
+            if kwargs:  # pragma: no cover
                 warnings.warn(
                     f"Keyword arguments {kwargs} for matplotlib.pyplot.subplots"
                     " are ignored since an explicit axis is given."
                 )
-            else:
-                pass  # pragma: no cover
 
         xticks = [cuts[0][0]]
         for i, (start, mid, stop) in enumerate(cuts):
