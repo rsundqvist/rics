@@ -32,6 +32,7 @@ PYTHON_TARGETS_STR = " ".join([str(p) for p in PYTHON_TARGETS])
 
 
 def _run(c: Context, command: str) -> Result:
+    print(f"Command: {command}")
     return c.run(command, pty=platform.system() != "Windows")
 
 

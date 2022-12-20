@@ -1,6 +1,5 @@
 RiCS
 ====
-
 My personal little library. Written to help with common Machine Learning and Data Science tasks.
 
 .. toctree::
