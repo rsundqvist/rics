@@ -1,5 +1,6 @@
 """My personal little ML engineering library."""
 import logging
+from os import getenv as _getenv
 
 from ._just_the_way_i_like_it import configure_stuff
 
@@ -13,3 +14,7 @@ __all__ = [
 ]
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+if _getenv("JTWILI") == "true":  # pragma: no cover
+    configure_stuff()
+    print("Configured some things just the way I like it since JTWILI=true.")

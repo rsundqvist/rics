@@ -23,8 +23,9 @@ def configure_stuff(
     pd.options.display.max_colwidth = 150
     pd.options.display.max_rows = 250
     pd.options.display.width = 0
-
     pd.options.display.float_format = "{:.6g}".format
+
+    pd.options.mode.chained_assignment = "raise"
 
     basic_config(level=level, matplotlib_level=matplotlib_level, **kwargs)
 
