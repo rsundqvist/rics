@@ -94,7 +94,7 @@ croniter = ">=1.2.0"  # Used for tfold tests
 
 [tool.poetry.group.misc.dependencies]
 pre-commit = "^2.20.0"
-invoke = ">=1.7.1"  # Make 3.11 succeed when a compatible release is out.
+invoke = ">=2"
 safety = "^2.1.1"
 mypy = "^0.991"
 bump2version = "^1.0.1"
