@@ -1,7 +1,7 @@
 """Utility methods for logging tasks."""
 import logging
 from contextlib import contextmanager as _contextmanager
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Union
 
 FORMAT: str = "%(asctime)s.%(msecs)03d [%(name)s:%(levelname)s] %(message)s"
 """Default logging format; ``<date-format>.378 [rics:DEBUG] I'm a debug message!``"""
@@ -14,7 +14,10 @@ def basic_config(
     *,
     format: str = FORMAT,  # noqa: A002
     datefmt: str = DATE_FORMAT,
-    rics_level: Union[int, str] = None,
+    level: Union[int, str] = logging.INFO,
+    rics_level: Union[int, str] = logging.INFO,
+    id_translation_level: Union[int, str] = logging.WARNING,
+    matplotlib_level: Union[int, str] = logging.WARNING,
     force: bool = True,
     **kwargs: Any,
 ) -> None:
@@ -25,13 +28,12 @@ def basic_config(
     Args:
         format: Format string for emitted messages; see :attr:`FORMAT`.
         datefmt: Format string for date/time; see :attr:`DATE_FORMAT`.
-        rics_level: Log level for the `rics` package. Inherit if ``None``.
+        level: Log level for the root logger. Default is ``logging.INFO``.
+        rics_level: Log level for the :mod:`rics` package. Default is ``logging.INFO``.
+        id_translation_level: Log level for the :mod:`id_translation` package. Default is ``logging.WARNING``.
+        matplotlib_level: Log level for the :mod:`matplotlib` package. Default is ``logging.WARNING``.
         force: If ``True``, override existing configuration if it exists.
         **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
-
-    Keyword Args:
-        <namespace>_level: Log level for the namespace denoted by `namespace` (without the `"_level"`-suffix).
-            Use underscores instead of dots for submodules, eg ``module.submodule`` => ``module_submodule``.
 
     Examples:
         Basic usage.
@@ -45,15 +47,16 @@ def basic_config(
         2022-02-05T11:17:05.378 [rics:DEBUG] I'm a debug message!
         2022-02-05T11:17:05.378 [root:CRITICAL] I'm a critical message!
     """
-    wildcard_levels, kwargs = _extract_wildcards(rics_level=rics_level, force=force, **kwargs)
-    logging.basicConfig(format=format, datefmt=datefmt, **kwargs)
-
-    for name, level in wildcard_levels.items():
-        logging.getLogger(name).setLevel(level)
+    logging.basicConfig(level=level, format=format, datefmt=datefmt, force=force, **kwargs)
+    logging.getLogger("rics").setLevel(rics_level)
+    logging.getLogger("id_translation").setLevel(id_translation_level)
+    logging.getLogger("matplotlib").setLevel(matplotlib_level)
 
 
 @_contextmanager
-def disable_temporarily(logger: logging.Logger, *more_loggers: logging.Logger):  # type: ignore[no-untyped-def]  # noqa: ANN201
+def disable_temporarily(  # type: ignore[no-untyped-def]
+    logger: logging.Logger, *more_loggers: logging.Logger
+):  # noqa: ANN201
     """Temporarily disable logging.
 
     Args:
@@ -81,18 +84,3 @@ def disable_temporarily(logger: logging.Logger, *more_loggers: logging.Logger): 
     finally:
         for lgr, old_state in zip(loggers, states):
             lgr.disabled = old_state
-
-
-_LOG_LEVEL_SUFFIX = "_level"
-
-
-def _extract_wildcards(**kwargs: Any) -> Tuple[Dict[str, Union[int, str]], Dict[str, Any]]:
-    wildcard_levels: Dict[str, Union[int, str]] = {}
-    for key in list(kwargs.keys()):
-        if key and key.endswith(_LOG_LEVEL_SUFFIX):
-            wildcard_key = key[: -len(_LOG_LEVEL_SUFFIX)].replace("_", ".")
-            level = kwargs.pop(key)
-            if level is not None:  # pragma: no cover
-                wildcard_levels[wildcard_key] = level
-
-    return wildcard_levels, kwargs

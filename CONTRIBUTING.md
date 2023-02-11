@@ -77,7 +77,6 @@ trouble.
    Python version. It also skips the additional isolation provided by `nox`,
    which may hide some dependency-gotchas.
    ```bash
-   ./run-docker-dvdrental.sh
    ./run-invocations.sh
    ```
 
