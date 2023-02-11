@@ -6,16 +6,22 @@ import pandas as pd
 
 
 def configure_stuff(
-    level: Union[int, str] = logging.INFO, matplotlib_level: Union[int, str] = logging.WARNING, **kwargs: Any
+    level: Union[int, str] = logging.INFO,
+    rics_level: Union[int, str] = logging.INFO,
+    id_translation_level: Union[int, str] = logging.WARNING,
+    matplotlib_level: Union[int, str] = logging.WARNING,
+    **kwargs: Any,
 ) -> None:
     """Configure a bunch of stuff to match my personal preferences.
 
     Caveat Emptor: May do strange stuff 👻.
 
     Args:
-        level: Root log level.
-        matplotlib_level: Matplotlib log level.
-        **kwargs: Keyword arguments for :meth:`rics.logs.basic_config`.
+        level: Log level for the root logger. Default is ``logging.INFO``.
+        rics_level: Log level for the :mod:`rics` package. Default is ``logging.INFO``.
+        id_translation_level: Log level for the :mod:`id_translation` package. Default is ``logging.WARNING``.
+        matplotlib_level: Log level for the :mod:`matplotlib` package. Default is ``logging.WARNING``.
+        **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
     """
     from .logs import basic_config
 
@@ -27,7 +33,13 @@ def configure_stuff(
 
     pd.options.mode.chained_assignment = "raise"
 
-    basic_config(level=level, matplotlib_level=matplotlib_level, **kwargs)
+    basic_config(
+        level=level,
+        rics_level=rics_level,
+        id_translation_level=id_translation_level,
+        matplotlib_level=matplotlib_level,
+        **kwargs,
+    )
 
     try:
         from .plotting import configure

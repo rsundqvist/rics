@@ -6,24 +6,19 @@ from rics.logs import basic_config
 
 
 @pytest.mark.skip(reason="Messes up logging for other tests.")
-def test_set_levels():
-    basic_config(
-        level=logging.CRITICAL,
-        rics_level=logging.INFO,
-        rics_utility_level=logging.DEBUG,
-        foo_level=logging.WARNING,
-        foo_bar_level=logging.INFO,
-    )
+@pytest.mark.parametrize(
+    "logger_name, level_name",
+    [
+        ("rics", "INFO"),
+        ("id_translation", "DEBUG"),
+        ("matplotlib", "WARNING"),
+        ("random_lib", "CRITICAL"),
+        ("another", "CRITICAL"),
+    ],
+)
+def test_set_levels(logger_name, level_name):
+    basic_config(level=logging.CRITICAL, id_translation_level=logging.DEBUG)
+    assert logging.getLogger().getEffectiveLevel() == logging.CRITICAL, "Bad root level"
 
-    assert logging.getLogger().getEffectiveLevel() == logging.CRITICAL, "root"
-
-    assert logging.getLogger("alib").getEffectiveLevel() == logging.CRITICAL, "alib"
-    assert logging.getLogger("alib.submodule").getEffectiveLevel() == logging.CRITICAL, "alib.submodule"
-
-    assert logging.getLogger("rics").getEffectiveLevel() == logging.INFO, "rics"
-    assert logging.getLogger("rics.submodule").getEffectiveLevel() == logging.INFO, "rics.submodule"
-    assert logging.getLogger("rics.utility").getEffectiveLevel() == logging.DEBUG, "rics.utility"
-
-    assert logging.getLogger("foo").getEffectiveLevel() == logging.WARNING, "foo"
-    assert logging.getLogger("foo.submodule").getEffectiveLevel() == logging.WARNING, "foo.submodule"
-    assert logging.getLogger("foo.bar").getEffectiveLevel() == logging.INFO, "foo.bar"
+    expected_level = logging.getLevelName(level_name)
+    assert logging.getLogger(logger_name).getEffectiveLevel() == expected_level
