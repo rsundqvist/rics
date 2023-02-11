@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.0] - 2023-02-11
+
 ### Changed
 - Update log levels in `logs.basic_config()`.
 - Move legend outside figure in `rics.performance.plot_run()`
@@ -361,7 +363,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/rsundqvist/rics/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/rsundqvist/rics/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/rsundqvist/rics/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/rsundqvist/rics/compare/v0.17.0...v1.0.0
