@@ -25,6 +25,13 @@ TEST_DATA = (
             ],
         ),
         (
+            dict(schedule="3d", before=1, after=1, n_splits=2),
+            [
+                ("2022-01-07", range(36, 72), range(72, 108)),
+                ("2022-01-10", range(72, 108), range(108, 144)),
+            ],
+        ),
+        (
             dict(
                 schedule=["2022-01-01", "2022-01-04", "2022-01-07", "2022-01-10", "2022-01-13", "2100"],
                 before=1,
@@ -123,15 +130,18 @@ def test_iter(use_index, to_str, kwargs_and_expected):
 
 
 @pytest.mark.parametrize(
-    "args, time_column",
+    "args, time_column, n_splits",
     [
-        ("Xy", None),
-        ("X", None),
-        ("X", "time"),
-        ("y", None),
+        ("Xy", None, None),
+        ("X", None, None),
+        ("X", "time", None),
+        ("y", None, None),
+        ("X", None, 2),
+        ("X", None, 3),
+        ("X", None, 4),
     ],
 )
-def test_sklearn_equality(args, time_column):
+def test_sklearn_equality(args, time_column, n_splits):
     assert args in ("X", "y", "Xy")
 
     time = pd.date_range("2022", "2022-1-15", freq="2h")
@@ -144,7 +154,7 @@ def test_sklearn_equality(args, time_column):
     X = df.drop(columns="y") if args[0] == "X" else None
     y = df.y if args[-1] == "y" else None
 
-    kwargs = dict(schedule="3d", before="all", after=1, time_column=time_column)
+    kwargs = dict(schedule="3d", before="all", after=1, time_column=time_column, n_splits=n_splits)
     splitter = TimeFold.make_sklearn_splitter(**kwargs)
     sklearn_res = list(splitter.split(X, y))
     assert splitter.get_n_splits(X, y) == len(sklearn_res)
@@ -157,6 +167,10 @@ def test_sklearn_equality(args, time_column):
         ("2022-01-07", range(0, 72), range(72, 108)),
         ("2022-01-10", range(0, 108), range(108, 144)),
     ]
+
+    if n_splits:
+        expected = expected[-n_splits:]
+
     for (et, ed, efd), (t, d, fd), (idx, fidx) in zip(expected, iter_res, sklearn_res):
         assert pd.Timestamp(et) == t, t
         assert df.index[ed].equals(d.index), t

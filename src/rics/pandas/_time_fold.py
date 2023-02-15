@@ -29,11 +29,13 @@ class DatetimeSplitter:
         before: Span,
         after: Span,
         time_column: Optional[str],
+        n_splits: int = None,
     ) -> None:
         self._schedule = schedule
         self._before = before
         self._after = after
         self._column = time_column
+        self._n_splits = n_splits
 
     def __repr__(self) -> str:
         before = self._before
@@ -44,6 +46,7 @@ class DatetimeSplitter:
         """Returns the number of splitting iterations with the given arguments."""
         if X is None and y is None:
             raise ValueError("At least one of (X, y) must be given.")  # pragma: no cover
+
         data, name = (X, "X") if y is None else (y, "y")
         with disable_temporarily(LOGGER):
             return len(list(self._parse_args(data, name=name)[0]))
@@ -86,7 +89,14 @@ class DatetimeSplitter:
         if self._column and isinstance(data, pd.Series):
             raise TypeError(f"Cannot process Series-type '{name}'-argument unless time_column=None.")
 
-        cuts, time = _parse_args(data, self._schedule, time_column=self._column, before=self._before, after=self._after)
+        cuts, time = _parse_args(
+            data,
+            self._schedule,
+            time_column=self._column,
+            before=self._before,
+            after=self._after,
+            n_splits=self._n_splits,
+        )
         if expected_time is not None:
             try:
                 pd.testing.assert_series_equal(expected_time, time)
@@ -188,6 +198,7 @@ class TimeFold(NamedTuple):
         before: Span = "5d",
         after: Span = 1,
         time_column: Optional[str] = "time",
+        n_splits: int = None,
     ) -> Iterable["TimeFold"]:
         """Create temporal k-folds from a heterogeneous ``DataFrame``.
 
@@ -198,6 +209,8 @@ class TimeFold(NamedTuple):
                 expression (requires ``croniter``).
             before: The period before the scheduled time to include. See :ref:`ba-args`
             after: The period after the scheduled time to include. See :ref:`ba-args`
+            n_splits: Maximum number of splits, preferring later folds. Has no effects if the actual number of splits
+                given `df` is less than `n_splits`.
             time_column: Column to base the folds on. Use index if ``None``.
 
         Yields:
@@ -206,7 +219,7 @@ class TimeFold(NamedTuple):
         See Also:
             The :meth:`TimeFold.plot` method, which may be used to visualize temporal folds.
         """
-        cuts, time = _parse_args(df, schedule, time_column, before, after)
+        cuts, time = _parse_args(df, schedule, time_column, before, after, n_splits)
 
         for start, mid, stop in cuts:
             yield TimeFold(
@@ -222,6 +235,7 @@ class TimeFold(NamedTuple):
         before: Span = "5d",
         after: Span = 1,
         time_column: str = None,
+        n_splits: int = None,
     ) -> DatetimeSplitter:
         """Create a scikit-learn compatible splitter.
 
@@ -233,6 +247,8 @@ class TimeFold(NamedTuple):
             after: The period after the scheduled time to include. See :ref:`ba-args`
             time_column: Column to base the folds on. Use index if ``None``. If given, the returned splitter will not
                 be able to handle y-arguments.
+            n_splits: Maximum number of splits, preferring later folds. Has no effects if the actual number of splits
+                given `df` is less than `n_splits`.
 
         Returns:
             A sklearn-compatible splitter backed by :meth:`TimeFold.iter`.
@@ -240,7 +256,7 @@ class TimeFold(NamedTuple):
         See Also:
             The :meth:`TimeFold.plot` method, which may be used to visualize temporal folds.
         """
-        return DatetimeSplitter(schedule, before=before, after=after, time_column=time_column)
+        return DatetimeSplitter(schedule, before=before, after=after, time_column=time_column, n_splits=n_splits)
 
     @classmethod
     def plot(
@@ -250,6 +266,7 @@ class TimeFold(NamedTuple):
         before: Span = "5d",
         after: Span = 1,
         time_column: Optional[str] = "time",
+        n_splits: int = None,
         ax: "Axes" = None,
         **kwargs: Any,
     ) -> "Axes":
@@ -263,6 +280,8 @@ class TimeFold(NamedTuple):
             before: The period before the scheduled time to include for each iteration. See :ref:`ba-args`
             after: The period after the scheduled time to include for each iteration. See :ref:`ba-args`
             time_column: Column to base the folds on. Use index if ``None``.
+            n_splits: Maximum number of splits, preferring later folds. Has no effects if the actual number of splits
+                given `df` is less than `n_splits`.
             ax: Axis to use for plotting. Creates a new figure using :func:`matplotlib.pyplot.subplots` if ``None``.
             **kwargs: Keyword arguments for :func:`matplotlib.pyplot.subplots`. Default arguments:
                 ``{"tight_layout": True, "figsize": (<default-width>, 3 + 0.5 * num_folds)}``
@@ -276,7 +295,7 @@ class TimeFold(NamedTuple):
         import matplotlib.pyplot as plt
         from matplotlib.dates import AutoDateFormatter
 
-        cuts, time = _parse_args(df, schedule, time_column, before, after)
+        cuts, time = _parse_args(df, schedule, time_column, before, after, n_splits)
         with disable_temporarily(LOGGER):
             cuts = list(cuts)
 
@@ -343,12 +362,13 @@ def _parse_args(
     time_column: Optional[str],
     before: Span,
     after: Optional[Span],
+    n_splits: Optional[int],
 ) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
     time = pd.Series(
         pd.to_datetime(data.index if time_column is None else data[time_column], infer_datetime_format=True)
     )
 
-    cuts = _cuts(schedule, time, before, after)
+    cuts = _cuts(schedule, time, before, after, n_splits)
     return cuts, time
 
 
@@ -389,11 +409,20 @@ def _handle_schedule(
 
 
 def _cuts(
-    schedule: Schedule, time: Union[pd.DatetimeIndex, pd.Series], before: Span, after: Span
+    schedule: Schedule,
+    time: Union[pd.DatetimeIndex, pd.Series],
+    before: Span,
+    after: Span,
+    n_splits: Optional[int],
+    allow_recurse: bool = True,
 ) -> Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]]:
-    if LOGGER.isEnabledFor(logging.INFO):
+    number_to_skip = 0
+    if allow_recurse and (LOGGER.isEnabledFor(logging.INFO) or n_splits):
         with disable_temporarily(LOGGER):
-            num_folds = len(list(_cuts(schedule, time, before, after)))
+            num_folds = len(list(_cuts(schedule, time, before, after, n_splits, allow_recurse=False)))
+
+        if n_splits is not None:
+            number_to_skip = num_folds - n_splits
 
     min_dt, max_dt = time.min(), time.max()
     parsed_schedule = _handle_schedule(schedule, min_dt, max_dt)
@@ -414,6 +443,7 @@ def _cuts(
         )
 
     fold_idx = 0
+    num_valid_fold_skipped = 0
 
     for start, mid, stop in zip(
         before_iter,
@@ -440,6 +470,12 @@ def _cuts(
                 if mid >= stop:
                     details.append(f"[schedule: '{mid}'] >= fold_stop")
                 LOGGER.debug(f"Skip fold {pretty_fold} since {'and'.join(details)}.")
+            continue
+
+        if num_valid_fold_skipped < number_to_skip:
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                LOGGER.debug(f"Skip fold {pretty_fold}: Rejected by {n_splits=}.")
+            num_valid_fold_skipped += 1
             continue
 
         fold_idx += 1
