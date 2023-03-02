@@ -4,6 +4,7 @@ from typing import Any
 import pytest
 
 from rics.mapping import Cardinality, HeuristicScore, Mapper
+from rics.mapping.exceptions import AmbiguousScoreError
 
 POSSIBLE_NUMBER_OF_LEGS = [0, 2, 3, 4]
 NUMBER_OF_LEGS = {
@@ -44,23 +45,33 @@ def run(
     use_short_circuit,
 ):
     values = NUMBER_OF_LEGS.copy()
-    actual = (
-        Mapper(
-            HeuristicScore(
-                score_function=lambda v, c, cxt: [float(c == NUMBER_OF_LEGS[v]) for c in c],
-                heuristics=[ShortCircuit.dogs_have_4_legs] if use_short_circuit else (),
-            ),
-            overrides=StaticOverride.nobody_gets_any_legs if use_static_override else None,
-            filter_functions=[(FilterFunction.nobody_has_4_legs, {})] if use_filter else (),
-            cardinality=cardinality,
-        )
-        .apply(
-            values=values,
-            candidates=POSSIBLE_NUMBER_OF_LEGS,
-            override_function=OverrideFunction.humans_have_4_legs if use_override_function else None,
-        )
-        .left_to_right
+    mapper = Mapper(
+        HeuristicScore(
+            score_function=lambda v, c, cxt: [float(c == NUMBER_OF_LEGS[v]) for c in c],
+            heuristics=[ShortCircuit.dogs_have_4_legs] if use_short_circuit else (),
+        ),
+        overrides=StaticOverride.nobody_gets_any_legs if use_static_override else None,
+        filter_functions=[(FilterFunction.nobody_has_4_legs, {})] if use_filter else (),
+        cardinality=cardinality,
     )
+
+    if cardinality.one_left and not any(
+        [
+            use_override_function,
+            use_static_override,
+            use_filter,
+            use_short_circuit,
+        ]
+    ):
+        with pytest.raises(AmbiguousScoreError, match=f"score=1.*cardinality='{cardinality.name}'"):
+            mapper.apply(values, POSSIBLE_NUMBER_OF_LEGS)
+        return
+
+    actual = mapper.apply(
+        values=values,
+        candidates=POSSIBLE_NUMBER_OF_LEGS,
+        override_function=OverrideFunction.humans_have_4_legs if use_override_function else None,
+    ).left_to_right
 
     if use_override_function:
         for animal, legs in OverrideFunction.expected(cardinality).items():

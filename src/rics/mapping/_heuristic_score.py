@@ -90,6 +90,7 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         base_score = list(self.score_function(value, candidates, context, **kwargs))  # Unmodified score
         best = list(base_score)
 
+        positional_penalty = 0.0  # A small value that rewards alias functions based on their position.
         h_value = value
         h_candidates = list(candidates)
         for func, func_kwargs in self._heuristics:
@@ -99,9 +100,12 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
             if isinstance(res, tuple):  # Alias function -- res is a modified (value, candidates) tuple
                 res_value, res_candidates = res[0], list(res[1])
                 for i, heuristic_score in enumerate(self._score(res_value, res_candidates, context, **kwargs)):
+                    heuristic_score -= positional_penalty
                     best[i] = max(best[i], heuristic_score)
                 if mutate:
                     h_value, h_candidates = res_value, res_candidates
+
+                positional_penalty += 0.005
             else:  # Filter function
                 if mutate:  # pragma: no cover
                     LOGGER.warning(f"Ignoring {mutate=} for filter function {func=}.")

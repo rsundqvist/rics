@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Add `n_splits` argument to `TimeFold` (scikit-learn compatibility).
 - Raise `AmbiguousScoreError` if match scores do not allow deterministic mapping.
+- Add a small positional penalty in `HeuristicScore`, to favor alias functions that are defined early.
+- Add a small positional penalty in `modified_hamming`, to favor candidates that are defined early.
+- Reduce default value of `Mapper.min_score` (from 1.0 to 0.9).
 
 ### Fixed
 - The `heuristic_functions.candidate_fstring_alias()` function may now properly use _value_ and _context_ placeholders.

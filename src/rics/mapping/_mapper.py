@@ -17,6 +17,10 @@ from ._directional_mapping import DirectionalMapping
 from .exceptions import MappingError, MappingWarning, UserMappingError, UserMappingWarning
 from .types import CandidateType, ContextType, FilterFunction, ScoreFunction, UserOverrideFunction, ValueType
 
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", category=UserWarning)
+    from .support import MatchScores, enable_verbose_debug_messages
+
 LOGGER = logging.getLogger(__package__).getChild("Mapper")
 
 
@@ -49,7 +53,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         filter_functions: Iterable[
             Tuple[Union[str, FilterFunction[ValueType, CandidateType, ContextType]], Dict[str, Any]]
         ] = (),
-        min_score: float = 1.00,
+        min_score: float = 0.90,
         overrides: Union[
             InheritedKeysDict[ContextType, ValueType, CandidateType], Dict[ValueType, CandidateType]
         ] = None,
@@ -109,8 +113,6 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             raise ValueError("Must pass a context in context-sensitive mode.")
 
         if self.verbose:  # pragma: no cover
-            from .support import enable_verbose_debug_messages
-
             with enable_verbose_debug_messages():
                 scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
         else:
@@ -228,9 +230,6 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         See Also:
             :meth:`.MatchScores.to_directional_mapping`
         """
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=UserWarning)
-            from .support import MatchScores
         return MatchScores(scores, self._min_score).to_directional_mapping(self.cardinality)
 
     @property
