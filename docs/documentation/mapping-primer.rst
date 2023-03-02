@@ -85,7 +85,7 @@ restriction. These may be summarized as:
 * :attr:`~rics.mapping.Cardinality.ManyToMany` = *'M:N'*: All matches above the score limit are kept.
 
 In theory, ``OneToMany`` and ``ManyToOne`` are equally restrictive. During mapping however, *the goal is usually to
-find matches for values, not candidates*. With that in mind, the ordering above may considered strictly decreasing
+find matches for values, not candidates*. With that in mind, the ordering above may be considered strictly decreasing
 in preciseness.
 
 Conflict resolution
