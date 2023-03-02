@@ -12,6 +12,11 @@ There are two principal steps involved in the mapping procedure: The :ref:`Step 
 (see :meth:`Mapper.to_directional_mapping <rics.mapping.Mapper.to_directional_mapping>`). The two are automatically combined
 when using the :meth:`Mapper.apply <rics.mapping.Mapper.apply>`-function, though they may be invoked separately by users.
 
+.. hint::
+   Setting ``score_function='disabled'`` when creating the ``Mapper`` will force override-only mode. This will require
+   manually defined mappings to be defined for every values that should be mapped. Trying to map values without an
+   override will raise a :class:`~rics.mapping.exceptions.ScoringDisabledError` in this mode.
+
 Step 1/2: Scoring procedure
 ---------------------------
 The ``Mapper`` first applies :ref:`Overrides and filtering`, after which the actual :ref:`Score computations` are

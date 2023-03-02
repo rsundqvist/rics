@@ -12,8 +12,21 @@ class MappingError(ValueError):
         )
 
 
+class ScoringDisabledError(MappingError):
+    """Indicates that the scoring logic has been disabled. Raised by :func:`.score_functions.disabled`."""
+
+    def __init__(self, value: Any, candidates: Any, context: Any) -> None:
+        super().__init__(
+            "Scoring disabled; the Mapper is working in override-only mode. Please add an override "
+            f"for {value=} in {context=} in order to map it to an appropriate candidate."
+        )
+        self.value = value
+        self.candidates = candidates
+        self.context = context
+
+
 class UserMappingError(MappingError):
-    """A user-defined mapping function did something strange."""
+    """A user-defined mapping function did something forbidden."""
 
     def __init__(self, msg: str, value: Any, candidates: Set[Any]) -> None:
         super().__init__(msg)

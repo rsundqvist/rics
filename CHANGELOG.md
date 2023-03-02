@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The `score_functions.disabled()` function, used to force a `Mapper` to work in override-only mode.
+
 ### Changed
 - Add `n_splits` argument to `TimeFold` (scikit-learn compatibility).
 

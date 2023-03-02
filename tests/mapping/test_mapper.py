@@ -2,7 +2,7 @@ import pytest
 
 from rics.collections.dicts import InheritedKeysDict
 from rics.mapping import Cardinality, Mapper, exceptions
-from rics.mapping.exceptions import UserMappingError, UserMappingWarning
+from rics.mapping.exceptions import ScoringDisabledError, UserMappingError, UserMappingWarning
 from rics.mapping.types import MatchTuple
 
 
@@ -229,3 +229,23 @@ def test_context_sensitive_overrides():
 def test_copy():
     assert Mapper() == Mapper()
     assert Mapper() == Mapper().copy()
+
+
+@pytest.mark.parametrize(
+    "values, expected",
+    [
+        ("a", {"a": ("fixed",)}),
+        ("aa", {"a": ("fixed",)}),
+        ("ab", None),
+        ("b", None),
+        ("", {}),
+    ],
+)
+def test_disabled(values, expected, candidates):
+    mapper: Mapper[str, str, None] = Mapper(score_function="disabled", overrides={"a": "fixed"})
+
+    if expected is None:
+        with pytest.raises(ScoringDisabledError, match="disabled"):
+            mapper.apply(values, candidates)
+    else:
+        assert mapper.apply(values, candidates).left_to_right == expected

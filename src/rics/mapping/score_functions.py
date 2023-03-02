@@ -27,7 +27,7 @@ def modified_hamming(
         add_length_ratio_term: If ``True``, score is divided by ``abs(len(name) - len(candidate))``.
 
     Examples:
-        >>> from .score_functions import modified_hamming
+        >>> from rics.mapping.score_functions import modified_hamming
         >>> print(list(modified_hamming('aa', ['aa', 'a', 'ab'], context=None)))
         [1.0, 0.5, 0.5]
         >>> print(list(modified_hamming('face', ['face', 'FAce', 'race', 'place'], context=None)))
@@ -50,8 +50,23 @@ def equality(value: ValueType, candidates: Iterable[CandidateType], context: Opt
     """Return 1.0 if ``k == c_i``, 0.0 otherwise.
 
     Examples:
-        >>> from .score_functions import equality
+        >>> from rics.mapping.score_functions import equality
         >>> print(list(equality('a', 'aAb', context=None)))
         [1.0, 0.0, 0.0]
     """
     yield from map(float, (value == c for c in candidates))
+
+
+def disabled(value: ValueType, candidates: Iterable[CandidateType], context: Optional[ContextType]) -> Iterable[float]:
+    """Special value to indicate that scoring logic has been disabled.
+
+    This is a workaround to allow users to indicate that the scoring logic is disabled, and that overrides should be
+    used instead. The ``disabled``-function has no special meaning to the mapper, and will be called as any other
+    scoring function. This in turn will immediately raise a ``ScoringDisabledError``.
+
+    Raises:
+        ScoringDisabledError: Always.
+    """
+    from .exceptions import ScoringDisabledError
+
+    raise ScoringDisabledError(value, candidates, context)
