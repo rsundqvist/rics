@@ -1,15 +1,21 @@
+from pathlib import Path
+
 import pytest
 from numpy.random import choice, randint
 
 from rics.mapping import score_functions as sf
 
-with open("tests/mapping/words.txt") as f:
-    WORDS = f.read().splitlines()
-
-SCORE_FUNCTIONS = [sf.equality, sf.modified_hamming]
+WORDS = Path(__file__).parent.joinpath("words.txt").read_text().splitlines()
 
 
-@pytest.mark.parametrize("func, dtype", [(func, str) for func in SCORE_FUNCTIONS] + [(sf.equality, int)])
+@pytest.mark.parametrize(
+    "func, dtype",
+    [
+        (sf.equality, str),
+        (sf.equality, int),
+        (sf.modified_hamming, str),
+    ],
+)
 def test_stable(func, dtype):
     """Score function should respect input order."""
     candidates = make(12, dtype)
@@ -19,8 +25,11 @@ def test_stable(func, dtype):
         actual_scores = list(func(v, candidates.copy(), None))
         assert all([isinstance(s, float) for s in actual_scores]), "Bad return type"
 
-        expected_scores = [next(iter(func(v, [candidates[i]], None))) for i in range(len(candidates))]
-        assert actual_scores == expected_scores
+        for i, c in enumerate(candidates):
+            random_candidates = make(12, dtype)
+            random_candidates[i] = c
+            scores = list(func(v, random_candidates, None))
+            assert scores[i] == actual_scores[i]
 
 
 def make(count, dtype):

@@ -20,18 +20,23 @@ def modified_hamming(
     candidates: Iterable[str],
     context: Optional[ContextType],
     add_length_ratio_term: bool = True,
+    positional_penalty: float = 0.001,
 ) -> Iterable[float]:
     """Compute hamming distance modified by length ratio, from the back. Score range is ``[0, 1]``.
 
     Keyword Args:
         add_length_ratio_term: If ``True``, score is divided by ``abs(len(name) - len(candidate))``.
+        positional_penalty: A penalty applied to prefer earlier `candidates`, according to the formulare
+            ``penalty = index(candidate) * positional_penalty)``.
 
     Examples:
         >>> from rics.mapping.score_functions import modified_hamming
-        >>> print(list(modified_hamming('aa', ['aa', 'a', 'ab'], context=None)))
-        [1.0, 0.5, 0.5]
+        >>> print(list(modified_hamming('aa', ['aa', 'a', 'ab', 'aa'], context=None)))
+        [1.0, 0.499, 0.498, 0.997]
+        >>> print(list(modified_hamming('aa', ['aa', 'a', 'ab', 'aa'], context=None, positional_penalty=0)))
+        [1.0, 0.5, 0.5, 1.0]
         >>> print(list(modified_hamming('face', ['face', 'FAce', 'race', 'place'], context=None)))
-        [1.0, 0.5, 0.75, 0.375]
+        [1.0, 0.499, 0.748, 0.372]
     """
 
     def _apply(candidate: str) -> float:
@@ -43,7 +48,7 @@ def modified_hamming(
 
         return ratio * normalized_hamming
 
-    yield from map(_apply, candidates)
+    yield from (s - i * positional_penalty for i, s in enumerate(map(_apply, candidates)))
 
 
 def equality(value: ValueType, candidates: Iterable[CandidateType], context: Optional[ContextType]) -> Iterable[float]:
