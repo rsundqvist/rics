@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Add `n_splits` argument to `TimeFold` (scikit-learn compatibility).
+- Raise `AmbiguousScoreError` if match scores do not allow deterministic mapping.
 
 ### Fixed
 - The `heuristic_functions.candidate_fstring_alias()` function may now properly use _value_ and _context_ placeholders.

@@ -17,6 +17,7 @@ import pandas as pd
 
 from ._cardinality import Cardinality as _Cardinality
 from ._directional_mapping import DirectionalMapping as _DirectionalMapping
+from .exceptions import AmbiguousScoreError as _AmbiguousScoreError
 from .types import CandidateType, ValueType
 
 _MAPPER_LOGGER = logging.getLogger(__package__).getChild("Mapper")
@@ -203,6 +204,32 @@ class MatchScores:
 
             return f"{self.record}{why}."
 
+    def _raise_if_ambiguous(
+        self,
+        record: Record,  # type: ignore[type-arg]
+        matches: Dict,  # type: ignore[type-arg]
+        kind: str,
+        cardinality: _Cardinality,
+    ) -> None:
+        if record.score == np.inf:
+            # Overrides are allowed to be infinite; the first one will be chosen. It's up to the user to manage them.
+            return
+
+        key = record.value if kind == "value" else record.candidate
+        if key not in matches:
+            return
+
+        old_match = matches[key]
+        if record.score == old_match.score:
+            raise _AmbiguousScoreError(
+                kind=kind,
+                key=key,
+                match0=record,
+                match1=old_match,
+                cardinality=cardinality.name,
+                scores=self._matrix.to_string(),
+            )
+
     def _select_one_to_one(
         self,
         records: Iterable[Record[ValueType, CandidateType]],
@@ -212,6 +239,9 @@ class MatchScores:
         mcs: Dict[CandidateType, MatchScores.Record[ValueType, CandidateType]] = {}
 
         for record in records:
+            self._raise_if_ambiguous(record, mcs, "candidate", _Cardinality.OneToOne)
+            self._raise_if_ambiguous(record, mvs, "value", _Cardinality.OneToOne)
+
             if record.score < self._min_score or record.value in mvs or record.candidate in mcs:
                 if rejections is not None:  # pragma: no cover
                     rejections.append(
@@ -234,6 +264,8 @@ class MatchScores:
         mcs: Dict[CandidateType, MatchScores.Record[ValueType, CandidateType]] = {}
 
         for record in records:
+            self._raise_if_ambiguous(record, mcs, "candidate", _Cardinality.OneToMany)
+
             if record.score < self._min_score or record.candidate in mcs:
                 if rejections is not None:  # pragma: no cover
                     rejections.append(MatchScores.Reject(record, superseding_candidate=mcs.get(record.candidate)))
@@ -249,6 +281,8 @@ class MatchScores:
         mvs: Dict[ValueType, MatchScores.Record[ValueType, CandidateType]] = {}
 
         for record in records:
+            self._raise_if_ambiguous(record, mvs, "value", cardinality=_Cardinality.ManyToOne)
+
             if record.score < self._min_score or record.value in mvs:
                 if rejections is not None:  # pragma: no cover
                     rejections.append(MatchScores.Reject(record, superseding_value=mvs.get(record.value)))

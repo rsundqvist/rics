@@ -149,24 +149,6 @@ def test_filter(filters, expected, candidates):
 @pytest.mark.parametrize(
     "values, candidates, expected",
     [
-        ([1, 2], [3, 4], {1: 3, 2: 4}),
-        ([1, 2], [4, 3], {1: 4, 2: 3}),
-        ([2, 1], [3, 4], {2: 3, 1: 4}),
-        ([2, 1], [4, 3], {2: 4, 1: 3}),
-        ([1, 2], [0], {1: 0}),
-        ([2, 1], [0], {2: 0}),
-        ([0], [1, 2], {0: 1}),
-        ([0], [2, 1], {0: 2}),
-    ],
-)
-def test_equal_score_prioritizes_first(values, candidates, expected):
-    mapper: Mapper[int, int, None] = Mapper(score_function=lambda *_: [1, 1], cardinality=Cardinality.OneToOne)
-    assert mapper.apply(values, candidates).flatten() == expected
-
-
-@pytest.mark.parametrize(
-    "values, candidates, expected",
-    [
         ([1, 2], [], {1: 0}),
         ([2, 1], [], {2: 0}),
     ],
