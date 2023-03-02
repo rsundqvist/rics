@@ -25,6 +25,17 @@ class ScoringDisabledError(MappingError):
         self.context = context
 
 
+class AmbiguousScoreError(MappingError):
+    """Indicates that the scoring logic has produces ambiguous scores."""
+
+    def __init__(self, kind: str, key: Any, match0: Any, match1: Any, cardinality: str, scores: str) -> None:
+        hint = f"\n{scores}\nInspect the matrix above for details. You may wish to use a different scoring method."
+        super().__init__(
+            f"Ambiguous mapping of {kind}={key!r}; matches ({match0}) and ({match1}) "
+            f"are in conflict since {cardinality=}.{hint}"
+        )
+
+
 class UserMappingError(MappingError):
     """A user-defined mapping function did something forbidden."""
 
