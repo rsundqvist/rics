@@ -49,7 +49,7 @@ def short_circuit_to_value(
         candidates: Candidates for `value`.
         context: Context in which the function is being called.
         regex: A pattern in `candidates` which should trigger forced short-circuit matching.
-        target: The target value. If ``value != to_value``, an empty set is always returned.
+        target: The target value. If ``value != target``, an empty set is always returned.
 
     Returns:
         Candidates which match `regex`, or an empty set.
@@ -64,7 +64,7 @@ def short_circuit_to_value(
             value,
             candidates,
             context,
-            regex,
+            regex=regex,
             where="candidate",
             purpose=f"short-circuiting to value-{target=}",
         )
@@ -100,7 +100,7 @@ def short_circuit_to_candidate(
             value,
             [target],
             context,
-            regex,
+            regex=regex,
             where="name",
             purpose=f"short-circuiting to candidate-{target=}",
         )
@@ -123,11 +123,11 @@ def value_fstring_alias(
         value: Passed to `fstring.format` using the `value` placeholder key.
         candidates: Not used (returned as given).
         context: Context in which the function is being called.
-        fstring: The format string to use.
+        fstring: The format string to use. Can use `value` and `context` as as placeholders.
         **kwargs: Additional keyword placeholders in `fstring`.
 
     Returns:
-        A tuple (formatted_value, candidates).
+        A tuple ``(formatted_value, candidates)``.
     """
     return fstring.format(value=value, context=context, **kwargs), candidates
 
@@ -141,10 +141,10 @@ def candidate_fstring_alias(
         value: Not used (returned as given).
         candidates: Passed to `fstring.format` using the `candidates` placeholder key.
         context: Context in which the function is being called.
-        fstring: The format string to use.
+        fstring: The format string to use. Can use `value`, `context`, and elements of `candidates` as placeholders.
         **kwargs: Additional keyword placeholders in `fstring`.
 
     Returns:
-        A tuple (value, formatted_candidates).
+        A tuple ``(value, formatted_candidates)``.
     """
-    return value, map(lambda c: fstring.format(candidate=c, **kwargs), candidates)
+    return value, map(lambda c: fstring.format(value=value, candidate=c, context=context, **kwargs), candidates)
