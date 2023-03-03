@@ -42,8 +42,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             unknown candidate. Unknown candidates, i.e. candidates not in the input `candidates` collection, will not be
             used unless `'ignore'` is chosen. As such, `'ignore'` should rather be interpreted as `'allow'`.
         cardinality: Desired cardinality for mapped values. Derive for each matching if ``None``.
-        enable_verbose_logging: If ``True``, enable verbose logging for the :meth:`apply` function. Has no effect when
-            the log level is above ``logging.DEBUG``.
+        verbose_logging: If ``True``, enable verbose logging for the :meth:`apply` function. Has no effect when the log
+            level is above ``logging.DEBUG``.
     """
 
     def __init__(
@@ -60,7 +60,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         unmapped_values_action: ActionLevel.ParseType = ActionLevel.IGNORE,
         unknown_user_override_action: ActionLevel.ParseType = ActionLevel.RAISE,
         cardinality: Optional[Cardinality.ParseType] = Cardinality.ManyToOne,
-        enable_verbose_logging: bool = False,
+        verbose_logging: bool = False,
     ) -> None:
         self._score = get_by_full_name(score_function, sf) if isinstance(score_function, str) else score_function
         self._score_kwargs = score_function_kwargs or {}
@@ -75,7 +75,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             ((get_by_full_name(func, mf) if isinstance(func, str) else func), kwargs)
             for func, kwargs in filter_functions
         ]
-        self._verbose = enable_verbose_logging
+        self._verbose = verbose_logging
 
     def apply(
         self,
@@ -114,7 +114,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         if isinstance(self._overrides, InheritedKeysDict) and context is None:
             raise ValueError("Must pass a context in context-sensitive mode.")
 
-        if self.verbose:
+        if self.verbose_logging:
             with enable_verbose_debug_messages():
                 scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
         else:
@@ -226,7 +226,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             if not filtered_candidates:
                 continue
 
-            if self.verbose and LOGGER.isEnabledFor(logging.DEBUG):
+            if self.verbose_logging and LOGGER.isEnabledFor(logging.DEBUG):
                 LOGGER.debug(f"Compute match scores for {value=}.")
             scores_for_value = self._score(value, filtered_candidates, context, **self._score_kwargs, **kwargs)
             for score, candidate in zip(scores_for_value, filtered_candidates):
@@ -285,7 +285,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         return isinstance(self._overrides, InheritedKeysDict)
 
     @property
-    def verbose(self) -> bool:
+    def verbose_logging(self) -> bool:
         """Return ``True`` if verbose debug-level messages are enabled."""
         return self._verbose
 
@@ -401,7 +401,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             if not filtered_candidates:
                 break
 
-        if self.verbose and LOGGER.isEnabledFor(logging.DEBUG) and len(self._filters):
+        if self.verbose_logging and LOGGER.isEnabledFor(logging.DEBUG) and len(self._filters):
             diff = set(candidates).difference(filtered_candidates)
             removed = f"removing candidates={diff}" if diff else "but did not remove any candidates"
             done = "All candidates removed by filtering. " if not filtered_candidates else ""
@@ -413,17 +413,36 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         score = self._score
         return f"{tname(self)}({score=} >= {self._min_score}, {len(self._filters)} filters)"
 
-    def copy(self) -> "Mapper[ValueType, CandidateType, ContextType]":
-        """Make a copy of this ``Mapper``."""
-        return Mapper(
-            score_function=self._score,
-            score_function_kwargs=self._score_kwargs.copy(),
-            filter_functions=[(func, kwargs.copy()) for func, kwargs in self._filters],
-            min_score=self._min_score,
-            overrides=self._overrides.copy(),
-            unmapped_values_action=self._unmapped_action,
-            cardinality=self._cardinality,
-        )
+    def copy(self, **overrides: Any) -> "Mapper[ValueType, CandidateType, ContextType]":
+        """Make a copy of this ``Mapper``.
+
+        Args:
+            overrides: Keyword arguments to use when instantiating the copy. Options that aren't given will be taken
+                from the current instance. See the :class:`Mapper` class documentation for possible choices.
+
+        Returns:
+            A copy of this ``Mapper`` with `overrides` applied.
+        """
+        kwargs: Dict[str, Any] = {
+            "score_function": self._score,
+            "min_score": self._min_score,
+            "unmapped_values_action": self.unmapped_values_action,
+            "unknown_user_override_action": self.unknown_user_override_action,
+            "cardinality": self.cardinality,
+            "verbose_logging": self.verbose_logging,
+            **overrides,
+        }
+
+        if "score_function_kwargs" not in kwargs:
+            kwargs["score_function_kwargs"] = self._score_kwargs.copy()
+
+        if "filter_functions" not in kwargs:
+            kwargs["filter_functions"] = [(func, func_kwargs.copy()) for func, func_kwargs in self._filters]
+
+        if "overrides" not in kwargs:
+            kwargs["overrides"] = self._overrides.copy()
+
+        return Mapper(**kwargs)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, Mapper):
@@ -437,6 +456,8 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 self._min_score == other._min_score,
                 self._overrides == other._overrides,
                 self._unmapped_action == other._unmapped_action,
+                self._bad_candidate_action == other._bad_candidate_action,
                 self._cardinality == other._cardinality,
+                self._verbose == other._verbose,
             )
         )

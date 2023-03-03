@@ -1,7 +1,7 @@
 """Action level enumeration types."""
 
 from enum import Enum as _Enum
-from typing import Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 
 class ActionLevel(_Enum):
@@ -37,7 +37,7 @@ class ActionLevel(_Enum):
             A valid action level for the given purpose.
 
         Raises:
-            BadActionLevelError: If `action` is not in ('ignore', 'warn', 'raise') or if `action` is in `remove`.
+            BadActionLevelError: If `action` is not in ('ignore', 'warn', 'raise') or if `action` is in `forbidden`.
         """
         forbidden = None if forbidden is None else cls.verify(forbidden)
 
@@ -55,6 +55,15 @@ class ActionLevel(_Enum):
             raise BadActionLevelError(action, purpose, forbidden)
 
         return action_level
+
+    def __eq__(self, other: Any) -> bool:
+        if isinstance(other, ActionLevel):
+            other = other.name
+
+        if isinstance(other, str):
+            return self.name == other.lower()
+
+        return False
 
 
 ActionLevel.ParseType = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], ActionLevel]
