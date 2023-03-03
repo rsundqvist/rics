@@ -115,36 +115,66 @@ def force_lower_case(
 
 
 def value_fstring_alias(
-    value: str, candidates: Iterable[str], context: Optional[ContextType], fstring: str, **kwargs: Any
+    value: str,
+    candidates: Iterable[str],
+    context: Optional[ContextType],
+    fstring: str,
+    for_value: str = None,
+    **kwargs: Any,
 ) -> Tuple[str, Iterable[str]]:
     """Return a value formatted by `fstring`.
 
     Args:
-        value: Passed to `fstring.format` using the `value` placeholder key.
-        candidates: Not used (returned as given).
+        value: An element to find matches for.
+        candidates: Potential matches for `value`. Not used (returned as given).
         context: Context in which the function is being called.
-        fstring: The format string to use. Can use `value` and `context` as as placeholders.
+        fstring: The format string to use. Can use `value` and `context` as placeholders.
+        for_value: If given, apply only if ``value == for_value``. When `if_value_equals` is given, `fstring` arguments
+            which do not use the `value` as a placeholder key are permitted.
         **kwargs: Additional keyword placeholders in `fstring`.
 
     Returns:
         A tuple ``(formatted_value, candidates)``.
+
+    Raises:
+        ValueError: If `fstring` does not contain a placeholder `'value'` and `for_value` is not given.
     """
+    if not for_value and "{value}" not in fstring:
+        # No longer a function of the value.
+        raise ValueError(
+            f"Invalid {fstring=} passed to value_fstring_alias(); does not contain {{value}}. "
+            "To allow, the 'for_value' parameter must be given as well."
+        )
+
+    if for_value and value != for_value:
+        return value, candidates  # pragma: no cover
+
     return fstring.format(value=value, context=context, **kwargs), candidates
 
 
 def candidate_fstring_alias(
-    value: str, candidates: Iterable[str], context: Optional[ContextType], fstring: str, **kwargs: Any
+    value: str,
+    candidates: Iterable[str],
+    context: Optional[ContextType],
+    fstring: str,
+    **kwargs: Any,
 ) -> Tuple[str, Iterable[str]]:
     """Return candidates formatted by `fstring`.
 
     Args:
-        value: Not used (returned as given).
-        candidates: Passed to `fstring.format` using the `candidates` placeholder key.
+        value: An element to find matches for. Not used (returned as given).
+        candidates: Potential matches for `value`.
         context: Context in which the function is being called.
         fstring: The format string to use. Can use `value`, `context`, and elements of `candidates` as placeholders.
         **kwargs: Additional keyword placeholders in `fstring`.
 
     Returns:
         A tuple ``(value, formatted_candidates)``.
+
+    Raises:
+        ValueError: If `fstring` does not contain a placeholder `'candidate'`.
     """
+    if "{candidate}" not in fstring:
+        raise ValueError(f"Invalid {fstring=} passed to candidate_fstring_alias(); does not contain {{candidate}}.")
+
     return value, map(lambda c: fstring.format(value=value, candidate=c, context=context, **kwargs), candidates)
