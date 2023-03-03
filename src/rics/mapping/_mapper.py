@@ -109,16 +109,17 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 ``unknown_user_override_action != 'ignore'``
             ValueError: If passing ``context=None`` (the default) when  :attr:`context_sensitive_overrides` is ``True``.
         """
+        start = perf_counter()
+
         if isinstance(self._overrides, InheritedKeysDict) and context is None:
             raise ValueError("Must pass a context in context-sensitive mode.")
 
-        if self.verbose:  # pragma: no cover
+        if self.verbose:
             with enable_verbose_debug_messages():
                 scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
         else:
-            scores = self.compute_scores(values, candidates, context, override_function, **kwargs)
+            scores = self.compute_scores(values, candidates, context, override_function, **kwargs)  # pragma: no cover
 
-        start = perf_counter()
         dm: DirectionalMapping[ValueType, CandidateType] = self.to_directional_mapping(scores)
 
         unmapped = set(scores.index[~np.isinf(scores).all(axis=1)]).difference(dm.left)
@@ -128,8 +129,19 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             self._report_unmapped(f"Could not map {unmapped}{extra} to any of {candidates=}.")
 
         if LOGGER.isEnabledFor(logging.DEBUG):
+            values = list(scores.index)
+            candidates = list(scores.columns)
             cardinality = "automatic" if self.cardinality is None else self.cardinality.name
-            LOGGER.debug(f"Match selection with {cardinality=} completed in {format_perf_counter(start)}.")
+
+            l2r = dm.left_to_right
+            matches = " Matches:\n" + "\n".join(
+                (f"    {v!r} -> {repr(l2r[v]) if v in l2r else '<no match>'}" for v in values)
+            )
+
+            LOGGER.debug(
+                f"Mapping with {cardinality=} completed for {values}x{candidates} in {format_perf_counter(start)}."
+                f"{matches}\nMatched {len(dm.left)}/{len(values)} values with {len(dm.right)} different candidates."
+            )
 
         return dm
 
@@ -189,17 +201,30 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         )
 
         extra = f" in {context=}" if context else ""
+
+        if scores.empty:
+            if LOGGER.isEnabledFor(logging.DEBUG):
+                candidates = list(scores.columns)
+                values = list(scores.index)
+                end = "" if values or candidates else ", but got neither"
+                LOGGER.debug(
+                    f"Abort mapping{extra} of {values}x{candidates}. Both values and candidates must be given{end}."
+                )
+            return scores
+
         if LOGGER.isEnabledFor(logging.DEBUG):
-            candidates = tuple(scores.columns)
-            values = tuple(scores.index)
-            LOGGER.debug(f"Begin computing match scores for {values=}{extra} to {candidates=} using {self._score}.")
+            candidates = list(scores.columns)
+            values = list(scores.index)
+            LOGGER.debug(f"Begin computing match scores{extra} for {values}x{candidates} using {self._score}.")
 
         unmapped_values = self._handle_overrides(scores, context, override_function)
+        if not unmapped_values:
+            return scores
 
         for value in unmapped_values:
-            if self.verbose and LOGGER.isEnabledFor(logging.DEBUG):
-                LOGGER.debug(f"Apply filters for {value=}.")
             filtered_candidates = self._apply_filters(value, scores.columns, context, kwargs)
+            if not filtered_candidates:
+                continue
 
             if self.verbose and LOGGER.isEnabledFor(logging.DEBUG):
                 LOGGER.debug(f"Compute match scores for {value=}.")
@@ -270,10 +295,13 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         context: Optional[ContextType],
         override_function: Optional[UserOverrideFunction[ValueType, CandidateType, ContextType]],
     ) -> List[ValueType]:
+        applied: Dict[ValueType, CandidateType] = {}
+
         def apply(v: ValueType, oc: CandidateType) -> None:
             scores.loc[v, :] = -np.inf
             scores.loc[v, oc] = np.inf
             unmapped_values.remove(v)
+            applied[v] = oc
 
         unmapped_values = list(scores.index)
 
@@ -289,6 +317,12 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
         for value, override_candidate in self._get_static_overrides(unmapped_values, context):
             apply(value, override_candidate)
+
+        if LOGGER.isEnabledFor(logging.DEBUG) and (self._overrides or override_function is not None):
+            num_overrides = len(self._overrides) + int(override_function is not None)
+            result = f"and found {len(applied)} matches={applied} in" if applied else "but none were a match for"
+            done = "All values mapped by overrides. " if (not unmapped_values and applied) else ""
+            LOGGER.debug(f"{done}Applied {num_overrides} overrides, {result} the given values={list(scores.index)}.")
 
         return unmapped_values
 
@@ -351,7 +385,9 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         context: Optional[ContextType],
         kwargs: Dict[str, Any],
     ) -> Set[CandidateType]:
+        candidates = list(candidates)
         filtered_candidates = set(candidates)
+
         for filter_function, function_kwargs in self._filters:
             filtered_candidates = filter_function(value, filtered_candidates, context, **function_kwargs, **kwargs)
 
@@ -364,6 +400,12 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
             if not filtered_candidates:
                 break
+
+        if self.verbose and LOGGER.isEnabledFor(logging.DEBUG) and len(self._filters):
+            diff = set(candidates).difference(filtered_candidates)
+            removed = f"removing candidates={diff}" if diff else "but did not remove any candidates"
+            done = "All candidates removed by filtering. " if not filtered_candidates else ""
+            LOGGER.debug(f"{done}Applied {len(self._filters)} filters for {value=}, {removed}.")
 
         return filtered_candidates
 

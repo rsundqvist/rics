@@ -147,33 +147,31 @@ def test_filter(filters, expected, candidates):
 
 
 @pytest.mark.parametrize(
-    "values, candidates, expected",
+    "values, expected",
     [
-        ([1, 2], [], {1: 0}),
-        ([2, 1], [], {2: 0}),
+        ([1] + [2] * 999, {1: 0}),
+        ([2] + [1] * 999, {2: 0}),
     ],
 )
-def test_conflicting_overrides_prioritizes_first(values, candidates, expected):
+def test_conflicting_overrides_prioritizes_first(values, expected):
     mapper: Mapper[int, int, None] = Mapper(
-        score_function=lambda *_: [1, 1], cardinality="1:1", overrides={v: 0 for v in values}
+        score_function=lambda *_: [1] * len(values), cardinality="1:1", overrides={v: 0 for v in values}
     )
-
-    assert mapper.apply(values, candidates).flatten() == expected
+    assert mapper.apply(values, reversed(values)).flatten() == expected
 
 
 @pytest.mark.parametrize(
-    "values, candidates, expected",
+    "values, expected",
     [
-        ([1, 2], [], {1: 0}),
-        ([2, 1], [], {2: 0}),
+        ([1] + [2] * 999, {1: 0}),
+        ([2] + [1] * 999, {2: 0}),
     ],
 )
-def test_conflicting_function_overrides_prioritizes_first(values, candidates, expected):
+def test_conflicting_function_overrides_prioritizes_first(values, expected):
     mapper: Mapper[int, int, None] = Mapper(
-        score_function=lambda *_: [1, 1], unknown_user_override_action="ignore", cardinality="1:1"
+        score_function=lambda *_: [1] * len(values), unknown_user_override_action="ignore", cardinality="1:1"
     )
-
-    assert mapper.apply(values, candidates, override_function=lambda *_: 0).flatten() == expected
+    assert mapper.apply(values, reversed(values), override_function=lambda *_: 0).flatten() == expected
 
 
 @pytest.mark.parametrize(
@@ -200,9 +198,9 @@ def test_context_sensitive_overrides():
     )
     assert mapper.context_sensitive_overrides
     values = ["value0", "value1"]
-    assert mapper.apply(values, [], 0).flatten() == {"value0": "c0-override-0", "value1": "default1"}
-    assert mapper.apply(values, [], 1).flatten() == {"value0": "c1-override-0", "value1": "default1"}
-    assert mapper.apply(values, [], 1999).flatten() == {"value0": "default0", "value1": "default1"}
+    assert mapper.apply(values, [""], 0).flatten() == {"value0": "c0-override-0", "value1": "default1"}
+    assert mapper.apply(values, [""], 1).flatten() == {"value0": "c1-override-0", "value1": "default1"}
+    assert mapper.apply(values, [""], 1999).flatten() == {"value0": "default0", "value1": "default1"}
 
     with pytest.raises(ValueError, match="Must pass a context"):
         mapper.apply(values, [])

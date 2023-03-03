@@ -90,6 +90,8 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         base_score = list(self.score_function(value, candidates, context, **kwargs))  # Unmodified score
         best = list(base_score)
 
+        log_aliases = heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG)
+
         positional_penalty = 0.0  # A small value that rewards alias functions based on their position.
         h_value = value
         h_candidates = list(candidates)
@@ -99,16 +101,33 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
             res = func(h_value, h_candidates, context, **func_kwargs)
             if isinstance(res, tuple):  # Alias function -- res is a modified (value, candidates) tuple
                 res_value, res_candidates = res[0], list(res[1])
-                for i, heuristic_score in enumerate(self._score(res_value, res_candidates, context, **kwargs)):
+                res_scores = list(self._score(res_value, res_candidates, context, **kwargs))
+                for i, heuristic_score in enumerate(res_scores):
                     heuristic_score -= positional_penalty
                     best[i] = max(best[i], heuristic_score)
+
+                if log_aliases:
+                    mutating = "mutating" if mutate else "non-mutating"
+
+                    res_value_repr = f"{res_value!r}" if (h_value != res_value) else "-"
+                    res_candidates_repr = f"{res_candidates!r}" if (h_candidates != res_candidates) else "-"
+
+                    res_score_repr = [round(s, 3) for s in res_scores]
+                    LOGGER.debug(
+                        f"Called {mutating} alias function {_stringify((func, func_kwargs))} in {context=}: "
+                        f"({h_value!r}, {h_candidates!r}) -> ({res_value_repr}, {res_candidates_repr})."
+                        f" Positional penalty={positional_penalty:.3f}. Scores before penalty: {res_score_repr}."
+                    )
+                else:
+                    pass  # pragma: no cover
+
                 if mutate:
                     h_value, h_candidates = res_value, res_candidates
 
                 positional_penalty += 0.005
             else:  # Filter function
                 if mutate:  # pragma: no cover
-                    LOGGER.warning(f"Ignoring {mutate=} for filter function {func=}.")
+                    LOGGER.warning(f"The filter function {_stringify(func, func_kwargs)} cannot use {mutate=}.")
 
                 if res:
                     if heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG):
@@ -129,13 +148,14 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
         yield from best
 
     def __str__(self) -> str:
-        def func(t: Tuple[HeuristicsTypes[ValueType, CandidateType, ContextType], Dict[str, Any]]) -> str:
-            f, kwargs = t
-            kwlist = [f"{k}={repr(v)}" for k, v in kwargs.items()]
-            return f"{tname(f)}({', '.join(kwlist)})"
-
         score_function = tname(self.score_function, prefix_classname=True)
-        return f"{tname(self)}([{' | '.join(map(func, self._heuristics))}] -> {score_function})"
+        return f"{tname(self)}([{' | '.join(map(_stringify, self._heuristics))}] -> {score_function})"
+
+
+def _stringify(*args: Any) -> str:
+    f, kwargs = args[0] if len(args) == 1 else args
+    kwlist = (f"{k}={repr(v)}" for k, v in kwargs.items())
+    return f"{tname(f)}({', '.join(kwlist)})"
 
 
 def _resolve_heuristic(
