@@ -59,6 +59,23 @@ def test_no_purpose():
     assert ec.value.args == ("Unknown purpose='not-known' given.",)
 
 
+def test_eq():
+    assert ActionLevel.RAISE != 0
+
+    assert ActionLevel.RAISE == "raise"
+    assert ActionLevel.RAISE == "raisE"
+    assert ActionLevel.RAISE == "RAISE"
+    assert ActionLevel.RAISE == ActionLevel.RAISE
+
+    assert hash(ActionLevel.RAISE) != hash("raise")
+    assert hash(ActionLevel.RAISE) != hash("raisE")
+    assert hash(ActionLevel.RAISE) == hash("RAISE")
+
+    assert ActionLevel.RAISE != ActionLevel.WARN
+    assert ActionLevel.RAISE != ActionLevel.IGNORE
+    assert ActionLevel.WARN != ActionLevel.IGNORE
+
+
 @pytest.fixture
 def helper():
     return ActionLevelHelper(

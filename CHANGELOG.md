@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - The `score_functions.disabled()` function, used to force a `Mapper` to work in override-only mode.
 - An optional argument `for_value` to the `heuristic_functions.value_fstring_alias()` function.
+- The `Mapper.copy()`-method now accepts keyword override arguments.
 
 ### Changed
 - Add `n_splits` argument to `TimeFold` (scikit-learn compatibility).
@@ -17,10 +18,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add a small positional penalty in `HeuristicScore`, to favor alias functions that are defined early.
 - Add a small positional penalty in `modified_hamming`, to favor candidates that are defined early.
 - Reduce default value of `Mapper.min_score` (from 1.0 to 0.9).
+- Updated `Mapper` verbosity flag to be consistent. Now called `verbose_logging` everywhere.
 
 ### Fixed
 - The `heuristic_functions.candidate_fstring_alias()` function may now properly use _value_ and _context_ placeholders.
 - Properly raise exceptions in `[value/candidate]_fstring_alias` for invalid `fstring` arguments.
+- Added missing checks in `Mapper.__eq__()`.
 
 ## [2.1.0] - 2023-02-11
 
