@@ -1,13 +1,53 @@
 """Miscellaneous utility methods for Python applications."""
-import os
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
 from types import ModuleType as _ModuleType
 from typing import Any, Callable, Optional, Type, Union
 
 from ._internal_support import _local_or_remote
-from ._internal_support.types import NO_DEFAULT, NoDefault, PathLikeType
-from .strings import without_prefix as _without_prefix
+from ._internal_support.types import PathLikeType
+from .envinterp import UnsetVariableError as _UnsetVariableError, Variable as _Variable
+
+
+def interpolate_environment_variables(
+    s: str,
+    *,  # noqa: DAR401
+    allow_nested: bool = True,
+    allow_blank: bool = False,
+) -> str:
+    """Interpolate environment variables in a string `s`.
+
+    This function replaces references to environment variables with the actual value of the variable, or a default if
+    specified. The syntax is similar to Bash string interpolation; use ``${<var>}`` for mandatory variables, and
+    ``${<var>:default}`` for optional variables.
+
+    Args:
+        s: A string in which to interpolate.
+        allow_blank: If ``True``, allow variables to be set but empty.
+        allow_nested: If ``True`` allow using another environment variable as the default value. This option will not
+            verify whether the actual values are interpolation-strings.
+
+    Returns:
+        A copy of `s`, after environment variable interpolation.
+
+    Raises:
+        ValueError: If nested variables are discovered (only when ``allow_nested=False``).
+        UnsetVariableError: If any required environment variables are unset or blank (only when ``allow_blank=False``).
+
+    See Also:
+        The :mod:`rics.envinterp` module, which this function wraps.
+    """
+    for var in _Variable.parse_string(s):
+        if not allow_nested and (var.default and _Variable.parse_string(var.default)):
+            raise ValueError(f"Nested variables forbidden since {allow_nested=}.")
+
+        value = var.get_value(resolve_nested_defaults=allow_nested).strip()
+
+        if not (allow_blank or value):
+            raise _UnsetVariableError(var.name, f"Empty values forbidden since {allow_blank=}.")
+
+        s = s.replace(var.full_match, value)
+    return s
 
 
 def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) -> Any:
@@ -126,34 +166,6 @@ def get_local_or_remote(
         postprocessor=postprocessor,
         show_progress=show_progress,
     )
-
-
-def read_env_or_literal(
-    arg: str,
-    default: Union[NoDefault, str] = NO_DEFAULT,
-    env_marker: str = "@",
-) -> str:
-    """Read an environment variable if `arg` if prefixed by `env_marker`, otherwise return `arg` as-is.
-
-    Args:
-        arg: A literal value or environment variable to read.
-        env_marker: A prefix which indicates that `arg` should be interpreted as environment variable name.
-        default: Default value to use if the variable denoted by `arg` doesn't exist.
-
-    Returns:
-        A processed version `arg` where the final response is ``ans_type(processed-arg)``.
-
-    Raises:
-        ValueError: If `arg` does not start with `env_marker` and `enforce_env_var` is ``True``.
-
-    Notes:
-        The constructor of `desired_return_type` may raise errors not listed here.
-    """
-    if not arg.startswith(env_marker):
-        return arg
-
-    env_var_name = _without_prefix(arg, env_marker)
-    return os.environ[env_var_name] if default is NO_DEFAULT else os.environ.get(env_var_name, default)
 
 
 def serializable(obj: Any) -> bool:

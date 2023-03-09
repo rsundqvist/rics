@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `score_functions.disabled()` function, used to force a `Mapper` to work in override-only mode.
 - An optional argument `for_value` to the `heuristic_functions.value_fstring_alias()` function.
 - The `Mapper.copy()`-method now accepts keyword override arguments.
+- The `envinterp` module and `misc.interpolate_environment_variables()` function (replaces `read_env_or_literal()`)
 
 ### Changed
 - Add `n_splits` argument to `TimeFold` (scikit-learn compatibility).
@@ -24,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `heuristic_functions.candidate_fstring_alias()` function may now properly use _value_ and _context_ placeholders.
 - Properly raise exceptions in `[value/candidate]_fstring_alias` for invalid `fstring` arguments.
 - Added missing checks in `Mapper.__eq__()`.
+
+### Removed
+- The `misc.read_env_or_literal()` function has been replaced by `rics.misc.interpolate_environment_variables()`.
 
 ## [2.1.0] - 2023-02-11
 
