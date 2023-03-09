@@ -145,7 +145,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
 
         return dm
 
-    def _report_unmapped(self, msg: str) -> None:  # pragma: no cover
+    def _report_unmapped(self, msg: str) -> None:
         logger = LOGGER.getChild("unmapped")
         if self.unmapped_values_action is ActionLevel.RAISE:
             msg += (
@@ -332,7 +332,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
         context: Optional[ContextType],
     ) -> List[Tuple[ValueType, CandidateType]]:
         if not self._overrides:
-            return []  # pragma: no cover
+            return []
 
         # The assertions are redundant (checked earlier), but makes mypy happy without type-ignores.
         if self.context_sensitive_overrides:
@@ -368,7 +368,7 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
                 if self.unknown_user_override_action is ActionLevel.RAISE:
                     LOGGER.error(msg)
                     raise UserMappingError(msg, value, candidates)
-                elif self.unknown_user_override_action is ActionLevel.WARN:  # pragma: no cover
+                elif self.unknown_user_override_action is ActionLevel.WARN:
                     msg += " The override has been ignored."
                     LOGGER.warning(msg)
                     warnings.warn(msg, UserMappingWarning)
@@ -433,13 +433,13 @@ class Mapper(Generic[ValueType, CandidateType, ContextType]):
             **overrides,
         }
 
-        if "score_function_kwargs" not in kwargs:  # pragma: no cover
+        if "score_function_kwargs" not in kwargs:
             kwargs["score_function_kwargs"] = self._score_kwargs.copy()
 
-        if "filter_functions" not in kwargs:  # pragma: no cover
+        if "filter_functions" not in kwargs:
             kwargs["filter_functions"] = [(func, func_kwargs.copy()) for func, func_kwargs in self._filters]
 
-        if "overrides" not in kwargs:  # pragma: no cover
+        if "overrides" not in kwargs:
             kwargs["overrides"] = self._overrides.copy()
 
         return Mapper(**kwargs)

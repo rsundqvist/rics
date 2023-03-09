@@ -69,12 +69,12 @@ class DatetimeSplitter:
         """
         cuts, time = (None, None) if X is None else self._parse_args(X, "X")
         if y is None:
-            pass  # pragma: no cover
+            pass
         else:
             cuts, time = self._parse_args(y, "y", expected_time=time)
 
         if cuts is None:
-            raise ValueError("At least one of (X, y) must be given.")  # pragma: no cover
+            raise ValueError("At least one of (X, y) must be given.")
 
         for start, mid, stop in cuts:
             train, test = time.between(start, mid, inclusive="left"), time.between(mid, stop, inclusive="left")
@@ -100,10 +100,10 @@ class DatetimeSplitter:
         if expected_time is not None:
             try:
                 pd.testing.assert_series_equal(expected_time, time)
-            except AssertionError as e:  # pragma: no cover
+            except AssertionError as e:
                 raise ValueError("Indices of X and y must be equal. See trace for details.") from e
         else:
-            pass  # pragma: no cover
+            pass
 
         return cuts, time
 
@@ -341,7 +341,7 @@ class TimeFold(NamedTuple):
             f"{after=}",
         ]
         if time_column != "time":
-            args.append(f"{time_column=}")  # pragma: no cover
+            args.append(f"{time_column=}")
         ax.set_title(f"TimeFold.iter({', '.join(args)})")
         ax.legend(loc="upper left")
 
@@ -403,7 +403,7 @@ def _handle_schedule(
         schedule = pd.DatetimeIndex(schedule)
 
     if any(schedule.sort_values() != schedule):
-        raise ValueError("Schedule timestamps must be in sorted order.")  # pragma: no cover
+        raise ValueError("Schedule timestamps must be in sorted order.")
 
     return schedule
 
@@ -490,14 +490,14 @@ def _handle_span(schedule: pd.DatetimeIndex, span: Span, before: bool) -> pd.Dat
 
     if isinstance(span, int):
         if span < 0:
-            raise ValueError(f"Bad period {span_repr}")  # pragma: no cover
+            raise ValueError(f"Bad period {span_repr}")
         assert not before, "This isn't supposed to happen."  # noqa: S101
 
         return schedule[span:]
     else:
         offset = pd.Timedelta(span)
         if offset < pd.Timedelta(0):
-            raise ValueError(f"Bad timedelta {span_repr}")  # pragma: no cover
+            raise ValueError(f"Bad timedelta {span_repr}")
 
         if before:
             return schedule - offset

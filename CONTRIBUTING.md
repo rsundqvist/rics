@@ -28,7 +28,7 @@ These requirements are *not* verified in CI/CD.
 ### Checked requirements
 These requirements are verified in CI/CD.
 
-* Coverage must remain at 100% (after ignores).
+* Coverage limit should not decrease unless it's well-motivated.
 * Public methods and classes must be documented.
 * Use the commit hooks to format and lint the code.
 

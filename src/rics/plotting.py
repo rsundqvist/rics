@@ -82,8 +82,8 @@ class _PiTickHelper:
     HALF_PI = PI / 2
 
     def __init__(self, half: Optional[Literal["frac", "dec"]], start: float) -> None:
-        if half not in (None, "frac", "dec"):  # pragma: no cover
-            raise ValueError(f"Argument {half=} not in ('frac', 'dec', None).")
+        if half not in (None, "frac", "dec"):
+            raise TypeError(f"Argument {half=} not in ('frac', 'dec', None).")
 
         self.half = half
         r = self.HALF_PI if half else self.PI

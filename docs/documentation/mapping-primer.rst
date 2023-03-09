@@ -106,6 +106,11 @@ v1          0.0  1.0
 Notice that `val1` was left without a match, even though it could've been assigned to `cand0` if the equally viable
 matching `val0 → cand1` had been chosen first.
 
+.. note::
+
+   As of version 3.0.0, a score matrix like this will raise :class:`.AmbiguousScoreError` for any cardinality that
+   requires a single candidate (including `1:1`).
+
 Troubleshooting
 ---------------
 Unmapped values are allowed by default. If mapping failure is not an acceptable outcome for your application, initialize

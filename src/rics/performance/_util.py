@@ -74,7 +74,7 @@ def plot_run(
 
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed.
-        ValueError: For unknown `unit` arguments.
+        TypeError: For unknown `unit` arguments.
     """
     import matplotlib.pyplot as plt
     from seaborn import barplot, move_legend
@@ -88,8 +88,9 @@ def plot_run(
         else (("Test data", "Candidate") if x == "data" else ("Candidate", "Test data"))
     )
     y = f"Time [{unit.replace('us', 'μs')}]"
-    if y not in data:  # pragma: no cover
-        raise ValueError(f"Bad {unit=}; column '{y}' not present in data.")
+    if y not in data:
+        # Unit is not one of the literals, but we still check 'data' in case someone added more units themselves.
+        raise TypeError(f"Bad {unit=}; column '{y}' not present in data.")
 
     fig, (left, right) = plt.subplots(
         ncols=2, tight_layout=True, figsize=(8 + 4 * data.Candidate.nunique(), 7), sharey=True

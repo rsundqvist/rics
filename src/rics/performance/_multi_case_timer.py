@@ -27,12 +27,12 @@ class MultiCaseTimer:
         test_data: Union[DataType, Mapping[str, DataType]],
     ) -> None:
         self._candidates = _process_candidates(candidate_method)
-        if not self._candidates:  # pragma: no cover
-            raise ValueError("No candidates given.")
+        if not self._candidates:
+            raise ValueError("No candidates given.")  # pragma: no cover
 
         self._data = test_data if isinstance(test_data, dict) else _process_single_test_datum(test_data)
-        if not self._data:  # pragma: no cover
-            raise ValueError("No case data given.")
+        if not self._data:
+            raise ValueError("No case data given.")  # pragma: no cover
 
     def run(
         self,
@@ -78,7 +78,7 @@ class MultiCaseTimer:
                 raw_timings = self._get_raw_timings(func, test_data, candidate_number, repeat)
                 best, worst = min(raw_timings), max(raw_timings)
                 candidate_results[data_label] = [dt / candidate_number for dt in raw_timings]
-                if worst >= best * 4:  # pragma: no cover
+                if worst >= best * 4:
                     t = (candidate_label, data_label)
                     warnings.warn(
                         f"The test results may be unreliable for {t}. The worst time {fmt_time(worst)} "
@@ -93,11 +93,11 @@ class MultiCaseTimer:
     @staticmethod
     def _get_raw_timings(func: CandFunc, test_data: DataType, repeat: int, number: int) -> List[float]:
         """Exists so that it can be overridden for testing."""
-        return Timer(lambda: func(test_data)).repeat(repeat, number)  # pragma: no cover
+        return Timer(lambda: func(test_data)).repeat(repeat, number)
 
     def _compute_number_of_iterations(
         self, number: Optional[int], repeat: int, time_allocation: float
-    ) -> Dict[str, int]:  # pragma: no cover
+    ) -> Dict[str, int]:
         if isinstance(number, int):
             ans = {case: number for case in self._data}
         else:
@@ -117,7 +117,7 @@ class MultiCaseTimer:
 
 def _process_candidates(
     candidates: Union[CandFunc, Collection[CandFunc], Mapping[str, CandFunc]]
-) -> Dict[str, CandFunc]:  # pragma: no cover
+) -> Dict[str, CandFunc]:
     if isinstance(candidates, dict):
         return candidates
     if callable(candidates):
@@ -133,7 +133,7 @@ def _process_candidates(
     return ans  # type: ignore[return-value]
 
 
-def _process_single_test_datum(test_data: DataType) -> Dict[str, DataType]:  # pragma: no cover
+def _process_single_test_datum(test_data: DataType) -> Dict[str, DataType]:
     s = repr(test_data)
     key = f"{s[:29]}..." if len(s) > 32 else s
     return {f"Sample data: '{key}'": test_data}

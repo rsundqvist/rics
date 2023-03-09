@@ -30,6 +30,9 @@ def test_reverse_dict():
     assert reversed_d == {"a": "A", "b": "B"}
     assert id(reversed_d) != d_id
 
+    with pytest.raises(ValueError):
+        reverse_dict({0: 0, 1: 0})
+
 
 def test_flatten_dict(nested_dict):
     actual = flatten_dict(nested_dict)
@@ -101,6 +104,10 @@ def test_inherited_keys_dict(d):
     assert d["not-in-d"] == {0: "shared0", 1: "shared1"}
     assert len(d) == 2
     assert list(d) == ["ctx0", "ctx1"]
+
+    with pytest.raises(KeyError):
+        empty: InheritedKeysDict[str, str, str] = InheritedKeysDict()
+        _ = empty["any-key-will-do"]
 
 
 def test_copy(d):

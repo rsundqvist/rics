@@ -114,7 +114,7 @@ def main(time_per_candidate: float, name: str, create: bool, per_candidate: bool
         name = "create-example-run"
         for template_name in "candidates", "test_data":
             path = _Path().joinpath(template_name).with_suffix(".py").absolute()
-            if path.exists():  # pragma: no cover
+            if path.exists():
                 click.secho(
                     f"ABORT: Refusing to overwrite existing file '{path}'. "
                     f"Delete files 'candidates.py' and 'test_data.py' in '{path.parent}' to continue.",
@@ -184,7 +184,7 @@ def main(time_per_candidate: float, name: str, create: bool, per_candidate: bool
     click.secho(f"Figure saved: '{figure_path}'", fg="green")
 
     performance_report_path = name_path.with_suffix(".csv")
-    if len(result) > 10000:  # pragma: no cover
+    if len(result) > 10000:
         click.secho(
             f"WARNING: The full timing report has {len(result)} rows, which may take a while to serialize.", fg="yellow"
         )

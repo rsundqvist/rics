@@ -147,7 +147,7 @@ def value_fstring_alias(
         )
 
     if for_value and value != for_value:
-        return value, candidates  # pragma: no cover
+        return value, candidates
 
     return fstring.format(value=value, context=context, **kwargs), candidates
 

@@ -1,4 +1,7 @@
 import logging
+import os
+import sys
+import traceback
 import warnings
 from typing import Any, Union
 
@@ -43,6 +46,9 @@ def configure_stuff(
     except ModuleNotFoundError as e:
         warnings.warn(f"Plotting configuration not done: {e}")
 
+    print("👻 Configured some stuff just the way I like it!")
+    _maybe_emit_warning()
+
 
 def _configure_pandas() -> None:
     try:
@@ -62,4 +68,18 @@ def _configure_pandas() -> None:
     try:
         pd.plotting.register_matplotlib_converters()
     except ImportError:  # pragma: no cover
-        pass  # Likely a non-interactive environment
+        pass
+
+
+def _maybe_emit_warning() -> None:  # pragma: no cover
+    if os.environ.get("JTWILI", "false").lower() == "true":
+        return
+
+    caller = traceback.format_stack()[-3]
+    message = f"If you're seeing this in bad places, remove the call to rics.configure_stuff() in:\n{caller}"
+
+    logger = logging.getLogger("rics")
+    if logger.isEnabledFor(logging.WARNING):
+        logger.warning(message)
+    else:
+        print(message, end="", file=sys.stderr)

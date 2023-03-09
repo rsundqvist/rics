@@ -183,7 +183,7 @@ def test_sklearn_equality(args, time_column, n_splits):
             pd.testing.assert_frame_equal(fd, df.iloc[fidx])
 
 
-def test_bad_xy_index():
+def test_bad_xy():
     time = pd.date_range("2022", "2022-1-15", freq="2h")
     df = pd.DataFrame(
         {
@@ -202,3 +202,6 @@ def test_bad_xy_index():
 
     with pytest.raises(ValueError, match="Indices of X and y must be equal"):
         list(TimeFold.make_sklearn_splitter().split(X, y))
+
+    with pytest.raises(ValueError, match="At least one of \\(X, y\\)"):
+        list(TimeFold.make_sklearn_splitter().split())

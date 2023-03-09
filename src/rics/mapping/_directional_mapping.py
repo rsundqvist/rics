@@ -167,7 +167,7 @@ class DirectionalMapping(Generic[HL, HR]):
         return f"{tname(self)}({n_left} left | {n_right} right, type={self.cardinality.name})"
 
     def __bool__(self) -> bool:
-        return bool(self._left_to_right or self._right_to_left)  # pragma: no cover
+        return bool(self._left_to_right or self._right_to_left)
 
     @classmethod
     def _handle_cardinality(
@@ -179,7 +179,7 @@ class DirectionalMapping(Generic[HL, HR]):
     ) -> Cardinality:
         if not (left and right):
             if expected is None:
-                return Cardinality.ManyToMany  # pragma: no cover
+                return Cardinality.ManyToMany
             else:
                 return Cardinality.parse(expected)
 

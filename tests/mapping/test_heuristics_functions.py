@@ -56,22 +56,32 @@ def test_short_circuit_to_candidate(value, add_target, expected):
     [
         ("{value}", "VALUE"),
         ("{value}_{kwarg}", "VALUE_KWARG"),
-        ("only {kwarg}", None),
-        ("no-kwarg", None),
     ],
 )
 def test_value_fstring_alias(fstring, expected_value):
-    candidates = list("abc")
+    actual_value, actual_candidates = hf.value_fstring_alias("VALUE", list("abc"), None, fstring, kwarg="KWARG")
+    assert actual_value == expected_value
+    assert actual_candidates == list("abc")
 
+
+@pytest.mark.parametrize(
+    "for_value, expected_value",
+    [
+        (None, None),
+        ("VALUE", "context"),
+        ("NOT_VALUE", "VALUE"),
+    ],
+)
+def test_value_fstring_alias_for_value(for_value, expected_value):
+    args = ("VALUE", list("abc"), "context", "{context}")
     if expected_value is None:
         with pytest.raises(ValueError, match="does not contain {value}"):
-            hf.value_fstring_alias("VALUE", candidates.copy(), None, fstring, kwarg="KWARG")
+            hf.value_fstring_alias(*args, for_value=for_value)
         return
 
-    actual_value, actual_candidates = hf.value_fstring_alias("VALUE", candidates.copy(), None, fstring, kwarg="KWARG")
-
+    actual_value, actual_candidates = hf.value_fstring_alias(*args, for_value=for_value)
     assert actual_value == expected_value
-    assert actual_candidates == candidates
+    assert actual_candidates == list("abc")
 
 
 @pytest.mark.parametrize(

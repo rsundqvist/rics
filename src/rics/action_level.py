@@ -46,9 +46,9 @@ class ActionLevel(_Enum):
         else:
             try:
                 action_level = ActionLevel[action.upper()]
-            except KeyError:  # pragma: no cover
+            except KeyError:
                 raise BadActionLevelError(action, purpose, forbidden)
-            except AttributeError:  # pragma: no cover
+            except AttributeError:
                 raise BadActionLevelError(action, purpose, forbidden)
 
         if action_level is forbidden:

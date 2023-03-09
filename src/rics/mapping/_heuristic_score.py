@@ -125,18 +125,17 @@ class HeuristicScore(Generic[ValueType, CandidateType, ContextType]):
                     h_value, h_candidates = res_value, res_candidates
 
                 positional_penalty += 0.005
-            else:  # Filter function
-                if mutate:  # pragma: no cover
-                    LOGGER.warning(f"The filter function {_stringify(func, func_kwargs)} cannot use {mutate=}.")
+            elif res:  # Filter function
+                if mutate:
+                    raise TypeError(f"Filter function {_stringify((func, func_kwargs))} cannot use {mutate=}.")
 
-                if res:
-                    if heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG):
-                        base_args = ", ".join([repr(h_value), repr(h_candidates), f"{context=}"])
-                        extra_args = ", ".join(f"{k}={repr(v)}" for k, v, in func_kwargs.items())
-                        info = f"{tname(func)}({', '.join([base_args, extra_args])})"
-                        LOGGER.debug(f"Short-circuit {value=} -> candidates={repr(res)}, triggered by {info}.")
-                    yield from (float("inf") if c in res else -float("inf") for c in h_candidates)
-                    return  # Short-circuit
+                if heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG):
+                    base_args = ", ".join([repr(h_value), repr(h_candidates), f"{context=}"])
+                    extra_args = ", ".join(f"{k}={repr(v)}" for k, v, in func_kwargs.items())
+                    info = f"{tname(func)}({', '.join([base_args, extra_args])})"
+                    LOGGER.debug(f"Short-circuit {value=} -> candidates={repr(res)}, triggered by {info}.")
+                yield from (float("inf") if c in res else -float("inf") for c in h_candidates)
+                return  # Short-circuit
 
         if heuristic_functions.VERBOSE and LOGGER.isEnabledFor(logging.DEBUG):
             changes = [
@@ -160,15 +159,14 @@ def _stringify(*args: Any) -> str:
 
 def _resolve_heuristic(
     func_or_name: Union[str, HeuristicsTypes[ValueType, CandidateType, ContextType]]
-) -> HeuristicsTypes[ValueType, CandidateType, ContextType]:  # pragma: no cover
+) -> HeuristicsTypes[ValueType, CandidateType, ContextType]:
     if isinstance(func_or_name, str):
-        function_modules = [filter_functions, heuristic_functions]
-        for m in function_modules:
+        for m in filter_functions, heuristic_functions:
             try:
                 return get_by_full_name(func_or_name, m)  # type: ignore[no-any-return]
             except AttributeError:
                 pass
 
-        raise KeyError(func_or_name)
+        raise NameError(func_or_name)
     else:
         return func_or_name

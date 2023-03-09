@@ -171,7 +171,7 @@ class MatchScores:
         superseding_value: Optional["MatchScores.Record[ValueType, CandidateType]"] = None
         superseding_candidate: Optional["MatchScores.Record[ValueType, CandidateType]"] = None
 
-        def explain(self, min_score: float, full: bool = False) -> str:  # pragma: no cover
+        def explain(self, min_score: float, full: bool = False) -> str:
             """Create a string which explains the rejection.
 
             Args:
@@ -243,7 +243,7 @@ class MatchScores:
             self._raise_if_ambiguous(record, mvs, "value", _Cardinality.OneToOne)
 
             if record.score < self._min_score or record.value in mvs or record.candidate in mcs:
-                if rejections is not None:  # pragma: no cover
+                if rejections is not None:
                     rejections.append(
                         MatchScores.Reject(
                             record,
@@ -267,7 +267,7 @@ class MatchScores:
             self._raise_if_ambiguous(record, mcs, "candidate", _Cardinality.OneToMany)
 
             if record.score < self._min_score or record.candidate in mcs:
-                if rejections is not None:  # pragma: no cover
+                if rejections is not None:
                     rejections.append(MatchScores.Reject(record, superseding_candidate=mcs.get(record.candidate)))
                 continue
             mcs[record.candidate] = record
@@ -284,7 +284,7 @@ class MatchScores:
             self._raise_if_ambiguous(record, mvs, "value", cardinality=_Cardinality.ManyToOne)
 
             if record.score < self._min_score or record.value in mvs:
-                if rejections is not None:  # pragma: no cover
+                if rejections is not None:
                     rejections.append(MatchScores.Reject(record, superseding_value=mvs.get(record.value)))
                 continue
             mvs[record.value] = record
@@ -295,7 +295,7 @@ class MatchScores:
         records: Iterable[Record[ValueType, CandidateType]],
         rejections: List[Reject[ValueType, CandidateType]] = None,
     ) -> Iterable[Record[ValueType, CandidateType]]:
-        for record in records:  # pragma: no cover
+        for record in records:
             if record.score < self._min_score:
                 if rejections is not None:
                     rejections.append(MatchScores.Reject(record))

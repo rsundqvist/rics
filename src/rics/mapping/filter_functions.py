@@ -68,8 +68,8 @@ def require_regex_match(
             return set()
 
     if "context" in where:
-        if context is None:  # pragma: no cover
-            raise ValueError(f"No context given but 'context' was found in {where=}.")
+        if context is None:
+            raise ValueError(f"No context given but 'context' was found in {where=}.")  # pragma: no cover
 
         match = pattern.match(context)
         if keep_if_match and not match:

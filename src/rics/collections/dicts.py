@@ -56,7 +56,7 @@ def reverse_dict(d: Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseTyp
     ans = {value: key for key, value in d.items()}
     action_level = ActionLevel.verify(duplicate_key_action)
 
-    if action_level is not ActionLevel.IGNORE and len(d) != len(ans):  # pragma: no cover
+    if action_level is not ActionLevel.IGNORE and len(d) != len(ans):
         msg = (
             f"Duplicate values in {d}; cannot reverse. Original dict has size {len(d)} != {len(ans)}."
             f"\nHint: Set duplicate_key_action='ignore' to allow."
@@ -65,6 +65,8 @@ def reverse_dict(d: Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseTyp
             warnings.warn(msg)
         elif action_level is ActionLevel.RAISE:
             raise ValueError(msg)
+        else:
+            pass  # pragma: no cover
 
     return ans
 
@@ -168,7 +170,7 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
 
     def __getitem__(self, context: OKT) -> Dict[KT, VT]:
         if not self:
-            raise KeyError(context)  # pragma: no cover
+            raise KeyError(context)
 
         specific = self._specific.get(context, {})
         return {**self._default, **specific}
@@ -182,7 +184,7 @@ class InheritedKeysDict(Mapping[OKT, Dict[KT, VT]]):
         if not isinstance(other, InheritedKeysDict):
             return False
 
-        return self._default == other._default and self._specific == other._specific  # pragma: no cover
+        return self._default == other._default and self._specific == other._specific
 
     def __bool__(self) -> bool:
         return bool(self._default or self._specific)

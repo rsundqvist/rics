@@ -27,8 +27,8 @@ def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) 
         module_name, _, member = name.rpartition(".")
         module = _import_module(module_name)
     else:
-        if not default_module:  # pragma: no cover
-            raise ValueError("Names must be fully qualified when no default module is given.")
+        if not default_module:
+            raise ValueError("Names must be fully qualified when no default module is given.")  # pragma: no cover
         module = _import_module(default_module) if isinstance(default_module, str) else default_module
         member = name
 
@@ -56,8 +56,8 @@ def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) 
         return arg.__name__
     if hasattr(arg, "__class__"):
         return arg.__class__.__name__
-
-    raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
+    else:
+        raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
 
 
 def get_local_or_remote(
