@@ -56,10 +56,10 @@ optional = true
 # description: https://github.com/astropy/astropy/issues/11723
 # https://github.com/astropy/astropy/pull/12270
 sphinx = "^5.1.1"
-pydata-sphinx-theme = "^0.9.0"
-myst-parser = "^0.18.0"
+pydata-sphinx-theme = ">=0.9,<0.14"
+myst-parser = ">=0.18,<0.20"
 nbsphinx = "^0.8.9"
-ipython = "<8.7.0"
+ipython = "<8.12.0"
 
 [tool.poetry.group.notebooks]
 optional = true
@@ -74,7 +74,7 @@ flakeheaven = "^3.2.1"
 flake8-builtins = "^2.0.1"
 flake8-blind-except = "^0.2.1"
 flake8-logging-format = "^0.9.0"
-flake8-bugbear = "^22.9.11"
+flake8-bugbear = ">=22.9.11,<24.0.0"
 flake8-annotations = "^2.9.1"
 flake8-docstrings = "^1.6.0"
 flake8-bandit = "^3.0.0"
@@ -87,13 +87,13 @@ black = { version = "^22", extras = ["jupyter"] }
 [tool.poetry.group.test.dependencies]
 pytest = "^7.2.0"
 xdoctest = "^1.1.0"
-coverage = "^6.5.0"
+coverage = ">=6.5,<8.0"
 pytest-cov = "^4.0.0"
 codespell = "^2.2.2"
 croniter = ">=1.2.0"  # Used for tfold tests
 
 [tool.poetry.group.misc.dependencies]
-pre-commit = "^2.20.0"
+pre-commit = "^3.1.1"
 invoke = ">=2"
 safety = "^2.1.1"
 mypy = "^0.991"

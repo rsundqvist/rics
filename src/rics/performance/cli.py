@@ -10,7 +10,6 @@ from pathlib import Path as _Path
 from typing import Any, Optional
 
 import click
-import pkg_resources
 
 from .._just_the_way_i_like_it import configure_stuff as _configure_stuff
 from ._util import get_best as _get_best
@@ -122,8 +121,8 @@ def main(time_per_candidate: float, name: str, create: bool, per_candidate: bool
                     err=True,
                 )
                 sys.exit(1)
-            data: bytes = pkg_resources.resource_string(__package__, f"templates/{template_name}.py.txt")
-            path.write_bytes(data)
+            text = _Path(__file__).parent.joinpath(f"templates/{template_name}.py.txt").read_text()
+            path.write_text(text)
 
     name_path = _Path(name).absolute()
     pretty = name_path.stem.replace("-", " ").replace("_", " ").title()
