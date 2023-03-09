@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2023-03-09
+
 ### Added
 - The `score_functions.disabled()` function, used to force a `Mapper` to work in override-only mode.
 - An optional argument `for_value` to the `heuristic_functions.value_fstring_alias()` function.
@@ -385,7 +387,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v3.0.0...HEAD
+[3.0.0]: https://github.com/rsundqvist/rics/compare/v2.1.0...v3.0.0
 [2.1.0]: https://github.com/rsundqvist/rics/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/rsundqvist/rics/compare/v1.0.1...v2.0.0
 [1.0.1]: https://github.com/rsundqvist/rics/compare/v1.0.0...v1.0.1
