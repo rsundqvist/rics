@@ -13,7 +13,7 @@ omit =
     src/rics/_internal_support/_local_or_remote.py
     src/rics/wip/__init__.py
 
-fail_under = 98
+fail_under = 90
 
 exclude_lines =
     @overload

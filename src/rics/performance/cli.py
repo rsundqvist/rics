@@ -5,6 +5,7 @@ For details, see the CLI docs.
 import datetime
 import importlib
 import inspect
+import os
 import sys
 from pathlib import Path as _Path
 from typing import Any, Optional
@@ -132,6 +133,7 @@ def main(time_per_candidate: float, name: str, create: bool, per_candidate: bool
     click.secho("-" * 80, fg="green")
 
     # force=False has no effect during normal operation (i.e. when running from CLI), but keeps things tidy for CI/CD.
+    os.environ["JTWILI"] = "true"  # Suppress warnings
     _configure_stuff(force=False)
 
     try:

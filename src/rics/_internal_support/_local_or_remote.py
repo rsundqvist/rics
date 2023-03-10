@@ -90,7 +90,7 @@ def _fetch(local_file_path: Path, remote_file_path: str, show_progress: bool) ->
         raise ModuleNotFoundError("The requests package is not installed; cannot download remote content.")
 
     _GLOR_LOGGER.info(f"Fetching data from '{remote_file_path}'..")
-    response = requests.get(remote_file_path, stream=True)
+    response = requests.get(remote_file_path, stream=True, timeout=300)
     chunks = response.iter_content(_CHUNK_SIZE)
     with open(local_file_path, "wb") as output_file:
         if show_progress:

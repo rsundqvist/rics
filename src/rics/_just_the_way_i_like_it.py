@@ -74,6 +74,11 @@ def _configure_pandas() -> None:
 def _maybe_emit_warning() -> None:  # pragma: no cover
     if os.environ.get("JTWILI", "false").lower() == "true":
         return
+    try:
+        get_ipython()  # type: ignore[name-defined]
+        return  # Typically in a console or notebook
+    except NameError:
+        pass
 
     caller = traceback.format_stack()[-3]
     message = f"If you're seeing this in bad places, remove the call to rics.configure_stuff() in:\n{caller}"
