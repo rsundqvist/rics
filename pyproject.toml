@@ -96,7 +96,7 @@ croniter = ">=1.2.0"  # Used for tfold tests
 pre-commit = "^3.1.1"
 invoke = ">=2"
 safety = "^2.1.1"
-mypy = "^0.991"
+mypy = ">=0.991,<1.2"
 bump2version = "^1.0.1"
 
 [tool.poetry.group.types.dependencies]
