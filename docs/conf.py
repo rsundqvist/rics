@@ -18,7 +18,6 @@ import rics
 from rics._internal_support.changelog import split_changelog
 
 type_modules = (
-    "rics.mapping.types",
     "rics.collections.dicts",
     "rics.collections.misc",
 )
@@ -35,13 +34,6 @@ def callback(_app, _env, node, _contnode):  # noqa
             ans_hax = reference(refuri=m + ".html#" + reftarget, reftitle=reftarget)
             ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
             return ans_hax
-
-    if reftarget == "rics.mapping.support.Record":
-        ans_hax = reference(
-            refuri="rics.mapping.support.html#rics.mapping.support.MatchScores.Record", reftitle="Record"
-        )
-        ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
-        return ans_hax
 
     return None
 
@@ -162,12 +154,6 @@ html_context = {
             img="_static/chef.png",
         ),
         dict(
-            title="Mapping",
-            text="An introduction to the mapping framework.",
-            url="documentation/mapping-primer.html",
-            img="_static/mapping.png",
-        ),
-        dict(
             title="Utilities",
             text="Various utility methods.",
             url="_autosummary/rics.misc.html",
@@ -175,7 +161,7 @@ html_context = {
         ),
         dict(
             title="Cross Validation",
-            text="Temporal folds from pandas types. Scikit-learn compatible.",
+            text="Create temporal folds from Pandas types. Scikit-learn compatible.",
             url="_autosummary/rics.pandas.html#rics.pandas.TimeFold",
             img="_static/folds.png",
         ),
@@ -184,6 +170,13 @@ html_context = {
             text="Documentation for the ID translation suite.",
             url=id_translation_docs,
             img="_static/translation.png",
+        ),
+        dict(
+            title="Want to get in touch?",
+            text="Contact me on LinkedIn!",
+            url="https://www.linkedin.com/in/per-richard-sundqvist",
+            # This seems like acceptable in-logo use as per https://brand.linkedin.com/policies
+            img="https://content.linkedin.com/content/dam/me/brand/en-us/brand-home/logos/In-Blue-Logo.png.original.png",
         ),
     ],
 }

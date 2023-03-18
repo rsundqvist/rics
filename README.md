@@ -18,22 +18,16 @@
 An assorted collections of generic functions that used to live in a Dropbox folder where I used to keep useful snippets.
 RiCS, pronounced _"rix_", is short for _**Ri**chard's **C**ode **S**tash_. I started this project with the purpose of 
 learning more about Python best practices, typing and the Python ecosystem. It has grown organically since then, and now
-provides a wide variety of utility functions. The [id-translation](https://pypi.org/project/id-translation/) suite 
-(installed separately) relies heavily on [rics.mapping][mapping], as well as a number of other functions provided herein.
+provides a wide variety of utility functions. This library also powers much of the
+[id-translation](https://pypi.org/project/id-translation/) suite (installed separately).
 
 ## Highlighted Features
 - Multivariate [performance testing][perf].
-- Highly configurable [element mapping][mapping];
-  - Provides a wide variety of filtering, scoring and heuristic functions. 
-  - Powers Name-to-source mapping for the [id-translation](https://id-translation.readthedocs.io/en/stable/documentation/translation-primer.html#name-to-source-mapping) 
-    suite (installed separately).
 - Various other [utilities][utility], ranging from [logging] to [plotting] to specialized [dict] functions.
 - Temporal folds ([compatible with sklearn][time-fold]) for heterogeneous `pandas` types, meant for time-series cross validation.
 
 [perf]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.run_multivariate_test
 [perf-plot]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.plot_run
-
-[mapping]: https://rics.readthedocs.io/en/stable/_autosummary/rics.mapping.html
 
 [utility]: https://rics.readthedocs.io/en/stable/_autosummary/rics.misc.html
 [logging]: https://rics.readthedocs.io/en/stable/_autosummary/rics.logs.html
