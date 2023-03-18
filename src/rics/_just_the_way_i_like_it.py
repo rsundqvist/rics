@@ -44,7 +44,7 @@ def configure_stuff(
 
         configure()
     except ModuleNotFoundError as e:
-        warnings.warn(f"Plotting configuration not done: {e}")
+        warnings.warn(f"Plotting configuration not done: {e}", stacklevel=2)
 
     print("👻 Configured some stuff just the way I like it!")
     _maybe_emit_warning()
@@ -54,7 +54,7 @@ def _configure_pandas() -> None:
     try:
         import pandas as pd
     except ModuleNotFoundError as e:
-        warnings.warn(f"Pandas configuration not done: {e}")
+        warnings.warn(f"Pandas configuration not done: {e}", stacklevel=3)
         return
 
     pd.options.display.max_columns = 50

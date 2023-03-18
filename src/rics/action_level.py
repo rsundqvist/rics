@@ -69,7 +69,7 @@ class ActionLevel(_Enum):
         return hash(self.name)
 
 
-ActionLevel.ParseType = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], ActionLevel]
+ActionLevel.ParseType = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], ActionLevel]  # type: ignore
 
 
 class ActionLevelHelper:

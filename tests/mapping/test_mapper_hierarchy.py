@@ -47,7 +47,7 @@ def run(
     values = NUMBER_OF_LEGS.copy()
     mapper = Mapper(
         HeuristicScore(
-            score_function=lambda v, c, cxt: [float(c == NUMBER_OF_LEGS[v]) for c in c],
+            score_function=lambda v, c, cxt: [float(c == NUMBER_OF_LEGS[v]) for c in c],  # type: ignore[var-annotated]
             heuristics=[ShortCircuit.dogs_have_4_legs] if use_short_circuit else (),
         ),
         overrides=StaticOverride.nobody_gets_any_legs if use_static_override else None,
