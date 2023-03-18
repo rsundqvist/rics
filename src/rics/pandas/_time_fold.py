@@ -316,7 +316,8 @@ class TimeFold(NamedTuple):
             if kwargs:  # pragma: no cover
                 warnings.warn(
                     f"Keyword arguments {kwargs} for matplotlib.pyplot.subplots"
-                    " are ignored since an explicit axis is given."
+                    " are ignored since an explicit axis is given.",
+                    stacklevel=2,
                 )
 
         xticks = [cuts[0][0]]

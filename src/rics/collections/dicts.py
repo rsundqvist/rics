@@ -1,6 +1,6 @@
 """Dict utility functions."""
-import warnings
 from typing import Any, Callable, Dict, Hashable, Iterator, List, Mapping, Optional, TypedDict, TypeVar, Union
+from warnings import warn as _warn
 
 from ..action_level import ActionLevel
 from ..misc import tname as _tname
@@ -54,19 +54,17 @@ def reverse_dict(d: Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseTyp
         ValueError: If there are duplicate values in `d` and ``duplicate_key_action='raise'``.
     """
     ans = {value: key for key, value in d.items()}
-    action_level = ActionLevel.verify(duplicate_key_action)
 
+    action_level = ActionLevel.verify(duplicate_key_action)
     if action_level is not ActionLevel.IGNORE and len(d) != len(ans):
         msg = (
             f"Duplicate values in {d}; cannot reverse. Original dict has size {len(d)} != {len(ans)}."
             f"\nHint: Set duplicate_key_action='ignore' to allow."
         )
         if action_level is ActionLevel.WARN:
-            warnings.warn(msg)
-        elif action_level is ActionLevel.RAISE:
-            raise ValueError(msg)
+            _warn(msg, stacklevel=2)
         else:
-            pass  # pragma: no cover
+            raise ValueError(msg)  # pragma: no cover
 
     return ans
 
