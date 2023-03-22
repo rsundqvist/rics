@@ -125,12 +125,13 @@ class TimeFold(NamedTuple):
 
        * - Argument type
          - Interpretation
-       * - String ``'all```
+       * - String ``'all'``
          - Include all data before/after the scheduled time.
        * - ``int > 0``
          - Include all data within `N` schedule periods from the scheduled time.
        * - Anything else
-         - Passed as-is to the :class:`pandas.Timedelta` class. Must be positive.
+         - Passed as-is to the :class:`pandas.Timedelta` class. Must be positive. See
+           :ref:`pandas:timeseries.offset_aliases` for valid frequency strings.
 
     Folds always lie fully within the available time span, but empty :attr:`data` or :attr:`future_data` frames are
     possible if the data is not continuous.
@@ -334,7 +335,7 @@ class TimeFold(NamedTuple):
         ax.set_yticks(range(len(cuts)))
         ax.xaxis.set_major_formatter(AutoDateFormatter(ax.xaxis.get_major_locator()))
         ax.set_ylabel("Fold")
-        ax.set_xlabel("Time")
+        ax.set_xlabel((df.index.name or "df.index") if time_column is None else time_column)
         args = [
             "df",
             _repr_schedule(schedule),
@@ -379,7 +380,7 @@ def _handle_cron(expr: str, min_data: pd.Timestamp, max_dt: pd.Timestamp) -> pd.
 
         return pd.DatetimeIndex(croniter_range(min_data, max_dt, expr))
     except ModuleNotFoundError as e:
-        raise ValueError(f"Install 'croniter' to parse cron expressions such such as '{expr}'.") from e
+        raise ModuleNotFoundError(f"Install 'croniter' to parse cron expressions such such as '{expr}'.") from e
 
 
 def _handle_schedule(
@@ -417,6 +418,9 @@ def _cuts(
     n_splits: Optional[int],
     allow_recurse: bool = True,
 ) -> Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]]:
+    if n_splits is not None and n_splits < 1:
+        raise ValueError(f"Expected n_splits >= 1 but got {n_splits=}.")
+
     number_to_skip = 0
     if allow_recurse and (LOGGER.isEnabledFor(logging.INFO) or n_splits):
         with disable_temporarily(LOGGER):
@@ -424,6 +428,7 @@ def _cuts(
 
         if n_splits is not None:
             number_to_skip = num_folds - n_splits
+            num_folds = min(n_splits, num_folds)
 
     min_dt, max_dt = time.min(), time.max()
     parsed_schedule = _handle_schedule(schedule, min_dt, max_dt)
