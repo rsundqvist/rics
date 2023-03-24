@@ -21,8 +21,24 @@ SplittableTypes = Optional[Union[pd.DataFrame, pd.Series, Iterable[pd.Timestamp]
 LOGGER = logging.getLogger(__package__).getChild("TimeFold")
 
 
-class DatetimeSplitter:
+if TYPE_CHECKING:
+    from sklearn.model_selection import BaseCrossValidator  # type: ignore[import]
+
+    BaseType = BaseCrossValidator
+else:
+    try:
+        from sklearn.model_selection import BaseCrossValidator
+
+        BaseType = BaseCrossValidator
+    except ModuleNotFoundError:
+        BaseType = object
+
+
+class DatetimeSplitter(BaseType):  # type: ignore
     """See :meth:`TimeFold.make_sklearn_splitter`."""
+
+    def _iter_test_indices(self, X=None, y=None, groups=None):  # type: ignore  # noqa
+        raise NotImplementedError
 
     def __init__(
         self,
