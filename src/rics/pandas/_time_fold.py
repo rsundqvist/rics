@@ -21,8 +21,24 @@ SplittableTypes = Optional[Union[pd.DataFrame, pd.Series, Iterable[pd.Timestamp]
 LOGGER = logging.getLogger(__package__).getChild("TimeFold")
 
 
-class DatetimeSplitter:
+if TYPE_CHECKING:
+    from sklearn.model_selection import BaseCrossValidator  # type: ignore[import]
+
+    BaseType = BaseCrossValidator
+else:
+    try:
+        from sklearn.model_selection import BaseCrossValidator
+
+        BaseType = BaseCrossValidator
+    except ModuleNotFoundError:
+        BaseType = object
+
+
+class DatetimeSplitter(BaseType):  # type: ignore
     """See :meth:`TimeFold.make_sklearn_splitter`."""
+
+    def _iter_test_indices(self, X=None, y=None, groups=None):  # type: ignore  # noqa
+        raise NotImplementedError
 
     def __init__(
         self,
@@ -90,13 +106,10 @@ class DatetimeSplitter:
         name: str,
         expected_time: pd.Series = None,
     ) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
-        if isinstance(data, pd.DataFrame):
-            pass  # Nothing preprocessing needed
-        else:
-            if self._column:
+        if not isinstance(data, pd.DataFrame):
+            if self._column is not None:
                 raise TypeError(f"Cannot process {type(data).__name__}-type '{name}'-argument unless time_column=None.")
             if not isinstance(data, pd.Series):
-                # Wrap in Series to comply with expected types.
                 data = pd.Series(index=pd.DatetimeIndex(data), dtype=int)
 
         cuts, time = _parse_args(
