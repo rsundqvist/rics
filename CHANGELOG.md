@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed some minor `TimeFold` issues.
+- `TimeFold.make_sklearn_splitter.split` now properly accepts all reasonable types (any datetime-like iterable).
 
 ## [3.0.0] - 2023-03-09
 

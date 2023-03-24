@@ -2,7 +2,7 @@ import itertools
 import logging
 import os
 import warnings
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Iterable, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import pandas as pd
@@ -16,6 +16,7 @@ if TYPE_CHECKING or os.environ.get("SPHINX_BUILD"):
 
 Schedule = Union[pd.DatetimeIndex, pd.Timedelta, timedelta, Sequence, str]
 Span = Union[int, str, Literal["all"], pd.Timedelta, timedelta]
+SplittableTypes = Optional[Union[pd.DataFrame, pd.Series, Iterable[pd.Timestamp], Iterable[datetime], Iterable[str]]]
 
 LOGGER = logging.getLogger(__package__).getChild("TimeFold")
 
@@ -52,13 +53,16 @@ class DatetimeSplitter:
             return len(list(self._parse_args(data, name=name)[0]))
 
     def split(
-        self, X: pd.DataFrame = None, y: Union[pd.DataFrame, pd.Series] = None, groups: Any = None
+        self,
+        X: SplittableTypes = None,
+        y: SplittableTypes = None,
+        groups: Any = None,
     ) -> Iterable[Tuple[List[int], List[int]]]:
         """Generate indices to split data into training and test set.
 
         Args:
-            X: Training data (features). Must be a ``Pandas`` type.
-            y: Target variable. Must be a ``Pandas`` type.
+            X: Training data (features).
+            y: Target variable.
             groups: Always ignored, exists for compatibility.
 
         Yields:
@@ -82,12 +86,18 @@ class DatetimeSplitter:
 
     def _parse_args(
         self,
-        data: Union[pd.DataFrame, pd.Series],
+        data: SplittableTypes,
         name: str,
         expected_time: pd.Series = None,
     ) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
-        if self._column and isinstance(data, pd.Series):
-            raise TypeError(f"Cannot process Series-type '{name}'-argument unless time_column=None.")
+        if isinstance(data, pd.DataFrame):
+            pass  # Nothing preprocessing needed
+        else:
+            if self._column:
+                raise TypeError(f"Cannot process {type(data).__name__}-type '{name}'-argument unless time_column=None.")
+            if not isinstance(data, pd.Series):
+                # Wrap in Series to comply with expected types.
+                data = pd.Series(index=pd.DatetimeIndex(data), dtype=int)
 
         cuts, time = _parse_args(
             data,

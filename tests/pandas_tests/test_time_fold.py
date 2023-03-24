@@ -130,18 +130,23 @@ def test_iter(use_index, to_str, kwargs_and_expected):
 
 
 @pytest.mark.parametrize(
-    "args, time_column, n_splits",
+    "args, time_column, n_splits, dt_like_factory_fn",
     [
-        ("Xy", None, None),
-        ("X", None, None),
-        ("X", "time", None),
-        ("y", None, None),
-        ("X", None, 2),
-        ("X", None, 3),
-        ("X", None, 4),
+        ("Xy", None, None, None),
+        ("X", None, None, None),
+        ("X", "time", None, None),
+        ("y", None, None, None),
+        ("X", None, 2, None),
+        ("X", None, 3, None),
+        ("X", None, 4, None),
+        ("Xy", None, None, list),
+        ("X", None, None, list),
+        ("X", None, None, tuple),
+        ("X", None, 4, list),
+        ("X", None, 4, pd.Index),
     ],
 )
-def test_sklearn_equality(args, time_column, n_splits):
+def test_sklearn_equality(args, time_column, n_splits, dt_like_factory_fn):
     assert args in ("X", "y", "Xy")
 
     time = pd.date_range("2022", "2022-1-15", freq="2h")
@@ -153,6 +158,10 @@ def test_sklearn_equality(args, time_column, n_splits):
 
     X = df.drop(columns="y") if args[0] == "X" else None
     y = df.y if args[-1] == "y" else None
+    if dt_like_factory_fn is not None:
+        X = dt_like_factory_fn(X.index)
+        if y is not None:
+            y = dt_like_factory_fn(y.index)
 
     kwargs = dict(schedule="3d", before="all", after=1, time_column=time_column, n_splits=n_splits)
     splitter = TimeFold.make_sklearn_splitter(**kwargs)
