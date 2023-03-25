@@ -21,6 +21,7 @@ SplittableTypes = Optional[Union[pd.DataFrame, pd.Series, Iterable[pd.Timestamp]
 LOGGER = logging.getLogger(__package__).getChild("TimeFold")
 
 
+# Would be nice to inherit a base splitter here, but these scikit-learn splitters aren't very typing-friendly..
 class DatetimeSplitter:
     """See :meth:`TimeFold.make_sklearn_splitter`."""
 
@@ -90,14 +91,7 @@ class DatetimeSplitter:
         name: str,
         expected_time: pd.Series = None,
     ) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
-        if isinstance(data, pd.DataFrame):
-            pass  # Nothing preprocessing needed
-        else:
-            if self._column:
-                raise TypeError(f"Cannot process {type(data).__name__}-type '{name}'-argument unless time_column=None.")
-            if not isinstance(data, pd.Series):
-                # Wrap in Series to comply with expected types.
-                data = pd.Series(index=pd.DatetimeIndex(data), dtype=int)
+        data = _parse_data_arg(data, time_column=self._column, name=name)
 
         cuts, time = _parse_args(
             data,
@@ -136,7 +130,8 @@ class TimeFold(NamedTuple):
        * - Argument type
          - Interpretation
        * - String ``'all'``
-         - Include all data before/after the scheduled time.
+         - Include all data before/after the scheduled time. Equivalent to ``max_train_size=None`` when using
+           `TimeSeriesSplit`_.
        * - ``int > 0``
          - Include all data within `N` schedule periods from the scheduled time.
        * - Anything else
@@ -175,16 +170,17 @@ class TimeFold(NamedTuple):
         Plotting folds using ``TimeFold.plot``.
 
         >>> from rics import configure_stuff; configure_stuff()
-        >>> df = pd.DataFrame({'time': pd.date_range('2022', '2022-1-21')})
-        >>> TimeFold.plot(df, schedule='0 0 * * MON,FRI')
+        >>> data = pd.date_range('2022', '2022-1-21', freq='38min')
+        >>> TimeFold.plot(data, schedule='0 0 * * MON,FRI', before='all')
 
         .. image:: ../_images/folds.png
 
-        The expression ``'0 0 * * MON,FRI'`` means `"every Monday and Friday at midnight"`.
+        The expression ``'0 0 * * MON,FRI'`` means `"every Monday and Friday at midnight"`. The numbers shown are the
+        row counts for the fold.
 
         With ``after=1`` (the default), our `Future data` expands until the next scheduled time. This may be interpreted
         as `"taking a step forward"` in the schedule. Using integer `before` arguments works analogously, in the
-        opposite direction. Vertical lines indicate outer limits of `df`.
+        opposite direction. Vertical lines indicate outer limits of the data.
 
     Notes:
        This method may be used to create temporal folds from heterogeneous/unaggregated data, typically used for
@@ -222,7 +218,8 @@ class TimeFold(NamedTuple):
             after: The period after the scheduled time to include. See :ref:`ba-args`
             n_splits: Maximum number of splits, preferring later folds. Has no effects if the actual number of splits
                 given `df` is less than `n_splits`.
-            time_column: Column to base the folds on. Use index if ``None``.
+            time_column: Column to base the folds on if ``DataFrame``-type data is given, ignored otherwise. Pass
+                ``None`` to use  ``DataFrame.index``.
 
         Yields:
             Tuples ``TimeFold(time, data, future_data)``.
@@ -256,8 +253,8 @@ class TimeFold(NamedTuple):
                 expression (requires ``croniter``).
             before: The period before the scheduled time to include. See :ref:`ba-args`
             after: The period after the scheduled time to include. See :ref:`ba-args`
-            time_column: Column to base the folds on. Use index if ``None``. If given, the returned splitter will not
-                be able to handle y-arguments.
+            time_column: Column to base the folds on if ``DataFrame``-type data is given, ignored otherwise. Pass
+                ``None`` to use  ``DataFrame.index``.
             n_splits: Maximum number of splits, preferring later folds. Has no effects if the actual number of splits
                 given `df` is less than `n_splits`.
 
@@ -272,28 +269,32 @@ class TimeFold(NamedTuple):
     @classmethod
     def plot(
         cls,
-        df: pd.DataFrame,
+        data: SplittableTypes,
         schedule: Schedule = "1d",
         before: Span = "5d",
         after: Span = 1,
         time_column: Optional[str] = "time",
         n_splits: int = None,
         ax: "Axes" = None,
+        show_counts: bool = None,
         **kwargs: Any,
     ) -> "Axes":
         """Plot the intervals that would be returned by :meth:`TimeFold.iter` if invoked with the same parameters.
 
         Args:
-            df: A pandas ``DataFrame``.
+            data: Something to split.
             schedule: Timestamps which denote the anchor dates of the folds (e.g. training dates). If a ``Timedelta`` or
-                ``str``, create schedule from the start of ``df[time_column]``. Alternatively, you may pass a cron
+                ``str``, create schedule from the start of ``data[time_column]``. Alternatively, you may pass a cron
                 expression (requires ``croniter``).
             before: The period before the scheduled time to include for each iteration. See :ref:`ba-args`
             after: The period after the scheduled time to include for each iteration. See :ref:`ba-args`
-            time_column: Column to base the folds on. Use index if ``None``.
+            time_column: Column to base the folds on if ``DataFrame``-type data is given, ignored otherwise. Pass
+                ``None`` to use  ``DataFrame.index``.
             n_splits: Maximum number of splits, preferring later folds. Has no effects if the actual number of splits
                 given `df` is less than `n_splits`.
             ax: Axis to use for plotting. Creates a new figure using :func:`matplotlib.pyplot.subplots` if ``None``.
+            show_counts: If ``True``, data set sizes by calling :func:`matplotlib.pyplot.bar_label`. Set to
+                ``None`` to choose automatically based on ``matplotlib``-version.
             **kwargs: Keyword arguments for :func:`matplotlib.pyplot.subplots`. Default arguments:
                 ``{"tight_layout": True, "figsize": (<default-width>, 3 + 0.5 * num_folds)}``
 
@@ -305,8 +306,27 @@ class TimeFold(NamedTuple):
         """
         import matplotlib.pyplot as plt
         from matplotlib.dates import AutoDateFormatter
+        from matplotlib.pyplot import Axes
 
-        cuts, time = _parse_args(df, schedule, time_column, before, after, n_splits)
+        args = [
+            "data",
+            _repr_schedule(schedule),
+            f"{before=}",
+            f"{after=}",
+        ]
+        if time_column != "time":
+            args.append(f"{time_column=}")
+
+        if time_column == "time" and not isinstance(data, pd.DataFrame):
+            time_column = None  # Time is the default arg, but irrelevant for anything except DataFrame data
+
+        if time_column is None:
+            x_axis_label = (data.name or "time") if hasattr(data, "name") else "time"  # type:ignore[union-attr]
+        else:
+            x_axis_label = time_column
+
+        data = _parse_data_arg(data, time_column=time_column)
+        cuts, time = _parse_args(data, schedule, time_column, before, after, n_splits)
         with disable_temporarily(LOGGER):
             cuts = list(cuts)
 
@@ -332,30 +352,30 @@ class TimeFold(NamedTuple):
                 )
 
         xticks = [cuts[0][0]]
-        for i, (start, mid, stop) in enumerate(cuts):
-            ax.barh(i, mid - start, left=start, color="b", label="Data" if i == 0 else None)
-            ax.barh(i, stop - mid, left=mid, color="r", label="Future data" if i == 0 else None)
+        counts: List[str] = []
+        for i, (start, mid, stop) in enumerate(cuts, start=1):
+            ax.barh(i, mid - start, left=start, color="b", label="Data" if i == 1 else None)
+            ax.barh(i, stop - mid, left=mid, color="r", label="Future data" if i == 1 else None)
+
+            counts.append(time.between(start, mid, inclusive="left").sum())
+            counts.append(time.between(mid, stop, inclusive="left").sum())
+
             xticks.append(mid)
 
-        ax.axvline(time.min(), color="k", ls="--")
+        if hasattr(Axes, "bar_label") if show_counts is None else show_counts:
+            for bar, count in zip(ax.containers, counts):
+                ax.bar_label(bar, labels=[str(count)], label_type="center")
+
+        ax.axvline(time.min(), color="k", ls="--", label="Outer range")
         ax.axvline(time.max(), color="k", ls="--")
 
         xticks.append(cuts[-1][-1])
         ax.xaxis.set_ticks(xticks)
-        ax.set_yticks(range(len(cuts)))
         ax.xaxis.set_major_formatter(AutoDateFormatter(ax.xaxis.get_major_locator()))
         ax.set_ylabel("Fold")
-        ax.set_xlabel((df.index.name or "df.index") if time_column is None else time_column)
-        args = [
-            "df",
-            _repr_schedule(schedule),
-            f"{before=}",
-            f"{after=}",
-        ]
-        if time_column != "time":
-            args.append(f"{time_column=}")
+        ax.set_xlabel(x_axis_label)
         ax.set_title(f"TimeFold.iter({', '.join(args)})")
-        ax.legend(loc="upper left")
+        ax.legend(loc="lower right")
 
         if not user_axis:
             ax.figure.autofmt_xdate()
@@ -523,3 +543,17 @@ def _handle_span(schedule: pd.DatetimeIndex, span: Span, before: bool) -> pd.Dat
 
 def _repr_schedule(schedule: Schedule) -> str:
     return f"{schedule=}" if isinstance(schedule, (str, pd.Timedelta, timedelta)) else "schedule=[time..]"
+
+
+def _parse_data_arg(
+    data: SplittableTypes,
+    time_column: Optional[str],
+    name: str = "data",
+) -> Union[pd.DataFrame, pd.Series]:
+    if isinstance(data, pd.DataFrame):
+        return data
+
+    if time_column is not None:
+        raise TypeError(f"Cannot process {type(data).__name__}-type '{name}'-argument unless time_column=None.")
+
+    return data if isinstance(data, pd.Series) else pd.Series(index=pd.DatetimeIndex(data), dtype=int)
