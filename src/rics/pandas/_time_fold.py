@@ -396,9 +396,7 @@ def _parse_args(
     after: Optional[Span],
     n_splits: Optional[int],
 ) -> Tuple[Iterable[Tuple[pd.Timestamp, pd.Timestamp, pd.Timestamp]], pd.Series]:
-    time = pd.Series(
-        pd.to_datetime(data.index if time_column is None else data[time_column], infer_datetime_format=True)
-    )
+    time = pd.Series(pd.to_datetime(data.index if time_column is None else data[time_column]))
 
     cuts = _cuts(schedule, time, before, after, n_splits)
     return cuts, time
