@@ -1,6 +1,6 @@
 import pytest
 
-from rics.collections.dicts import InheritedKeysDict, compute_if_absent, flatten_dict, reverse_dict
+from rics.collections.dicts import InheritedKeysDict, compute_if_absent, flatten_dict, reverse_dict, unflatten_dict
 
 
 def test_compute_if_absent():
@@ -34,24 +34,36 @@ def test_reverse_dict():
         reverse_dict({0: 0, 1: 0})
 
 
-def test_flatten_dict(nested_dict):
-    actual = flatten_dict(nested_dict)
+def test_flatten_dict(nested_dict, flattened_dict):
+    actual = flatten_dict(nested_dict, string_fn="builtins.str")
+    assert actual == flattened_dict
 
-    expected = {
-        "top-key0.mid-key0": True,
-        "top-key0.mid-key1.bot-key0": True,
-        "top-key0.mid-key1.bot-key1": False,
-        "top-key1.mid-key0": True,
-        "top-key1.mid-key1": True,
-        "top-key2": False,
-        "top-key3.mid-key0": True,
-        "top-key3.mid-key1.bot-key0": True,
-        "top-key3.mid-key1.bot-key1.extra-bot-key0": True,
-        "top-key3.mid-key1.bot-key1.extra-bot-key1.extra-extra-bot-key0": True,
-        "top-key3.mid-key1.bot-key1.extra-bot-key1.extra-extra-bot-key1": False,
-        "top-key4": True,
+
+def test_flatten_dict_nonstandard_args():
+    from datetime import date
+
+    def filter_fn(key, value):
+        if isinstance(key, date):
+            return key.day % 2 == 0
+        if isinstance(value, date):
+            return value.day % 2 == 0
+        return True
+
+    d = {
+        date(1999, 4, 30): {"morris": "tarzan", "another_odd_date": date(2019, 5, 11)},
+        date(1991, 6, 5): "should-be-removed",
+        "keep me": {"please": "thank you"},
     }
-    assert actual == expected
+    actual = flatten_dict(d, filter_predicate=filter_fn)
+    assert actual == {"1999-04-30.morris": "tarzan", "keep me.please": "thank you"}
+
+    with pytest.raises(TypeError, match="string_fn=None"):
+        flatten_dict(d, filter_predicate=filter_fn, string_fn=None)
+
+
+def test_unflatten_dict(nested_dict, flattened_dict):
+    actual = unflatten_dict(flattened_dict)
+    assert actual == nested_dict
 
 
 def test_flatten_dict_false_values_only(nested_dict):
@@ -81,6 +93,24 @@ def nested_dict():
                 },
             },
         },
+        "top-key4": True,
+    }
+
+
+@pytest.fixture
+def flattened_dict():
+    return {
+        "top-key0.mid-key0": True,
+        "top-key0.mid-key1.bot-key0": True,
+        "top-key0.mid-key1.bot-key1": False,
+        "top-key1.mid-key0": True,
+        "top-key1.mid-key1": True,
+        "top-key2": False,
+        "top-key3.mid-key0": True,
+        "top-key3.mid-key1.bot-key0": True,
+        "top-key3.mid-key1.bot-key1.extra-bot-key0": True,
+        "top-key3.mid-key1.bot-key1.extra-bot-key1.extra-extra-bot-key0": True,
+        "top-key3.mid-key1.bot-key1.extra-bot-key1.extra-extra-bot-key1": False,
         "top-key4": True,
     }
 
