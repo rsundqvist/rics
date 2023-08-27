@@ -1,7 +1,7 @@
 """Utility methods for logging tasks."""
 import logging
 from contextlib import contextmanager as _contextmanager
-from typing import Any, Union
+from typing import Any, Dict, Tuple, Union
 
 FORMAT: str = "%(asctime)s.%(msecs)03d [%(name)s:%(levelname)s] %(message)s"
 """Default logging format; ``<date-format>.378 [rics:DEBUG] I'm a debug message!``"""
@@ -84,3 +84,18 @@ def disable_temporarily(  # type: ignore[no-untyped-def]
     finally:
         for lgr, old_state in zip(loggers, states):
             lgr.disabled = old_state
+
+
+def _extract_extra_levels(**kwargs: Any) -> Tuple[Dict[str, Union[int, str]], Dict[str, Any]]:
+    suffix = "_level"
+
+    levels: Dict[str, Union[int, str]] = {}
+    for key in list(kwargs.keys()):
+        if key and key.endswith(suffix):
+            wildcard_key = key[: -len(suffix)].replace("__", ".")
+
+            level = kwargs.pop(key)
+            if level is not None:  # pragma: no cover
+                levels[wildcard_key] = level
+
+    return levels, kwargs

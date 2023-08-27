@@ -1,8 +1,9 @@
 """Miscellaneous utility methods for Python applications."""
+import inspect
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
 from types import ModuleType as _ModuleType
-from typing import Any, Callable, Optional, Type, Union
+from typing import Any, Callable, Dict, Optional, Type, Union
 
 from ._internal_support import _local_or_remote
 from ._internal_support.types import PathLikeType
@@ -62,6 +63,17 @@ def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) 
 
     Raises:
         ValueError: If `name` does not contain any dots and ``default_module=None``.
+
+    Examples:
+        Retrieving a ``numpy`` function by name.
+
+        >>> get_by_full_name("numpy.isnan")
+        <ufunc 'isnan'>
+
+        Falling back to builtins.
+
+        >>> get_by_full_name("int", default_module="builtins")
+        <class 'int'>
     """
     if "." in name:
         module_name, _, member = name.rpartition(".")
@@ -73,6 +85,53 @@ def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) 
         member = name
 
     return getattr(module, member)
+
+
+def get_public_module(obj: Any, resolve_reexport: bool = False, include_name: bool = False) -> str:
+    """Get the public module of `obj`.
+
+    Args:
+        obj: An object to resolve a public module for.
+        resolve_reexport: If ``True``, traverse the module hierarchy and look for the earliest where `obj` is
+            reexported. This may be expensive.
+        include_name: If ``True``, include the name of `obj` reexported from a parent module. The first instance found
+            will be used if `obj` is reexported multiple times.
+
+    Returns:
+        Public module of `obj`.
+
+    Examples:
+        Public module of ``pandas.DataFrame``.
+
+        >>> from pandas import DataFrame as obj
+        >>> get_public_module(obj)
+        'pandas.core.frame'
+        >>> get_public_module(obj, resolve_reexport=True)
+        'pandas'
+        >>> get_public_module(obj, resolve_reexport=True, include_name=True)
+        'pandas.DataFrame'
+
+    See Also:
+        The analogous :func:`get_by_full_name`-function.
+    """
+    parts = []
+    for part in obj.__module__.split("."):
+        if part[0] == "_":
+            break
+        parts.append(part)
+
+    if resolve_reexport:
+        obj_id = id(obj)
+
+        for i in range(1, len(parts)):
+            module = _import_module(".".join(parts[:i]))
+            for name, _ in inspect.getmembers(module, predicate=lambda member: id(member) == obj_id):
+                parts = parts[:i]
+                if include_name:
+                    parts.append(name)
+                return ".".join(parts)
+
+    return ".".join(parts)
 
 
 def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) -> str:
@@ -98,6 +157,28 @@ def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) 
         return arg.__class__.__name__
     else:
         raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
+
+
+def format_kwargs(kwargs: Dict[str, Any]) -> str:
+    """Format keyword arguments.
+
+    Args:
+        kwargs: Arguments to format.
+
+    Returns:
+        A string on the form `'key0=repr(value0), key1=repr(value1)'`.
+
+    Raises:
+        ValueError: For keys in `kwargs` that are not valid Python argument names.
+
+    Examples:
+        >>> format_kwargs({'an_int': 1, 'a_string': 'Hello!'})
+        "an_int=1, a_string='Hello!'"
+    """
+    invalid = [k for k in kwargs if not k.isidentifier()]
+    if invalid:
+        raise ValueError(f"Got {len(invalid)} invalid identifiers: {invalid}.")
+    return ", ".join(f"{k}={v!r}" for k, v in kwargs.items())
 
 
 def get_local_or_remote(
