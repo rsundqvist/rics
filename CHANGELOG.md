@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `flatten_dict()`-function now takes a `string_fn`-argument (default=`str`).
 - Update format used for durations in `rics.performance`.
 
+### Fixed
+- Handle `LoggerAdapter` in `logs.disable_temporarily()`.
+- Handle improve handling of '{}' (e.g. Python fstrings) in `envinterp`.
+
 ## [3.0.1] - 2023-03-25
 
 ### Changed

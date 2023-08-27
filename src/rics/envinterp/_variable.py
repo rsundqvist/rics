@@ -31,15 +31,59 @@ class Variable:
     @classmethod
     def parse_string(cls, s: str) -> List["Variable"]:
         """Extract a list of ``Variable``-instances from a string `s`."""
+        retval = []
+        prev_is_dollar_sign: bool = False
+        n_open: int = 0
 
-        def parse_match(match: re.Match[str]) -> Variable:
-            return Variable(
-                name=match.group(1).strip(),
-                default=match.group(2),
-                full_match=match.group(0),
+        state = "search"
+
+        full_match: List[str] = []
+        default: List[str] = []
+        name: List[str] = []
+
+        def make(*, make_default: bool) -> None:
+            nonlocal state
+
+            var = Variable(
+                "".join(name).strip(),
+                default="".join(default) if make_default else None,
+                full_match="".join(full_match),
             )
+            name.clear()
+            default.clear()
+            full_match.clear()
+            state = "search"
+            retval.append(var)
 
-        return list(map(parse_match, cls.PATTERN.finditer(s)))
+        for c in s:
+            if state != "search":
+                full_match.append(c)
+
+            if c == "{":
+                n_open += 1
+            elif c == "}":
+                n_open -= 1
+
+            if state == "search":
+                if prev_is_dollar_sign and c == "{":
+                    full_match.append("${")
+                    state = "name"
+            elif state == "name":
+                if c == "}":
+                    make(make_default=False)
+                elif c == ":":
+                    state = "default"
+                else:
+                    name.append(c)
+            elif state == "default":
+                if n_open == 0:
+                    make(make_default=True)
+                else:
+                    default.append(c)
+
+            prev_is_dollar_sign = c == "$"
+
+        return [var for var in retval if var.name.isidentifier()]
 
     @property
     def is_required(self) -> bool:
@@ -79,7 +123,7 @@ class Variable:
             if len(inners) == 1:
                 inner = inners[0]
                 if inner.full_match != stripped:
-                    raise NotImplementedError()
+                    raise NotImplementedError
 
                 return inner.get_value(resolve_nested_defaults=resolve_nested_defaults)
 
