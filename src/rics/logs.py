@@ -84,3 +84,44 @@ def disable_temporarily(  # type: ignore[no-untyped-def]
     finally:
         for lgr, old_state in zip(loggers, states):
             lgr.disabled = old_state
+
+
+def logger_from_object(obj: Any, prefix_class: bool = True) -> logging.Logger:
+    """Create logger from an object.
+
+    Logger names are created based on ``type(obj)`` and the public module path.
+
+    Args:
+        obj: A logger to create an object for.
+        prefix_class: If ``True``, prefix the name of the class for member objects.
+
+    Returns:
+        A logger.
+
+    Examples:
+        Class names are included for class members.
+
+        >>> from logging import RootLogger
+        >>> logger_from_object(RootLogger(level=10).setLevel).name
+        'logging.Logger.setLevel'
+
+        Top-level objects appear as you would expect them to.
+
+        >>> logger_from_object(logger_from_object).name
+        'rics.logs.logger_from_object'
+
+        Exported members are shown using only public modules.
+
+        >>> from rics._just_the_way_i_like_it import configure_stuff
+        >>> logger_from_object(configure_stuff).name
+        'rics.configure_stuff'
+    """
+    from rics.misc import tname
+
+    parts = []
+    for part in obj.__module__.split("."):
+        if part[0] == "_":
+            break
+        parts.append(part)
+    parts.append(tname(obj, prefix_classname=prefix_class))
+    return logging.getLogger(".".join(parts))

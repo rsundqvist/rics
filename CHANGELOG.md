@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Function `collections.dicts.unflatten_dict()`; inverse of `flatten_dict()`.
+- Function `logs.logger_from_object()`; logger names based on public path.
+- Function `misc.format_kwargs()`; pretty-print keyword arguments.
+
 ### Changed
+- The `flatten_dict()`-function now takes a `string_fn`-argument (default=`str`).
 - Update format used for durations in `rics.performance`.
 
 ## [3.0.1] - 2023-03-25
