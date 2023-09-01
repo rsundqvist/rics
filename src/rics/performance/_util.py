@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Literal, Tuple, Union
 
 import pandas as pd
@@ -103,7 +104,9 @@ def plot_run(
     best = data.groupby(["Test data", "Candidate"]).min().reset_index()
     barplot(ax=right, data=best, x=x_arg, y=y, hue=hue, errorbar=None, **figure_kwargs)
 
-    move_legend(right, "upper left", bbox_to_anchor=(1, 1))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=DeprecationWarning)
+        move_legend(right, "upper left", bbox_to_anchor=(1, 1))
     left.get_legend().remove()
 
 

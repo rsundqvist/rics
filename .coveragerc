@@ -9,6 +9,7 @@ source = rics
 
 [report]
 omit =
+    src/rics/mapping/*
     src/rics/_internal_support/changelog/*
     src/rics/_internal_support/_local_or_remote.py
     src/rics/wip/__init__.py
