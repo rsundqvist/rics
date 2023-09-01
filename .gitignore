@@ -1,4 +1,5 @@
 codecov
+.flakeheaven_cache
 
 # Data
 *.sqlite
