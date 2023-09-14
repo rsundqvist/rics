@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from rics.ml.time_split import fold_weight, split
+from rics.ml.time_split import split
+from rics.ml.time_split.support import fold_weight
 
 
 def _split(typ, unit):
