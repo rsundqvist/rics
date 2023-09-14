@@ -1,21 +1,21 @@
 """Dict utility functions."""
-import typing as t
+import typing as _t
 from warnings import warn as _warn
 
-from ..action_level import ActionLevel
+from ..action_level import ActionLevel as _ActionLevel
 from ..misc import get_by_full_name as _get_by_full_name, tname as _tname
 
-KT = t.TypeVar("KT", bound=t.Hashable)
+KT = _t.TypeVar("KT", bound=_t.Hashable)
 """Key type."""
-VT = t.TypeVar("VT")
+VT = _t.TypeVar("VT")
 """Value type."""
-HVT = t.TypeVar("HVT", bound=t.Hashable)
+HVT = _t.TypeVar("HVT", bound=_t.Hashable)
 """Hashable value type."""
-OKT = t.TypeVar("OKT", bound=t.Hashable)
+OKT = _t.TypeVar("OKT", bound=_t.Hashable)
 """Outer key type."""
 
 
-def compute_if_absent(d: t.Dict[KT, VT], key: KT, func: t.Callable[[KT], VT] = None) -> VT:
+def compute_if_absent(d: _t.Dict[KT, VT], key: KT, func: _t.Callable[[KT], VT] = None) -> VT:
     """Compute and store `key` using `func` if `key` is not in the dict.
 
     Args:
@@ -32,7 +32,7 @@ def compute_if_absent(d: t.Dict[KT, VT], key: KT, func: t.Callable[[KT], VT] = N
     return d[key]
 
 
-def reverse_dict(d: t.Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseType = "raise") -> t.Dict[HVT, KT]:
+def reverse_dict(d: _t.Mapping[KT, HVT], duplicate_key_action: _ActionLevel.ParseType = "raise") -> _t.Dict[HVT, KT]:
     """Swap keys and values.
 
     Args:
@@ -55,13 +55,13 @@ def reverse_dict(d: t.Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseT
     """
     ans = {value: key for key, value in d.items()}
 
-    action_level = ActionLevel.verify(duplicate_key_action)
-    if action_level is not ActionLevel.IGNORE and len(d) != len(ans):
+    action_level = _ActionLevel.verify(duplicate_key_action)
+    if action_level is not _ActionLevel.IGNORE and len(d) != len(ans):
         msg = (
             f"Duplicate values in {d}; cannot reverse. Original dict has size {len(d)} != {len(ans)}."
             f"\nHint: Set duplicate_key_action='ignore' to allow."
         )
-        if action_level is ActionLevel.WARN:
+        if action_level is _ActionLevel.WARN:
             _warn(msg, stacklevel=2)
         else:
             raise ValueError(msg)  # pragma: no cover
@@ -70,11 +70,11 @@ def reverse_dict(d: t.Mapping[KT, HVT], duplicate_key_action: ActionLevel.ParseT
 
 
 def flatten_dict(
-    d: t.Dict[t.Hashable, t.Any],
+    d: _t.Dict[KT, _t.Any],
     join_string: str = ".",
-    filter_predicate: t.Callable[[t.Hashable, t.Any], bool] = lambda key, value: True,
-    string_fn: t.Union[t.Callable[[t.Hashable], str], str, None] = str,
-) -> t.Dict[str, t.Any]:
+    filter_predicate: _t.Callable[[KT, _t.Any], bool] = lambda key, value: True,
+    string_fn: _t.Union[_t.Callable[[KT], str], str, None] = str,
+) -> _t.Dict[str, _t.Any]:
     """Flatten a nested dictionary.
 
     This process is partially (or fully; depends on `d` and arguments) reversible, see :func:`unflatten_dict`.
@@ -99,33 +99,32 @@ def flatten_dict(
     """
     if string_fn is None:
 
-        def no_string_fn(key: t.Hashable) -> str:
+        def no_string_fn(key: _t.Hashable) -> str:
             raise TypeError(f"Cannot convert {key=} with string_fn=None.")
 
         string_fn = no_string_fn
     elif isinstance(string_fn, str):
-        string_fn = t.cast(t.Callable[[t.Hashable], str], _get_by_full_name(string_fn))
+        string_fn = _t.cast(_t.Callable[[KT], str], _get_by_full_name(string_fn))
 
-    ans: t.Dict[str, t.Any] = {}
+    ans: _t.Dict[str, _t.Any] = {}
     _flatten_inner(d, ans, [], join_string, filter_predicate, string_fn)
     return ans
 
 
 def _flatten_inner(
-    d: t.Dict[t.Hashable, t.Any],
-    flattened: t.Dict[str, t.Any],
-    parents: t.List[str],
+    d: _t.Dict[KT, _t.Any],
+    flattened: _t.Dict[str, _t.Any],
+    parents: _t.List[str],
     join_string: str,
-    filter_predicate: t.Callable[[t.Hashable, t.Any], bool],
-    string_fn: t.Callable[[t.Hashable], str],
+    filter_predicate: _t.Callable[[KT, _t.Any], bool],
+    string_fn: _t.Callable[[KT], str],
 ) -> None:
     for key, value in d.items():
         if not filter_predicate(key, value):
             continue
-        if not isinstance(key, str):
-            key = string_fn(key)
 
-        key_hierarchy = parents + [key]
+        str_key = key if isinstance(key, str) else string_fn(key)
+        key_hierarchy = parents + [str_key]
         if isinstance(value, dict):
             _flatten_inner(value, flattened, key_hierarchy, join_string, filter_predicate, string_fn)
         else:
@@ -134,9 +133,9 @@ def _flatten_inner(
 
 
 def unflatten_dict(
-    d: t.Dict[str, t.Any],
+    d: _t.Dict[str, _t.Any],
     join_string: str = ".",
-) -> t.Dict[str, t.Union[t.Dict[str, t.Any], t.Any]]:
+) -> _t.Dict[str, _t.Union[_t.Dict[str, _t.Any], _t.Any]]:
     """Unflatten a flat dictionary.
 
     This process is reversible, see :func:`flatten_dict`.
@@ -154,7 +153,7 @@ def unflatten_dict(
         >>> unflatten_dict({"foo": 0, "bar.foo": 1, "bar.bar": 2})
         {'foo': 0, 'bar': {'foo': 1, 'bar': 2}}
     """
-    ret: t.Dict[str, t.Union[t.Dict[str, t.Any], t.Any]] = {}
+    ret: _t.Dict[str, _t.Union[_t.Dict[str, _t.Any], _t.Any]] = {}
     for key, value in d.items():
         parts = key.split(join_string)
         final = len(parts) - 1
@@ -169,7 +168,7 @@ def unflatten_dict(
     return ret
 
 
-class InheritedKeysDict(t.Mapping[OKT, t.Dict[KT, VT]]):
+class InheritedKeysDict(_t.Mapping[OKT, _t.Dict[KT, VT]]):
     """A nested dictionary that returns default-backed child dictionaries.
 
     The length of an ``InheritedKeysDict`` is equal to the number of specific outer keys, and is considered ``True``
@@ -214,13 +213,13 @@ class InheritedKeysDict(t.Mapping[OKT, t.Dict[KT, VT]]):
 
     def __init__(
         self,
-        specific: t.Dict[OKT, t.Dict[KT, VT]] = None,
-        default: t.Dict[KT, VT] = None,
+        specific: _t.Dict[OKT, _t.Dict[KT, VT]] = None,
+        default: _t.Dict[KT, VT] = None,
     ) -> None:
         self._specific = specific or {}
         self._default = default or {}
 
-    def __getitem__(self, context: OKT) -> t.Dict[KT, VT]:
+    def __getitem__(self, context: OKT) -> _t.Dict[KT, VT]:
         if not self:
             raise KeyError(context)
 
@@ -232,7 +231,7 @@ class InheritedKeysDict(t.Mapping[OKT, t.Dict[KT, VT]]):
         specific = self._specific
         return f"{_tname(self)}({default=}, {specific=})"
 
-    def __eq__(self, other: t.Any) -> bool:
+    def __eq__(self, other: _t.Any) -> bool:
         if not isinstance(other, InheritedKeysDict):
             return False
 
@@ -244,7 +243,7 @@ class InheritedKeysDict(t.Mapping[OKT, t.Dict[KT, VT]]):
     def __len__(self) -> int:
         return len(self._specific)
 
-    def __iter__(self) -> t.Iterator[OKT]:
+    def __iter__(self) -> _t.Iterator[OKT]:
         yield from self._specific
 
     def copy(self) -> "InheritedKeysDict[OKT, KT, VT]":
@@ -282,8 +281,8 @@ class InheritedKeysDict(t.Mapping[OKT, t.Dict[KT, VT]]):
             return arg
 
         # TODO: Need 3.11 and MakeDict for these
-        default: t.Optional[t.Dict[KT, VT]] = arg.pop("default", None)
-        specific: t.Optional[t.Dict[OKT, t.Dict[KT, VT]]] = arg.pop("specific", None)
+        default: _t.Optional[_t.Dict[KT, VT]] = arg.pop("default", None)
+        specific: _t.Optional[_t.Dict[OKT, _t.Dict[KT, VT]]] = arg.pop("specific", None)
 
         if arg:  # pragma: no cover
             raise ValueError(f"Invalid {_tname(cls)}. Unknown keys: {list(arg)}")
@@ -292,15 +291,15 @@ class InheritedKeysDict(t.Mapping[OKT, t.Dict[KT, VT]]):
 
 
 class _MakeDict(
-    t.TypedDict,
+    _t.TypedDict,
     total=False,
     # Generic[OKT, KT, VT] # TODO: Requires 3.11
 ):
-    default: t.Dict[KT, VT]  # type: ignore[valid-type]
-    specific: t.Dict[OKT, t.Dict[KT, VT]]  # type: ignore[valid-type]
+    default: _t.Dict[KT, VT]  # type: ignore[valid-type]
+    specific: _t.Dict[OKT, _t.Dict[KT, VT]]  # type: ignore[valid-type]
 
 
-MakeType = t.Union[
+MakeType = _t.Union[
     InheritedKeysDict[OKT, KT, VT],
     _MakeDict,
     # MakeDict[OKT, KT, VT],
