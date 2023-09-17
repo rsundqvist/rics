@@ -2,6 +2,49 @@
 
 import typing as _t
 
+from . import types as _tst
+
+
+class auto_flex:
+    """Configuration for the `'auto'` :attr:`~rics.ml.time_split.types.Flex` logic.
+
+    This class determines how ``(lo, hi)``-tuples are expanded when flexible bounds are enabled.
+    """
+
+    SANITY_CHECK: bool = True
+    """If ``True``, use original limits if flexed limits do not pass sanity checks."""
+
+    @classmethod
+    def set_level(
+        cls,
+        level: _t.Literal["hour", "day"],
+        *,
+        start_at: _tst.TimedeltaTypes,
+        round_to: _tst.TimedeltaTypes,
+        tolerance: _tst.TimedeltaTypes,
+    ) -> None:
+        """Set a :class:`Level` used by the auto-flex logic."""
+        if level not in ("hour", "day"):
+            raise AttributeError(f"Bad {level=}: Expected one of ('hour', 'day').")
+        level_tuple = (start_at, round_to, tolerance)
+        setattr(cls, level, level_tuple)
+
+    class Level(_t.NamedTuple):
+        """Level type used by :attr:`auto_flex`."""
+
+        start_at: _tst.TimedeltaTypes
+        """Span size at which this level starts."""
+
+        round_to: _tst.TimedeltaTypes
+        """Frequency to round the range limits to."""
+
+        tolerance: _tst.TimedeltaTypes
+        """Maximum amount by which to alter limits."""
+
+    hour: Level = Level("6 hours", "hour", "15 min")
+
+    day: Level = Level("2 days", "day", "3 hours")
+
 
 class plot:
     """Global settings for the :func:`.plot`-function."""

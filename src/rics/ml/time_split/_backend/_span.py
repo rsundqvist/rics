@@ -4,7 +4,7 @@ from typing import Callable, Literal, Optional, Union
 from pandas import DatetimeIndex, Timedelta, Timestamp
 
 from ..types import Span
-from ._available import LimitsTuple
+from ._limits import LimitsTuple
 from ._schedule import NO_LIMITS
 
 StrictSpan = Union[int, Timedelta, Literal["all"]]

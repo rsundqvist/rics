@@ -1,10 +1,9 @@
-from typing import Literal, NamedTuple, Optional, Protocol, Tuple, runtime_checkable
+from typing import NamedTuple, Optional, Protocol, runtime_checkable
 
-from pandas import DatetimeIndex, Timedelta, Timestamp, isna
+from pandas import DatetimeIndex, Timestamp, isna
 
 from ..types import DatetimeIterable, DatetimeTypes, Flex
-
-LimitsTuple = Tuple[Timestamp, Timestamp]
+from ._limits import LimitsTuple, expand_limits
 
 
 @runtime_checkable
@@ -58,7 +57,7 @@ def process_available(available: DatetimeIterable, *, flex: Flex) -> AvailableMe
         # (croniter 1.4.1 + numpy 1.25.2): croniter cannot handle numpy.datetime64
         limits = Timestamp(min_dt), Timestamp(max_dt)
 
-    expanded_limits = _expand_limits(flex, limits)
+    expanded_limits = expand_limits(limits, flex=flex)
     return AvailableMetadata(available_retval, limits=limits, expanded_limits=expanded_limits)
 
 
@@ -74,27 +73,3 @@ def _compute_data_limits(available: MinMaxDate) -> LimitsTuple:
         max_dt = max_dt.compute()
 
     return min_dt, max_dt
-
-
-def _expand_limits(flex: Flex, limits: LimitsTuple) -> LimitsTuple:
-    if flex is False:
-        return limits
-
-    if flex is True or flex == "auto":
-        return _expand_limits(_auto_flex(limits), limits)
-
-    if isinstance(flex, tuple):
-        lo, hi = flex
-    else:
-        lo, hi = flex, flex
-
-    return limits[0].floor(lo), limits[1].ceil(hi)
-
-
-def _auto_flex(limits: LimitsTuple) -> Literal[False, "D"]:
-    diff = limits[1] - limits[0]
-
-    if diff >= Timedelta(days=2):
-        return "D"
-
-    return False

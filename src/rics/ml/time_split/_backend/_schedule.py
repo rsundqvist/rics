@@ -3,7 +3,8 @@ from typing import NamedTuple, cast, get_args
 from pandas import DatetimeIndex, NaT, Timedelta, Timestamp, date_range
 
 from ..types import DatetimeIterable, Flex, Schedule, TimedeltaTypes
-from ._available import AvailableMetadata, LimitsTuple, process_available
+from ._available import AvailableMetadata, process_available
+from ._limits import LimitsTuple
 
 NO_LIMITS = cast(LimitsTuple, (NaT, NaT))
 

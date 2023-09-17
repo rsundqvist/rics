@@ -10,9 +10,11 @@ internal logic, or just to test things out.
 This module may change without notice. Stick to the top-level :mod:`rics.ml.time_split`-module, or lock down your
 dependencies if you need to use the ``support`` module.
 """
+from .._backend import expand_limits
 from .._frontend import fold_weight, to_string
 
 __all__ = [
+    "expand_limits",
     "fold_weight",
     "to_string",
 ]

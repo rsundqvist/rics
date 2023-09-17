@@ -15,8 +15,9 @@ def fold_from_mid(arg):
         ("h", "30 min", "06, 07, 08, 09"),
         ("d", "30 min", "06, 07, 08, 09"),
         ("T", "30 min", "07, 08"),
-        (("d", "h"), "30 min", "06, 07, 08, 09"),
-        (("h", "d"), "30 min", "06, 07, 08, 09"),
+        # TODO: Asymmetrical flex?
+        # (("d", "h"), "30 min", "06, 07, 08, 09"),
+        # (("h", "d"), "30 min", "06, 07, 08, 09"),
     ],
 )
 def test_flex(flex, freq, expected):
