@@ -13,6 +13,7 @@ def test_pi_ticks_doesnt_crash(half):
     ax = plt.axes()
     ax.plot(range(10))
     pi_ticks(ax, half)
+    plt.close("all")
 
 
 @pytest.mark.parametrize(
@@ -31,7 +32,7 @@ def test_pi_ticks_doesnt_crash(half):
 def test_pi_tick_helper(half, start, start_rounded_to_pi, expected):
     assert len(expected) == 4, "Bad test case"
 
-    helper = _PiTickHelper(half, start)
+    helper = _PiTickHelper(half, start=start)
 
     # Test locating
     values = [(start_rounded_to_pi + i * PI * (0.5 if half else 1), i) for i in range(4)]
