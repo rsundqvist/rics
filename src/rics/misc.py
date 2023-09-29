@@ -153,6 +153,9 @@ def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) 
         return arg.__qualname__ if prefix_classname else arg.__name__
     if hasattr(arg, "__name__"):
         return arg.__name__
+    if hasattr(arg, "fget"):
+        # Instance-level properties accessed using the class.
+        return tname(arg.fget, prefix_classname=prefix_classname)
     if hasattr(arg, "__class__"):
         return arg.__class__.__name__
     else:

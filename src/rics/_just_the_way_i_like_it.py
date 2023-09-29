@@ -3,9 +3,12 @@ import os
 import sys
 import traceback
 import warnings
+from multiprocessing import process
 from typing import Any, Union
 
 from .logs import basic_config
+
+_SKIP_WARNING: bool = False
 
 
 def configure_stuff(
@@ -72,8 +75,17 @@ def _configure_pandas() -> None:
 
 
 def _maybe_emit_warning() -> None:  # pragma: no cover
+    global _SKIP_WARNING
+    if _SKIP_WARNING:
+        return
+    _SKIP_WARNING = True
+
+    if getattr(process.current_process(), "_inheriting", False):
+        return  # From multiprocessing.spawn._check_not_importing_main
+
     if os.environ.get("JTWILI", "false").lower() == "true":
         return
+
     try:
         get_ipython()  # type: ignore[name-defined]
         return  # Typically in a console or notebook

@@ -17,6 +17,10 @@ class Foo:
     def hi(self):
         pass
 
+    @property
+    def a_property(self) -> str:
+        return "property value"
+
 
 def plain_function():
     pass
@@ -37,29 +41,29 @@ def test_get_public_module():
     assert misc.get_public_module(obj, resolve_reexport=True, include_name=True) == "rics.performance"
 
 
-def test_tname():
-    assert misc.tname(None) == "None"
-    assert misc.tname(Foo()) == "Foo"
-    assert misc.tname(Foo) == "Foo"
-    assert misc.tname(Foo().hi) == "hi"
-    assert misc.tname(plain_function) == "plain_function"
+@pytest.mark.parametrize(
+    "obj, expected",
+    [
+        (None, "None"),
+        (Foo(), "Foo"),
+        (Foo, "Foo"),
+        (Foo.hi, "Foo.hi"),
+        (Foo().hi, "Foo.hi"),
+        (Foo.bar, "Foo.bar"),
+        (Foo().bar, "Foo.bar"),
+        (Foo.a_property, "Foo.a_property"),
+        (Foo().a_property, "str"),
+        (plain_function, "plain_function"),
+    ],
+)
+class Test_tname:
+    def test_without_class(self, obj, expected):
+        expected = expected.split(".")[-1]
+        assert misc.tname(obj, prefix_classname=False) == expected
+        assert misc.tname(obj) == expected
 
-
-def test_tname_callable_class():
-    assert misc.tname(Foo) == "Foo"
-    assert misc.tname(Foo()) == "Foo"
-
-
-def test_instance_method_with_classname():
-    print(f"{dir(Foo.hi)=}")
-    assert misc.tname(Foo.hi, prefix_classname=True) == "Foo.hi"
-    assert misc.tname(Foo.hi, prefix_classname=False) == "hi"
-
-
-def test_class_method_with_classname():
-    print(f"{dir(Foo.bar)=}")
-    assert misc.tname(Foo.bar, prefix_classname=True) == "Foo.bar"
-    assert misc.tname(Foo.bar, prefix_classname=False) == "bar"
+    def test_with_class(self, obj, expected):
+        assert misc.tname(obj, prefix_classname=True) == expected
 
 
 def test_get_local_or_remote(tmp_path):
