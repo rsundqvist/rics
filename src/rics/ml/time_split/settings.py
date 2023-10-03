@@ -23,7 +23,19 @@ class auto_flex:
         round_to: _tst.TimedeltaTypes,
         tolerance: _tst.TimedeltaTypes,
     ) -> None:
-        """Set a :class:`Level` used by the auto-flex logic."""
+        """Set a :class:`Level` used by the auto-flex logic.
+
+        Inputs are not verified until an actual split is made.
+
+        Args:
+            level: The level to set; `'hour'` or `'day'`.
+            start_at: Span size at which this level starts.
+            round_to: Frequency to round the range limits to.
+            tolerance: Maximum amount by which to alter limits.
+
+        Raises:
+            AttributeError: For unknown `level` names.
+        """
         if level not in ("hour", "day"):
             raise AttributeError(f"Bad {level=}: Expected one of ('hour', 'day').")
         level_tuple = (start_at, round_to, tolerance)
@@ -42,8 +54,18 @@ class auto_flex:
         """Maximum amount by which to alter limits."""
 
     hour: Level = Level("6 hours", "hour", "15 min")
+    """Conditions under which bounds are rounded to the nearest hour.
+
+    Default setting:
+        Round to hour if the total range is at least 6 hours, but do not move the bounds more than 15 minutes.
+    """
 
     day: Level = Level("2 days", "day", "3 hours")
+    """Conditions under which bounds are rounded to the nearest day.
+
+    Default setting:
+        Round to day if the total range is at least 2 days, but do not move the bounds more than 3 hours.
+    """
 
 
 class plot:
