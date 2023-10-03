@@ -4,7 +4,8 @@ import pandas as pd
 import pytest
 from matplotlib import pyplot as plt
 
-from rics.pandas import TimeFold
+with pytest.warns(DeprecationWarning):
+    from rics.pandas import TimeFold
 
 TEST_DATA = (
     [
