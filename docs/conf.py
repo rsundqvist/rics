@@ -21,6 +21,7 @@ type_modules = (
     "rics.mapping.types",
     "rics.collections.dicts",
     "rics.collections.misc",
+    "rics.ml.time_split.integration.pandas",
 )
 
 for tm in type_modules:
@@ -175,9 +176,9 @@ html_context = {
         ),
         dict(
             title="Cross Validation",
-            text="Temporal folds from pandas types. Scikit-learn compatible.",
-            url="_autosummary/rics.pandas.html#rics.pandas.TimeFold",
-            img="_static/folds.png",
+            text="Temporal folds for heterogeneous data. Scikit-learn compatible.",
+            url="_autosummary/rics.ml.time_split.html",
+            img="_static/folds-example1.png",
         ),
         dict(
             title="ID Translation",
@@ -201,6 +202,9 @@ nitpicky = True
 nitpick_ignore = [
     ("py:class", "re.Pattern"),
     ("py:class", "module"),
+    # Matplotlib/sklearn
+    ("py:class", "Axes"),
+    ("py:class", "sklearn.model_selection._split.BaseCrossValidator"),
 ]
 nitpick_ignore_regex = [
     ("py:obj", r".*\.Any"),

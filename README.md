@@ -28,7 +28,8 @@ provides a wide variety of utility functions. The [id-translation](https://pypi.
   - Powers Name-to-source mapping for the [id-translation](https://id-translation.readthedocs.io/en/stable/documentation/translation-primer.html#name-to-source-mapping) 
     suite (installed separately).
 - Various other [utilities][utility], ranging from [logging] to [plotting] to specialized [dict] functions.
-- Temporal folds ([compatible with sklearn][time-fold]) for heterogeneous `pandas` types, meant for time-series cross validation.
+- [Time-based cross-validation][time-split] splitter for heterogeneous data, 
+  including ``pandas`` and ``scikit-learn`` integrations.
 
 [perf]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.run_multivariate_test
 [perf-plot]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.plot_run
@@ -39,7 +40,7 @@ provides a wide variety of utility functions. The [id-translation](https://pypi.
 [logging]: https://rics.readthedocs.io/en/stable/_autosummary/rics.logs.html
 [plotting]: https://rics.readthedocs.io/en/stable/_autosummary/rics.plotting.html
 [dict]: https://rics.readthedocs.io/en/stable/_autosummary/rics.collections.dicts.html
-[time-fold]: https://rics.readthedocs.io/en/stable/_autosummary/rics.pandas.html#rics.pandas.TimeFold.make_sklearn_splitter
+[time-split]: https://rics.readthedocs.io/en/stable/_autosummary/rics.ml.time_split.html
 
 ## Installation
 The package is published through the [Python Package Index (PyPI)]. Source code

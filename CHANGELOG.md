@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- New module `rics.ml.time_split`; successor to `pandas.TimeFold`.
 - Function `collections.dicts.unflatten_dict()`; inverse of `flatten_dict()`.
 - Function `misc.get_public_module()`; resolve public module name of an object, optionally looking for reexports.
 - Function `misc.format_kwargs()`; pretty-print keyword arguments.
@@ -15,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - The `flatten_dict()`-function now takes a `string_fn`-argument (default=`str`).
 - Update format used for durations in `rics.performance`.
+
+### Deprecated
+- The `rics.pandas.TimeFold` class. Replaced by `rics.ml.time_split`.
 
 ### Fixed
 - Handle `LoggerAdapter` in `logs.disable_temporarily()`.
