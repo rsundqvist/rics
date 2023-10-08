@@ -2,6 +2,7 @@
 import inspect
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
+from pprint import saferepr as _safe_repr
 from types import ModuleType as _ModuleType
 from typing import Any, Callable, Dict, Optional, Type, Union
 
@@ -162,11 +163,13 @@ def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) 
         raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
 
 
-def format_kwargs(kwargs: Dict[str, Any]) -> str:
+def format_kwargs(kwargs: Dict[str, Any], *, max_value_length: int = None) -> str:
     """Format keyword arguments.
 
     Args:
         kwargs: Arguments to format.
+        max_value_length: If given, replace ``repr(value)`` with ``tname(value)`` if repr is longer than
+            `max_value_length` characters.
 
     Returns:
         A string on the form `'key0=repr(value0), key1=repr(value1)'`.
@@ -181,7 +184,14 @@ def format_kwargs(kwargs: Dict[str, Any]) -> str:
     invalid = [k for k in kwargs if not k.isidentifier()]
     if invalid:
         raise ValueError(f"Got {len(invalid)} invalid identifiers: {invalid}.")
-    return ", ".join(f"{k}={v!r}" for k, v in kwargs.items())
+
+    def repr_value(value: Any) -> str:
+        value_repr = _safe_repr(value)
+        if max_value_length is None or len(value_repr) <= max_value_length:
+            return value_repr
+        return tname(value)
+
+    return ", ".join(f"{k}={repr_value(v)}" for k, v in kwargs.items())
 
 
 def get_local_or_remote(
