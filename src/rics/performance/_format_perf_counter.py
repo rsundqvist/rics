@@ -15,9 +15,8 @@ def format_perf_counter(start: float, end: float = None) -> str:
         A formatted performance counter time.
 
     Examples:
-        >>> from rics.performance import format_perf_counter
-        >>> format_perf_counter(0, 313113.31)
-        '3d 14h 59m'
+        >>> format_perf_counter(0, 309613.49)
+        '3d 14h 0m 13s'
         >>> format_perf_counter(0, 0.154)
         '154ms'
         >>> format_perf_counter(0, 31.39)
@@ -30,7 +29,7 @@ def format_perf_counter(start: float, end: float = None) -> str:
     return format_seconds(t)
 
 
-def format_seconds(t: float, allow_negative: bool = False) -> str:
+def format_seconds(t: float, allow_negative: bool = False, brief: bool = True) -> str:
     """Format performance counter output.
 
     This function formats performance counter output based on the time elapsed. For ``t < 120 sec``, accuracy is
@@ -39,6 +38,7 @@ def format_seconds(t: float, allow_negative: bool = False) -> str:
     Args:
         t: Time in seconds.
         allow_negative: If ``True``, format negative `t` with a leading minus sign.
+        brief: If ``True``,
 
     Returns:
         A formatted performance counter time.
@@ -52,17 +52,16 @@ def format_seconds(t: float, allow_negative: bool = False) -> str:
             raise ValueError(f"Refuse to format {t=} < 0; to allow, set {allow_negative=}")
         return f"-{format_seconds(abs(t))}"
 
+    # days, hours, minutes, seconds = round(days), round(hours), round(minutes), round(seconds)
     if t > 60.0:
-        days, seconds = divmod(t, 86400)
+        days, seconds = divmod(round(t), 86400)
         hours, seconds = divmod(seconds, 3600)
         minutes, seconds = divmod(seconds, 60)
 
-        if days:
-            return f"{days:.0f}d {hours:.0f}h {minutes + seconds / 60:.0f}m"
-        elif hours:
-            return f"{hours:.0f}h {minutes:.0f}m {seconds:.0f}s"
-        else:
-            return f"{minutes:.0f}m {seconds:.0f}s"
+        parts = (days, hours, minutes, seconds)
+        nonzero = tuple(p > 0 for p in parts)
+        start, stop = nonzero.index(True), len(nonzero) - nonzero[::-1].index(True)
+        return " ".join(f"{parts[i]}{'dhms'[i]}" for i in range(start, stop))
 
     if t >= 1.0:
         return f"{t:.1f}s"
