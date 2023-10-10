@@ -1,11 +1,18 @@
+import logging
 from dataclasses import asdict, dataclass
 from typing import Optional, Tuple
 
+from pandas import Timestamp
+
 from rics.misc import format_kwargs
+from rics.performance import format_seconds
 
 from ..types import DatetimeIterable, DatetimeSplitBounds, DatetimeSplits, Flex, Schedule, Span
+from ._limits import LimitsTuple
 from ._schedule import NO_LIMITS, MaterializedSchedule, materialize_schedule
 from ._span import OffsetCalculator, to_strict_span
+
+LOGGER = logging.getLogger("rics.ml.time_split")
 
 
 @dataclass(frozen=True)
@@ -21,6 +28,7 @@ class DatetimeIndexSplitter:
     def get_splits(self, available: DatetimeIterable = None) -> DatetimeSplits:
         """Compute a split of given user data."""
         ms = self._materialize_schedule(available)
+        self._log_expansion(ms.available_metadata.limits, expanded=ms.available_metadata.expanded_limits)
         return self._make_bounds_list(ms)
 
     def get_plot_data(self, available: DatetimeIterable) -> Tuple[DatetimeSplits, MaterializedSchedule]:
@@ -60,6 +68,28 @@ class DatetimeIndexSplitter:
             retval = retval[-self.n_splits :]
 
         return retval
+
+    def _log_expansion(self, original: LimitsTuple, *, expanded: LimitsTuple) -> None:
+        if original == expanded:
+            return
+
+        if not LOGGER.isEnabledFor(logging.INFO):
+            return
+
+        def stringify(old: Timestamp, *, new: Timestamp) -> str:
+            from .._frontend._to_string import _PrettyTimestamp
+
+            retval = f"{old} -> "
+            if old == new:
+                return retval + "<no change>"
+            diff = (new - old).total_seconds()
+            return retval + f"{_PrettyTimestamp(new).auto} ({'+' if diff > 0 else '-'}{format_seconds(abs(diff))})"
+
+        LOGGER.info(
+            f"Available data limits have been expanded (since flex={self.flex!r}):\n"
+            f"  start: {stringify(original[0], new=expanded[0])}\n"
+            f"    end: {stringify(original[1], new=expanded[1])}"
+        )
 
     def __post_init__(self) -> None:
         # Verify n_splits
