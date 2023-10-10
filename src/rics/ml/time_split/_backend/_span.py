@@ -67,7 +67,7 @@ class OffsetCalculator:
         self.func: FuncType
         if span == "all":
             if limits == NO_LIMITS:
-                raise InvalidSpanError(span, name=name, reason="requires available data to bound the schedule.")
+                raise InvalidSpanError(span, name=name, reason="requires available data to bound the schedule")
             self.func = self._make_all(is_before, limits)
         elif isinstance(span, int):
             self.func = self._make_int(is_before, span, schedule)

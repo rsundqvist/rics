@@ -30,7 +30,7 @@ def materialize_schedule(schedule: Schedule, flex: Flex, *, available: DatetimeI
     available_metadata = process_available(available, flex=flex)
     min_dt, max_dt = available_metadata.expanded_limits
 
-    if isinstance(schedule, str) and (" " in schedule or schedule[0] == "@"):
+    if isinstance(schedule, str) and _cron_like(schedule):
         schedule = _handle_cron(schedule, min_dt, max_dt)
     elif isinstance(schedule, get_args(TimedeltaTypes)):
         schedule = _from_timedelta(schedule, available_metadata.expanded_limits)
@@ -41,6 +41,10 @@ def materialize_schedule(schedule: Schedule, flex: Flex, *, available: DatetimeI
         schedule = schedule.tz_localize(min_dt.tz) if schedule.tz is None else schedule.tz_convert(min_dt.tz)
         schedule = schedule[(min_dt <= schedule) & (schedule <= max_dt)]
     return MaterializedSchedule(schedule, available_metadata=available_metadata)
+
+
+def _cron_like(schedule: str) -> bool:
+    return len(schedule.split()) > 4 or schedule[0] == "@"
 
 
 def _from_timedelta(schedule: TimedeltaTypes, limits: LimitsTuple) -> DatetimeIndex:
