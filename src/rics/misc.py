@@ -112,9 +112,15 @@ def get_public_module(obj: Any, resolve_reexport: bool = False, include_name: bo
         >>> get_public_module(obj, resolve_reexport=True, include_name=True)
         'pandas.DataFrame'
 
+    Raises:
+        ValueError: If `include_name` is given without `resolve_reexport`.
+
     See Also:
         The analogous :func:`get_by_full_name`-function.
     """
+    if include_name and not resolve_reexport:
+        raise ValueError(f"Cannot combine {include_name=} with {resolve_reexport=}.")
+
     parts = []
     for part in obj.__module__.split("."):
         if part[0] == "_":
@@ -124,7 +130,7 @@ def get_public_module(obj: Any, resolve_reexport: bool = False, include_name: bo
     if resolve_reexport:
         obj_id = id(obj)
 
-        for i in range(1, len(parts)):
+        for i in range(1, len(parts) + 1):
             module = _import_module(".".join(parts[:i]))
             for name, _ in inspect.getmembers(module, predicate=lambda member: id(member) == obj_id):
                 parts = parts[:i]
