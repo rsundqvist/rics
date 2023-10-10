@@ -149,3 +149,5 @@ dmypy.json
 .idea/*
 
 !.idea/runConfigurations
+/docs/auto_examples/
+/docs/gen_modules/

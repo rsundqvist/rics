@@ -1,19 +1,28 @@
+import pytest
 from dask.datasets import timeseries
 
 from rics.ml.time_split import plot, split
 from rics.ml.time_split._backend._available import process_available
 
 
-def test_dask():
-    available = timeseries(end="2000-04", freq="5s").index
+@pytest.mark.parametrize("kind", ["index", "series"])
+def test_dask(kind):
+    df = timeseries(end="2000-04", freq="17 min", partition_freq="7d")
+    if kind == "index":
+        available = df.index
+    else:
+        df["time-column"] = df.index
+        available = df["time-column"]
+
     kwargs = dict(schedule="7d", before="all", after="30 days", available=available)
 
     unlimited_splits = split(**kwargs)
     assert len(unlimited_splits) == 8
 
-    ax = plot(**kwargs, n_splits=5, show_removed=True)
+    ax = plot(**kwargs, n_splits=5, show_removed=True, row_count_bin="1d")
     xtick_labels = [t.get_text() for t in ax.get_xticklabels()]
     assert len(xtick_labels) == len(unlimited_splits) + 2
+    assert f"dask.dataframe.{kind.capitalize()}" in ax.get_title()
 
     for i, (left, right) in enumerate(zip(xtick_labels[1:], unlimited_splits)):
         # Only mid (index 1) is added
