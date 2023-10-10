@@ -1,26 +1,16 @@
-from typing import NamedTuple, Optional, Protocol, runtime_checkable
+from typing import NamedTuple, Optional
 
 from pandas import DatetimeIndex, Timestamp, isna
 
-from ..types import DatetimeIterable, DatetimeTypes, Flex
+from ..types import DatetimeIterable, Flex
+from ._datetime_index_like import DatetimeIndexLike
 from ._limits import LimitsTuple, expand_limits
-
-
-@runtime_checkable
-class MinMaxDate(Protocol):
-    """A type that has min/max functions returning a datetime-like scalar."""
-
-    def min(self) -> DatetimeTypes:  # noqa: A003
-        """Compute minimum datetime."""
-
-    def max(self) -> DatetimeTypes:  # noqa: A003
-        """Compute maximum datetime."""
 
 
 class AvailableMetadata(NamedTuple):
     """Output of :func:`process_available`."""
 
-    available_as_index: Optional[DatetimeIndex]
+    available_as_index: Optional[DatetimeIndexLike]
     limits: LimitsTuple
     expanded_limits: LimitsTuple
 
@@ -39,11 +29,11 @@ def process_available(available: DatetimeIterable, *, flex: Flex) -> AvailableMe
     Raises:
         ValueError: For invalid `available` arguments.
     """
-    if isinstance(available, MinMaxDate):
+    if isinstance(available, DatetimeIndexLike):
         # Avoids conversion, which may be expensive (or impossible on the current machine),
         # and leverages additional non-Pandas types that do vectorized min/max.
         limits = _compute_data_limits(available)
-        available_retval = None
+        available_retval = available
     else:
         available_retval = DatetimeIndex(available)
         limits = _compute_data_limits(available_retval)
@@ -61,7 +51,7 @@ def process_available(available: DatetimeIterable, *, flex: Flex) -> AvailableMe
     return AvailableMetadata(available_retval, limits=limits, expanded_limits=expanded_limits)
 
 
-def _compute_data_limits(available: MinMaxDate) -> LimitsTuple:
+def _compute_data_limits(available: DatetimeIndexLike) -> LimitsTuple:
     min_dt, max_dt = available.min(), available.max()
 
     if (

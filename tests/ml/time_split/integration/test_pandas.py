@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from rics.ml.time_split import split
+from rics.ml.time_split._backend._available import process_available
 from rics.ml.time_split.integration.pandas import PandasDatetimeSplit, split_pandas
 
 
@@ -73,3 +74,17 @@ def test_inclusive_equality(inclusive):
         count += 1
 
     assert count == 4
+
+
+def test_index_is_preserved():
+    available = pd.date_range("2023-05-01", "2023-06-01", periods=100)
+
+    actual = process_available(available, flex=False).available_as_index
+    assert id(available) == id(actual)
+
+
+def test_series_is_preserved():
+    available = pd.date_range("2023-05-01", "2023-06-01", periods=100).to_series()
+
+    actual = process_available(available, flex=False).available_as_index
+    assert isinstance(actual, pd.Series)

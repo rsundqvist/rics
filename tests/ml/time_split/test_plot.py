@@ -55,9 +55,15 @@ def test_show_removed(n_splits):
 
 
 @pytest.mark.parametrize("factory", [pd.Series, pd.Index, list])
-def test_row_count_freq(factory, random_density_timestamps):
+def test_row_count_bin(factory, random_density_timestamps):
     available = factory(random_density_timestamps)
-    plot("0 0 * * MON,FRI", available=available, row_count_freq="h")
+    plot("0 0 * * MON,FRI", available=available, row_count_bin="1h")
+
+
+def test_row_count_bin_precomputed(random_density_timestamps):
+    available = pd.Index(random_density_timestamps)
+    row_count_bin = available.floor("3h").value_counts()
+    plot("0 0 * * MON,FRI", available=available, row_count_bin=row_count_bin)
 
 
 @pytest.fixture(scope="module")

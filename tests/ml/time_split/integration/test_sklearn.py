@@ -40,8 +40,8 @@ def test_bad_args():
 
 
 def test_cv():
-    from sklearn.linear_model import LinearRegression  # type: ignore[import]
-    from sklearn.model_selection import cross_val_score  # type: ignore[import]
+    from sklearn.linear_model import LinearRegression  # type: ignore[import-untyped]
+    from sklearn.model_selection import cross_val_score  # type: ignore[import-untyped]
 
     df = pd.DataFrame(index=pd.date_range("2022", "2022-1-10", freq="h"))
     df["x"] = range(len(df))

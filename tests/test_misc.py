@@ -33,12 +33,20 @@ def test_get_by_full_name():
         assert misc.get_by_full_name("tests.test_misc.Foo.bar")
 
 
-def test_get_public_module():
-    from rics.performance import MultiCaseTimer as obj
+class TestGetPublicModule:
+    def test_private_module(self):
+        from rics.performance import MultiCaseTimer as obj
 
-    assert misc.get_public_module(obj) == "rics.performance"
-    assert misc.get_public_module(obj, resolve_reexport=True) == "rics.performance"
-    assert misc.get_public_module(obj, resolve_reexport=True, include_name=True) == "rics.performance"
+        assert misc.get_public_module(obj) == "rics.performance"
+        assert misc.get_public_module(obj, True) == "rics.performance"
+        assert misc.get_public_module(obj, True, include_name=True) == "rics.performance.MultiCaseTimer"
+
+    def test_public_module(self):
+        from rics.action_level import ActionLevel as obj
+
+        assert misc.get_public_module(obj) == "rics.action_level"
+        assert misc.get_public_module(obj, True) == "rics.action_level"
+        assert misc.get_public_module(obj, True, include_name=True) == "rics.action_level.ActionLevel"
 
 
 @pytest.mark.parametrize(

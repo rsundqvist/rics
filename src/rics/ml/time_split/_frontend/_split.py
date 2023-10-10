@@ -28,7 +28,7 @@ def split(
     {USER_GUIDE}
 
     Returns:
-        A list of tuples ``[(start, mid, end), ..]``.
+        A list of tuples ``[(start, mid, end), ...]``.
     """
     return DatetimeIndexSplitter(
         schedule,

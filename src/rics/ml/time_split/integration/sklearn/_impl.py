@@ -9,7 +9,7 @@ from ...types import DatetimeIterable, DatetimeSplits, DatetimeTypes, Flex, Sche
 from .._log_progress import LogProgressArg, handle_log_progress_arg
 
 try:
-    from sklearn.model_selection import BaseCrossValidator  # type: ignore[import]
+    from sklearn.model_selection import BaseCrossValidator  # type: ignore[import-untyped]
 except ModuleNotFoundError:
     BaseCrossValidator = object
 

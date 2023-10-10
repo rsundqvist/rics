@@ -1,9 +1,6 @@
-import logging
 from typing import Iterable, List, NamedTuple, Optional, Tuple, Union
 
 from pandas import Timedelta, Timestamp
-
-from rics.misc import get_public_module
 
 from ..settings import auto_flex as settings
 from ..types import Flex, TimedeltaTypes
@@ -132,18 +129,7 @@ def _apply(limits: LimitsTuple, *, level: _TimedeltaTuple) -> LimitsTuple:
         if hi.round(level.round_to) != hi_ceil:
             return limits
 
-    retval = (lo_floor, hi_ceil)
-
-    logger = logging.getLogger(get_public_module(_apply)).getChild("flex")
-    if logger.isEnabledFor(logging.INFO) and limits != retval:
-        from .._frontend._to_string import _PrettyTimestamp
-
-        logger.info(
-            f"Available data limits have been expanded:\n"
-            f"  Start: {lo} -> {_PrettyTimestamp(lo_floor).auto if lo != lo_floor else '<no change>'}\n"
-            f"    End: {hi} -> {_PrettyTimestamp(hi_ceil).auto if hi != hi_ceil else '<no change>'}"
-        )
-    return retval
+    return lo_floor, hi_ceil
 
 
 def _levels_from_settings() -> List[_TimedeltaTuple]:
