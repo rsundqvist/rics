@@ -1,12 +1,11 @@
-import pytest
+from dask.datasets import timeseries
 
 from rics.ml.time_split import plot, split
-
-dask_datasets = pytest.importorskip("dask.datasets", reason="support is undocumented")
+from rics.ml.time_split._backend._available import process_available
 
 
 def test_dask():
-    available = dask_datasets.timeseries(end="2000-04", freq="5s").index
+    available = timeseries(end="2000-04", freq="5s").index
     kwargs = dict(schedule="7d", before="all", after="30 days", available=available)
 
     unlimited_splits = split(**kwargs)
@@ -21,3 +20,19 @@ def test_dask():
         assert left in str(right[1]), i
 
     assert len(split(**kwargs, n_splits=5)) == 5
+
+
+def test_index_is_preserved():
+    available = timeseries(freq="10 min").index
+
+    actual = process_available(available, flex=False).available_as_index
+    assert id(available) == id(actual)
+
+
+def test_series_is_preserved():
+    from dask.dataframe import Series  # type: ignore[attr-defined]
+
+    available = timeseries(freq="10 min").index
+
+    actual = process_available(available, flex=False).available_as_index
+    assert isinstance(actual, Series)

@@ -34,6 +34,7 @@ exclude_lines =
     if VERBOSE
     if __name__ == "__main__"
     except ModuleNotFoundError
+    \(Protocol
 
 show_missing = true
 
