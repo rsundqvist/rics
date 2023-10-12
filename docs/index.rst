@@ -6,6 +6,7 @@ My personal little library. Written to help with common Machine Learning and Dat
    :hidden:
 
    API reference <_autosummary/rics>
+   auto_examples/index
    documentation/index
    development
    License <LICENSE>
