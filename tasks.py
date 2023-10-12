@@ -13,9 +13,7 @@ from invoke.runners import Result
 ROOT_DIR = Path(__file__).parent
 DOCS_DIR = ROOT_DIR.joinpath("docs")
 DOCS_BUILD_DIR = DOCS_DIR.joinpath("_build")
-DOCS_GEN_DIR = DOCS_DIR.joinpath("_autosummary")
 DOCS_NOTEBOOK_DIR = DOCS_DIR.joinpath("documentation/examples/notebooks")
-DOCS_INDEX = DOCS_BUILD_DIR.joinpath("index.html")
 COVERAGE_FILE = ROOT_DIR.joinpath(".coverage")
 COVERAGE_DIR = ROOT_DIR.joinpath("htmlcov")
 COVERAGE_REPORT = COVERAGE_DIR.joinpath("index.html")
@@ -27,6 +25,7 @@ PYTHON_TARGETS = [
     TEST_DIR,
     ROOT_DIR.joinpath("noxfile.py"),
     Path(__file__),
+    ROOT_DIR / "examples",
 ]
 PYTHON_TARGETS_STR = " ".join([str(p) for p in PYTHON_TARGETS])
 
@@ -67,8 +66,11 @@ def clean_tests(c: Context) -> None:
 def clean_docs(c: Context) -> None:
     """Clean up files from documentation builds."""
     _run(c, f"rm -fr {DOCS_BUILD_DIR}")
-    _run(c, f"rm -fr {DOCS_GEN_DIR}")
     _run(c, f"rm -fr {DOCS_NOTEBOOK_DIR}")
+
+    dirs = "_autosummary", "changelog", "auto_examples", "gen_modules"
+    more_dirs = " ".join(map(str, map(DOCS_DIR.joinpath, dirs)))
+    _run(c, f"rm -fr {more_dirs}")
 
 
 @task(pre=[clean_build, clean_python, clean_tests, clean_docs])
@@ -171,7 +173,8 @@ def docs(c: Context, open_browser: bool = False) -> None:
     build_docs = f"sphinx-build -T -E -W --keep-going -a -j auto -b html {DOCS_DIR} {DOCS_BUILD_DIR}"
     _run(c, build_docs)
     if open_browser:
-        webbrowser.open(DOCS_INDEX.absolute().as_uri())
+        index = DOCS_BUILD_DIR / "index.html"
+        webbrowser.open(index.absolute().as_uri())
 
 
 @task(

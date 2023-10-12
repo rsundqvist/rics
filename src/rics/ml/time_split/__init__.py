@@ -1,9 +1,8 @@
 """Create temporal k-folds for cross-validation with heterogeneous data.
 
-* :ref:`Example 1`: Cron schedule, keeping all data ``before`` the schedule.
-* :ref:`Example 2`: List-schedule, without ``available`` data.
-* :ref:`Example 3`: Timedelta-schedule, 5 days ``before``-data.
-* :ref:`Example 4`: Removing folds with ``n_splits``. Dynamic ``before`` and ``after``-data.
+.. minigallery:: rics.ml.time_split.plot
+    :add-heading: Examples
+    :heading-level: =
 
 .. _tsug:
 
@@ -43,9 +42,9 @@ interpreted as a bounded schedule. Unbounded schedules are either `cron` express
 
 * Bound schedules. These are always viable.
 
-  >>> from pandas import date_range
+  >>> import pandas
   >>> schedule = ["2022-01-03", "2022-01-07", "2022-01-10", "2022-01-14"]
-  >>> another_schedule = date_range("2022-01-01", "2022-10-10")
+  >>> another_schedule = pandas.date_range("2022-01-01", "2022-10-10")
 
 * Unbounded schedules. These must be made bounded by a `data` argument.
 
@@ -99,65 +98,6 @@ the fold:
    ('2022-01-01' <= [schedule: '2022-01-08' (Saturday)] < '2022-01-09')
 
 This function is enabled by default since the scenario above is common. Set ``flex=False`` to disable.
-
-Plotted examples
-----------------
-A picture is worth a thousand words.
-
->>> from rics import configure_stuff; configure_stuff()  # Make it pretty
-
-Example 1
-~~~~~~~~~
-Using a `cron` schedule with data, showing number of rows in each partition.
-
->>> import pandas
->>> data = pandas.date_range("2022", "2022-1-21", freq="38min")
->>> plot("0 0 * * MON,FRI", before="all", after="3d", available=data)
-
-.. image:: ../_images/folds-example1.png
-
-The vertical, dashed lines shown denote the outer bounds of our `data`, beyond which the schedule may not extend.
-
-Example 2
-~~~~~~~~~
-Using an explicit schedule without data, showing number of hours in each partition.
-
->>> schedule = ["2022-01-03", "2022-01-07", "2022-01-10", "2022-01-14"]
->>> plot(schedule, bar_labels="h")
-
-.. image:: ../_images/folds-example2.png
-
-Note that the last timestamp ('**2022-01-14**') of the schedule was not included; this is because it was used as the end
-date (since ``after=1``) of the second-to-last timestamp ('**2022-01-10**'), which expands the **Future data** until the
-next scheduled time.
-
-Example 3
-~~~~~~~~~
-Using an unbounded timedelta-schedule, with custom bar labels.
-
->>> import pandas
->>> pandas.date_range("2022", "2022-1-21", freq="38min").to_series()
->>> bar_labels = [(f"{i}-left", f"{i}-right") for i in range(4)]
->>> plot("3d", before="5d", available=data, bar_labels=bar_labels)
-
-.. image:: ../_images/folds-example3.png
-
-Unbounded (timedelta) schedules require `available` data to materialize the schedule. When using the ``plot``-function,
-this data is also used to create bar labels unless they're explicitly given, as seen above.
-
-Example 4
-~~~~~~~~~
-Dynamic before/after-ranges, with removed partitions.
-
->>> import pandas
->>> data = pandas.date_range("2022", "2022-2", freq="15s")
->>> plot("0 0 * * MON,FRI", before=1, after=2, available=data,
-... n_splits=4, show_removed=True)
-
-.. image:: ../_images/folds-example4.png
-
-Any non-zero integer before/after-range may be used. Setting ``show_removed=True`` forces plotting of folds that would
-be silently discarded by the :func:`.split`-function. Later folds are preferred.
 """
 from ._frontend import log_split_progress, plot, split
 

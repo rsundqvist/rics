@@ -88,6 +88,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
+    "sphinx_gallery.gen_gallery",
     "nbsphinx",
     "sphinx.ext.mathjax",
     "myst_parser",
@@ -118,6 +119,8 @@ exclude_patterns = [
     "Thumbs.db",
     ".DS_Store",
     "**.ipynb_checkpoints",
+    "auto_examples/**/*.ipynb",
+    "auto_examples/**/*.py",
 ]
 shutil.rmtree("/tmp/example/", ignore_errors=True)  # noqa: 1S108
 
@@ -134,6 +137,9 @@ html_theme = "pydata_sphinx_theme"
 
 html_theme_options = {
     "github_url": "https://github.com/rsundqvist/rics",
+    "icon_links": [
+        {"name": "PyPI", "url": "https://pypi.org/project/rics/", "icon": "fa-solid fa-box"},
+    ],
     "icon_links_label": "Quick Links",
     "use_edit_page_button": False,
     "navigation_with_keys": False,
@@ -178,7 +184,7 @@ html_context = {
             title="Cross Validation",
             text="Temporal folds for heterogeneous data. Scikit-learn compatible.",
             url="_autosummary/rics.ml.time_split.html",
-            img="_static/folds-example1.png",
+            img="_static/cross-validation.png",
         ),
         dict(
             title="ID Translation",
@@ -231,9 +237,12 @@ intersphinx_mapping = {
 
 # -- Gallery configuration -------------------------------------------------
 sphinx_gallery_conf = {
-    "sphinx_gallery_conf": "*.png",
-    "gallery_dirs": ["_tiles"],
+    "backreferences_dir": "gen_modules/backreferences",
+    "gallery_dirs": ["auto_examples"],
+    "examples_dirs": ["../examples"],
+    "doc_module": ("rics",),
 }
+autosummary_generate = True
 
 # -- Nbsphinx
 nbsphinx_execute = "never"
