@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Set, Tuple, Union
 
 import pandas as pd
 from pandas import Timestamp
@@ -12,7 +12,7 @@ from .._backend._datetime_index_like import DatetimeIndexLike
 from .._backend._limits import LimitsTuple
 from .._docstrings import docs
 from ..settings import plot as settings
-from ..types import DatetimeIterable, DatetimeSplits, Flex, Schedule, Span
+from ..types import DatetimeIterable, DatetimeSplitBounds, DatetimeSplits, Flex, Schedule, Span
 from ._split import split
 from ._weight import fold_weight
 
@@ -34,7 +34,6 @@ class Available:
     index: DatetimeIndexLike
     true_limits: LimitsTuple
     expanded_limits: LimitsTuple
-    row_counts: Optional[pd.Series] = None
 
 
 @dataclass(frozen=True)
@@ -42,6 +41,11 @@ class PlotData:
     """Data used for plotting."""
 
     splits: DatetimeSplits
+    """All splits to plot."""
+    removed: Set[DatetimeSplitBounds]
+    """A subset of `splits` that should be plotted that would be filtered by user arguments."""
+    row_counts: Optional[pd.Series] = None
+    """Row counts for `available`. May be pre-computed by the user."""
     available: Optional[Available] = None
 
 
@@ -51,6 +55,7 @@ def plot(
     *,
     before: Span = "7d",
     after: Span = 1,
+    step: int = 1,
     n_splits: Optional[int] = None,
     available: DatetimeIterable = None,
     flex: Flex = "auto",
@@ -66,16 +71,17 @@ def plot(
         schedule: {schedule}
         before: {before}
         after: {after}
+        step: {step}
         n_splits: {n_splits}
         available: {available} If `bar_labels` is given but is not a ``list``,
             this data will be used to compute fold sizes.
-        flex: {flex} Figures show the "real" (non-flex) outer data range.
+        flex: {flex}
         bar_labels: Labels to draw on the bars. If you pass a string, it will be interpreted as a time unit (see
             :ref:`pandas:timeseries.offset_aliases` for valid frequency strings). Bars will show the number of units
             contained. Pass `'rows'` to simply count the numbers of elements in `data` (if given). To write custom
             bar labels, pass a list ``[(data_label, future_data_label), ...]``, one tuple for each fold. This may be
             used to write metric values per data set after cross validation.
-        show_removed: If ``True``, splits removed by `n_splits` are included in the figure.
+        show_removed: If ``True``, splits removed by `n_splits` or `step` are included in the figure.
         row_count_bin: A {OFFSET}. If given, show normalized row count per `row_count_bin` in the background. Pass
             ``pandas.Series`` to use pre-computed row counts.
         ax: Axis to use for plotting. If ``None``, create new axes.
@@ -91,9 +97,14 @@ def plot(
     import matplotlib.pyplot as plt
 
     splitter = DatetimeIndexSplitter(
-        schedule, before=before, after=after, n_splits=None if show_removed else n_splits, flex=flex
+        schedule,
+        before=before,
+        after=after,
+        step=step,
+        n_splits=n_splits,
+        flex=flex,
     )
-    plot_data = _get_plot_data(available, splitter, row_count_bin=row_count_bin)
+    plot_data = _get_plot_data(available, splitter, row_count_bin=row_count_bin, show_removed=show_removed)
 
     if bar_labels is True:
         bar_labels = settings.DEFAULT_TIME_UNIT if plot_data.available is None else COUNT_ROWS
@@ -104,7 +115,7 @@ def plot(
             figsize=(plt.rcParams.get("figure.figsize")[0], 3 + len(plot_data.splits) * 0.5),
         )
 
-    _plot_splits(ax, plot_data.splits, n_splits=n_splits)
+    _plot_splits(ax, plot_data.splits, removed=plot_data.removed)
 
     if bar_labels:
         _add_bar_labels(ax, plot_data, unit_or_labels=bar_labels, label_type="center", font="monospace")
@@ -115,15 +126,16 @@ def plot(
     ax.set_title(_make_title(available, split_kwargs))
 
     if plot_data.available is None:
+        ax.legend(loc=("lower" if splitter.step > 0 else "upper") + " right")
         return ax
 
     _plot_limits(ax, plot_data.available.expanded_limits)
 
-    if plot_data.available.row_counts is not None:
+    if plot_data.row_counts is not None:
         assert isinstance(row_count_bin, (str, pd.Series))  # noqa: S101
-        _plot_row_counts(ax, row_count_bin, plot_data.available.row_counts)
+        _plot_row_counts(ax, row_count_bin, plot_data.row_counts)
 
-    ax.legend(loc="lower right")
+    ax.legend(loc=("lower" if splitter.step > 0 else "upper") + " right")
 
     return ax
 
@@ -137,18 +149,26 @@ def _plot_limits(ax: "Axes", limits: LimitsTuple) -> None:
     ax.set_xticks([date2num(left), *ax.get_xticks(), date2num(right)])
 
 
-def _plot_splits(ax: "Axes", splits: DatetimeSplits, *, n_splits: int = None) -> None:
+def _plot_splits(ax: "Axes", splits: DatetimeSplits, *, removed: Set[DatetimeSplitBounds]) -> None:
     from matplotlib.dates import AutoDateFormatter
 
-    n_extra = len(splits) - n_splits if n_splits else 0  # Number of removed folds that are being visualized.
     extra_args: Dict[str, Any]
     xtick: List[Timestamp] = []
+    ytick: List[Optional[int]] = []
     for i, (start, mid, stop) in enumerate(splits, start=1):
-        extra_args = {"alpha": 1} if i > n_extra else {"alpha": 0.35, "height": 0.6}
+        blue_label, red_label = None, None
+        if (start, mid, stop) in removed:
+            extra_args = {"alpha": 0.35, "height": 0.6}
+            ytick.append(None)
+        else:
+            extra_args = {"alpha": 1}
+            fold_no = 1 + sum(1 for t in ytick if t is not None)
+            ytick.append(fold_no)
+            if fold_no == 1:
+                blue_label, red_label = settings.DATA_LABEL, settings.FUTURE_DATA_LABEL
 
-        is_last = i == len(splits) - 1
-        ax.barh(i, mid - start, left=start, color="b", label=settings.DATA_LABEL if is_last else None, **extra_args)
-        ax.barh(i, stop - mid, left=mid, color="r", label=settings.FUTURE_DATA_LABEL if is_last else None, **extra_args)
+        ax.barh(i, mid - start, left=start, color="b", label=blue_label, **extra_args)
+        ax.barh(i, stop - mid, left=mid, color="r", label=red_label, **extra_args)
         xtick.append(mid)
 
     ax.set_xticks(xtick)
@@ -156,10 +176,7 @@ def _plot_splits(ax: "Axes", splits: DatetimeSplits, *, n_splits: int = None) ->
 
     ax.set_ylabel("Fold")
     ax.yaxis.get_major_locator().set_params(integer=True)
-    ticks = list(range(n_extra + 1, len(splits) + 1))
-    ax.yaxis.set_ticks(ticks, labels=[t - n_extra for t in ticks])
-
-    ax.legend(loc="lower right")
+    ax.yaxis.set_ticks(range(1, len(splits) + 1), labels=["" if t is None else t for t in ytick])
 
 
 def _plot_row_counts(ax: "Axes", row_count_bin: Union[str, pd.Series], row_counts: pd.Series) -> None:
@@ -222,39 +239,66 @@ def _make_count_labels(
 def _get_plot_data(
     available: Optional[DatetimeIterable],
     splitter: DatetimeIndexSplitter,
+    *,
     row_count_bin: Union[pd.Series, str, None],
+    show_removed: bool,
 ) -> PlotData:
-    if available is None:
-        if row_count_bin is not None:
-            raise ValueError(f"Cannot use {row_count_bin=} without available data.")
-
-        return PlotData(splitter.get_splits())
-
     splits, ms = splitter.get_plot_data(available)
+    available = ms.available_metadata.available_as_index
 
-    assert ms.available_metadata.available_as_index is not None  # noqa: S101
-    if row_count_bin is None:
-        row_counts = None
-    elif isinstance(row_count_bin, pd.Series):
-        row_counts = row_count_bin
+    if show_removed:
+        kept_splits = set(splits)
+        kwargs = asdict(splitter)  # Can't use dataclasses.replace: 3.10+ only
+        kwargs["n_splits"] = None
+        kwargs["step"] = 1
+        splits = DatetimeIndexSplitter(**kwargs).get_plot_data(available)[0]
+        if splitter.step < 0:
+            splits.reverse()
+        removed = set(splits) - set(kept_splits)
     else:
-        index_like = ms.available_metadata.available_as_index
-        if hasattr(index_like, "dt"):
-            index_like = index_like.dt
+        removed = set()
 
-        row_counts = index_like.floor(row_count_bin).value_counts()  # type: ignore[attr-defined]
-        if hasattr(row_counts, "compute") and callable(row_counts.compute):
-            row_counts = row_counts.compute()
+    row_counts = _compute_row_counts(available, row_count_bin=row_count_bin)
 
-    return PlotData(
-        splits,
-        available=Available(
-            index=ms.available_metadata.available_as_index,
-            true_limits=ms.available_metadata.limits,
-            expanded_limits=ms.available_metadata.expanded_limits,
+    if available is None:
+        return PlotData(splits, removed=removed)
+    else:
+        return PlotData(
+            splits,
+            removed=removed,
             row_counts=row_counts,
-        ),
-    )
+            available=Available(
+                index=available,
+                true_limits=ms.available_metadata.limits,
+                expanded_limits=ms.available_metadata.expanded_limits,
+            ),
+        )
+
+
+def _compute_row_counts(
+    available: Optional[DatetimeIndexLike], *, row_count_bin: Union[pd.Series, str, None]
+) -> Optional[pd.Series]:
+    if row_count_bin is None:
+        return None
+
+    if isinstance(row_count_bin, pd.Series):
+        return row_count_bin
+
+    if available is None:
+        raise ValueError(f"Cannot use {row_count_bin=} without available data.")
+
+    index_like = available
+    if hasattr(index_like, "dt"):
+        # pandas series, dask datetime index
+        index_like = index_like.dt
+    elif not hasattr(index_like, "floor"):
+        a_type = get_public_module(type(available), resolve_reexport=True, include_name=True)
+        raise TypeError(f"type(available)={a_type} must have one of `floor` and `dt` to use {row_count_bin=}")
+
+    row_counts = index_like.floor(row_count_bin).value_counts()
+    if hasattr(row_counts, "compute") and callable(row_counts.compute):
+        row_counts = row_counts.compute()
+    return row_counts
 
 
 def _make_title(available: Optional[Any], split_kwargs: Dict[str, Any]) -> str:

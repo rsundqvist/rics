@@ -51,7 +51,7 @@ def test_show_removed(n_splits):
 
     ax = plot("3d", available=("2022", "2022-2"), n_splits=n_splits, bar_labels=False, show_removed=True)
     xtick_labels = [t.get_text() for t in ax.get_yticklabels()]
-    assert [str(n) for n in range(1, n_splits + 1)] == xtick_labels
+    assert xtick_labels == ["" for _ in range(7 - n_splits)] + [str(n) for n in range(1, n_splits + 1)]
 
 
 @pytest.mark.parametrize("factory", [pd.Series, pd.Index, list])
@@ -87,3 +87,18 @@ def random_density_timestamps() -> Tuple[pd.Timestamp, ...]:
         start = start + pd.Timedelta(hours=1)
         prev_size = size
     return tuple(parts)
+
+
+@pytest.mark.parametrize(
+    "step, n_splits, expected",
+    [
+        (2, None, "1,,2,,3,,4"),
+        (-2, None, "1,,2,,3,,4"),
+        (2, 3, ",,1,,2,,3"),
+    ],
+)
+def test_step(step, n_splits, expected):
+    data = pd.date_range("2022-01", "2022-03")
+    ax = plot("0 0 * * THU", after="5d", step=step, n_splits=n_splits, available=data, show_removed=True)
+    xtick_labels = [t.get_text() for t in ax.get_yticklabels()]
+    assert xtick_labels == expected.split(",")

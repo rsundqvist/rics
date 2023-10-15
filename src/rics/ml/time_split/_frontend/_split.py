@@ -11,6 +11,7 @@ def split(
     *,
     before: Span = "7d",
     after: Span = 1,
+    step: int = 1,
     n_splits: Optional[int] = None,
     available: DatetimeIterable = None,
     flex: Flex = "auto",
@@ -21,6 +22,7 @@ def split(
         schedule: {schedule}
         before: {before}
         after: {after}
+        step: {step}
         n_splits: {n_splits}
         available: {available} Passing a tuple ``(min, max)`` is enough.
         flex: {flex}
@@ -34,6 +36,7 @@ def split(
         schedule,
         before=before,
         after=after,
+        step=step,
         n_splits=n_splits,
         flex=flex,
     ).get_splits(available)
