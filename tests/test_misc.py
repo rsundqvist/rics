@@ -73,6 +73,16 @@ class Test_tname:
     def test_with_class(self, obj, expected):
         assert misc.tname(obj, prefix_classname=True) == expected
 
+    @pytest.mark.parametrize("n_wraps", [1, 2, 4])
+    def test_wrapped(self, obj, expected, n_wraps):
+        class Wrapper:
+            def __init__(self, func):
+                self.func = func
+
+        for _ in range(n_wraps):
+            obj = Wrapper(obj)
+        assert misc.tname(obj, prefix_classname=True) == expected
+
 
 def test_get_local_or_remote(tmp_path):
     def my_postprocessor(p):
