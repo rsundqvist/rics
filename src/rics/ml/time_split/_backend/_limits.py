@@ -15,35 +15,14 @@ class _TimedeltaTuple(NamedTuple):
     tolerance: Timedelta
 
 
-def expand_limits(limits: LimitsTuple, *, flex: Union[Flex, LevelTuple, Iterable[LevelTuple]]) -> LimitsTuple:
+def expand_limits(limits: LimitsTuple, *, flex: Union[Flex, LevelTuple, Iterable[LevelTuple]] = "auto") -> LimitsTuple:
     """Derive the `"real"` bounds of `limits`.
-
-    .. list-table:: Flex options.
-       :header-rows: 1
-       :widths: 20 80
-
-       * - Type
-         - Description
-       * - ``True`` or ``'auto'``
-         - Auto-flex using :attr:`auto_flex <rics.ml.time_split.settings.auto_flex>`-settings.
-       * - ``False``
-         - Do nothing; return `limits` unchanged.
-       * - ``str``
-         - A string `round_to` or `round_to<tolerance`, where `round_to` is the desired frequency of the `limits` and
-           `tolerance` is the maximum amount by which to change the input limits.
-       * - ``list[tuple]``
-         - Passing tuples ``(start_at, round_to, tolerance)`` will use the largest tuple such that
-           ``start_at > >= limits[1] - limits[0]``. Other parameters are interpreted as above.
-       * - ``tuple``
-         - Like ``list[tuple]``, but with just one level.
-
-    .. note::
-
-       Passing ``flex=[auto_flex.day, auto_flex.hour]`` is equivalent to ``flex='auto'``.
 
     Args:
         limits: A tuple ``(lo, hi)`` of timestamps.
-        flex: See the table above.
+        flex: Flex arguments as described in the :ref:`User guide`. Also supports level-tuples
+            ``[(start_at, round_to, tolerance)...]``. Passing ``flex=[settings.auto_flex.day, settings.auto_flex.hour]``
+            is equivalent to ``flex='auto'``.
 
     Returns:
         Limits rounded according to the `flex`-argument.
@@ -65,7 +44,7 @@ def expand_limits(limits: LimitsTuple, *, flex: Union[Flex, LevelTuple, Iterable
         >>> expand_limits(limits, flex="d<1h")
         (Timestamp('2019-05-11 00:00:00'), Timestamp('2019-05-11 22:05:30'))
 
-        Limits will never be rounded in the "wrong" direction..
+        Limits will never be rounded in the "wrong" direction...
 
         >>> limits = Timestamp("2019-05-11"), Timestamp("2019-05-11 11:05:30")
         >>> expand_limits(limits, flex="d")

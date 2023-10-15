@@ -18,24 +18,7 @@ Schedule = _t.Union[_pd.DatetimeIndex, DatetimeIterable, TimedeltaTypes]
 Span = _t.Union[int, _t.Literal["all"], TimedeltaTypes]
 """User span type. Used to determine limits from the timestamps given by a :attr:`Schedule`."""
 Flex = _t.Union[bool, _t.Literal["auto"], str]
-"""Flexibility frequency string for ``floor/ceil``. Pass ``False`` to disable.
-
-Options `'auto'` (**default**) and ``True`` are equivalent. Available data limits ``(start, end)`` are rounded using
-:meth:`Timestamp.floor <pandas.Timestamp.floor>` and :meth:`Timestamp.ceil <pandas.Timestamp.ceil>`, respectively. In
-other words, the start of the range is always rounded down while the end is rounded up.
-
-Auto flex:
-    When using ``flex='auto'`` (**default**), if and how bounds are expanded is determined by the size of the range and
-    by distance between the actual and desired limits.
-
-    Use :attr:`settings.auto_flex <rics.ml.time_split.settings.auto_flex>` to modify auto-flex behaviour.
-
-Manual flex:
-    Pass an :ref:`offset alias <pandas:timeseries.offset_aliases>` specify how limits should be rounded. To specify by
-    `how much` limits may be rounded, pass ``'<'`` follow by a valid :class:`pandas.Timedelta`-string.
-
-    See :func:`~rics.ml.time_split.support.expand_limits` for usage examples.
-"""
+"""Flexibility frequency string for ``floor/ceil``. Pass ``False`` to disable."""
 
 
 class DatetimeSplitBounds(_t.NamedTuple):

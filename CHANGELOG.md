@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- New `step` argument to `rics.ml.time_split` splitting functions.
+
 ## [3.1.0] - 2023-10-13
 
 ### Added
