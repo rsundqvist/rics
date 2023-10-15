@@ -1,10 +1,10 @@
 """Miscellaneous utility methods for Python applications."""
 import inspect
+import typing as _t
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
 from pprint import saferepr as _safe_repr
 from types import ModuleType as _ModuleType
-from typing import Any, Callable, Dict, Optional, Type, Union
 
 from ._internal_support import _local_or_remote
 from ._internal_support.types import PathLikeType
@@ -52,7 +52,7 @@ def interpolate_environment_variables(
     return s
 
 
-def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) -> Any:
+def get_by_full_name(name: str, default_module: _t.Union[str, _ModuleType] = None) -> _t.Any:
     """Combine :py:func:`~importlib.import_module` and :py:func:`getattr` to retrieve items by name.
 
     Args:
@@ -88,7 +88,7 @@ def get_by_full_name(name: str, default_module: Union[str, _ModuleType] = None) 
     return getattr(module, member)
 
 
-def get_public_module(obj: Any, resolve_reexport: bool = False, include_name: bool = False) -> str:
+def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name: bool = False) -> str:
     """Get the public module of `obj`.
 
     Args:
@@ -141,12 +141,18 @@ def get_public_module(obj: Any, resolve_reexport: bool = False, include_name: bo
     return ".".join(parts)
 
 
-def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) -> str:
+def tname(
+    arg: _t.Optional[_t.Union[_t.Type[_t.Any], _t.Any]],
+    prefix_classname: bool = False,
+    attrs: _t.Optional[_t.Union[str, _t.Iterable[str]]] = "func",
+) -> str:
     """Get name of method or class.
 
     Args:
         arg: Something get a name for.
         prefix_classname: If ``True``, prepend the class name if `arg` belongs to a class.
+        attrs: Attribute names to search for wrapped functions. The default, `'func'`, is the name used by the built-in
+            :py:func:`functools.partial` wrapper. May cause infinite recursion.
 
     Returns:
         A name for `arg`.
@@ -156,6 +162,17 @@ def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) 
     """
     if arg is None:
         return "None"
+
+    if attrs:
+        from rics.collections.misc import as_list
+
+        attrs = as_list(attrs)
+        for attr in attrs:
+            wrapped = getattr(arg, attr, arg)
+            if wrapped is arg:
+                break
+            return tname(wrapped, prefix_classname=prefix_classname, attrs=attrs)
+
     if hasattr(arg, "__qualname__"):
         return arg.__qualname__ if prefix_classname else arg.__name__
     if hasattr(arg, "__name__"):
@@ -169,7 +186,7 @@ def tname(arg: Optional[Union[Type[Any], Any]], prefix_classname: bool = False) 
         raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
 
 
-def format_kwargs(kwargs: Dict[str, Any], *, max_value_length: int = None) -> str:
+def format_kwargs(kwargs: _t.Dict[str, _t.Any], *, max_value_length: int = None) -> str:
     """Format keyword arguments.
 
     Args:
@@ -191,7 +208,7 @@ def format_kwargs(kwargs: Dict[str, Any], *, max_value_length: int = None) -> st
     if invalid:
         raise ValueError(f"Got {len(invalid)} invalid identifiers: {invalid}.")
 
-    def repr_value(value: Any) -> str:
+    def repr_value(value: _t.Any) -> str:
         value_repr = _safe_repr(value)
         if max_value_length is None or len(value_repr) <= max_value_length:
             return value_repr
@@ -205,7 +222,7 @@ def get_local_or_remote(
     remote_root: PathLikeType,
     local_root: PathLikeType = ".",
     force: bool = False,
-    postprocessor: Callable[[str], Any] = None,
+    postprocessor: _t.Callable[[str], _t.Any] = None,
     show_progress: bool = _local_or_remote.TQDM_INSTALLED,
 ) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
@@ -268,7 +285,7 @@ def get_local_or_remote(
     )
 
 
-def serializable(obj: Any) -> bool:
+def serializable(obj: _t.Any) -> bool:
     """Check if `obj` is serializable using Pickle.
 
     Serializes to memory for speed.
