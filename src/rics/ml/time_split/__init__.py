@@ -4,6 +4,9 @@
     :add-heading: Examples
     :heading-level: =
 
+Examples demonstrate usage of :func:`.split` and :func:`.plot`. The :mod:`.integration` functions do not have examples,
+but mostly behave the same way as the :func:`.split`-function.
+
 .. _tsug:
 
 User guide
@@ -46,7 +49,7 @@ interpreted as a bounded schedule. Unbounded schedules are either `cron` express
   >>> schedule = ["2022-01-03", "2022-01-07", "2022-01-10", "2022-01-14"]
   >>> another_schedule = pandas.date_range("2022-01-01", "2022-10-10")
 
-* Unbounded schedules. These must be made bounded by a `data` argument.
+* Unbounded schedules. These must be made bounded by an `available` data argument.
 
   >>> cron_schedule = "0 0 * * MON,FRI"  # Monday and friday at midnight
   >>> offset_alias_schedule = "5d"  # Every 5 days
@@ -73,31 +76,40 @@ The `before` and `after` :attr:`~rics.ml.time_split.types.Span` arguments determ
      - Passed as-is to the :class:`pandas.Timedelta` class. Must be positive. See
        :ref:`pandas:timeseries.offset_aliases` for valid frequency strings.
 
-Use of all of these are demonstrated in the examples section.
-
 .. _TimeSeriesSplit: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html
 
 Available data `flex`
 ---------------------
-Data :attr:`~rics.ml.time_split.types.Flex` allows bounds inferred from and `available` data argument to stretch outward
-slightly. This useful in situations where the data is open of the left side only, or when data is sparse enough that
-there aren't always records at exactly ``YYYY-mmm-dd 00:00:00``. Consider the following scenario:
+Data :attr:`~rics.ml.time_split.types.Flex` allows bounds inferred from and `available` data argument to stretch
+**outward** slightly, toward the likely "real" limits of the data.
 
-.. code-block:: python
+.. hint::
 
-   schedule_timestamp = "2022-01-08 00:00:00"
-   before, after = ("7d", "1d")
-   final_timestamp_in_dataset = "2022-01-08 23:59:55"
+    See :func:`.support.expand_limits` for examples and manual experimentation.
 
-Without `flex`, the `schedule_timestamp` above is invalid since there isn't enough `after` data to get one day of data
-after the current `schedule_timestamp`. Using `flex` allows the splitter to stretch to ``2022-08-09 00:00:00``, yielding
-the fold:
+.. list-table:: Flex options.
+   :header-rows: 1
+   :widths: 20 80
 
-.. code-block:: python
+   * - Type
+     - Description
+   * - ``False``
+     - Disable flex; use real limits instead.
+   * - ``True`` or ``'auto'``
+     - Auto-flex using :attr:`settings.auto_flex <rics.ml.time_split.settings.auto_flex>`-settings.
 
-   ('2022-01-01' <= [schedule: '2022-01-08' (Saturday)] < '2022-01-09')
+       Snap limits to the nearest :attr:`~.settings.auto_flex.hour` or :attr:`~.settings.auto_flex.day`, depending on
+       the amount of `available` data. Use :meth:`settings.auto_flex.set_level <.settings.auto_flex.set_level>` to
+       modify auto-flex behavior.
 
-This function is enabled by default since the scenario above is common. Set ``flex=False`` to disable.
+   * - ``str``
+     - Manual flex specification.
+
+       Pass an :ref:`offset alias <pandas:timeseries.offset_aliases>` specify how limits should be rounded. To specify
+       by `how much` limits may be rounded, pass two offset aliases separated by a  ``'<'``.
+
+       For example, passing ``flex="d<1h"`` will snap limits to the nearest date, but will not expand limits by more
+       than one hour in either direction.
 """
 from ._frontend import log_split_progress, plot, split
 

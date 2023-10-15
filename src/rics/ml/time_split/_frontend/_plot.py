@@ -65,7 +65,10 @@ def plot(
     row_count_bin: Union[str, pd.Series] = None,
     ax: "Axes" = None,
 ) -> "Axes":
-    """Visualize ranges in `splits`.
+    """Fold visualization.
+
+    This function plots the folds and in-fold splits that would be made by passing the same arguments to the
+    :func:`.split`-function.
 
     Args:
         schedule: {schedule}

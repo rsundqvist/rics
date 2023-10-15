@@ -27,8 +27,9 @@ _DOCSTRINGS = {
     "step": "Select a subset of folds, preferring folds later in the schedule.",
     "n_splits": "Maximum number of folds, preferring folds later in the schedule.",
     "available": "Binds `schedule` to a range.",
-    "flex": f'A {_OFFSET} used to expand `available` data to its likely `"true"` limits. Set to ``False`` to disable. '
-    "See :attr:`types.Flex <rics.ml.time_split.types.Flex>` for details.",
-    "USER_GUIDE": "For more information about the `schedule` and `before/after`-arguments, see the :ref:`User guide`.",
+    "flex": f'A {_OFFSET} used to expand `available` data to its likely `"true"` limits. Pass ``False`` to disable.',
+    "USER_GUIDE": (
+        "For more information about the `schedule`, `before/after` and `flex`-arguments" ", see the :ref:`User guide`."
+    ),
     "OFFSET": _OFFSET,
 }

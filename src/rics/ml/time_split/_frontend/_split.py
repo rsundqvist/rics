@@ -18,6 +18,8 @@ def split(
 ) -> DatetimeSplits:
     """Create time-based cross-validation splits.
 
+    To visualize the folds, pass the same arguments to the :func:`.plot`-function.
+
     Args:
         schedule: {schedule}
         before: {before}
