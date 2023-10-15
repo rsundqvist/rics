@@ -38,6 +38,7 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
         schedule: {schedule}
         before: {before}
         after: {after}
+        step: {step}
         n_splits: {n_splits}
         flex: {flex}
         log_progress: {log_progress}
@@ -54,11 +55,19 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
         after: Span = 1,
         n_splits: Optional[int] = None,
         flex: Flex = "auto",
+        step: int = 1,
         log_progress: LogProgressArg = False,
         verify_xy: bool = True,
     ) -> None:
         super().__init__()
-        self._splitter = DatetimeIndexSplitter(schedule, before, after=after, n_splits=n_splits, flex=flex)
+        self._splitter = DatetimeIndexSplitter(
+            schedule,
+            before=before,
+            after=after,
+            step=step,
+            n_splits=n_splits,
+            flex=flex,
+        )
         self.log_progress = log_progress
         self.verify_xy = verify_xy
 

@@ -56,6 +56,7 @@ def split_pandas(
     after: Span = 1,
     n_splits: Optional[int] = None,
     flex: Flex = "auto",
+    step: int = 1,
     time_column: Hashable = None,
     inclusive: Inclusive = "left",
     log_progress: LogProgressArg = False,
@@ -70,6 +71,7 @@ def split_pandas(
         schedule: {schedule}
         before: {before}
         after: {after}
+        step: {step}
         n_splits: {n_splits}
         flex: {flex}
         time_column: A column in `data` to split on. Use index if ``None``.
@@ -87,7 +89,14 @@ def split_pandas(
     """
     time = _verify_time_type(data, time_column)
 
-    splits = DatetimeIndexSplitter(schedule, before, after=after, n_splits=n_splits, flex=flex).get_splits(time)
+    splits = DatetimeIndexSplitter(
+        schedule,
+        before=before,
+        after=after,
+        step=step,
+        n_splits=n_splits,
+        flex=flex,
+    ).get_splits(time)
     tracked_splits = handle_log_progress_arg(log_progress, splits=splits)
 
     indexer = _Indexer(data, time=time, inclusive=inclusive)

@@ -24,6 +24,7 @@ _DOCSTRINGS = {
     "schedule": f"A collection of timestamps, a {_OFFSET}, or a cron expression.",
     "before": _SPAN.format(arg="before"),
     "after": _SPAN.format(arg="after"),
+    "step": "Select a subset of folds, preferring folds later in the schedule.",
     "n_splits": "Maximum number of folds, preferring folds later in the schedule.",
     "available": "Binds `schedule` to a range.",
     "flex": f'A {_OFFSET} used to expand `available` data to its likely `"true"` limits. Set to ``False`` to disable. '

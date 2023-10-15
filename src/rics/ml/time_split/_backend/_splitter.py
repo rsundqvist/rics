@@ -9,7 +9,7 @@ from rics.performance import format_seconds
 
 from ..types import DatetimeIterable, DatetimeSplitBounds, DatetimeSplits, Flex, Schedule, Span
 from ._limits import LimitsTuple
-from ._schedule import NO_LIMITS, MaterializedSchedule, materialize_schedule
+from ._schedule import MaterializedSchedule, materialize_schedule
 from ._span import OffsetCalculator, to_strict_span
 
 LOGGER = logging.getLogger("rics.ml.time_split")
@@ -22,6 +22,7 @@ class DatetimeIndexSplitter:
     schedule: Schedule
     before: Span
     after: Span
+    step: int
     n_splits: Optional[int]
     flex: Flex
 
@@ -31,7 +32,7 @@ class DatetimeIndexSplitter:
         self._log_expansion(ms.available_metadata.limits, expanded=ms.available_metadata.expanded_limits)
         return self._make_bounds_list(ms)
 
-    def get_plot_data(self, available: DatetimeIterable) -> Tuple[DatetimeSplits, MaterializedSchedule]:
+    def get_plot_data(self, available: DatetimeIterable = None) -> Tuple[DatetimeSplits, MaterializedSchedule]:
         """Returns additional data needed to visualize folds."""
         ms = self._materialize_schedule(available)
         splits = self._make_bounds_list(ms)
@@ -59,15 +60,33 @@ class DatetimeIndexSplitter:
             retval.append(DatetimeSplitBounds(start, mid, end))
 
         if not retval:
-            # TODO Rapportera även expanded
             limits = ms.available_metadata.limits
-            limits_info = "" if limits == NO_LIMITS else f"limits={tuple(map(str, limits))} and "
+            limits_info = f"limits={tuple(map(str, limits))} and "
             raise ValueError(f"No valid splits with {limits_info}split params: ({format_kwargs(asdict(self))})")
 
-        if self.n_splits:
-            retval = retval[-self.n_splits :]
+        return self._filter(retval)
 
-        return retval
+    def _filter(self, splits: DatetimeSplits) -> DatetimeSplits:
+        """Apply splitting arguments.
+
+        Args:
+            splits: Splits to filter.
+
+        Returns:
+            Filtered splits.
+        """
+        if self.step != 1:
+            step = abs(self.step)
+            splits = [s for i, s in enumerate(reversed(splits)) if i % step == 0]
+            splits.reverse()
+
+        if self.n_splits:
+            splits = splits[-self.n_splits :]
+
+        if self.step < 0:
+            splits.reverse()
+
+        return splits
 
     def _log_expansion(self, original: LimitsTuple, *, expanded: LimitsTuple) -> None:
         if original == expanded:
@@ -99,3 +118,6 @@ class DatetimeIndexSplitter:
         # Verify before/after
         to_strict_span(self.before, name="before")
         to_strict_span(self.after, name="after")
+
+        if self.step == 0:
+            raise ValueError(f"Bad argument step={self.step}; must be a non-zero integer.")
