@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.2.0] - 2023-10-17
+
 ### Added
 - Add new `step` argument to `ml.time_split` splitting functions.
 - Add new `plot.REMOVED_FOLD_STYLE` attribute to `time_split.settings`.
@@ -424,7 +426,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/rsundqvist/rics/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/rsundqvist/rics/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/rsundqvist/rics/compare/v3.0.0...v3.0.1
 [3.0.0]: https://github.com/rsundqvist/rics/compare/v2.1.0...v3.0.0
