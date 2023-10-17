@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- New `step` argument to `rics.ml.time_split` splitting functions.
-- New argument `attrs` to the `misc.name()`-function. Default is `'func'` (name used by `functools.partial`).
+- Add new `step` argument to `ml.time_split` splitting functions.
+- Add new `plot.REMOVED_FOLD_STYLE` attribute to `time_split.settings`.
+
+### Fixed
+- Update, fix and clarify some documentation issues.
+- The `misc.tname()`-function now handles `functools.partial` properly (new argument `attrs='func'`).
 
 ## [3.1.0] - 2023-10-13
 

@@ -72,7 +72,7 @@ class plot:
     """Global settings for the :func:`.plot`-function."""
 
     THOUSANDS_SEPARATOR: str = "'"
-    """Sign to use when printing `bar_labels`."""
+    """Separator to use when printing `bar_labels`."""
     THOUSANDS_SEPARATOR_CUTOFF: int = 10_000
     """Minimum value before `bar_labels` include a :attr:`THOUSANDS_SEPARATOR`."""
     ROW_UNIT: str = "rows"
@@ -86,11 +86,17 @@ class plot:
     DEFAULT_TIME_UNIT: str = "h"
     """Time unit to use by default when ``bar_labels=True`` and ``available=None``."""
 
+    REMOVED_FOLD_STYLE: _t.Dict[str, _t.Any] = {"alpha": 0.35, "height": 0.6}
+    """Keyword arguments used to distinguish filtered folds when plotting with ``show_removed=True``.
+
+    See :func:`matplotlib.pyplot.bar` for details.
+    """
+
 
 class log_split_progress:
     """Global settings for the :func:`.log_split_progress`-function."""
 
-    FOLD_FORMAT: str = "('{start.auto}' <= [schedule: '{mid.auto}' ({mid:%A})] < '{end.auto}')"
+    FOLD_FORMAT: str = "'{start.auto}' <= [schedule: '{mid.auto}' ({mid:%A})] < '{end.auto}'"
     """Pretty-printed `fold`-key for other messages.
 
     * Only the ``start``, ``mid``, and ``end`` keys are available (see
@@ -100,7 +106,7 @@ class log_split_progress:
     .. code-block:: python
        :caption: Sample output.
 
-       ('2021-12-30' <= [schedule: '2022-01-04' (Tuesday)] < '2022-01-04 18:00:00')
+       '2021-12-30' <= [schedule: '2022-01-04' (Tuesday)] < '2022-01-04 18:00:00'
     """
 
     SECONDS_FORMATTER: _t.Union[str, _t.Callable[[float], str]] = "rics.performance.format_seconds"
@@ -122,10 +128,10 @@ class log_split_progress:
     .. code-block:: python
        :caption: Sample output.
 
-        Begin fold 5/7: ('2021-12-30' <= [schedule: '2022-01-04' (Tuesday)] < '2022-01-04 18:00:00').
+        Begin fold 5/7: '2021-12-30' <= [schedule: '2022-01-04' (Tuesday)] < '2022-01-04 18:00:00'.
     """
 
-    END_MESSAGE: str = "Finished fold {n}/{n_splits} [schedule: '{mid.auto}' ({mid:%A})] after {formatted_seconds}."
+    END_MESSAGE: str = "Finished fold {n}/{n_splits}: [schedule: '{mid.auto}' ({mid:%A})] after {formatted_seconds}."
     """Message indicating that the user is done with the current fold.
 
     Has access to all keys from the previous sections, as well as:
@@ -138,7 +144,7 @@ class log_split_progress:
     .. code-block:: python
        :caption: Sample output.
 
-        Finished fold 5/7 [schedule: '2022-01-04' (Tuesday)] after 5m 21s.
+        Finished fold 5/7: [schedule: '2022-01-04' (Tuesday)] after 5m 21s.
     """
 
     AUTO_DATE_FORMAT = "%Y-%m-%d"

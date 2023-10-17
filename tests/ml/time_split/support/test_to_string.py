@@ -15,7 +15,7 @@ IDS = [type(bounds).__name__ for bounds in TUPLES]
 
 @pytest.mark.parametrize("bounds", TUPLES, ids=IDS)
 def test_to_string_default(bounds):
-    expected = "('1999-04-30' <= [schedule: '1991-06-05' (Wednesday)] < '2019-05-11 21:00:00')"
+    expected = "'1999-04-30' <= [schedule: '1991-06-05' (Wednesday)] < '2019-05-11 21:00:00'"
     assert to_string(bounds) == expected
     assert to_string(*bounds) == expected
 

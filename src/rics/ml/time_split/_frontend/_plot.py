@@ -155,23 +155,23 @@ def _plot_limits(ax: "Axes", limits: LimitsTuple) -> None:
 def _plot_splits(ax: "Axes", splits: DatetimeSplits, *, removed: Set[DatetimeSplitBounds]) -> None:
     from matplotlib.dates import AutoDateFormatter
 
-    extra_args: Dict[str, Any]
+    kwargs: Dict[str, Any]
     xtick: List[Timestamp] = []
     ytick: List[Optional[int]] = []
     for i, (start, mid, stop) in enumerate(splits, start=1):
         blue_label, red_label = None, None
         if (start, mid, stop) in removed:
-            extra_args = {"alpha": 0.35, "height": 0.6}
+            kwargs = settings.REMOVED_FOLD_STYLE
             ytick.append(None)
         else:
-            extra_args = {"alpha": 1}
+            kwargs = {"alpha": 1}
             fold_no = 1 + sum(1 for t in ytick if t is not None)
             ytick.append(fold_no)
             if fold_no == 1:
                 blue_label, red_label = settings.DATA_LABEL, settings.FUTURE_DATA_LABEL
 
-        ax.barh(i, mid - start, left=start, color="b", label=blue_label, **extra_args)
-        ax.barh(i, stop - mid, left=mid, color="r", label=red_label, **extra_args)
+        ax.barh(i, mid - start, left=start, color="b", label=blue_label, **kwargs)
+        ax.barh(i, stop - mid, left=mid, color="r", label=red_label, **kwargs)
         xtick.append(mid)
 
     ax.set_xticks(xtick)
