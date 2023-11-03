@@ -181,7 +181,7 @@ def tname(
         # Instance-level properties accessed using the class.
         return tname(arg.fget, prefix_classname=prefix_classname)
     if hasattr(arg, "__class__"):
-        return arg.__class__.__name__
+        return arg.__class__.__qualname__ if prefix_classname else arg.__class__.__name__
     else:
         raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
 

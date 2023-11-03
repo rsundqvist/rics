@@ -7,6 +7,9 @@ from rics.envinterp import UnsetVariableError
 
 
 class Foo:
+    class Bar:
+        pass
+
     @classmethod
     def bar(cls) -> str:
         return "a string"
@@ -62,6 +65,8 @@ class TestGetPublicModule:
         (Foo.a_property, "Foo.a_property"),
         (Foo().a_property, "str"),
         (plain_function, "plain_function"),
+        (Foo.Bar, "Foo.Bar"),
+        (Foo.Bar(), "Foo.Bar"),
     ],
 )
 class Test_tname:
