@@ -66,6 +66,12 @@ def test_unflatten_dict(nested_dict, flattened_dict):
     assert actual == nested_dict
 
 
+def test_unflatten_dict_tuples(nested_dict, flattened_dict):
+    flattened_dict = {tuple(k.split(".")): v for k, v in flattened_dict.items()}
+    actual = unflatten_dict(flattened_dict)
+    assert actual == nested_dict
+
+
 def test_flatten_dict_false_values_only(nested_dict):
     actual = flatten_dict(nested_dict, filter_predicate=lambda key, value: isinstance(value, dict) or not value)
 

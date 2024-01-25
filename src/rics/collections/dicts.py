@@ -46,7 +46,6 @@ def reverse_dict(d: _t.Mapping[KT, HVT], duplicate_key_action: _ActionLevel.Pars
     Examples:
         Reversing a dict with two elements.
 
-        >>> from rics.collections.dicts import reverse_dict
         >>> reverse_dict({"A": 0, "B": 1})
         {0: 'A', 1: 'B'}
 
@@ -93,7 +92,6 @@ def flatten_dict(
     Examples:
         Flattening a shallow nested dict.
 
-        >>> from rics.collections.dicts import flatten_dict
         >>> flatten_dict({"foo": 0, "bar": {"foo": 1, "bar": 2}})
         {'foo': 0, 'bar.foo': 1, 'bar.bar': 2}
     """
@@ -133,7 +131,7 @@ def _flatten_inner(
 
 
 def unflatten_dict(
-    d: _t.Dict[str, _t.Any],
+    d: _t.Dict[_t.Union[str, _t.Tuple[str, ...]], _t.Any],
     join_string: str = ".",
 ) -> _t.Dict[str, _t.Union[_t.Dict[str, _t.Any], _t.Any]]:
     """Unflatten a flat dictionary.
@@ -141,8 +139,8 @@ def unflatten_dict(
     This process is reversible, see :func:`flatten_dict`.
 
     Args:
-        d: A flat dict to unflatten. Keys must be strings.
-        join_string: Joiner for flattened keys.
+        d: A flat dict to unflatten. Keys must be ``str`` or ``tuple``.
+        join_string: Joiner for flattened keys. Ignored if `d` has ``tuple``-keys.
 
     Returns:
         A nested version of `d`.
@@ -152,10 +150,19 @@ def unflatten_dict(
 
         >>> unflatten_dict({"foo": 0, "bar.foo": 1, "bar.bar": 2})
         {'foo': 0, 'bar': {'foo': 1, 'bar': 2}}
+
+        Tuple keys are also supported, including mixed key types.
+
+        >>> unflatten_dict({"foo": 0, ("bar", "foo"): 1, "bar.bar": 2})
+        {'foo': 0, 'bar': {'foo': 1, 'bar': 2}}
     """
     ret: _t.Dict[str, _t.Union[_t.Dict[str, _t.Any], _t.Any]] = {}
     for key, value in d.items():
-        parts = key.split(join_string)
+        parts: _t.Sequence[str]
+        if isinstance(key, str):
+            parts = key.split(join_string)
+        else:
+            parts = key
         final = len(parts) - 1
         current = ret
         for i, p in enumerate(parts):
@@ -181,7 +188,6 @@ class InheritedKeysDict(_t.Mapping[OKT, _t.Dict[KT, VT]]):
     Examples:
         A short demonstration.
 
-        >>> from rics.collections.dicts import InheritedKeysDict
         >>> shared = {0: 'fallback-for-0', 1: 'fallback-for-1'}
         >>> specific = {
         ...     'ctx0': {0: 'c0-v0'},

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - The `get_by_full_name()` function has two new optional arguments `instance_of` and `subclass_of`, which may be 
   used to ensure correct return types.
+- The `unflatten_dict` function now supports `tuple` keys.
 
 ### Fixed
 - Print parent of inner class in `misc.tname()` when `prefix_classname=True`.
