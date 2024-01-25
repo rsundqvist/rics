@@ -52,18 +52,67 @@ def interpolate_environment_variables(
     return s
 
 
-def get_by_full_name(name: str, default_module: _t.Union[str, _ModuleType] = None) -> _t.Any:
+GBFNReturnType = _t.TypeVar("GBFNReturnType")
+"""Output type for :func:`get_by_full_name` when using one of `instance_of` and `subclass_of`."""
+
+
+@_t.overload
+def get_by_full_name(  # noqa: D103
+    name: str,
+    default_module: _t.Union[str, _ModuleType] = ...,
+    *,
+    instance_of: _t.Literal[None] = None,
+    subclass_of: _t.Literal[None] = None,
+) -> _t.Any:
+    pass
+
+
+@_t.overload
+def get_by_full_name(  # noqa: D103
+    name: str,
+    default_module: _t.Union[str, _ModuleType] = ...,
+    *,
+    instance_of: _t.Type[GBFNReturnType],
+    subclass_of: _t.Literal[None] = None,
+) -> GBFNReturnType:
+    pass
+
+
+@_t.overload
+def get_by_full_name(  # noqa: D103
+    name: str,
+    default_module: _t.Union[str, _ModuleType] = ...,
+    *,
+    instance_of: _t.Literal[None] = None,
+    subclass_of: _t.Type[GBFNReturnType],
+) -> _t.Type[GBFNReturnType]:
+    pass
+
+
+def get_by_full_name(
+    name: str,
+    default_module: _t.Union[str, _ModuleType] = None,
+    *,
+    instance_of: _t.Type[GBFNReturnType] = None,
+    subclass_of: _t.Type[GBFNReturnType] = None,
+) -> _t.Any:
     """Combine :py:func:`~importlib.import_module` and :py:func:`getattr` to retrieve items by name.
 
     Args:
         name: A name or fully qualified name.
         default_module: A namespace to search if `name` is not fully qualified (contains no ``'.'``-characters).
+        instance_of: If given, validate the returned value using :py:func:`isinstance`.
+        subclass_of: If given, validate the returned value using :py:func:`issubclass`. Note that ``issubclass(T, T)``
+            is ``True`` - a true subtype is not required.
 
     Returns:
         An object with the fully qualified name `name`.
 
     Raises:
         ValueError: If `name` does not contain any dots and ``default_module=None``.
+        ValueError: If both `instance_of` and `subclass_of` are given.
+        TypeError: If the ``isinstance(obj, instance_of)`` check fails.
+        TypeError: If ``obj`` is not a ``type``, or the ``issubclass(obj, subclass_of)`` check fails.
 
     Examples:
         Retrieving a ``numpy`` function by name.
@@ -71,11 +120,24 @@ def get_by_full_name(name: str, default_module: _t.Union[str, _ModuleType] = Non
         >>> get_by_full_name("numpy.isnan")
         <ufunc 'isnan'>
 
+        Validating the return type. In the example below, we ensure that ``logging.INFO`` really is an ``int``, and that
+        the :py:class:`logging.Logger` class inherits from ``logging.Filterer``.
+
+        >>> import logging
+        >>> get_by_full_name("logging.INFO", instance_of=int)
+        20
+        >>> get_by_full_name("logging.Logger", subclass_of=logging.Filterer)
+        <class 'logging.Logger'>
+
         Falling back to builtins.
 
         >>> get_by_full_name("int", default_module="builtins")
         <class 'int'>
     """
+    if not (instance_of is None or subclass_of is None):
+        msg = f"At least one of ({instance_of=}, {subclass_of=}) must be None."
+        raise ValueError(msg)
+
     if "." in name:
         module_name, _, member = name.rpartition(".")
         module = _import_module(module_name)
@@ -85,7 +147,18 @@ def get_by_full_name(name: str, default_module: _t.Union[str, _ModuleType] = Non
         module = _import_module(default_module) if isinstance(default_module, str) else default_module
         member = name
 
-    return getattr(module, member)
+    obj = getattr(module, member)
+
+    if not (instance_of is None or isinstance(obj, instance_of)):
+        msg = f"Expected an instance of '{instance_of.__name__}', but got: '{tname(obj, prefix_classname=True)}'."
+        raise TypeError(msg)
+
+    if subclass_of is not None:
+        if not (type(obj) is type and issubclass(obj, subclass_of)):
+            msg = f"Expected a subclass of '{subclass_of.__name__}', but got: '{tname(obj, prefix_classname=True)}'."
+            raise TypeError(msg)
+
+    return obj
 
 
 def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name: bool = False) -> str:

@@ -7,6 +7,9 @@ from rics.envinterp import UnsetVariableError
 
 
 class Foo:
+    def __init__(self, n: int = 1):
+        self.n = n
+
     class Bar:
         pass
 
@@ -17,26 +20,56 @@ class Foo:
     def __call__(self):
         return None
 
-    def hi(self):
-        pass
+    def hi(self) -> str:
+        return f"Hi, {self.n}!"
 
     @property
     def a_property(self) -> str:
         return "property value"
 
 
+my_foo = Foo(1999)
+
+
 def plain_function():
     pass
 
 
-def test_get_by_full_name():
-    assert Foo == misc.get_by_full_name("tests.test_misc.Foo")
+class Test_get_by_full_name:
+    module = "tests.test_misc"
 
-    with pytest.raises(ModuleNotFoundError):
-        assert misc.get_by_full_name("tests.test_misc.Foo.bar")
+    def test_untyped(self):
+        actual = misc.get_by_full_name(f"{self.module}.Foo")
+        assert actual is Foo
+
+    def test_typed_class(self):
+        actual = misc.get_by_full_name(f"{self.module}.Foo", subclass_of=Foo)
+        assert actual is Foo
+
+    def test_typed_instance(self):
+        actual = misc.get_by_full_name(f"{self.module}.my_foo", instance_of=Foo)
+        assert actual.hi() == "Hi, 1999!"
+        assert isinstance(actual, Foo)
+
+    def test_default_module(self):
+        actual = misc.get_by_full_name("Foo", default_module=self.module)
+        assert actual(1991).hi() == "Hi, 1991!"
+        assert Foo is actual
+
+    def test_bad_instance_of(self):
+        with pytest.raises(TypeError, match="Expected an instance of 'int', but got: 'Foo'."):
+            misc.get_by_full_name("my_foo", default_module=self.module, instance_of=int)
+
+    def test_bad_subclass_of(self):
+        with pytest.raises(TypeError, match="Expected a subclass of 'int', but got: 'Foo'."):
+            misc.get_by_full_name("my_foo", default_module=self.module, subclass_of=int)
+
+    def test_dual_of_args(self):
+        with pytest.raises(ValueError, match="least one of.*must be None"):
+            misc.get_by_full_name("my_foo", instance_of=int, subclass_of=int)  # type: ignore[call-overload]
 
 
-class TestGetPublicModule:
+class Test_get_public_module:
     def test_private_module(self):
         from rics.performance import MultiCaseTimer as obj
 
