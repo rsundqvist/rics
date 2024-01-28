@@ -19,6 +19,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
+    'Programming Language :: Python :: 3 :: Only',
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -66,7 +67,7 @@ ipython = "<8.13.0"
 [tool.poetry.group.notebooks]
 optional = true
 [tool.poetry.group.notebooks.dependencies]
-jupyterlab = "^3"
+jupyterlab = "^4"
 ipywidgets = "*"
 jupyterlab-execute-time = "*"
 tqdm = "*"
