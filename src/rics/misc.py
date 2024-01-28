@@ -101,9 +101,8 @@ def get_by_full_name(
     Args:
         name: A name or fully qualified name.
         default_module: A namespace to search if `name` is not fully qualified (contains no ``'.'``-characters).
-        instance_of: If given, validate the returned value using :py:func:`isinstance`.
-        subclass_of: If given, validate the returned value using :py:func:`issubclass`. Note that ``issubclass(T, T)``
-            is ``True`` - a true subtype is not required.
+        instance_of: If given, perform :py:func:`isinstance` check on `name`.
+        subclass_of: If given, perform :py:func:`issubclass` check on `name`.
 
     Returns:
         An object with the fully qualified name `name`.
@@ -111,8 +110,7 @@ def get_by_full_name(
     Raises:
         ValueError: If `name` does not contain any dots and ``default_module=None``.
         ValueError: If both `instance_of` and `subclass_of` are given.
-        TypeError: If the ``isinstance(obj, instance_of)`` check fails.
-        TypeError: If ``obj`` is not a ``type``, or the ``issubclass(obj, subclass_of)`` check fails.
+        TypeError: If an ``isinstance`` or ``issubclass`` check fails.
 
     Examples:
         Retrieving a ``numpy`` function by name.
@@ -143,19 +141,32 @@ def get_by_full_name(
         module = _import_module(module_name)
     else:
         if not default_module:
-            raise ValueError("Names must be fully qualified when no default module is given.")  # pragma: no cover
+            msg = "Name must be fully qualified when no default module is given."
+            raise ValueError(msg)
         module = _import_module(default_module) if isinstance(default_module, str) else default_module
         member = name
 
     obj = getattr(module, member)
 
-    if not (instance_of is None or isinstance(obj, instance_of)):
-        msg = f"Expected an instance of '{instance_of.__name__}', but got: '{tname(obj, prefix_classname=True)}'."
-        raise TypeError(msg)
+    if instance_of is not None:
+        if not isinstance(obj, instance_of):
+            msg = f"Expected an instance of {instance_of.__name__}, but got {obj=}."
+            raise TypeError(msg)
 
     if subclass_of is not None:
-        if not (type(obj) is type and issubclass(obj, subclass_of)):
-            msg = f"Expected a subclass of '{subclass_of.__name__}', but got: '{tname(obj, prefix_classname=True)}'."
+        reason = ""
+        try:
+            if not issubclass(obj, subclass_of):
+                reason = "does not inherit from {subclass_of}"
+        except TypeError as e:
+            if "must be a class" in str(e):
+                reason = "is not a class"
+            else:
+                raise e
+        if reason:
+            pretty = tname(subclass_of, prefix_classname=True)
+            reason = reason.format(subclass_of=pretty)
+            msg = f"Expected a subclass of {pretty}, but {obj=} {reason}."
             raise TypeError(msg)
 
     return obj
