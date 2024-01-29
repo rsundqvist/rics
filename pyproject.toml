@@ -50,7 +50,7 @@ cli = ["click"]
 plotting = ["matplotlib", "seaborn"]
 
 [tool.poetry.group.manual-extras.dependencies]
-croniter = "^1.3.8"
+croniter = ">=1.3.8,<3.0.0"
 
 [tool.poetry.group.docs]
 [tool.poetry.group.docs.dependencies]
