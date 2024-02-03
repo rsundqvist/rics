@@ -1,5 +1,4 @@
 """Miscellaneous utility methods for Python applications."""
-import inspect
 import typing as _t
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
@@ -202,6 +201,8 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
     See Also:
         The analogous :func:`get_by_full_name`-function.
     """
+    import inspect
+
     if include_name and not resolve_reexport:
         raise ValueError(f"Cannot combine {include_name=} with {resolve_reexport=}.")
 

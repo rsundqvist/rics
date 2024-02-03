@@ -5,7 +5,7 @@ from .. import log_split_progress
 from .._docstrings import add_docstrings
 from ..types import DatetimeSplitBounds, DatetimeSplits
 
-LogProgressArg = Union[str, bool, Dict[str, Any], logging.Logger, logging.LoggerAdapter]
+LogProgressArg = Union[str, bool, Dict[str, Any], logging.Logger, logging.LoggerAdapter]  # type: ignore[type-arg]
 
 add_docstrings(log_progress="Controls logging of fold progress. See :func:`~.log_split_progress` for details.")
 
