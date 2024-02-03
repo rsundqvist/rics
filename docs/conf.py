@@ -247,7 +247,7 @@ autosummary_generate = True
 # -- Nbsphinx
 nbsphinx_execute = "never"
 
-shutil.copytree("../jupyterlab/rics/demo/", "documentation/examples/notebooks", dirs_exist_ok=True)
-shutil.copytree("../jupyterlab/rics/cli/", "documentation/cli/notebooks", dirs_exist_ok=True)
+shutil.copytree("../notebooks/demo/", "documentation/examples/notebooks", dirs_exist_ok=True)
+shutil.copytree("../notebooks/cli/", "documentation/cli/notebooks", dirs_exist_ok=True)
 
 split_changelog("changelog", "../CHANGELOG.md")
