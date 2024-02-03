@@ -9,7 +9,7 @@ from ..settings import log_split_progress as settings
 from ..types import DatetimeSplitBounds
 from ._to_string import _PrettyTimestamp
 
-LoggerArg = Union[logging.Logger, logging.LoggerAdapter, str]
+LoggerArg = Union[logging.Logger, logging.LoggerAdapter, str]  # type: ignore[type-arg]
 
 
 def log_split_progress(
