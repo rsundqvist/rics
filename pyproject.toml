@@ -160,7 +160,7 @@ flake8-annotations = ["-*"]
 flake8-bandit = ["-*"]
 flake8-darglint = ["-DAR101"]
 
-[tool.flakeheaven.exceptions."jupyterlab/"]
+[tool.flakeheaven.exceptions."notebooks/"]
 flake8-annotations = ["-*"]
 flake8-docstrings = ["-*"]
 
