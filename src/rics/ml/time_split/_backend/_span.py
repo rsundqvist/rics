@@ -58,9 +58,7 @@ def to_strict_span(span: Span, *, name: SpanArgumentName) -> StrictSpan:
 class OffsetCalculator:
     """Utility class for computing before/after offsets from the `schedule`."""
 
-    def __init__(
-        self, span: StrictSpan, schedule: DatetimeIndex, limits: LimitsTuple, *, name: SpanArgumentName
-    ) -> None:
+    def __init__(self, span: Span, schedule: DatetimeIndex, limits: LimitsTuple, *, name: SpanArgumentName) -> None:
         span = to_strict_span(span, name=name)
         is_before = name == "before"
 

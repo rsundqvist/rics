@@ -1,13 +1,14 @@
 import logging
 from dataclasses import asdict, dataclass
-from typing import Optional, Tuple
+from typing import Optional, Tuple, get_args
 
-from pandas import Timestamp
+from pandas import Timedelta, Timestamp
 
 from rics.misc import format_kwargs
 from rics.performance import format_seconds
 
-from ..types import DatetimeIterable, DatetimeSplitBounds, DatetimeSplits, Flex, Schedule, Span
+from ..settings import misc
+from ..types import DatetimeIterable, DatetimeSplitBounds, DatetimeSplits, Flex, Schedule, Span, TimedeltaTypes
 from ._limits import LimitsTuple
 from ._schedule import MaterializedSchedule, materialize_schedule
 from ._span import OffsetCalculator, to_strict_span
@@ -42,7 +43,27 @@ class DatetimeIndexSplitter:
         ms = materialize_schedule(self.schedule, self.flex, available=available)
         if not ms.schedule.sort_values().equals(ms.schedule):
             raise ValueError(f"schedule must be sorted in ascending order; schedule={self.schedule!r} is not valid.")
+
+        types = get_args(TimedeltaTypes)
+        if (
+            misc.snap_to_end
+            and self.after != "all"
+            and isinstance(self.schedule, types)
+            and isinstance(self.after, types)
+        ):
+            ms = self._snap_to_end(ms)
+
         return ms
+
+    def _snap_to_end(self, ms: MaterializedSchedule) -> MaterializedSchedule:
+        schedule_frequency = ms.schedule.freq
+        if schedule_frequency is None:
+            return ms
+
+        from_end = ms.available_metadata.expanded_limits[1] - (ms.schedule[-1] + Timedelta(self.after))
+        from_end = from_end.floor(schedule_frequency.base)
+
+        return ms._replace(schedule=ms.schedule + from_end)
 
     def _make_bounds_list(self, ms: MaterializedSchedule) -> DatetimeSplits:
         get_start = OffsetCalculator(self.before, ms.schedule, ms.available_metadata.expanded_limits, name="before")

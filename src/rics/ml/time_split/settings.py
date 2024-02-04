@@ -151,3 +151,18 @@ class log_split_progress:
     """Short-form timestamp format_spec used by ``<key>.auto``."""
     AUTO_DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
     """Long-form timestamp format_spec used by ``<key>.auto``."""
+
+
+class misc:
+    """Miscellaneous settings that don't fit in any other namespace."""
+
+    snap_to_end: bool = True
+    """Controls alignment of timedelta-based splits.
+
+    .. note::
+
+       Active only when both `schedule` and `after` are :attr:`~rics.ml.time_split.types.TimedeltaTypes`.
+
+    If ``True``, ensure that the `Future data` of the final fold ends at the rightmost edge of the available data range.
+    Otherwise, alignment is determined by :func:`pandas.date_range`.
+    """

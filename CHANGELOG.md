@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Print parent of inner class in `misc.tname()` when `prefix_classname=True`.
+- Prefer later folds when using frequency-based schedule and after arguments (`ml.time_split`, #313).
 
 ## [3.2.0] - 2023-10-17
 
