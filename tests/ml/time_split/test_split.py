@@ -16,6 +16,37 @@ def test_data(kwargs, expected):
     assert len(actual) == len(expected)
 
 
+class TestSnapToEnd:
+    @staticmethod
+    def _run(monkeypatch, *, snap_to_end):
+        from rics.ml.time_split.settings import misc
+
+        monkeypatch.setattr(misc, "snap_to_end", snap_to_end)
+
+        dates = []
+        for bounds in split(schedule="3d", before="3d", after="2d", available=SPLIT_DATA):
+            for ts in bounds:
+                assert ts.normalize() == ts
+            dates.append(tuple(ts.date().isoformat() for ts in bounds))
+        return dates
+
+    def test_true(self, monkeypatch):
+        actual = self._run(monkeypatch, snap_to_end=True)
+        assert actual == [
+            ("2022-01-03", "2022-01-06", "2022-01-08"),
+            ("2022-01-06", "2022-01-09", "2022-01-11"),
+            ("2022-01-09", "2022-01-12", "2022-01-14"),
+        ]
+
+    def test_false(self, monkeypatch):
+        actual = self._run(monkeypatch, snap_to_end=False)
+        assert actual == [
+            ("2022-01-01", "2022-01-04", "2022-01-06"),
+            ("2022-01-04", "2022-01-07", "2022-01-09"),
+            ("2022-01-07", "2022-01-10", "2022-01-12"),
+        ]
+
+
 @pytest.mark.parametrize("kwargs, expected", *DATA_CASES)
 def test_data_utc(kwargs, expected):
     actual = split(**kwargs, available=SPLIT_DATA.tz_localize("utc"))
