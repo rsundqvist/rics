@@ -53,8 +53,8 @@ def basic_config(
 
 @_contextmanager
 def disable_temporarily(  # type: ignore[no-untyped-def]
-    logger: Union[logging.Logger, logging.LoggerAdapter],  # type:  ignore[type-arg]
-    *more_loggers: Union[logging.Logger, logging.LoggerAdapter],  # type:  ignore[type-arg]
+    logger: Union[str, logging.Logger, logging.LoggerAdapter],  # type:  ignore[type-arg]
+    *more_loggers: Union[str, logging.Logger, logging.LoggerAdapter],  # type:  ignore[type-arg]
 ):  # noqa: ANN201
     """Temporarily disable logging.
 
@@ -77,6 +77,8 @@ def disable_temporarily(  # type: ignore[no-untyped-def]
     for lgr in (logger, *more_loggers):
         while isinstance(lgr, logging.LoggerAdapter):
             lgr = lgr.logger
+        if isinstance(lgr, str):
+            lgr = logging.getLogger(lgr)
         loggers.append(lgr)
 
     states = [lgr.disabled for lgr in loggers]

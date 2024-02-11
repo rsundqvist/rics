@@ -28,6 +28,7 @@ def test_set_levels(logger_name, level_name):
     "loggers",
     [
         [logging.root],
+        ["rics", "id_translation"],
         [logging.LoggerAdapter(logging.root, extra={})],
         [logging.LoggerAdapter(logging.getLogger("rics"), extra={})],
         [logging.LoggerAdapter(logging.getLogger("rics"), extra={}), logging.getLogger("id_translation")],
@@ -37,6 +38,8 @@ def test_disable_temporarily(loggers, caplog):
     def log_messages():
         caplog.clear()
         for i, lgr in enumerate(loggers):
+            if isinstance(lgr, str):
+                lgr = logging.getLogger(lgr)
             lgr.warning("Hello from logger #%i of type %r!", i, type(lgr).__name__)
         return caplog.records
 
