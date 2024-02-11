@@ -12,7 +12,7 @@ from rics.ml.time_split import log_split_progress, plot, split
 configure_stuff(format="[%(name)s:%(levelname)s] %(message)s")
 
 data = pandas.date_range("2022-01", "2022-03")
-config = kwargs = dict(schedule="0 0 * * THU", after="5d", step=2, n_splits=3, available=data)
+config = dict(schedule="0 0 * * THU", after="5d", step=2, n_splits=3, available=data)
 
 plot(**config, bar_labels="h", show_removed=True)
 # %%
