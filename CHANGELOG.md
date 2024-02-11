@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.3.0] - 2024-02-11
+
 ### Added
 - The `get_by_full_name()` function has two new optional arguments `instance_of` and `subclass_of`, which may be 
   used to ensure correct return types.
@@ -436,7 +438,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/rsundqvist/rics/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/rsundqvist/rics/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/rsundqvist/rics/compare/v3.0.1...v3.1.0
 [3.0.1]: https://github.com/rsundqvist/rics/compare/v3.0.0...v3.0.1
