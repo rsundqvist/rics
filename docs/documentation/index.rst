@@ -7,5 +7,4 @@ Examples and documentation.
 
    examples/index
    cookbook/index
-   mapping-primer
    cli/index
