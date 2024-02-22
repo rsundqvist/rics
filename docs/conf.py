@@ -18,7 +18,6 @@ import rics
 from rics._internal_support.changelog import split_changelog
 
 type_modules = (
-    "rics.mapping.types",
     "rics.collections.dicts",
     "rics.collections.misc",
     "rics.ml.time_split.integration.pandas",
@@ -36,13 +35,6 @@ def callback(_app, _env, node, _contnode):  # noqa
             ans_hax = reference(refuri=m + ".html#" + reftarget, reftitle=reftarget)
             ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
             return ans_hax
-
-    if reftarget == "rics.mapping.support.Record":
-        ans_hax = reference(
-            refuri="rics.mapping.support.html#rics.mapping.support.MatchScores.Record", reftitle="Record"
-        )
-        ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
-        return ans_hax
 
     return None
 
