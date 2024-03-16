@@ -1,16 +1,17 @@
-from typing import List, Literal, Union
+from typing import Literal
 
 from pandas import DatetimeIndex, Timedelta
 
+from .._support import handle_dask
 from ..types import DatetimeIterable, DatetimeSplitCounts, DatetimeSplits
 
 
 def fold_weight(
     splits: DatetimeSplits,
     *,
-    unit: Union[str, Literal["rows", "hours", "days"]] = "hours",
-    available: DatetimeIterable = None,
-) -> List[DatetimeSplitCounts]:
+    unit: str | Literal["rows", "hours", "days"] = "hours",
+    available: DatetimeIterable | None = None,
+) -> list[DatetimeSplitCounts]:
     """Compute fold weights.
 
     Args:
@@ -23,6 +24,7 @@ def fold_weight(
 
     Raises:
         ValueError: if ``unit='rows'`` and ``available=None``.
+
     """
     if unit == "rows":
         if available is None:
@@ -32,15 +34,18 @@ def fold_weight(
         return _from_unit(unit, splits)
 
 
-def _from_unit(unit: str, splits: DatetimeSplits) -> List[DatetimeSplitCounts]:
+def _from_unit(unit: str, splits: DatetimeSplits) -> list[DatetimeSplitCounts]:
     resolution = Timedelta(1, unit=unit)
     return [
-        DatetimeSplitCounts(round((fold.mid - fold.start) / resolution), round((fold.end - fold.mid) / resolution))
+        DatetimeSplitCounts(
+            round((fold.mid - fold.start) / resolution),
+            round((fold.end - fold.mid) / resolution),
+        )
         for fold in splits
     ]
 
 
-def _from_data(available: DatetimeIterable, splits: DatetimeSplits) -> List[DatetimeSplitCounts]:
+def _from_data(available: DatetimeIterable, splits: DatetimeSplits) -> list[DatetimeSplitCounts]:
     if hasattr(available, "to_series"):
         time = available.to_series()  # Works for Dask and Pandas.
     elif hasattr(available, "between"):
@@ -53,9 +58,8 @@ def _from_data(available: DatetimeIterable, splits: DatetimeSplits) -> List[Date
         data = time.between(fold.start, fold.mid, inclusive="left").sum()
         future_data = time.between(fold.mid, fold.end, inclusive="left").sum()
 
-        if hasattr(data, "compute") and hasattr(future_data, "compute"):
-            data = data.compute()
-            future_data = future_data.compute()
+        data = handle_dask(data)
+        future_data = handle_dask(future_data)
 
         retval.append(DatetimeSplitCounts(data, future_data=future_data))
 

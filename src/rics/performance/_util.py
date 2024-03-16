@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, Literal, Tuple, Union
+from typing import Any, Literal
 
 import pandas as pd
 
@@ -14,11 +14,12 @@ def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
 
     Returns:
         The `run_result` input wrapped in a DataFrame.
+
     """
-    ans = []
+    frames = []
     for candidate_label, candidate_results in run_results.items():
         for data_label, data_results in candidate_results.items():
-            ans.append(
+            frames.append(
                 pd.DataFrame(
                     {
                         "Candidate": candidate_label,
@@ -29,7 +30,7 @@ def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
                 )
             )
 
-    df = pd.concat(ans, ignore_index=True)
+    df = pd.concat(frames, ignore_index=True)
     df["Time [ms]"] = df["Time [s]"] * 1000
     df["Time [μs]"] = df["Time [ms]"] * 1000
 
@@ -40,7 +41,7 @@ def to_dataframe(run_results: ResultsDict) -> pd.DataFrame:
     return df
 
 
-def get_best(run_results: Union[ResultsDict, pd.DataFrame], per_candidate: bool = False) -> pd.DataFrame:
+def get_best(run_results: ResultsDict | pd.DataFrame, per_candidate: bool = False) -> pd.DataFrame:
     """Get a summarized view of the best run results for each candidate/data pair.
 
     Args:
@@ -50,14 +51,15 @@ def get_best(run_results: Union[ResultsDict, pd.DataFrame], per_candidate: bool 
 
     Returns:
         The best (lowest) times for each candidate/data pair.
+
     """
     df = run_results if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results)
     return df.sort_values("Time [s]").groupby(["Candidate", "Test data"] if per_candidate else "Test data").head(1)
 
 
 def plot_run(
-    run_results: Union[ResultsDict, pd.DataFrame],
-    x: Literal["candidate", "data"] = None,
+    run_results: ResultsDict | pd.DataFrame,
+    x: Literal["candidate", "data"] | None = None,
     unit: Literal["s", "ms", "μs", "us"] = "ms",
     **figure_kwargs: Any,
 ) -> None:
@@ -76,6 +78,7 @@ def plot_run(
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed.
         TypeError: For unknown `unit` arguments.
+
     """
     import matplotlib.pyplot as plt
     from seaborn import barplot, move_legend
@@ -94,14 +97,17 @@ def plot_run(
         raise TypeError(f"Bad {unit=}; column '{y}' not present in data.")
 
     fig, (left, right) = plt.subplots(
-        ncols=2, tight_layout=True, figsize=(8 + 4 * data.Candidate.nunique(), 7), sharey=True
+        ncols=2,
+        tight_layout=True,
+        figsize=(8 + 4 * data.Candidate.nunique(), 7),
+        sharey=True,
     )
     left.set_title("Average")
     right.set_title("Best")
     fig.suptitle("Performance", size=24)
 
     barplot(ax=left, data=data, x=x_arg, y=y, hue=hue, errorbar="sd", **figure_kwargs)
-    best = data.groupby(["Test data", "Candidate"]).min().reset_index()
+    best = data.groupby(["Test data", "Candidate"], observed=True).min().reset_index()
     barplot(ax=right, data=best, x=x_arg, y=y, hue=hue, errorbar=None, **figure_kwargs)
 
     with warnings.catch_warnings():
@@ -110,6 +116,6 @@ def plot_run(
     left.get_legend().remove()
 
 
-def _smaller_as_hue(data: pd.DataFrame) -> Tuple[str, str]:
+def _smaller_as_hue(data: pd.DataFrame) -> tuple[str, str]:
     unique = data.nunique()
     return ("Test data", "Candidate") if unique["Test data"] < unique["Candidate"] else ("Candidate", "Test data")

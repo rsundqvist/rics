@@ -1,7 +1,8 @@
 import logging
+from collections.abc import Callable, Iterable, MutableMapping, Sequence
 from dataclasses import dataclass
 from time import perf_counter
-from typing import Any, Callable, Dict, Iterable, MutableMapping, Sequence, Tuple, Union
+from typing import Any, Union
 
 from rics.misc import get_by_full_name
 
@@ -18,7 +19,7 @@ def log_split_progress(
     logger: LoggerArg = "rics.ml.time_split",
     start_level: int = logging.INFO,
     end_level: int = logging.INFO,
-    extra: Dict[str, Any] = None,
+    extra: dict[str, Any] | None = None,
 ) -> Iterable[DatetimeSplitBounds]:
     """Log iteration progress over `splits` using `logger`.
 
@@ -39,7 +40,9 @@ def log_split_progress(
 
         >>> from rics.ml.time_split import split, log_split_progress
         >>> splits = split("36h", available=("2023-08-10", "2023-08-19"))
-        >>> tracked_splits = log_split_progress(splits, logger="progress", start_level=logging.DEBUG)
+        >>> tracked_splits = log_split_progress(
+        ...     splits, logger="progress", start_level=logging.DEBUG
+        ... )
         >>> list(tracked_splits)  # doctest: +SKIP
         [progress:DEBUG] Begin fold 1/2: ('2023-08-11' <= [schedule: '2023-08-16' (Wednesday)] < '2023-08-17 12:00:00').
         [progress:INFO] Finished fold 1/2 [schedule: '2023-08-16' (Wednesday)] after 5m 18s.
@@ -49,7 +52,7 @@ def log_split_progress(
     logger = logging.getLogger(logger) if isinstance(logger, str) else logger
 
     if isinstance(logger, logging.LoggerAdapter) and not hasattr(logger, "merge_extra"):
-        # TODO: Remove after https://github.com/python/cpython/pull/107292
+        # Backport of https://github.com/python/cpython/pull/107292
         logger = _MergingLoggerAdapter(logger.logger, logger.extra)
 
     track = _ProgressTracker(
@@ -69,20 +72,20 @@ def log_split_progress(
 
 @dataclass(frozen=True)
 class _ProgressTracker:
-    logger: Union[logging.Logger, logging.LoggerAdapter]  # type: ignore[type-arg]
+    logger: logging.Logger | logging.LoggerAdapter  # type: ignore[type-arg]
     fold_format: str
     start_level: int
     start_message: str
     end_level: int
     end_message: str
     seconds_formatter: Callable[[float], str]
-    user_extra: Dict[str, Any]
+    user_extra: dict[str, Any]
 
     def __call__(self, splits: Sequence[DatetimeSplitBounds]) -> Iterable[DatetimeSplitBounds]:
         n_splits = len(splits)
 
         for n, split in enumerate(splits, start=1):
-            extra: Dict[str, Union[str, float, int, bool]] = dict(
+            extra: dict[str, str | float | int | bool] = dict(
                 n=n,
                 n_splits=n_splits,
                 start=split.start.isoformat(),
@@ -90,7 +93,7 @@ class _ProgressTracker:
                 end=split.end.isoformat(),
                 **self.user_extra,
             )
-            kwargs: Dict[str, Any] = dict(
+            kwargs: dict[str, Any] = dict(
                 n=n,
                 n_splits=n_splits,
                 start=_PrettyTimestamp(split.start),
@@ -116,7 +119,7 @@ class _ProgressTracker:
 
 
 class _MergingLoggerAdapter(logging.LoggerAdapter):  # type: ignore[type-arg]
-    def process(self, msg: Any, kwargs: MutableMapping[str, Any]) -> Tuple[Any, MutableMapping[str, Any]]:
+    def process(self, msg: Any, kwargs: MutableMapping[str, Any]) -> tuple[Any, MutableMapping[str, Any]]:
         """See https://github.com/python/cpython/pull/107292."""
         kwargs["extra"] = {**self.extra, **kwargs["extra"]} if "extra" in kwargs and self.extra else self.extra
         return msg, kwargs

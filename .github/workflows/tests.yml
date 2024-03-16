@@ -19,7 +19,7 @@ on:
 env:
   # Need to be explicit when using pip; this is only for the official Poetry (curl-based) installer.
   # https://github.com/python-poetry/poetry/issues/7611
-  POETRY_VERSION: 1.3.2
+  POETRY_VERSION: 1.7.1
 
 jobs:
   linting:
@@ -28,15 +28,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
 
       - name: Linting
         run: |
-          pip install pre-commit
-          pre-commit run --all-files
+          pip install invoke poetry==$POETRY_VERSION
+          poetry install --all-extras
+          poetry run inv lint
 
   tests:
     needs: linting
@@ -46,8 +47,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ Ubuntu, MacOS, Windows ]
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
+        # os: [ Ubuntu, MacOS, Windows ]
+        os: [ Ubuntu, Windows ]
+        python-version: [ '3.11', '3.12' ]
         experimental: [false]
     steps:
       - uses: actions/checkout@v4
@@ -72,26 +74,26 @@ jobs:
         run: nox --force-color -s tests-${{ matrix.python-version }}
 
       - name: Run safety check
-        if: matrix.python-version == '3.10' && matrix.os == 'Ubuntu'
+        if: matrix.python-version == '3.12' && matrix.os == 'Ubuntu'
         shell: bash
         run: nox --force-color -s safety
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: coverage-data
+          name: coverage-data-${{ matrix.python-version }}+${{ matrix.os }}
           path: ".coverage.*"
-
+  
   coverage:
     needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: 3.12
 
       - name: Install system deps
         shell: bash
@@ -100,9 +102,10 @@ jobs:
           pip install poetry==$POETRY_VERSION
 
       - name: Download coverage data
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: coverage-data
+          pattern: coverage-data-*
+          merge-multiple: true
 
       - name: Create coverage report
         shell: bash
@@ -110,6 +113,6 @@ jobs:
           nox --force-color --session=coverage -- --fmt xml
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v3.1.5
+        uses: codecov/codecov-action@v4.0.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

@@ -1,9 +1,11 @@
 """Dict utility functions."""
+
 import typing as _t
 from warnings import warn as _warn
 
 from ..action_level import ActionLevel as _ActionLevel
-from ..misc import get_by_full_name as _get_by_full_name, tname as _tname
+from ..misc import get_by_full_name as _get_by_full_name
+from ..misc import tname as _tname
 
 KT = _t.TypeVar("KT", bound=_t.Hashable)
 """Key type."""
@@ -15,7 +17,7 @@ OKT = _t.TypeVar("OKT", bound=_t.Hashable)
 """Outer key type."""
 
 
-def compute_if_absent(d: _t.Dict[KT, VT], key: KT, func: _t.Callable[[KT], VT] = None) -> VT:
+def compute_if_absent(d: dict[KT, VT], key: KT, func: _t.Callable[[KT], VT] | None = None) -> VT:
     """Compute and store `key` using `func` if `key` is not in the dict.
 
     Args:
@@ -25,6 +27,7 @@ def compute_if_absent(d: _t.Dict[KT, VT], key: KT, func: _t.Callable[[KT], VT] =
 
     Returns:
         The value of `k` in `d`.
+
     """
     if not (func is None or key in d):
         d[key] = func(key)
@@ -32,7 +35,7 @@ def compute_if_absent(d: _t.Dict[KT, VT], key: KT, func: _t.Callable[[KT], VT] =
     return d[key]
 
 
-def reverse_dict(d: _t.Mapping[KT, HVT], duplicate_key_action: _ActionLevel.ParseType = "raise") -> _t.Dict[HVT, KT]:
+def reverse_dict(d: _t.Mapping[KT, HVT], duplicate_key_action: _ActionLevel.ParseType = "raise") -> dict[HVT, KT]:
     """Swap keys and values.
 
     Args:
@@ -51,13 +54,14 @@ def reverse_dict(d: _t.Mapping[KT, HVT], duplicate_key_action: _ActionLevel.Pars
 
     Raises:
         ValueError: If there are duplicate values in `d` and ``duplicate_key_action='raise'``.
+
     """
-    ans = {value: key for key, value in d.items()}
+    retval = {value: key for key, value in d.items()}
 
     action_level = _ActionLevel.verify(duplicate_key_action)
-    if action_level is not _ActionLevel.IGNORE and len(d) != len(ans):
+    if action_level is not _ActionLevel.IGNORE and len(d) != len(retval):
         msg = (
-            f"Duplicate values in {d}; cannot reverse. Original dict has size {len(d)} != {len(ans)}."
+            f"Duplicate values in {d}; cannot reverse. Original dict has size {len(d)} != {len(retval)}."
             f"\nHint: Set duplicate_key_action='ignore' to allow."
         )
         if action_level is _ActionLevel.WARN:
@@ -65,15 +69,15 @@ def reverse_dict(d: _t.Mapping[KT, HVT], duplicate_key_action: _ActionLevel.Pars
         else:
             raise ValueError(msg)  # pragma: no cover
 
-    return ans
+    return retval
 
 
 def flatten_dict(
-    d: _t.Dict[KT, _t.Any],
+    d: dict[KT, _t.Any],
     join_string: str = ".",
-    filter_predicate: _t.Callable[[KT, _t.Any], bool] = lambda key, value: True,
-    string_fn: _t.Union[_t.Callable[[KT], str], str, None] = str,
-) -> _t.Dict[str, _t.Any]:
+    filter_predicate: _t.Callable[[KT, _t.Any], bool] = lambda *_: True,
+    string_fn: _t.Callable[[KT], str] | str | None = str,
+) -> dict[str, _t.Any]:
     """Flatten a nested dictionary.
 
     This process is partially (or fully; depends on `d` and arguments) reversible, see :func:`unflatten_dict`.
@@ -94,6 +98,7 @@ def flatten_dict(
 
         >>> flatten_dict({"foo": 0, "bar": {"foo": 1, "bar": 2}})
         {'foo': 0, 'bar.foo': 1, 'bar.bar': 2}
+
     """
     if string_fn is None:
 
@@ -104,15 +109,15 @@ def flatten_dict(
     elif isinstance(string_fn, str):
         string_fn = _t.cast(_t.Callable[[KT], str], _get_by_full_name(string_fn))
 
-    ans: _t.Dict[str, _t.Any] = {}
-    _flatten_inner(d, ans, [], join_string, filter_predicate, string_fn)
-    return ans
+    retval: dict[str, _t.Any] = {}
+    _flatten_inner(d, retval, [], join_string, filter_predicate, string_fn)
+    return retval
 
 
 def _flatten_inner(
-    d: _t.Dict[KT, _t.Any],
-    flattened: _t.Dict[str, _t.Any],
-    parents: _t.List[str],
+    d: dict[KT, _t.Any],
+    flattened: dict[str, _t.Any],
+    parents: list[str],
     join_string: str,
     filter_predicate: _t.Callable[[KT, _t.Any], bool],
     string_fn: _t.Callable[[KT], str],
@@ -122,18 +127,25 @@ def _flatten_inner(
             continue
 
         str_key = key if isinstance(key, str) else string_fn(key)
-        key_hierarchy = parents + [str_key]
+        key_hierarchy = [*parents, str_key]
         if isinstance(value, dict):
-            _flatten_inner(value, flattened, key_hierarchy, join_string, filter_predicate, string_fn)
+            _flatten_inner(
+                value,
+                flattened,
+                key_hierarchy,
+                join_string,
+                filter_predicate,
+                string_fn,
+            )
         else:
             flat_key = join_string.join(key_hierarchy)
             flattened[flat_key] = value
 
 
 def unflatten_dict(
-    d: _t.Dict[_t.Union[str, _t.Tuple[str, ...]], _t.Any],
+    d: dict[str | tuple[str, ...], _t.Any],
     join_string: str = ".",
-) -> _t.Dict[str, _t.Union[_t.Dict[str, _t.Any], _t.Any]]:
+) -> dict[str, dict[str, _t.Any] | _t.Any]:
     """Unflatten a flat dictionary.
 
     This process is reversible, see :func:`flatten_dict`.
@@ -155,8 +167,9 @@ def unflatten_dict(
 
         >>> unflatten_dict({"foo": 0, ("bar", "foo"): 1, "bar.bar": 2})
         {'foo': 0, 'bar': {'foo': 1, 'bar': 2}}
+
     """
-    ret: _t.Dict[str, _t.Union[_t.Dict[str, _t.Any], _t.Any]] = {}
+    ret: dict[str, dict[str, _t.Any] | _t.Any] = {}
     for key, value in d.items():
         parts: _t.Sequence[str]
         if isinstance(key, str):
@@ -175,7 +188,7 @@ def unflatten_dict(
     return ret
 
 
-class InheritedKeysDict(_t.Mapping[OKT, _t.Dict[KT, VT]]):
+class InheritedKeysDict(_t.Mapping[OKT, dict[KT, VT]]):
     """A nested dictionary that returns default-backed child dictionaries.
 
     The length of an ``InheritedKeysDict`` is equal to the number of specific outer keys, and is considered ``True``
@@ -188,30 +201,31 @@ class InheritedKeysDict(_t.Mapping[OKT, _t.Dict[KT, VT]]):
     Examples:
         A short demonstration.
 
-        >>> shared = {0: 'fallback-for-0', 1: 'fallback-for-1'}
+        >>> shared = {0: "fallback-for-0", 1: "fallback-for-1"}
         >>> specific = {
-        ...     'ctx0': {0: 'c0-v0'},
-        ...     'ctx1': {0: 'c1-v0', 1: 'c1-v1', 2: 'c1-v2'},
+        ...     "ctx0": {0: "c0-v0"},
+        ...     "ctx1": {0: "c1-v0", 1: "c1-v1", 2: "c1-v2"},
         ... }
-        >>> ikd = InheritedKeysDict(default=shared, specific=specific); ikd
+        >>> ikd = InheritedKeysDict(default=shared, specific=specific)
+        >>> ikd
         InheritedKeysDict(default={0: 'fallback-for-0', 1: 'fallback-for-1'}, specific={'ctx0': {0: 'c0-v0'},
         'ctx1': {0: 'c1-v0', 1: 'c1-v1', 2: 'c1-v2'}})
 
         The value of key `0` is inherited for `'ctx0'`. The `'ctx1'`-context
         defines all shared keys, as well as a unique key.
 
-        >>> ikd['ctx0']
+        >>> ikd["ctx0"]
         {0: 'c0-v0', 1: 'fallback-for-1'}
-        >>> ikd['ctx1']
+        >>> ikd["ctx1"]
         {0: 'c1-v0', 1: 'c1-v1', 2: 'c1-v2'}
 
         The ``InheritedKeysDict.__contains__``-method is ``True`` for all keys.
         Unknown keys simply return the default values. This will be an empty
         if no specific keys are specified.
 
-        >>> 'unseen-key' in ikd
+        >>> "unseen-key" in ikd
         True
-        >>> ikd['unseen-key']
+        >>> ikd["unseen-key"]
         {0: 'fallback-for-0', 1: 'fallback-for-1'}
 
         The length of `ikd` is equal to the number of specific contexts (two in this case).
@@ -219,13 +233,13 @@ class InheritedKeysDict(_t.Mapping[OKT, _t.Dict[KT, VT]]):
 
     def __init__(
         self,
-        specific: _t.Dict[OKT, _t.Dict[KT, VT]] = None,
-        default: _t.Dict[KT, VT] = None,
+        specific: dict[OKT, dict[KT, VT]] | None = None,
+        default: dict[KT, VT] | None = None,
     ) -> None:
         self._specific = specific or {}
         self._default = default or {}
 
-    def __getitem__(self, context: OKT) -> _t.Dict[KT, VT]:
+    def __getitem__(self, context: OKT) -> dict[KT, VT]:
         if not self:
             raise KeyError(context)
 
@@ -282,32 +296,24 @@ class InheritedKeysDict(_t.Mapping[OKT, _t.Dict[KT, VT]]):
 
         Raises:
             ValueError: If there are any keys other than 'default' and 'context-specific' present in `mapping`.
+
         """
         if isinstance(arg, InheritedKeysDict):  # pragma: no cover
             return arg
 
-        # TODO: Need 3.11 and MakeDict for these
-        default: _t.Optional[_t.Dict[KT, VT]] = arg.pop("default", None)
-        specific: _t.Optional[_t.Dict[OKT, _t.Dict[KT, VT]]] = arg.pop("specific", None)
+        default: dict[KT, VT] | None = arg.pop("default", None)
+        specific: dict[OKT, dict[KT, VT]] | None = arg.pop("specific", None)
 
         if arg:  # pragma: no cover
-            raise ValueError(f"Invalid {_tname(cls)}. Unknown keys: {list(arg)}")
+            raise ValueError(f"Unknown keys: {list(arg)}")
 
         return InheritedKeysDict(default=default, specific=specific)
 
 
-class _MakeDict(
-    _t.TypedDict,
-    total=False,
-    # Generic[OKT, KT, VT] # TODO: Requires 3.11
-):
-    default: _t.Dict[KT, VT]  # type: ignore[valid-type]
-    specific: _t.Dict[OKT, _t.Dict[KT, VT]]  # type: ignore[valid-type]
+class _MakeDict(_t.TypedDict, _t.Generic[OKT, KT, VT], total=False):
+    default: dict[KT, VT]
+    specific: dict[OKT, dict[KT, VT]]
 
 
-MakeType = _t.Union[
-    InheritedKeysDict[OKT, KT, VT],
-    _MakeDict,
-    # MakeDict[OKT, KT, VT],
-]
+MakeType = InheritedKeysDict[OKT, KT, VT] | _MakeDict[OKT, KT, VT]
 """Valid input types for making the :meth:`InheritedKeysDict.make` function."""

@@ -34,7 +34,14 @@ DATA_CASES = (
         ),
         (
             dict(
-                schedule=[_sdata_start, "2022-01-04", "2022-01-07", "2022-01-10", "2022-01-13", "2100"],
+                schedule=[
+                    _sdata_start,
+                    "2022-01-04",
+                    "2022-01-07",
+                    "2022-01-10",
+                    "2022-01-13",
+                    "2100",
+                ],
                 before=1,
                 after=1,
             ),
@@ -46,7 +53,15 @@ DATA_CASES = (
         ),
         (
             dict(
-                schedule=pd.DatetimeIndex([_sdata_start, "2022-01-04", "2022-01-07", "2022-01-10", "2022-01-13"]),
+                schedule=pd.DatetimeIndex(
+                    [
+                        _sdata_start,
+                        "2022-01-04",
+                        "2022-01-07",
+                        "2022-01-10",
+                        "2022-01-13",
+                    ]
+                ),
                 before=1,
                 after=1,
             ),

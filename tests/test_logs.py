@@ -1,7 +1,6 @@
 import logging
 
 import pytest
-
 from rics.logs import _extract_extra_levels, basic_config, disable_temporarily
 
 
@@ -31,16 +30,19 @@ def test_set_levels(logger_name, level_name):
         ["rics", "id_translation"],
         [logging.LoggerAdapter(logging.root, extra={})],
         [logging.LoggerAdapter(logging.getLogger("rics"), extra={})],
-        [logging.LoggerAdapter(logging.getLogger("rics"), extra={}), logging.getLogger("id_translation")],
+        [
+            logging.LoggerAdapter(logging.getLogger("rics"), extra={}),
+            logging.getLogger("id_translation"),
+        ],
     ],
 )
 def test_disable_temporarily(loggers, caplog):
     def log_messages():
         caplog.clear()
-        for i, lgr in enumerate(loggers):
-            if isinstance(lgr, str):
-                lgr = logging.getLogger(lgr)
-            lgr.warning("Hello from logger #%i of type %r!", i, type(lgr).__name__)
+        for i, logger in enumerate(loggers):
+            if isinstance(logger, str):
+                logger = logging.getLogger(logger)  # noqa: PLW2901
+            logger.warning("Hello from logger #%i of type %r!", i, type(logger).__name__)
         return caplog.records
 
     actual = log_messages()
@@ -65,5 +67,5 @@ def test_disable_temporarily(loggers, caplog):
     ],
 )
 def test_extract_extra_levels(arg, expected):
-    actual = list(_extract_extra_levels(**{f"{arg}_level": logging.INFO})[0])[0]
+    actual = next(iter(_extract_extra_levels(**{f"{arg}_level": logging.INFO})[0]))
     assert actual == expected.replace(":", ".")

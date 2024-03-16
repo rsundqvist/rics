@@ -20,10 +20,8 @@ classifiers = [
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
     'Programming Language :: Python :: 3 :: Only',
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 
 
@@ -35,9 +33,9 @@ classifiers = [
 mtimeit = { callable = "rics.performance.cli:main", extras = ["cli"] }
 
 [tool.poetry.dependencies]
-python = "<4,>=3.8"
+python = ">=3.11"
 
-pandas = ">=1.1"
+pandas = ">=2.0.3"
 
 # cli
 click = { version = "*", optional = true }
@@ -51,18 +49,19 @@ plotting = ["matplotlib", "seaborn"]
 
 [tool.poetry.group.manual-extras.dependencies]
 croniter = "^2.0.1"
+pyarrow = "^15.0.0"
 
 [tool.poetry.group.docs]
 [tool.poetry.group.docs.dependencies]
 # duplicate object warnings for sphinx>=4
 # description: https://github.com/astropy/astropy/issues/11723
 # https://github.com/astropy/astropy/pull/12270
-sphinx = "^7.1.2"
+sphinx = "^7.2.6"
 sphinx-gallery = "^0.15.0"
-pydata-sphinx-theme = "^0.14.1"
+pydata-sphinx-theme = "^0.15.2"
 myst-parser = "^2.0.0"
 nbsphinx = "^0.9.3"
-ipython = "<8.13.0"
+ipython = "^8.22.1"
 
 [tool.poetry.group.notebooks]
 optional = true
@@ -72,116 +71,121 @@ ipywidgets = "*"
 jupyterlab-execute-time = "*"
 tqdm = "*"
 
-[tool.poetry.group.codestyle.dependencies]
-isort = "^5.12.0"
-black = { version = "^23.9.1", extras = ["jupyter"] }
-
 [tool.poetry.group.test.dependencies]
 pytest = "^7.4.0"
 xdoctest = "^1.1.1"
 coverage = "^7.3.0"
 pytest-cov = "^4.1.0"
 
-scikit-learn = "^1.3.0"
-dask = "*"
+scikit-learn = "^1.4.0"
+# TODO Unpin.
+# dask.datasets.timeseries() warns:
+#     UserWarning: dask_expr does not support the DataFrameIOFunction protocol for column projection
+# on dask == 2024.3.1
+dask = { version = "==2024.2.1", extras = ["dataframe"] }
 
-[tool.poetry.group.lint.dependencies]
-pre-commit = "^3.4.0"
+[tool.poetry.group.devops.dependencies]
 invoke = "^2.2.0"
+mypy = "^1.9.0"
+ruff = "^0.3.3"
+
 safety = "^3.0.1"
 codespell = "^2.2.6"
 bump2version = "^1.0.1"
 
-[tool.poetry.group.flake8.dependencies]
-flakeheaven = "^3.3.0"
-flake8-builtins = "^2.1.0"
-flake8-blind-except = "^0.2.1"
-flake8-logging-format = "^0.9.0"
-flake8-bugbear = "^23.3.12"
-flake8-annotations = "^2.9.1"
-flake8-docstrings = "^1.7.0"
-flake8-bandit = "^3.0.0"
-darglint = "^1.8.1"
-
-[tool.poetry.group.mypy.dependencies]
-mypy = "^1.6.0"
-
-types-requests = ">=2.28.10"
-types-setuptools = ">=65.3.0"
-types-urllib3 = ">=1.26.24"
-types-croniter = ">=1.3.2"
-#pandas-stubs = ">=1.4.4.220919"
-
-[tool.flakeheaven]
-format = "grouped"
-max_line_length = 150 # The "real" limit is 120; black takes care of those. This allows black to make exceptions.
-show_source = true
-docstring_convention = "google"
-extended-default-ignore = []
-
-[tool.flakeheaven.plugins]
-pyflakes = ["+*"]
-pycodestyle = ["+*",
-    "-W503", # Line break occurred before a binary operator - conflicts with W504
-    "+W504", # Line break occurred after a binary operator - keeping this one
-    "-E203", # Whitespace before ':' - conflicts with black
-]
-mccabe = ["+*"]
-"flake8-*" = ["+*"]
-darglint = ["+*"]
-
-flake8-annotations = ["+*",
-    "-ANN101", "-ANN102", # Typehint for self/cls
-    "-ANN401"             # Allow typing.Any
-]
-flake8-docstrings = ["+*",
-    "-D105", # Missing docstring in magic method
-    "-D107", # Missing docstring in __init__ - special case of D105. Init docstring = class docstring.
-]
-flake8-darglint = ["+*",
-    "-DAR203", # The docstring parameter type doesn't match function. - Let mypy handle types
-    "-DAR402", # The docstring describes an exception not explicitly raised. - for delegates that raise
-]
-flake8-logging-format = ["+*",
-    "-G004", # Logging statements should not use fstring. - I think this is fine IFF under enabledFor-guard
-]
-
-[tool.flakeheaven.exceptions."src/rics/mapping/"]
-flake8-darglint = ["-DAR101", "-DAR301"]
-flake8-bugbear = ["-B028"]
-
-[tool.flakeheaven.exceptions."src/rics/ml/time_split/_backend/_datetime_index_like.py"]
-flake8-docstrings = ["-D101", "-D102"]
-
-[tool.flakeheaven.exceptions."tests/"]
-# Test modules/classes/functions are never "really" public, and I don't want to typehint/document all of them :).
-flake8-docstrings = ["-*"]
-flake8-annotations = ["-*"]
-flake8-bandit = ["-*"]
-flake8-darglint = ["-DAR101"]
-
-[tool.flakeheaven.exceptions."notebooks/"]
-flake8-annotations = ["-*"]
-flake8-docstrings = ["-*"]
-
-[tool.flakeheaven.exceptions."src/rics/__init__.py"]
-pyflakes = ["-F401"]  # Module imported but unused - False positive for __version__; IDE solves for real positives
-
-
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 120
-known_third_party = ["invoke", "nox"]
-combine_as_imports = true
-
-
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = ["py38"]
+fix = true
+unsafe-fixes = false
+output-format = "grouped"
 
+[tool.ruff.format]
+docstring-code-format = true
+docstring-code-line-length = 80
+line-ending = "lf"
+
+[tool.ruff.lint]
+exclude = ["notebooks/*"]
+select = [
+    "ANN",
+    "S",
+    "I",
+    "B",
+    "D",
+    "F",
+    "W",
+    "E",
+    "SLOT",
+    "SIM",
+    "TID",
+    "TD",
+    "TCH",
+    "ARG",
+    "PTH",
+    "NPY",
+    "PD",
+    "N",
+    "PERF",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "UP",
+    "FURB",
+    "RUF",
+    "TRY",
+]
+ignore = [
+    "ANN101", # Missing type annotation for `self` in method
+    "ANN102", # Missing type annotation for `cls` in method
+    "D105", # Missing docstring in magic method
+    "D107", # Missing docstring in `__init__`
+    "ANN401",
+    "TID252", # Prefer absolute imports over relative imports from parent modules
+    "TRY003",
+    "PD901", # Avoid using the generic variable name `df` for DataFrames
+    "PLC0415", # `import` should be at the top-level of a file
+    "PLR0913", #
+    "SIM108", #  Use ternary operator - coverage issue, see https://github.com/nedbat/coveragepy/issues/509
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "D",
+    "S101", # Allow 'assert' keyword
+    "ANN",
+    "PLR2004", # Allow magic values
+    "TD003", # Missing issue link
+]
+"examples/*" = [
+    "D205", # Clashes with sphinx_gallery (generated examples)
+    "B007",
+]
+"**/time_split/*" = [
+    "PLR0913", # Too many arguments in function definition
+]
+"**/time_split/integration/sklearn/*" = [
+    "N803", # Argument name `X` should be lowercase
+    "ARG002", # Unused method argument: `groups`
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+[tool.ruff.lint.pycodestyle]
+max-line-length = 150
+
+[tool.pytest]
+[tool.pytest.ini_options]
+filterwarnings = [
+    "error",
+    "ignore:Matplotlib is currently using agg:UserWarning",
+    "ignore:.*utcfromtimestamp.*:DeprecationWarning", # Detta är farligt - ta bort
+]
+log_file_level = 10
+log_file = "pytest.log"
+norecursedirs = [
+    "**/cli_modules/*",
+]
 
 [build-system]
 requires = ["poetry-core>=1.0.8"]

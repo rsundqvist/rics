@@ -1,7 +1,20 @@
 # Jupyter Notebooks
 Full documentation: https://jupyter-docker-stacks.readthedocs.io
 
-## Starting an ephemeral server
+## Native
+Installing JupyterLab and a few useful plugins.
+
+```bash
+pip install -U jupyterlab jupyterlab-execute-time jupyterlab-git ipywidgets
+```
+
+Installing a kernel.
+
+```bash
+python -m ipykernel install --user --name NAME --display-name DISPLAY_NAME
+```
+
+## Dockerized
 Click the link shown in the display to open the browser.
 ```bash
 docker run --rm \

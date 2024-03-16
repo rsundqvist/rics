@@ -1,11 +1,10 @@
-"""
-Cron schedule, keeping all data before the schedule.
-====================================================
+"""Cron schedule, keeping all data before the schedule.
+=======================================================
 
 Using a cron schedule with data, showing number of rows in each partition.
 """
-import pandas
 
+import pandas
 from rics import configure_stuff
 from rics.ml.time_split import log_split_progress, plot, split
 

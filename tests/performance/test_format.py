@@ -1,5 +1,4 @@
-import pytest as pytest
-
+import pytest
 from rics.performance import format_perf_counter, format_seconds
 
 

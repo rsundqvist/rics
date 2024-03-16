@@ -2,7 +2,6 @@ import logging
 
 import pandas as pd
 import pytest
-
 from rics.ml.time_split.integration.pandas import split_pandas
 from rics.ml.time_split.integration.sklearn import ScikitLearnSplitter
 

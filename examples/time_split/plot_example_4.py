@@ -1,11 +1,10 @@
-"""
-Removing folds with ``n_splits``. Dynamic ``before`` and ``after``-data.
-========================================================================
+"""Removing folds with ``n_splits``. Dynamic ``before`` and ``after``-data.
+===========================================================================
 
 Dynamic before/after-ranges, with removed partitions.
 """
-import pandas
 
+import pandas
 from rics import configure_stuff
 from rics.ml.time_split import log_split_progress, plot, split
 

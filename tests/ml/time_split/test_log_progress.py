@@ -1,5 +1,4 @@
 import pytest
-
 from rics.ml.time_split import log_split_progress, settings, split
 
 
@@ -13,7 +12,8 @@ def test_log_progress(extra, caplog, monkeypatch):
 
     user_extra = {"extra0": 0, "extra1": 1, "mutable": "a"}
     for i, _ in enumerate(
-        log_split_progress(split(["2022-1", "2022-2", "2022-3"], after="1d"), extra=user_extra), start=1
+        log_split_progress(split(["2022-1", "2022-2", "2022-3"], after="1d"), extra=user_extra),
+        start=1,
     ):
         record = caplog.records[-1]
         must_contain = extra.format(**user_extra)

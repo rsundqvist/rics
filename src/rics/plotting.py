@@ -1,8 +1,12 @@
 """Plotting utility methods."""
+
+import math
 import typing as _t
 
-from matplotlib.axis import Axis as _Axis, XAxis as _XAxis
-from matplotlib.ticker import FuncFormatter as _FuncFormatter, IndexLocator as _IndexLocator
+from matplotlib.axis import Axis as _Axis
+from matplotlib.axis import XAxis as _XAxis
+from matplotlib.ticker import FuncFormatter as _FuncFormatter
+from matplotlib.ticker import IndexLocator as _IndexLocator
 
 ERROR_BAR_CAPSIZE: float = 0.1
 
@@ -29,6 +33,7 @@ def configure_seaborn() -> None:
 
     Raises:
         ModuleNotFoundError: If Seaborn is not installed.
+
     """
     import functools
     import warnings
@@ -50,6 +55,7 @@ def configure_matplotlib() -> None:
 
     Raises:
         ModuleNotFoundError: If matplotlib is not installed.
+
     """
     import functools
 
@@ -57,13 +63,12 @@ def configure_matplotlib() -> None:
     import matplotlib.ticker as mtick
 
     plt.rcParams["figure.figsize"] = (20, 5)
-    # plt.rcParams["figure.tight_layout"] = True # Doesn't exist -- must call afterward if figure is created for you
     plt.subplots = functools.partial(plt.subplots, tight_layout=True)
 
-    mtick.PercentFormatter = functools.partial(mtick.PercentFormatter, xmax=1)
+    mtick.PercentFormatter = functools.partial(mtick.PercentFormatter, xmax=1)  # type: ignore[misc, assignment]
 
 
-def pi_ticks(ax: _t.Union[_Axis, HasXAxis], half_rep: HalfRep = None) -> None:
+def pi_ticks(ax: _Axis | HasXAxis, half_rep: HalfRep | None = None) -> None:
     """Decorate an axis by setting the labels to multiples of pi.
 
     .. image:: ../_images/pi_ticks.png
@@ -87,6 +92,7 @@ def pi_ticks(ax: _t.Union[_Axis, HasXAxis], half_rep: HalfRep = None) -> None:
     Args:
         ax: An axis to decorate, or an object with an `xaxis` attribute.
         half_rep: Controls how fractions of `π` are represented on the x-axis.
+
     """
     axis: _Axis = ax.xaxis if hasattr(ax, "xaxis") else ax
 
@@ -96,12 +102,12 @@ def pi_ticks(ax: _t.Union[_Axis, HasXAxis], half_rep: HalfRep = None) -> None:
 
 
 class _PiTickHelper:
-    PI: float = 3.14159265359
+    PI: float = math.pi
     HALF_PI: float = PI / 2
 
     def __init__(
         self,
-        half_rep: _t.Optional[HalfRep],
+        half_rep: HalfRep | None,
         *,
         start: float,
     ) -> None:
@@ -113,7 +119,9 @@ class _PiTickHelper:
         self.formatter = _FuncFormatter(self._format)
 
     @staticmethod
-    def _parse_half_rep(half_rep: _t.Optional[str]) -> _t.Optional[_t.Literal["frac", "dec"]]:
+    def _parse_half_rep(
+        half_rep: str | None,
+    ) -> _t.Literal["frac", "dec"] | None:
         if half_rep is None:
             return None
 

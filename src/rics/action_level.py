@@ -1,15 +1,15 @@
 """Action level enumeration types."""
 
+import typing as _t
 from enum import Enum as _Enum
-from typing import Any, Literal, Optional, Union
 
 
 class ActionLevel(_Enum):
     """Action level enumeration type for events."""
 
-    _ignore_ = ["ParseType"]
+    _ignore_: _t.ClassVar = ("ParseType",)  # type: ignore[misc]
 
-    ParseType = Union[str, "ActionLevel"]  # Type checking
+    ParseType: _t.TypeAlias = "str | ActionLevel"
     """Types that may be interpreted as an ``ActionLevel``."""
 
     RAISE = "raise"
@@ -23,8 +23,8 @@ class ActionLevel(_Enum):
     def verify(
         cls,
         action: ParseType,
-        purpose: str = None,
-        forbidden: ParseType = None,
+        purpose: str | None = None,
+        forbidden: "ActionLevel.ParseType | None" = None,
     ) -> "ActionLevel":
         """Verify an action level.
 
@@ -38,6 +38,7 @@ class ActionLevel(_Enum):
 
         Raises:
             BadActionLevelError: If `action` is not in ('ignore', 'warn', 'raise') or if `action` is in `forbidden`.
+
         """
         forbidden = None if forbidden is None else cls.verify(forbidden)
 
@@ -47,16 +48,16 @@ class ActionLevel(_Enum):
             try:
                 action_level = ActionLevel[action.upper()]
             except KeyError:
-                raise BadActionLevelError(action, purpose, forbidden)
+                raise BadActionLevelError(action, purpose, forbidden) from None
             except AttributeError:
-                raise BadActionLevelError(action, purpose, forbidden)
+                raise BadActionLevelError(action, purpose, forbidden) from None
 
         if action_level is forbidden:
             raise BadActionLevelError(action, purpose, forbidden)
 
         return action_level
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: _t.Any) -> bool:
         if isinstance(other, ActionLevel):
             other = other.name
 
@@ -69,7 +70,7 @@ class ActionLevel(_Enum):
         return hash(self.name)
 
 
-ActionLevel.ParseType = Union[Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"], ActionLevel]  # type: ignore
+ActionLevel.ParseType = _t.Literal["ignore", "warn", "raise", "IGNORE", "WARN", "RAISE"] | ActionLevel  # type: ignore
 
 
 class ActionLevelHelper:
@@ -83,8 +84,8 @@ class ActionLevelHelper:
 
     def __init__(
         self,
-        require_purpose: Literal["given", "exists"] = "exists",
-        **forbidden_for_purpose: Optional[ActionLevel.ParseType],
+        require_purpose: _t.Literal["given", "exists"] = "exists",
+        **forbidden_for_purpose: "ActionLevel.ParseType | None",
     ) -> None:
         self._require = require_purpose
         self._forbidden_for_purpose = forbidden_for_purpose
@@ -102,6 +103,7 @@ class ActionLevelHelper:
         Raises:
             BadActionLevelError: If `action` is not in ('ignore', 'warn', 'raise') or if `action` is in `remove`.
             ValueError: If `purpose` is unknown and `require_purpose` is set to `'exists'`.
+
         """
         if self._require == "exists" and purpose not in self._forbidden_for_purpose:
             raise ValueError(f"Unknown {purpose=} given.")
@@ -114,8 +116,8 @@ class BadActionLevelError(ValueError):
     def __init__(
         self,
         action: ActionLevel.ParseType,
-        purpose: str = None,
-        forbidden: "ActionLevel" = None,
+        purpose: str | None = None,
+        forbidden: "ActionLevel | None" = None,
     ) -> None:
         extra = f" for {purpose}" if purpose else ""
         all_options = {ActionLevel.RAISE, ActionLevel.WARN, ActionLevel.IGNORE}

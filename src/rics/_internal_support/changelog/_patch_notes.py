@@ -1,6 +1,6 @@
 import datetime
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Tuple
 
 
 @dataclass(frozen=True)
@@ -11,20 +11,20 @@ class PatchNotes:
     """Title of the release, such as `'0.1.0'`."""
     date: str
     """Date of the release."""
-    extras: List[str]
+    extras: list[str]
     """Extra content to append just below the title."""
 
-    sections: Dict[str, List[str]]
+    sections: dict[str, list[str]]
     """Subsections such as `'Added'` and `'Fixed'`."""
 
-    def __iter__(self) -> Iterable[Tuple[str, List[str]]]:
+    def __iter__(self) -> Iterable[tuple[str, list[str]]]:
         for section in sorted(self.sections):
             lines = self.sections[section]
             if lines:
                 yield section.title(), lines
 
     @classmethod
-    def from_markdown(cls, raw: str) -> Tuple[List["PatchNotes"], Dict[str, str]]:
+    def from_markdown(cls, raw: str) -> tuple[list["PatchNotes"], dict[str, str]]:
         """Create ``PatchNotes`` and references from the lines of a Markdown file.
 
         Args:
@@ -35,19 +35,20 @@ class PatchNotes:
 
         Raises:
             ValueError: If there are duplicate subsections.
+
         """
         parts = raw.split("\n## ")[1:]  # First section is just the title itself.
         last_lines = parts[-1].splitlines()  # Last part has references that we need to extract.
         del parts[-1]
 
-        ans = list(map(cls._consume, parts))
+        parsed_notes = list(map(cls._consume, parts))
 
-        last_section_lines: List[str] = []
+        last_section_lines: list[str] = []
         for references_start, line in enumerate(last_lines):
             if "]: http" in line:
-                ans.append(cls._consume("\n".join(last_section_lines)))
+                parsed_notes.append(cls._consume("\n".join(last_section_lines)))
                 refs = {line.partition(": ")[0].strip(): line for line in last_lines[references_start:]}
-                return ans, refs
+                return parsed_notes, refs
             else:
                 last_section_lines.append(line)
 
@@ -63,7 +64,7 @@ class PatchNotes:
         else:
             date = ""
 
-        subsection_content_lines: List[List[str]] = list(map(str.splitlines, the_rest.split("### ")))
+        subsection_content_lines: list[list[str]] = list(map(str.splitlines, the_rest.split("### ")))
         extra = subsection_content_lines[0]
 
         sections = {section_lines[0]: section_lines[1:] for section_lines in subsection_content_lines[1:]}

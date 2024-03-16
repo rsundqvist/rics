@@ -1,7 +1,8 @@
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 from pandas import DatetimeIndex, Timestamp, isna
 
+from .._support import handle_dask
 from ..types import DatetimeIterable, Flex
 from ._datetime_index_like import DatetimeIndexLike
 from ._limits import LimitsTuple, expand_limits
@@ -10,7 +11,7 @@ from ._limits import LimitsTuple, expand_limits
 class AvailableMetadata(NamedTuple):
     """Output of :func:`process_available`."""
 
-    available_as_index: Optional[DatetimeIndexLike]
+    available_as_index: DatetimeIndexLike | None
     limits: LimitsTuple
     expanded_limits: LimitsTuple
 
@@ -28,6 +29,7 @@ def process_available(available: DatetimeIterable, *, flex: Flex) -> AvailableMe
 
     Raises:
         ValueError: For invalid `available` arguments.
+
     """
     if isinstance(available, DatetimeIndexLike):
         # Avoids conversion, which may be expensive (or impossible on the current machine),
@@ -52,14 +54,4 @@ def process_available(available: DatetimeIterable, *, flex: Flex) -> AvailableMe
 
 
 def _compute_data_limits(available: DatetimeIndexLike) -> LimitsTuple:
-    min_dt, max_dt = available.min(), available.max()
-
-    if (
-        # Compatibility with Dask. One at a time is slower, but seems to use less memory.
-        (hasattr(min_dt, "compute") and callable(min_dt.compute))
-        and (hasattr(max_dt, "compute") and callable(max_dt.compute))
-    ):
-        min_dt = min_dt.compute()
-        max_dt = max_dt.compute()
-
-    return min_dt, max_dt
+    return handle_dask(available.min()), handle_dask(available.max())

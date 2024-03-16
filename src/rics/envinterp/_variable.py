@@ -1,21 +1,19 @@
-from __future__ import annotations
-
 import re
 from dataclasses import dataclass
 from os import environ
-from typing import ClassVar, List, Optional
+from typing import ClassVar
 
 
 @dataclass(frozen=True)
 class Variable:
     """Representation of an environment variable."""
 
-    PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\${(?:[ \t]*(\w+)[ \t]*)(?::(.*))?}?}")
+    PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\${[ \t]*(\w+)[ \t]*(?::(.*))?}?}")
     """The Regex pattern used to find variables in strings."""
 
     name: str
     """Name of the environment variable, e.g. ``PATH`` or ``USER``."""
-    default: Optional[str]
+    default: str | None
     """Fallback value is the variable is unset."""
     full_match: str
     """The entire matching (sub)string as it were found in the input."""
@@ -29,7 +27,7 @@ class Variable:
         return res[0]
 
     @classmethod
-    def parse_string(cls, s: str) -> List["Variable"]:
+    def parse_string(cls, s: str) -> list["Variable"]:  # noqa: PLR0912
         """Extract a list of ``Variable``-instances from a string `s`."""
         retval = []
         prev_is_dollar_sign: bool = False
@@ -37,9 +35,9 @@ class Variable:
 
         state = "search"
 
-        full_match: List[str] = []
-        default: List[str] = []
-        name: List[str] = []
+        full_match: list[str] = []
+        default: list[str] = []
+        name: list[str] = []
 
         def make(*, make_default: bool) -> None:
             nonlocal state
@@ -110,6 +108,7 @@ class Variable:
             NotImplementedError: If an inner ``Variable``, resolved from :attr:`default`, contains text that was not
                 interpolated text.
             NotImplementedError: If :attr:`default` contains multiple inner variables.
+
         """
         if self.name in environ:
             return environ[self.name]

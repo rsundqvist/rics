@@ -1,20 +1,28 @@
-from typing import Any, Iterable, Optional, Sequence, Tuple, cast, get_args
+from collections.abc import Iterable, Sequence
+from typing import Any, cast, get_args
 
 from numpy import array, datetime64, logical_and, ndarray, nonzero
 from numpy.typing import NDArray
 
 from ..._backend import DatetimeIndexSplitter
 from ..._docstrings import docs
-from ...types import DatetimeIterable, DatetimeSplits, DatetimeTypes, Flex, Schedule, Span
+from ...types import (
+    DatetimeIterable,
+    DatetimeSplits,
+    DatetimeTypes,
+    Flex,
+    Schedule,
+    Span,
+)
 from .._log_progress import LogProgressArg, handle_log_progress_arg
 
 try:
     from sklearn.model_selection import BaseCrossValidator  # type: ignore[import-untyped]
+
 except ModuleNotFoundError:
     BaseCrossValidator = object
 
-
-IndexTuple = Tuple[Sequence[int], Sequence[int]]
+IndexTuple = tuple[Sequence[int], Sequence[int]]
 
 
 @docs
@@ -26,11 +34,6 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
     `TimeSeriesSplit`_ class from scikit-learn instead.
 
     .. _TimeSeriesSplit: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.TimeSeriesSplit.html
-
-    .. note::
-
-       Test coverage is limited for this integration.
-       Please report issues to https://github.com/rsundqvist/rics/issues/new.
 
     If a ``pandas`` type is passed to the :meth:`ScikitLearnSplitter.split`-method, the index will be used.
 
@@ -45,6 +48,7 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
         verify_xy: If ``True``, split X and y independently and verify that they are equal.
 
     {USER_GUIDE}
+
     """
 
     def __init__(
@@ -53,7 +57,7 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
         *,
         before: Span = "7d",
         after: Span = 1,
-        n_splits: Optional[int] = None,
+        n_splits: int | None = None,
         flex: Flex = "auto",
         step: int = 1,
         log_progress: LogProgressArg = False,
@@ -71,7 +75,9 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
         self.log_progress = log_progress
         self.verify_xy = verify_xy
 
-    def get_n_splits(self, X: DatetimeIterable = None, y: DatetimeIterable = None, groups: Any = None) -> int:
+    def get_n_splits(
+        self, X: DatetimeIterable | None = None, y: DatetimeIterable | None = None, groups: Any = None
+    ) -> int:
         """Returns the number of splitting iterations in the cross-validator.
 
         Equivalent to ``len(list(split(X, y, groups))``.
@@ -87,14 +93,15 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
         Raises:
             ValueError: If both `X` and `y` are ``None``.
             ValueError: If splits of `X` and `y` are not equal when ``verify_xy=True``.
+
         """
         _, splits = self._get_splits(X, y)
         return len(splits)
 
     def split(
         self,
-        X: DatetimeIterable = None,
-        y: DatetimeIterable = None,
+        X: DatetimeIterable | None = None,
+        y: DatetimeIterable | None = None,
         groups: Any = None,
     ) -> Iterable[IndexTuple]:
         """Generate indices to split data into training and test set.
@@ -111,6 +118,7 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
             ValueError: If both `X` and `y` are ``None``.
             ValueError: If splits of `X` and `y` are not equal when ``verify_xy=True``.
             TypeError: If `X` or `y` have an ``index``-attribute, but index elements are not datetime-like.
+
         """
         index, splits = self._get_splits(self._handle_pandas(X, "X"), self._handle_pandas(y, "y"))
         for fold in handle_log_progress_arg(self.log_progress, splits=splits) or splits:
@@ -123,7 +131,7 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
             )
 
     @staticmethod
-    def _handle_pandas(arg: Optional[DatetimeIterable], name: str) -> Optional[DatetimeIterable]:
+    def _handle_pandas(arg: DatetimeIterable | None, name: str) -> DatetimeIterable | None:
         if arg is None or not hasattr(arg, "index"):
             return arg
 
@@ -136,12 +144,12 @@ class ScikitLearnSplitter(BaseCrossValidator):  # type: ignore[misc]
 
     def _get_splits(
         self,
-        X: DatetimeIterable = None,
-        y: DatetimeIterable = None,
-    ) -> Tuple[NDArray[datetime64], DatetimeSplits]:
-        splits: Optional[DatetimeSplits] = None
-        y_splits: Optional[DatetimeSplits] = None
-        timestamps: Optional[Any] = None
+        X: DatetimeIterable | None = None,
+        y: DatetimeIterable | None = None,
+    ) -> tuple[NDArray[datetime64], DatetimeSplits]:
+        splits: DatetimeSplits | None = None
+        y_splits: DatetimeSplits | None = None
+        timestamps: Any | None = None
 
         if X is not None:
             splits = self._splitter.get_splits(X)

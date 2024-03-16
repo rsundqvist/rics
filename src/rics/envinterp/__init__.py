@@ -53,17 +53,18 @@ Examples:
 
     Furthermore, variables may be nested, but this requires setting the flag to enable recursive parsing.
 
-    >>> Variable.parse_first("${ ENV_VAR2 :${ ENV_VAR0 }}").get_value(resolve_nested_defaults=True)
+    >>> Variable.parse_first("${ ENV_VAR2 :${ ENV_VAR0 }}").get_value(
+    ...     resolve_nested_defaults=True
+    ... )
     'VALUE0'
 
-    Whitespaced around the names is fine. As a final point, nesting may be arbitrarily deep..
+    Whitespaced around the names is fine. Finally, nesting may be arbitrarily deep.
 
     >>> Variable.parse_first("${ENV_VAR3:${ENV_VAR4:${ENV_VAR0}}}").get_value(True)
     'VALUE0'
-
-    ..but you probably shouldn't do like this.
 """
+
 from ._file_utils import replace_in_string
 from ._variable import UnsetVariableError, Variable
 
-__all__ = ["Variable", "UnsetVariableError", "replace_in_string"]
+__all__ = ["UnsetVariableError", "Variable", "replace_in_string"]

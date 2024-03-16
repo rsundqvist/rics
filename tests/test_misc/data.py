@@ -35,8 +35,7 @@ def say_hi():
 
 class AbstractHello(ABC):
     @abstractmethod
-    def hello(self) -> str:
-        ...
+    def hello(self) -> str: ...
 
 
 class HelloClassImpl(AbstractHello):
@@ -49,8 +48,7 @@ hello_class_impl = HelloClassImpl()
 
 @runtime_checkable
 class HiProtocol(Protocol):
-    def hi(self) -> str:
-        ...
+    def hi(self) -> str: ...
 
 
 class HiProtocolImpl(HiProtocol):

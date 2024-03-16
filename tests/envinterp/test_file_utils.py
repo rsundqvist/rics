@@ -1,6 +1,6 @@
 import pytest
-
 from rics.envinterp import replace_in_string
+
 from tests.envinterp.conftest import set_variables
 
 

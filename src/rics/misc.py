@@ -1,4 +1,5 @@
 """Miscellaneous utility methods for Python applications."""
+
 import typing as _t
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
@@ -7,12 +8,13 @@ from types import ModuleType as _ModuleType
 
 from ._internal_support import _local_or_remote
 from ._internal_support.types import PathLikeType
-from .envinterp import UnsetVariableError as _UnsetVariableError, Variable as _Variable
+from .envinterp import UnsetVariableError as _UnsetVariableError
+from .envinterp import Variable as _Variable
 
 
 def interpolate_environment_variables(
     s: str,
-    *,  # noqa: DAR401
+    *,
     allow_nested: bool = True,
     allow_blank: bool = False,
 ) -> str:
@@ -37,6 +39,7 @@ def interpolate_environment_variables(
 
     See Also:
         The :mod:`rics.envinterp` module, which this function wraps.
+
     """
     for var in _Variable.parse_string(s):
         if not allow_nested and (var.default and _Variable.parse_string(var.default)):
@@ -56,9 +59,9 @@ GBFNReturnType = _t.TypeVar("GBFNReturnType")
 
 
 @_t.overload
-def get_by_full_name(  # noqa: D103
+def get_by_full_name(
     name: str,
-    default_module: _t.Union[str, _ModuleType] = ...,
+    default_module: str | _ModuleType = ...,
     *,
     instance_of: _t.Literal[None] = None,
     subclass_of: _t.Literal[None] = None,
@@ -67,9 +70,9 @@ def get_by_full_name(  # noqa: D103
 
 
 @_t.overload
-def get_by_full_name(  # noqa: D103
+def get_by_full_name(
     name: str,
-    default_module: _t.Union[str, _ModuleType] = ...,
+    default_module: str | _ModuleType = ...,
     *,
     instance_of: _t.Type[GBFNReturnType],
     subclass_of: _t.Literal[None] = None,
@@ -78,9 +81,9 @@ def get_by_full_name(  # noqa: D103
 
 
 @_t.overload
-def get_by_full_name(  # noqa: D103
+def get_by_full_name(
     name: str,
-    default_module: _t.Union[str, _ModuleType] = ...,
+    default_module: str | _ModuleType = ...,
     *,
     instance_of: _t.Literal[None] = None,
     subclass_of: _t.Type[GBFNReturnType],
@@ -90,10 +93,10 @@ def get_by_full_name(  # noqa: D103
 
 def get_by_full_name(
     name: str,
-    default_module: _t.Union[str, _ModuleType] = None,
+    default_module: str | _ModuleType | None = None,
     *,
-    instance_of: _t.Type[GBFNReturnType] = None,
-    subclass_of: _t.Type[GBFNReturnType] = None,
+    instance_of: _t.Type[GBFNReturnType] | None = None,
+    subclass_of: _t.Type[GBFNReturnType] | None = None,
 ) -> _t.Any:
     """Combine :py:func:`~importlib.import_module` and :py:func:`getattr` to retrieve items by name.
 
@@ -130,24 +133,15 @@ def get_by_full_name(
 
         >>> get_by_full_name("int", default_module="builtins")
         <class 'int'>
+
     """
     if not (instance_of is None or subclass_of is None):
         msg = f"At least one of ({instance_of=}, {subclass_of=}) must be None."
         raise ValueError(msg)
 
-    if "." in name:
-        module_name, _, member = name.rpartition(".")
-        module = _import_module(module_name)
-    else:
-        if not default_module:
-            msg = "Name must be fully qualified when no default module is given."
-            raise ValueError(msg)
-        module = _import_module(default_module) if isinstance(default_module, str) else default_module
-        member = name
+    obj = _get_by_full_name(name, default_module=default_module)
 
-    obj = getattr(module, member)
-
-    if instance_of is not None:
+    if instance_of is not None:  # noqa: SIM102 # See https://github.com/nedbat/coveragepy/issues/509
         if not isinstance(obj, instance_of):
             msg = f"Expected an instance of {instance_of.__name__}, but got {obj=}."
             raise TypeError(msg)
@@ -161,7 +155,7 @@ def get_by_full_name(
             if "must be a class" in str(e):
                 reason = "is not a class"
             else:
-                raise e
+                raise
         if reason:
             pretty = tname(subclass_of, prefix_classname=True)
             reason = reason.format(subclass_of=pretty)
@@ -169,6 +163,20 @@ def get_by_full_name(
             raise TypeError(msg)
 
     return obj
+
+
+def _get_by_full_name(name: str, *, default_module: str | _ModuleType | None = None) -> _t.Any:
+    if "." in name:
+        module_name, _, member = name.rpartition(".")
+        module = _import_module(module_name)
+    else:
+        if not default_module:
+            msg = "Name must be fully qualified when no default module is given."
+            raise ValueError(msg)
+        module = _import_module(default_module) if isinstance(default_module, str) else default_module
+        member = name
+
+    return getattr(module, member)
 
 
 def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name: bool = False) -> str:
@@ -200,6 +208,7 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
 
     See Also:
         The analogous :func:`get_by_full_name`-function.
+
     """
     import inspect
 
@@ -227,9 +236,9 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
 
 
 def tname(
-    arg: _t.Optional[_t.Union[_t.Type[_t.Any], _t.Any]],
+    arg: _t.Type[_t.Any] | _t.Any | None,
     prefix_classname: bool = False,
-    attrs: _t.Optional[_t.Union[str, _t.Iterable[str]]] = "func",
+    attrs: str | _t.Iterable[str] | None = "func",
 ) -> str:
     """Get name of method or class.
 
@@ -244,6 +253,7 @@ def tname(
 
     Raises:
         ValueError: If no name could be derived for `arg`.
+
     """
     if arg is None:
         return "None"
@@ -271,7 +281,7 @@ def tname(
         raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
 
 
-def format_kwargs(kwargs: _t.Dict[str, _t.Any], *, max_value_length: int = None) -> str:
+def format_kwargs(kwargs: dict[str, _t.Any], *, max_value_length: int = 80) -> str:
     """Format keyword arguments.
 
     Args:
@@ -286,8 +296,9 @@ def format_kwargs(kwargs: _t.Dict[str, _t.Any], *, max_value_length: int = None)
         ValueError: For keys in `kwargs` that are not valid Python argument names.
 
     Examples:
-        >>> format_kwargs({'an_int': 1, 'a_string': 'Hello!'})
+        >>> format_kwargs({"an_int": 1, "a_string": "Hello!"})
         "an_int=1, a_string='Hello!'"
+
     """
     invalid = [k for k in kwargs if not k.isidentifier()]
     if invalid:
@@ -295,7 +306,7 @@ def format_kwargs(kwargs: _t.Dict[str, _t.Any], *, max_value_length: int = None)
 
     def repr_value(value: _t.Any) -> str:
         value_repr = _safe_repr(value)
-        if max_value_length is None or len(value_repr) <= max_value_length:
+        if len(value_repr) <= max_value_length:
             return value_repr
         return tname(value)
 
@@ -304,10 +315,11 @@ def format_kwargs(kwargs: _t.Dict[str, _t.Any], *, max_value_length: int = None)
 
 def get_local_or_remote(
     file: PathLikeType,
+    *,
     remote_root: PathLikeType,
     local_root: PathLikeType = ".",
     force: bool = False,
-    postprocessor: _t.Callable[[str], _t.Any] = None,
+    postprocessor: _t.Callable[[str], _t.Any] | None = None,
     show_progress: bool = _local_or_remote.TQDM_INSTALLED,
 ) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
@@ -341,16 +353,20 @@ def get_local_or_remote(
         >>> file = "name.basics.tsv.gz"
         >>> local_root = "my-data"  # default = "."
         >>> remote_root = "https://datasets.imdbws.com"
-        >>> path = get_local_or_remote(file, remote_root, local_root, show_progress=True) # doctest: +SKIP
-        >>> pd.read_csv(path, sep="\t").shape # doctest: +SKIP
+        >>> path = get_local_or_remote(
+        ...     file, remote_root, local_root, show_progress=True
+        ... )  # doctest: +SKIP
+        >>> pd.read_csv(path, sep="\t").shape  # doctest: +SKIP
         https://datasets.imdbws.com/name.basics.tsv.gz: 100%|██████████| 214M/214M [00:05<00:00, 39.3MiB/s]
         (11453719, 6)
 
         We had download `name.basics.tsv.gz` the first time, but ``get_local_or_remote`` returns immediately the second
         time it is called. Fetching can be forced using ``force_remote=True``.
 
-        >>> path = get_local_or_remote(file, remote_root, local_root, show_progress=True) # doctest: +SKIP
-        >>> pd.read_csv(path, sep="\t").shape # doctest: +SKIP
+        >>> path = get_local_or_remote(
+        ...     file, remote_root, local_root, show_progress=True
+        ... )  # doctest: +SKIP
+        >>> pd.read_csv(path, sep="\t").shape  # doctest: +SKIP
         (11453719, 6)
 
     .. _IMDb dataset:
@@ -359,6 +375,7 @@ def get_local_or_remote(
         https://2.python-requests.org/en/master/api/#requests.get
     .. _tqdm:
         https://pypi.org/project/tqdm/
+
     """
     return _local_or_remote.get_local_or_remote(
         file=file,
@@ -370,23 +387,22 @@ def get_local_or_remote(
     )
 
 
-def serializable(obj: _t.Any) -> bool:
+def serializable(obj: object) -> bool:
     """Check if `obj` is serializable using Pickle.
 
-    Serializes to memory for speed.
-
     Args:
-        obj: An object to attempt to serialize.
+        obj: Object to test.
 
     Returns:
         ``True`` if `obj` was pickled without issues.
+
     """
     import io
-    import pickle  # noqa: S403
+    import pickle
 
     bio = io.BytesIO()
     try:
         pickle.dump(obj, bio)
-        return True
-    except Exception:  # noqa: B902
+        return True  # noqa: TRY300
+    except Exception:
         return False

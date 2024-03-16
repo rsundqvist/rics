@@ -2,12 +2,15 @@ from datetime import datetime
 
 import pandas as pd
 import pytest
-
 from rics.ml.time_split.support import to_string
 from rics.ml.time_split.types import DatetimeSplitBounds
 
 TUPLES = [
-    DatetimeSplitBounds(pd.Timestamp("1999-04-30"), pd.Timestamp("1991-06-05"), pd.Timestamp("2019-05-11 21:00")),
+    DatetimeSplitBounds(
+        pd.Timestamp("1999-04-30"),
+        pd.Timestamp("1991-06-05"),
+        pd.Timestamp("2019-05-11 21:00"),
+    ),
     ("1999-04-30", pd.Timestamp("1991-06-05"), datetime(2019, 5, 11, 21)),
 ]
 IDS = [type(bounds).__name__ for bounds in TUPLES]
@@ -42,7 +45,7 @@ def test_bad_args():
     start, mid, end = "1999-04-30", "1991-06-05", "2019-05-11 21:00:00"
 
     with pytest.raises(TypeError, match="Too many"):
-        to_string((start, mid, end), mid, end)  # TODO This should need an ignore, but doesn't with the current mypy.ini
+        to_string((start, mid, end), mid, end)  # TODO(richard): This should need an ignore, check mypy.ini
     with pytest.raises(TypeError, match="Too few"):
         to_string(start)  # type: ignore[call-overload]
     with pytest.raises(TypeError, match="Too few"):

@@ -4,12 +4,18 @@ from pathlib import Path
 import pandas as pd
 import pytest
 from click.testing import CliRunner
-
 from rics.performance import MultiCaseTimer, cli, run_multivariate_test
+
+pytestmark = pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive:UserWarning")
 
 
 def unload_modules():
-    for key in list(filter(lambda s: "cli_modules" in s or "test_data" in s or "candidates" in s, sys.modules)):
+    for key in list(
+        filter(
+            lambda s: "cli_modules" in s or "test_data" in s or "candidates" in s,
+            sys.modules,
+        )
+    ):
         del sys.modules[key]
 
 
@@ -27,7 +33,7 @@ def test_cli_create():
     assert result.exit_code == 0
 
 
-def get_raw_timings(self, func, test_data, repeat, number):
+def get_raw_timings(_self, func, test_data, repeat, _number, /):
     return [func.sleep_multiplier * test_data] * repeat
 
 
@@ -39,14 +45,17 @@ def test_cli(monkeypatch, with_all):
     if with_all:
         from tests.performance.cli_modules.with_all import candidates, test_data
     else:
-        from tests.performance.cli_modules.without_all import candidates, test_data  # type: ignore
+        from tests.performance.cli_modules.without_all import (  # type: ignore
+            candidates,
+            test_data,
+        )
 
     runner = CliRunner()
-    with runner.isolated_filesystem() as tmpdir:
-        with open(candidates.__file__) as f:
-            Path(tmpdir).joinpath("candidates.py").write_text(f.read())
-        with open(test_data.__file__) as f:
-            Path(tmpdir).joinpath("test_data.py").write_text(f.read())
+    with runner.isolated_filesystem() as tmp:
+        with Path(candidates.__file__).open() as f:
+            Path(tmp).joinpath("candidates.py").write_text(f.read())
+        with Path(test_data.__file__).open() as f:
+            Path(tmp).joinpath("test_data.py").write_text(f.read())
 
         result = runner.invoke(
             cli.main,
@@ -54,10 +63,10 @@ def test_cli(monkeypatch, with_all):
             catch_exceptions=False,
         )
         assert result.exit_code == 0
-        assert Path(tmpdir).joinpath("unit-test.png").is_file()
-        csv = Path(tmpdir).joinpath("unit-test.csv")
+        assert Path(tmp).joinpath("unit-test.png").is_file()
+        csv = Path(tmp).joinpath("unit-test.csv")
         assert csv.is_file()
-        verify_ans(pd.read_csv(csv))
+        verify(pd.read_csv(csv))
 
 
 def test_run_multivariate_test(monkeypatch):
@@ -66,16 +75,16 @@ def test_run_multivariate_test(monkeypatch):
 
     from tests.performance.cli_modules.with_all import candidates, test_data
 
-    ans = run_multivariate_test(
+    result = run_multivariate_test(
         candidate_method=candidates.ALL,
         test_data=test_data.ALL,
         time_per_candidate=0.1,
     )
-    verify_ans(ans)
+    verify(result)
 
 
-def verify_ans(ans):
-    assert sorted(ans["Candidate"].unique()) == ["sleep", "sleep_x4"]
-    assert sorted(ans["Test data"].unique()) == ["1 ms", "3 ms"]
-    best = ans.groupby(["Candidate", "Test data"])["Time [ms]"].min()
+def verify(result):
+    assert sorted(result["Candidate"].unique()) == ["sleep", "sleep_x4"]
+    assert sorted(result["Test data"].unique()) == ["1 ms", "3 ms"]
+    best = result.groupby(["Candidate", "Test data"])["Time [ms]"].min()
     assert (best["sleep"] < best["sleep_x4"]).all()

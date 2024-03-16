@@ -1,7 +1,8 @@
 import logging
-import pickle  # noqa: S403
+import pickle
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any, BinaryIO, Callable, Iterable, Optional
+from typing import Any, BinaryIO
 from urllib.parse import urljoin
 
 from .types import PathLikeType
@@ -21,13 +22,28 @@ _GLOR_LOGGER = LOGGER.getChild("get_local_or_remote")
 
 def get_local_or_remote(
     file: PathLikeType,
+    *,
     remote_root: PathLikeType,
     local_root: PathLikeType,
     force: bool = False,
-    postprocessor: Callable[[str], Any] = None,
+    postprocessor: Callable[[str], Any] | None = None,
     show_progress: bool = TQDM_INSTALLED,
 ) -> Path:
-    """Retrieve the path of a local file, downloading it if needed."""
+    """Retrieve a file from a local or remove (HTTP/HTTPS) source.
+
+    Args:
+        file: Name of an object to retrieve.
+        remote_root: Remote location where the `file` may be downloaded.
+        local_root: Local storage location for `file`.
+        force: If ``True``, always fetch from the remote.
+        postprocessor: A transformer that accepts a file path to a pickled object, and returns a transformed object.
+            Returned value must be pickleable.
+        show_progress: If ``True``, show a progress bar.
+
+    Returns:
+        Location where `file` may be accessed locally. Transformations are applied if a `postprocessor` is given, in
+        which case the returned ``Path`` will point to a transformed result.
+    """
     if show_progress and not TQDM_INSTALLED:
         raise ModuleNotFoundError("The tqdm package is not installed; cannot show progress.")
 
@@ -46,7 +62,7 @@ def _get_file(
     remote_root: str,
     local_root: Path,
     force: bool,
-    postprocessor: Optional[Callable[[str], Any]],
+    postprocessor: Callable[[str], Any] | None,
     show_progress: bool,
 ) -> Path:
     local_file_path = local_root.joinpath(file)
@@ -75,7 +91,7 @@ def _get_file(
             _GLOR_LOGGER.info(f"Running {postprocessor.__name__}..")
             result = postprocessor(str(local_file_path))
             _GLOR_LOGGER.info(f"Serializing processed data to '{local_processed_file_path}'..")
-            with open(local_processed_file_path, "wb") as f:
+            with local_processed_file_path.open("wb") as f:
                 pickle.dump(result, f)
 
         return local_processed_file_path
@@ -87,15 +103,20 @@ def _fetch(local_file_path: Path, remote_file_path: str, show_progress: bool) ->
     try:
         import requests
     except ModuleNotFoundError:
-        raise ModuleNotFoundError("The requests package is not installed; cannot download remote content.")
+        raise ModuleNotFoundError("The 'requests' package is not installed; cannot download remote content.") from None
 
     _GLOR_LOGGER.info(f"Fetching data from '{remote_file_path}'..")
     response = requests.get(remote_file_path, stream=True, timeout=300)
     chunks = response.iter_content(_CHUNK_SIZE)
-    with open(local_file_path, "wb") as output_file:
+    with local_file_path.open("wb") as output_file:
         if show_progress:
             total = response.headers.get("Content-Length")
-            _with_progress(chunks, output_file, remote_file_path, total=None if not total else int(total))
+            _with_progress(
+                chunks,
+                output_file,
+                remote_file_path,
+                total=None if not total else int(total),
+            )
         else:
             _without_progress(chunks, output_file)
 
@@ -106,7 +127,12 @@ def _without_progress(chunks: Iterable[bytes], output_file: BinaryIO) -> None:
             output_file.write(chunk)
 
 
-def _with_progress(chunks: Iterable[bytes], output_file: BinaryIO, remote_file_path: str, total: Optional[int]) -> None:
+def _with_progress(
+    chunks: Iterable[bytes],
+    output_file: BinaryIO,
+    remote_file_path: str,
+    total: int | None,
+) -> None:
     kwargs = {
         "total": total,
         "desc": str(remote_file_path),
