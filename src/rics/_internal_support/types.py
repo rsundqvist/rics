@@ -2,7 +2,7 @@ import os
 from enum import Enum
 from typing import Literal, Union
 
-PathLikeType = Union[str, bytes, os.PathLike]  # type: ignore[type-arg]
+PathLikeType = Union[str, os.PathLike]  # type: ignore[type-arg]
 
 
 class _NoDefault(Enum):

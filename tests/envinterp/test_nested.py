@@ -1,8 +1,8 @@
 from typing import TypeVar
 
 import pytest
-
 from rics.envinterp import UnsetVariableError, Variable
+
 from tests.envinterp.conftest import set_variables
 
 ExcType = TypeVar("ExcType", bound=Exception)
@@ -43,16 +43,10 @@ def test_not_implemented(s, match):
         var.get_value(resolve_nested_defaults=True)
 
 
-@pytest.mark.parametrize(
-    "s, expected",
-    [
-        ("${ENV_VAR1:${ENV_VAR3:${ENV_VAR5}}}", UnsetVariableError),
-        ("${ENV_VAR1:${ENV_VAR3}}", UnsetVariableError),
-    ],
-)
-def test_unset(s, expected):
+@pytest.mark.parametrize("string", ["${ENV_VAR1:${ENV_VAR3:${ENV_VAR5}}}", "${ENV_VAR1:${ENV_VAR3}}"])
+def test_unset(string):
     set_variables(0, 2, 4)
-    var = Variable.parse_first(s)
+    var = Variable.parse_first(string)
 
     with pytest.raises(UnsetVariableError, match="Not set."):
         var.get_value(resolve_nested_defaults=True)

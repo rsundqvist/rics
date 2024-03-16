@@ -1,4 +1,4 @@
-from typing import Any, Literal, Optional, Tuple, Union, overload
+from typing import Any, Literal, overload
 
 from pandas import Timestamp
 
@@ -13,30 +13,28 @@ def to_string(
     __ignored1: DatetimeTypes,
     /,
     *,
-    format: str = None,  # noqa: A002
-) -> str:
-    ...
+    format: str | None = None,
+) -> str: ...
 
 
 @overload
 def to_string(
-    start: Tuple[DatetimeTypes, DatetimeTypes, DatetimeTypes],
+    start: tuple[DatetimeTypes, DatetimeTypes, DatetimeTypes],
     mid: Literal[None] = None,
     end: Literal[None] = None,
     /,
     *,
-    format: str = None,  # noqa: A002
-) -> str:
-    ...
+    format: str | None = None,
+) -> str: ...
 
 
 def to_string(
-    bounds: Union[DatetimeTypes, DatetimeSplitBounds, Tuple[DatetimeTypes, DatetimeTypes, DatetimeTypes]],
-    mid: Optional[DatetimeTypes] = None,
-    end: Optional[DatetimeTypes] = None,
+    bounds: (DatetimeTypes | DatetimeSplitBounds | tuple[DatetimeTypes, DatetimeTypes, DatetimeTypes]),
+    mid: DatetimeTypes | None = None,
+    end: DatetimeTypes | None = None,
     /,
     *,
-    format: str = None,  # noqa: A002
+    format: str | None = None,
 ) -> str:
     """Pretty-print a fold.
 
@@ -57,6 +55,7 @@ def to_string(
 
     Raises:
         TypeError: If an incorrect number of timestamps are given.
+
     """
     if isinstance(bounds, tuple):
         if not (mid is None and end is None):
@@ -77,7 +76,7 @@ def to_string(
 class _PrettyTimestamp:
     def __init__(self, raw: DatetimeTypes) -> None:
         self.timestamp = Timestamp(raw)
-        self._auto: Optional[str] = None
+        self._auto: str | None = None
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.timestamp, name)

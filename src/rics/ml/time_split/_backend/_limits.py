@@ -1,12 +1,14 @@
-from typing import Iterable, List, NamedTuple, Optional, Tuple, Union
+from collections.abc import Iterable
+from itertools import starmap
+from typing import NamedTuple
 
 from pandas import Timedelta, Timestamp
 
-from ..settings import auto_flex as settings
+from ..settings import auto_flex
 from ..types import Flex, TimedeltaTypes
 
-LimitsTuple = Tuple[Timestamp, Timestamp]
-LevelTuple = Tuple[TimedeltaTypes, TimedeltaTypes, TimedeltaTypes]
+LimitsTuple = tuple[Timestamp, Timestamp]
+LevelTuple = tuple[TimedeltaTypes, TimedeltaTypes, TimedeltaTypes]
 
 
 class _TimedeltaTuple(NamedTuple):
@@ -15,7 +17,7 @@ class _TimedeltaTuple(NamedTuple):
     tolerance: Timedelta
 
 
-def expand_limits(limits: LimitsTuple, *, flex: Union[Flex, LevelTuple, Iterable[LevelTuple]] = "auto") -> LimitsTuple:
+def expand_limits(limits: LimitsTuple, *, flex: Flex | LevelTuple | Iterable[LevelTuple] = "auto") -> LimitsTuple:
     """Derive the `"real"` bounds of `limits`.
 
     Args:
@@ -54,9 +56,11 @@ def expand_limits(limits: LimitsTuple, *, flex: Union[Flex, LevelTuple, Iterable
 
         >>> expand_limits(limits, flex="d<14h")
         (Timestamp('2019-05-11 00:00:00'), Timestamp('2019-05-11 11:05:30'))
+
     """
     if limits[0] >= limits[1]:
-        raise ValueError(f"Bad limits. Expected limits[1] > limits[0], but got {limits=}.")
+        msg = f"Bad limits. Expected limits[1] > limits[0], but got {limits=}."
+        raise ValueError(msg)
 
     if flex is False:
         return limits
@@ -71,20 +75,20 @@ def expand_limits(limits: LimitsTuple, *, flex: Union[Flex, LevelTuple, Iterable
     if isinstance(flex, tuple):
         return _from_levels(limits, levels=[_make_level(*flex)])
 
-    return _from_levels(limits, levels=(_make_level(*t) for t in flex))
+    return _from_levels(limits, levels=starmap(_make_level, flex))
 
 
-def _from_levels(limits: LimitsTuple, *, levels: Iterable[_TimedeltaTuple] = None) -> LimitsTuple:
+def _from_levels(limits: LimitsTuple, *, levels: Iterable[_TimedeltaTuple] | None = None) -> LimitsTuple:
     if levels is None:
         levels = _levels_from_settings()
     else:
-        levels = sorted(levels, reverse=True, key=lambda l: l[0])
+        levels = sorted(levels, reverse=True, key=lambda level: level[0])
 
     lo, hi = limits
     diff = hi - lo
 
     for level in levels:
-        start_at, round_to, tolerance = level
+        start_at, _round_to, _tolerance = level
         if diff >= start_at:
             return _apply(limits, level=level)
 
@@ -102,7 +106,7 @@ def _apply(limits: LimitsTuple, *, level: _TimedeltaTuple) -> LimitsTuple:
     if abs(hi_ceil - hi) > level.tolerance:
         return limits
 
-    if settings.SANITY_CHECK:
+    if auto_flex.SANITY_CHECK:
         if lo.round(level.round_to) != lo_floor:
             return limits
         if hi.round(level.round_to) != hi_ceil:
@@ -111,17 +115,19 @@ def _apply(limits: LimitsTuple, *, level: _TimedeltaTuple) -> LimitsTuple:
     return lo_floor, hi_ceil
 
 
-def _levels_from_settings() -> List[_TimedeltaTuple]:
-    day, hour = _make_level(*settings.day), _make_level(*settings.hour)
+def _levels_from_settings() -> list[_TimedeltaTuple]:
+    day, hour = _make_level(*auto_flex.day), _make_level(*auto_flex.hour)
     if day.round_to != Timedelta(days=1):
-        raise ValueError(f"Invalid settings: {settings.day=} must have round_to=1 day.")
+        msg = f"Invalid settings: {auto_flex.day=} must have round_to=1 day."
+        raise ValueError(msg)
     if hour.round_to != Timedelta(hours=1):
-        raise ValueError(f"Invalid settings: {settings.hour=} must have round_to=1 hour.")
+        msg = f"Invalid settings: {auto_flex.hour=} must have round_to=1 hour."
+        raise ValueError(msg)
     return [day, hour]
 
 
 def _make_level(
-    start_at: Optional[TimedeltaTypes],
+    start_at: TimedeltaTypes | None,
     round_to: TimedeltaTypes,
     tolerance: TimedeltaTypes,
 ) -> _TimedeltaTuple:

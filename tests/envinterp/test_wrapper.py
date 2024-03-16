@@ -1,7 +1,6 @@
 import os
 
 import pytest
-
 from rics import misc
 from rics.envinterp import UnsetVariableError
 
@@ -11,7 +10,10 @@ from rics.envinterp import UnsetVariableError
     [
         ("", ""),
         ("no vars!", "no vars!"),
-        ("${ ENV_VAR0 \t} exists, but ${  ENV_VAR100  :not this} one", "VALUE0 exists, but not this one"),
+        (
+            "${ ENV_VAR0 \t} exists, but ${  ENV_VAR100  :not this} one",
+            "VALUE0 exists, but not this one",
+        ),
     ],
 )
 def test_interpolate_environment_variables_default_args(s, expected):

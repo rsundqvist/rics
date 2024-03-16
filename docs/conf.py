@@ -1,5 +1,6 @@
 """Sphinx configuration."""
 import os
+from datetime import datetime, timezone
 
 if True:  # E402 hack
     os.environ["SPHINX_BUILD"] = "true"
@@ -10,11 +11,10 @@ if True:  # E402 hack
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import shutil
-from importlib import import_module
-
-from docutils.nodes import Text, reference
+from importlib import import_module, metadata
 
 import rics
+from docutils.nodes import Text, reference
 from rics._internal_support.changelog import split_changelog
 
 type_modules = (
@@ -53,16 +53,16 @@ def setup(app):  # noqa
 # -- Project information -------------------------------------------------------
 
 # General information about the project.
-
-project = rics.__title__
-copyright = rics.__copyright__  # noqa: A001
-author = rics.__author__
+_metadata = metadata.metadata(rics.__name__)
+project = _metadata["Name"]
+copyright = _metadata["Author"] + f", {datetime.now(tz=timezone.utc).year}"
+author = _metadata["Author"]
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
 # the built documents.
 #
 # The full version, including alpha/beta/rc tags.
-release = rics.__version__
+release = _metadata["Version"]
 # The short X.Y version.
 version = ".".join(release.split(".")[:2])
 
@@ -198,15 +198,14 @@ html_favicon = "logo-icon.png"
 # -- Nitpicky configuration ----------------------------------------------------
 nitpicky = True
 nitpick_ignore = [
-    ("py:class", "re.Pattern"),
     ("py:class", "module"),
-    # Matplotlib/sklearn
+    # Third party
     ("py:class", "Axes"),
     ("py:class", "sklearn.model_selection._split.BaseCrossValidator"),
 ]
-nitpick_ignore_regex = [
-    ("py:obj", r".*\.Any"),
-]
+# nitpick_ignore_regex = [
+#     ("py:obj", r".*\.Any"),
+# ]
 
 # -- Autodoc configuration -----------------------------------------------------
 autodoc_typehints = "signature"

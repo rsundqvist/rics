@@ -23,18 +23,12 @@ provides a wide variety of utility functions. The [id-translation](https://pypi.
 
 ## Highlighted Features
 - Multivariate [performance testing][perf].
-- Highly configurable [element mapping][mapping];
-  - Provides a wide variety of filtering, scoring and heuristic functions. 
-  - Powers Name-to-source mapping for the [id-translation](https://id-translation.readthedocs.io/en/stable/documentation/translation-primer.html#name-to-source-mapping) 
-    suite (installed separately).
 - Various other [utilities][utility], ranging from [logging] to [plotting] to specialized [dict] functions.
 - [Time-based cross-validation][time-split] splitter for heterogeneous data, 
   including ``pandas`` and ``scikit-learn`` integrations.
 
 [perf]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.run_multivariate_test
 [perf-plot]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.plot_run
-
-[mapping]: https://rics.readthedocs.io/en/stable/_autosummary/rics.mapping.html
 
 [utility]: https://rics.readthedocs.io/en/stable/_autosummary/rics.misc.html
 [logging]: https://rics.readthedocs.io/en/stable/_autosummary/rics.logs.html

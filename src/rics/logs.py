@@ -1,7 +1,8 @@
 """Utility methods for logging tasks."""
-import logging
+
+import logging as _logging
 from contextlib import contextmanager as _contextmanager
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any as _Any
 
 FORMAT: str = "%(asctime)s.%(msecs)03d [%(name)s:%(levelname)s] %(message)s"
 """Default logging format; ``<date-format>.378 [rics:DEBUG] I'm a debug message!``"""
@@ -12,11 +13,11 @@ DATE_FORMAT: str = "%Y-%m-%dT%H:%M:%S"
 
 def basic_config(
     *,
-    format: str = FORMAT,  # noqa: A002
+    format: str = FORMAT,
     datefmt: str = DATE_FORMAT,
-    level: Union[int, str] = logging.INFO,
+    level: int | str = "INFO",
     force: bool = True,
-    **kwargs: Any,
+    **kwargs: _Any,
 ) -> None:
     """Do basic logging configuration with package defaults.
 
@@ -25,7 +26,7 @@ def basic_config(
     Args:
         format: Format string for emitted messages; see :attr:`FORMAT`.
         datefmt: Format string for date/time; see :attr:`DATE_FORMAT`.
-        level: Log level for the root logger. Default is ``logging.INFO``.
+        level: Log level for the root logger.
         force: If ``True``, override existing configuration if it exists.
         **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
 
@@ -36,31 +37,31 @@ def basic_config(
     Examples:
         Basic usage.
 
-        >>> from rics.logs import basic_config, logging
+        >>> from rics.logs import basic_config
+        >>> import logging
         >>> basic_config(level=logging.INFO, rics_level=logging.DEBUG)
         >>> logging.getLogger("rics").debug("I'm a debug message!")
         >>> logging.debug("I'm a debug message!")
-        >>> logging.critical("I'm a critical message!") # Doctest: +SKIP
+        >>> logging.critical("I'm a critical message!")  # Doctest: +SKIP
         2022-02-05T11:17:05.378 [rics:DEBUG] I'm a debug message!
         2022-02-05T11:17:05.378 [root:CRITICAL] I'm a critical message!
+
     """
     extra_levels, kwargs = _extract_extra_levels(**kwargs)
-    logging.basicConfig(level=level, format=format, datefmt=datefmt, force=force, **kwargs)
+    _logging.basicConfig(level=level, format=format, datefmt=datefmt, force=force, **kwargs)
 
     for name, level in extra_levels.items():
-        logging.getLogger(name).setLevel(level)
+        _logging.getLogger(name).setLevel(level)
 
 
 @_contextmanager
-def disable_temporarily(  # type: ignore[no-untyped-def]
-    logger: Union[str, logging.Logger, logging.LoggerAdapter],  # type:  ignore[type-arg]
-    *more_loggers: Union[str, logging.Logger, logging.LoggerAdapter],  # type:  ignore[type-arg]
-):  # noqa: ANN201
+def disable_temporarily(
+    *loggers: str | _logging.Logger | _logging.LoggerAdapter,  # type: ignore[type-arg]
+) -> _Any:
     """Temporarily disable logging.
 
     Args:
-        logger: A logger to disable.
-        *more_loggers: Additional loggers to disable.
+        *loggers: Loggers to disable.
 
     Yields:
         Nothing.
@@ -72,33 +73,34 @@ def disable_temporarily(  # type: ignore[no-untyped-def]
         >>> logging.basicConfig()
         >>> with disable_temporarily(logging.root):
         ...     logging.info("This message is ignored.")
-    """
-    loggers: List[logging.Logger] = []
-    for lgr in (logger, *more_loggers):
-        while isinstance(lgr, logging.LoggerAdapter):
-            lgr = lgr.logger
-        if isinstance(lgr, str):
-            lgr = logging.getLogger(lgr)
-        loggers.append(lgr)
 
-    states = [lgr.disabled for lgr in loggers]
+    """
+    enabled_loggers: list[_logging.Logger] = []
+    for logger in loggers:
+        while isinstance(logger, _logging.LoggerAdapter):
+            logger = logger.logger  # noqa: PLW2901
+        if isinstance(logger, str):
+            logger = _logging.getLogger(logger)  # noqa: PLW2901
+
+        if not logger.disabled:
+            enabled_loggers.append(logger)
 
     try:
-        for lgr in loggers:
-            lgr.disabled = True
+        for logger in enabled_loggers:
+            logger.disabled = True
         yield
     finally:
-        for lgr, old_state in zip(loggers, states):
-            lgr.disabled = old_state
+        for logger in enabled_loggers:
+            logger.disabled = False
 
 
-def _extract_extra_levels(**kwargs: Any) -> Tuple[Dict[str, Union[int, str]], Dict[str, Any]]:
-    suffix = "_level"
-
-    levels: Dict[str, Union[int, str]] = {}
+def _extract_extra_levels(
+    **kwargs: _Any,
+) -> tuple[dict[str, int | str], dict[str, _Any]]:
+    levels: dict[str, int | str] = {}
     for key in list(kwargs.keys()):
-        if key and key.endswith(suffix):
-            wildcard_key = key[: -len(suffix)].replace("__", ".")
+        if key and key.endswith("_level"):
+            wildcard_key = key.removesuffix("_level").replace("__", ".")
 
             level = kwargs.pop(key)
             if level is not None:  # pragma: no cover

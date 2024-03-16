@@ -1,6 +1,11 @@
 import pytest
-
-from rics.collections.dicts import InheritedKeysDict, compute_if_absent, flatten_dict, reverse_dict, unflatten_dict
+from rics.collections.dicts import (
+    InheritedKeysDict,
+    compute_if_absent,
+    flatten_dict,
+    reverse_dict,
+    unflatten_dict,
+)
 
 
 def test_compute_if_absent():
@@ -13,7 +18,7 @@ def test_compute_if_absent():
     assert compute_if_absent(d, "foo", "{}bar".format) == "foobar"
     assert d["foo"] == "foobar"
 
-    assert compute_if_absent(d, "bar", lambda s: "backup-bar") == "real-bar"
+    assert compute_if_absent(d, "bar", lambda _: "backup-bar") == "real-bar"
     assert d["bar"] == "real-bar"
 
     assert d == {
@@ -73,7 +78,10 @@ def test_unflatten_dict_tuples(nested_dict, flattened_dict):
 
 
 def test_flatten_dict_false_values_only(nested_dict):
-    actual = flatten_dict(nested_dict, filter_predicate=lambda key, value: isinstance(value, dict) or not value)
+    actual = flatten_dict(
+        nested_dict,
+        filter_predicate=lambda _, value: isinstance(value, dict) or not value,
+    )
 
     expected = {
         "top-key0.mid-key1.bot-key1": False,
@@ -86,7 +94,10 @@ def test_flatten_dict_false_values_only(nested_dict):
 @pytest.fixture
 def nested_dict():
     return {
-        "top-key0": {"mid-key0": True, "mid-key1": {"bot-key0": True, "bot-key1": False}},
+        "top-key0": {
+            "mid-key0": True,
+            "mid-key1": {"bot-key0": True, "bot-key1": False},
+        },
         "top-key1": {"mid-key0": True, "mid-key1": True},
         "top-key2": False,
         "top-key3": {
@@ -95,7 +106,10 @@ def nested_dict():
                 "bot-key0": True,
                 "bot-key1": {
                     "extra-bot-key0": True,
-                    "extra-bot-key1": {"extra-extra-bot-key0": True, "extra-extra-bot-key1": False},
+                    "extra-bot-key1": {
+                        "extra-extra-bot-key0": True,
+                        "extra-extra-bot-key1": False,
+                    },
                 },
             },
         },

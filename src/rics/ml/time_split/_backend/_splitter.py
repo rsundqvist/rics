@@ -1,6 +1,6 @@
 import logging
 from dataclasses import asdict, dataclass
-from typing import Optional, Tuple, get_args
+from typing import get_args
 
 from pandas import Timedelta, Timestamp
 
@@ -8,7 +8,15 @@ from rics.misc import format_kwargs
 from rics.performance import format_seconds
 
 from ..settings import misc
-from ..types import DatetimeIterable, DatetimeSplitBounds, DatetimeSplits, Flex, Schedule, Span, TimedeltaTypes
+from ..types import (
+    DatetimeIterable,
+    DatetimeSplitBounds,
+    DatetimeSplits,
+    Flex,
+    Schedule,
+    Span,
+    TimedeltaTypes,
+)
 from ._limits import LimitsTuple
 from ._schedule import MaterializedSchedule, materialize_schedule
 from ._span import OffsetCalculator, to_strict_span
@@ -24,22 +32,22 @@ class DatetimeIndexSplitter:
     before: Span
     after: Span
     step: int
-    n_splits: Optional[int]
+    n_splits: int | None
     flex: Flex
 
-    def get_splits(self, available: DatetimeIterable = None) -> DatetimeSplits:
+    def get_splits(self, available: DatetimeIterable | None = None) -> DatetimeSplits:
         """Compute a split of given user data."""
         ms = self._materialize_schedule(available)
         self._log_expansion(ms.available_metadata.limits, expanded=ms.available_metadata.expanded_limits)
         return self._make_bounds_list(ms)
 
-    def get_plot_data(self, available: DatetimeIterable = None) -> Tuple[DatetimeSplits, MaterializedSchedule]:
+    def get_plot_data(self, available: DatetimeIterable | None = None) -> tuple[DatetimeSplits, MaterializedSchedule]:
         """Returns additional data needed to visualize folds."""
         ms = self._materialize_schedule(available)
         splits = self._make_bounds_list(ms)
         return splits, ms
 
-    def _materialize_schedule(self, available: DatetimeIterable = None) -> MaterializedSchedule:
+    def _materialize_schedule(self, available: DatetimeIterable | None = None) -> MaterializedSchedule:
         ms = materialize_schedule(self.schedule, self.flex, available=available)
         if not ms.schedule.sort_values().equals(ms.schedule):
             raise ValueError(f"schedule must be sorted in ascending order; schedule={self.schedule!r} is not valid.")
@@ -66,7 +74,12 @@ class DatetimeIndexSplitter:
         return ms._replace(schedule=ms.schedule + from_end)
 
     def _make_bounds_list(self, ms: MaterializedSchedule) -> DatetimeSplits:
-        get_start = OffsetCalculator(self.before, ms.schedule, ms.available_metadata.expanded_limits, name="before")
+        get_start = OffsetCalculator(
+            self.before,
+            ms.schedule,
+            ms.available_metadata.expanded_limits,
+            name="before",
+        )
         get_end = OffsetCalculator(self.after, ms.schedule, ms.available_metadata.expanded_limits, name="after")
 
         min_start, max_end = ms.available_metadata.expanded_limits
@@ -95,6 +108,7 @@ class DatetimeIndexSplitter:
 
         Returns:
             Filtered splits.
+
         """
         if self.step != 1:
             step = abs(self.step)

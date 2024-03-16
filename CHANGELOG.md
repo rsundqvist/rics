@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Python `3.12` is now fully tested and supported in CI/CD.
+
+### Changed
+- Python minimum version is now `3.11` (was `3.8`).
+
+### Removed
+- Module `rics.mapping` was previously deprecated and has now been removed.
+- Module `rics.pandas` was previously deprecated and has now been removed.
+- Module `rics.strings` (use `str` methods instead).
+
 ## [3.3.0] - 2024-02-11
 
 ### Added

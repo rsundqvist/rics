@@ -28,13 +28,11 @@ Guarantees:
     * Timestamps within a fold are strictly increasing: ``start[i] < mid[i] < end[i]``.
     * If `available` data is given **and** ``flex=False``, no part of any fold will lie outside the available range.
 
-By default, the bounds derived from `available` data is flexible. See :attr:`~rics.ml.time_split.types.Flex` for
-details.
+By default, the bounds derived from `available` data is flexible. See :ref:`Available data `flex`` for details.
 
-Restrictions:
+Limitations:
     * **Data** and **Future data** from different folds may overlap, depending on the split parameters.
-    * Date restrictions apply only to ``min(available), max(available)``. If there are gaps in the data, some folds may
-      contain zero rows.
+    * Date restrictions apply to ``min(available), max(available)``. Sparse data may create empty folds.
     * :attr:`~types.Schedule` and :attr:`~types.Span` arguments (before/after) must be strictly positive.
 
 Schedules
@@ -111,10 +109,11 @@ Data :attr:`~rics.ml.time_split.types.Flex` allows bounds inferred from and `ava
        For example, passing ``flex="d<1h"`` will snap limits to the nearest date, but will not expand limits by more
        than one hour in either direction.
 """
+
 from ._frontend import log_split_progress, plot, split
 
 __all__ = [
-    "split",
-    "plot",
     "log_split_progress",
+    "plot",
+    "split",
 ]

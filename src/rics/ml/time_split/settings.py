@@ -5,7 +5,7 @@ import typing as _t
 from . import types as _tst
 
 
-class auto_flex:
+class auto_flex:  # noqa: N801
     """Configuration for the `'auto'` :attr:`~rics.ml.time_split.types.Flex` logic.
 
     This class determines how ``(lo, hi)``-tuples are expanded when flexible bounds are enabled.
@@ -35,8 +35,9 @@ class auto_flex:
 
         Raises:
             AttributeError: For unknown `level` names.
+
         """
-        if level not in ("hour", "day"):
+        if level not in {"hour", "day"}:
             raise AttributeError(f"Bad {level=}: Expected one of ('hour', 'day').")
         level_tuple = (start_at, round_to, tolerance)
         setattr(cls, level, level_tuple)
@@ -68,7 +69,7 @@ class auto_flex:
     """
 
 
-class plot:
+class plot:  # noqa: N801
     """Global settings for the :func:`.plot`-function."""
 
     THOUSANDS_SEPARATOR: str = "'"
@@ -86,14 +87,17 @@ class plot:
     DEFAULT_TIME_UNIT: str = "h"
     """Time unit to use by default when ``bar_labels=True`` and ``available=None``."""
 
-    REMOVED_FOLD_STYLE: _t.Dict[str, _t.Any] = {"alpha": 0.35, "height": 0.6}
+    REMOVED_FOLD_STYLE: _t.ClassVar[dict[str, _t.Any]] = {
+        "alpha": 0.35,
+        "height": 0.6,
+    }
     """Keyword arguments used to distinguish filtered folds when plotting with ``show_removed=True``.
 
     See :func:`matplotlib.pyplot.bar` for details.
     """
 
 
-class log_split_progress:
+class log_split_progress:  # noqa: N801
     """Global settings for the :func:`.log_split_progress`-function."""
 
     FOLD_FORMAT: str = "'{start.auto}' <= [schedule: '{mid.auto}' ({mid:%A})] < '{end.auto}'"
@@ -109,7 +113,7 @@ class log_split_progress:
        '2021-12-30' <= [schedule: '2022-01-04' (Tuesday)] < '2022-01-04 18:00:00'
     """
 
-    SECONDS_FORMATTER: _t.Union[str, _t.Callable[[float], str]] = "rics.performance.format_seconds"
+    SECONDS_FORMATTER: str | _t.Callable[[float], str] = "rics.performance.format_seconds"
     """A callable ``(seconds) -> formatted_seconds``.
 
     Both ``seconds`` and ``formatted_seconds`` will be available to the :attr:`END_MESSAGE` message. If a string is
@@ -153,7 +157,7 @@ class log_split_progress:
     """Long-form timestamp format_spec used by ``<key>.auto``."""
 
 
-class misc:
+class misc:  # noqa: N801
     """Miscellaneous settings that don't fit in any other namespace."""
 
     snap_to_end: bool = True

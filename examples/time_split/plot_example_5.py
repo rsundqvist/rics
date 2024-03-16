@@ -1,11 +1,10 @@
-"""
-Fold sampling using the ``step``-argument.
-==========================================
+"""Fold sampling using the ``step``-argument.
+=============================================
 
 Filtering every other Thursday, preferring later folds.
 """
-import pandas
 
+import pandas
 from rics import configure_stuff
 from rics.ml.time_split import log_split_progress, plot, split
 

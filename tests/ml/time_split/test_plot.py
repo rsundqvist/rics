@@ -1,9 +1,6 @@
-from typing import List, Tuple
-
 import pandas as pd
 import pytest
 from matplotlib import pyplot as plt
-
 from rics import configure_stuff
 from rics.ml.time_split import plot, split
 
@@ -25,7 +22,7 @@ def test_data(kwargs, expected):
         # Only mid (index 1) is added
         assert left in right[1], i
 
-    plt.close(ax.figure)
+    plt.close(ax.figure)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("after, expected", NO_DATA_CASES)
@@ -41,7 +38,7 @@ def test_no_data(after, expected):
         # Only mid (index 1) is added
         assert left in right[1], i
 
-    plt.close(ax.figure)
+    plt.close(ax.figure)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("n_splits", [2, 4, 7])
@@ -49,7 +46,13 @@ def test_show_removed(n_splits):
     max_splits = len(split("3d", available=("2022", "2022-2")))
     assert n_splits <= max_splits, "bad test case"
 
-    ax = plot("3d", available=("2022", "2022-2"), n_splits=n_splits, bar_labels=False, show_removed=True)
+    ax = plot(
+        "3d",
+        available=("2022", "2022-2"),
+        n_splits=n_splits,
+        bar_labels=False,
+        show_removed=True,
+    )
     xtick_labels = [t.get_text() for t in ax.get_yticklabels()]
     assert xtick_labels == ["" for _ in range(7 - n_splits)] + [str(n) for n in range(1, n_splits + 1)]
 
@@ -67,21 +70,22 @@ def test_row_count_bin_precomputed(random_density_timestamps):
 
 
 @pytest.fixture(scope="module")
-def random_density_timestamps() -> Tuple[pd.Timestamp, ...]:
-    from numpy.random import choice, randint, seed
+def random_density_timestamps() -> tuple[pd.Timestamp, ...]:
+    from numpy.random import default_rng
 
-    seed(0)
-    parts: List[pd.Timestamp] = []
+    rng = default_rng(0)
+
+    parts: list[pd.Timestamp] = []
     start = pd.Timestamp("1999-04-30")
     prev_size = 5000
     for _ in range(31 * 24):
         choices = pd.date_range(start, start + pd.Timedelta(hours=1), freq="5min", inclusive="left")
-        size = prev_size + randint(-1000, 1000)
+        size = prev_size + rng.integers(-1000, 1000)
         if size < 500:
-            size = 500 + randint(0, 500 - size)
+            size = 500 + rng.integers(0, 500 - size)
         if size > 10_000:
-            size = 10_000 + randint(0, size - 10_000)
-        timestamps = choice(choices, size=size)
+            size = 10_000 + rng.integers(0, size - 10_000)
+        timestamps = rng.choice(choices, size=size)
         parts.extend(timestamps)
 
         start = start + pd.Timedelta(hours=1)
@@ -99,6 +103,13 @@ def random_density_timestamps() -> Tuple[pd.Timestamp, ...]:
 )
 def test_step(step, n_splits, expected):
     data = pd.date_range("2022-01", "2022-03")
-    ax = plot("0 0 * * THU", after="5d", step=step, n_splits=n_splits, available=data, show_removed=True)
+    ax = plot(
+        "0 0 * * THU",
+        after="5d",
+        step=step,
+        n_splits=n_splits,
+        available=data,
+        show_removed=True,
+    )
     xtick_labels = [t.get_text() for t in ax.get_yticklabels()]
     assert xtick_labels == expected.split(",")

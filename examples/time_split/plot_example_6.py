@@ -1,10 +1,10 @@
-"""
-Timedelta-based ``schedule`` and ``after`` arguments.
-=====================================================
+"""Timedelta-based ``schedule`` and ``after`` arguments.
+========================================================
 
 By default, passing :attr:`~rics.ml.time_split.types.TimedeltaTypes` as both the ``schedule`` and the ``after`` argument
 causes the folds to align to the right edge of the ``available`` data.
 """
+
 from rics import configure_stuff
 from rics.ml.time_split import log_split_progress, plot, settings, split
 

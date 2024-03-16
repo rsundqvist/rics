@@ -1,15 +1,15 @@
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import pytest
-
 from rics.action_level import ActionLevel, ActionLevelHelper, BadActionLevelError
 
 
 def run(
-    func: Callable[[ActionLevel.ParseType, Optional[str]], ActionLevel],
-    expected: Optional[ActionLevel],
+    func: Callable[[ActionLevel.ParseType, str | None], ActionLevel],
+    expected: ActionLevel | None,
     action: ActionLevel.ParseType,
-    purpose: Optional[str],
+    purpose: str | None,
     *args: Any,
 ) -> None:
     if expected is None:

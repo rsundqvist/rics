@@ -1,11 +1,10 @@
-"""
-List-schedule, without ``available`` data.
-==========================================
+"""List-schedule, without ``available`` data.
+=============================================
 
 Using an explicit schedule without data, showing number of hours in each partition.
 """
-import pandas
 
+import pandas
 from rics import configure_stuff
 from rics.ml.time_split import log_split_progress, plot, split
 

@@ -53,8 +53,7 @@ trouble.
    ```bash
    git clone --recurse-submodules git@github.com:rsundqvist/rics.git
    cd rics
-   git submodule update --init --recursive
-   poetry install --all-extras --with=docs,notebooks
+   poetry install --all-extras
    ```
    
    Generating documentation has a few dependencies which may need to be installed
@@ -64,14 +63,7 @@ trouble.
    sudo apt-get install pandoc tree
    ```
    
-3. **Install commit hooks (optional)**
-   
-   If this step is skipped, use `inv hooks` to run hooks manually.
-   ```bash
-   poetry run inv install-hooks
-   ```
-   
-4. **Verify installation (optional)**
+3. **Verify installation**
 
    This is similar to what the CI/CD pipeline will run for a single OS and major
    Python version. It also skips the additional isolation provided by `nox`,
@@ -90,11 +82,3 @@ act -j tests
 ```
 
 will execute the [tests](https://github.com/rsundqvist/rics/blob/master/.github/workflows/tests.yml) workflow.
-
-## Source template
-Originally created with [Cookiecutter] and the [fedejaure/cookiecutter-modern-pypackage]
-template. The repo has changed quite a lot since creation, but some linked
-resources linked are still useful.
-
-[Cookiecutter]: https://github.com/cookiecutter/cookiecutter
-[fedejaure/cookiecutter-modern-pypackage]: https://github.com/fedejaure/cookiecutter-modern-pypackage

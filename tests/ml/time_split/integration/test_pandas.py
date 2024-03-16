@@ -2,7 +2,6 @@ import logging
 
 import pandas as pd
 import pytest
-
 from rics.ml.time_split import split
 from rics.ml.time_split._backend._available import process_available
 from rics.ml.time_split.integration.pandas import PandasDatetimeSplit, split_pandas

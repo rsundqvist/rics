@@ -1,5 +1,5 @@
 from dataclasses import asdict, dataclass
-from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
 from pandas import Timestamp
@@ -11,17 +11,24 @@ from .._backend import DatetimeIndexSplitter
 from .._backend._datetime_index_like import DatetimeIndexLike
 from .._backend._limits import LimitsTuple
 from .._docstrings import docs
+from .._support import handle_dask
 from ..settings import plot as settings
-from ..types import DatetimeIterable, DatetimeSplitBounds, DatetimeSplits, Flex, Schedule, Span
+from ..types import (
+    DatetimeIterable,
+    DatetimeSplitBounds,
+    DatetimeSplits,
+    Flex,
+    Schedule,
+    Span,
+)
 from ._split import split
 from ._weight import fold_weight
 
 if TYPE_CHECKING:
     try:
-        from matplotlib.pyplot import Axes
+        from matplotlib.pyplot import Axes  # type: ignore[attr-defined]
     except ModuleNotFoundError:
-        Axes = Any
-
+        Axes = Any  # type: ignore[misc, assignment]
 
 Rows = Literal["rows"]
 COUNT_ROWS: Literal["rows"] = "rows"
@@ -42,11 +49,11 @@ class PlotData:
 
     splits: DatetimeSplits
     """All splits to plot."""
-    removed: Set[DatetimeSplitBounds]
+    removed: set[DatetimeSplitBounds]
     """A subset of `splits` that should be plotted that would be filtered by user arguments."""
-    row_counts: Optional[pd.Series] = None
+    row_counts: pd.Series | None = None
     """Row counts for `available`. May be pre-computed by the user."""
-    available: Optional[Available] = None
+    available: Available | None = None
 
 
 @docs
@@ -56,14 +63,14 @@ def plot(
     before: Span = "7d",
     after: Span = 1,
     step: int = 1,
-    n_splits: Optional[int] = None,
-    available: DatetimeIterable = None,
+    n_splits: int | None = None,
+    available: DatetimeIterable | None = None,
     flex: Flex = "auto",
     # Split plot args
-    bar_labels: Union[str, Rows, List[Tuple[str, str]], bool] = True,
+    bar_labels: str | Rows | list[tuple[str, str]] | bool = True,
     show_removed: bool = False,
-    row_count_bin: Union[str, pd.Series] = None,
-    ax: "Axes" = None,
+    row_count_bin: str | pd.Series | None = None,
+    ax: "Axes | None" = None,
 ) -> "Axes":
     """Fold visualization.
 
@@ -96,6 +103,7 @@ def plot(
 
     Raises:
         ValueError: For invalid plot/split argument combinations.
+
     """
     import matplotlib.pyplot as plt
 
@@ -115,13 +123,22 @@ def plot(
     if ax is None:
         _, ax = plt.subplots(
             tight_layout=True,
-            figsize=(plt.rcParams.get("figure.figsize")[0], 3 + len(plot_data.splits) * 0.5),
+            figsize=(
+                plt.rcParams["figure.figsize"][0],
+                3 + len(plot_data.splits) * 0.5,
+            ),
         )
 
     _plot_splits(ax, plot_data.splits, removed=plot_data.removed)
 
     if bar_labels:
-        _add_bar_labels(ax, plot_data, unit_or_labels=bar_labels, label_type="center", font="monospace")
+        _add_bar_labels(
+            ax,
+            plot_data,
+            unit_or_labels=bar_labels,
+            label_type="center",
+            font="monospace",
+        )
 
     # Set title
     split_kwargs = asdict(splitter)
@@ -149,15 +166,16 @@ def _plot_limits(ax: "Axes", limits: LimitsTuple) -> None:
     left, right = limits
     ax.axvline(left, color="k", ls="--", label="Outer range")
     ax.axvline(right, color="k", ls="--")
-    ax.set_xticks([date2num(left), *ax.get_xticks(), date2num(right)])
+    left_tick, right_tick = date2num(left), date2num(right)  # type: ignore[no-untyped-call]
+    ax.set_xticks([left_tick, *ax.get_xticks(), right_tick])
 
 
-def _plot_splits(ax: "Axes", splits: DatetimeSplits, *, removed: Set[DatetimeSplitBounds]) -> None:
+def _plot_splits(ax: "Axes", splits: DatetimeSplits, *, removed: set[DatetimeSplitBounds]) -> None:
     from matplotlib.dates import AutoDateFormatter
 
-    kwargs: Dict[str, Any]
-    xtick: List[Timestamp] = []
-    ytick: List[Optional[int]] = []
+    kwargs: dict[str, Any]
+    xtick: list[Timestamp] = []
+    ytick: list[int | None] = []
     for i, (start, mid, stop) in enumerate(splits, start=1):
         blue_label, red_label = None, None
         if (start, mid, stop) in removed:
@@ -175,14 +193,15 @@ def _plot_splits(ax: "Axes", splits: DatetimeSplits, *, removed: Set[DatetimeSpl
         xtick.append(mid)
 
     ax.set_xticks(xtick)
-    ax.xaxis.set_major_formatter(AutoDateFormatter(ax.xaxis.get_major_locator(), defaultfmt="%Y-%m-%d\n%A"))
+    locator = ax.xaxis.get_major_locator()
+    ax.xaxis.set_major_formatter(AutoDateFormatter(locator, defaultfmt="%Y-%m-%d\n%A"))  # type: ignore[no-untyped-call]
 
     ax.set_ylabel("Fold")
-    ax.yaxis.get_major_locator().set_params(integer=True)
-    ax.yaxis.set_ticks(range(1, len(splits) + 1), labels=["" if t is None else t for t in ytick])
+    ax.yaxis.get_major_locator().set_params(integer=True)  # type: ignore[call-arg]
+    ax.yaxis.set_ticks(range(1, len(splits) + 1), labels=["" if t is None else str(t) for t in ytick])
 
 
-def _plot_row_counts(ax: "Axes", row_count_bin: Union[str, pd.Series], row_counts: pd.Series) -> None:
+def _plot_row_counts(ax: "Axes", row_count_bin: str | pd.Series, row_counts: pd.Series) -> None:
     if isinstance(row_count_bin, pd.Series):
         from numpy import diff, timedelta64
 
@@ -193,11 +212,21 @@ def _plot_row_counts(ax: "Axes", row_count_bin: Union[str, pd.Series], row_count
         pretty = format_seconds(pd.Timedelta(row_count_bin).total_seconds())
 
     row_counts = row_counts * (max(ax.get_yticks()) / row_counts.max())  # Normalize to fold number yaxis
-    ax.fill_between(row_counts.index, row_counts, alpha=0.2, color="grey", label=f"#rows [bin: {pretty}]")
+    ax.fill_between(
+        row_counts.index,
+        row_counts,
+        alpha=0.2,
+        color="grey",
+        label=f"#rows [bin: {pretty}]",
+    )
 
 
 def _add_bar_labels(
-    ax: "Axes", plot_data: PlotData, *, unit_or_labels: Union[List[Tuple[str, str]], str], **kwargs: Any
+    ax: "Axes",
+    plot_data: PlotData,
+    *,
+    unit_or_labels: list[tuple[str, str]] | str,
+    **kwargs: Any,
 ) -> None:
     if not (hasattr(ax, "bar_label") and callable(ax.bar_label)):
         raise TypeError(f"Given axes={ax!r} don't have a bar_label()-method.")
@@ -212,12 +241,15 @@ def _add_bar_labels(
         )
 
     for bar, label in zip(ax.containers, labels):
-        ax.bar_label(bar, labels=[label], **kwargs)
+        ax.bar_label(bar, labels=[label], **kwargs)  # type: ignore[arg-type]
 
 
 def _make_count_labels(
-    splits: DatetimeSplits, *, available: Optional[DatetimeIterable], unit: str = COUNT_ROWS
-) -> List[str]:
+    splits: DatetimeSplits,
+    *,
+    available: DatetimeIterable | None,
+    unit: str = COUNT_ROWS,
+) -> list[str]:
     counts = fold_weight(splits, unit=unit, available=available)
 
     suffix = settings.ROW_UNIT if unit == COUNT_ROWS else unit
@@ -232,18 +264,17 @@ def _make_count_labels(
         )
         return count_str + suffix
 
-    labels = []
+    labels: list[str] = []
     for data, future_data in counts:
-        labels.append(make_label(data))
-        labels.append(make_label(future_data))
+        labels.extend((make_label(data), make_label(future_data)))
     return labels
 
 
 def _get_plot_data(
-    available: Optional[DatetimeIterable],
+    available: DatetimeIterable | None,
     splitter: DatetimeIndexSplitter,
     *,
-    row_count_bin: Union[pd.Series, str, None],
+    row_count_bin: pd.Series | str | None,
     show_removed: bool,
 ) -> PlotData:
     splits, ms = splitter.get_plot_data(available)
@@ -279,8 +310,10 @@ def _get_plot_data(
 
 
 def _compute_row_counts(
-    available: Optional[DatetimeIndexLike], *, row_count_bin: Union[pd.Series, str, None]
-) -> Optional[pd.Series]:
+    available: DatetimeIndexLike | None,
+    *,
+    row_count_bin: pd.Series | str | None,
+) -> pd.Series | None:
     if row_count_bin is None:
         return None
 
@@ -298,13 +331,10 @@ def _compute_row_counts(
         a_type = get_public_module(type(available), resolve_reexport=True, include_name=True)
         raise TypeError(f"type(available)={a_type} must have one of `floor` and `dt` to use {row_count_bin=}")
 
-    row_counts = index_like.floor(row_count_bin).value_counts()
-    if hasattr(row_counts, "compute") and callable(row_counts.compute):
-        row_counts = row_counts.compute()
-    return row_counts
+    return handle_dask(index_like.floor(row_count_bin).value_counts())
 
 
-def _make_title(available: Optional[Any], split_kwargs: Dict[str, Any]) -> str:
+def _make_title(available: Any | None, split_kwargs: dict[str, Any]) -> str:
     from inspect import signature
 
     default = {name: params.default for name, params in signature(split).parameters.items()}

@@ -1,10 +1,10 @@
+import contextlib
 import logging
 import os
 import sys
 import traceback
-import warnings
 from multiprocessing import process
-from typing import Any, Union
+from typing import Any
 
 from .logs import basic_config
 
@@ -12,10 +12,10 @@ _SKIP_WARNING: bool = False
 
 
 def configure_stuff(
-    level: Union[int, str] = logging.INFO,
-    rics_level: Union[int, str] = logging.INFO,
-    id_translation_level: Union[int, str] = logging.INFO,
-    matplotlib_level: Union[int, str] = logging.WARNING,
+    level: int | str = logging.INFO,
+    rics_level: int | str = logging.INFO,
+    id_translation_level: int | str = logging.INFO,
+    matplotlib_level: int | str = logging.WARNING,
     **kwargs: Any,
 ) -> None:
     """Configure a bunch of stuff to match my personal preferences. May do strange stuff 👻.
@@ -31,6 +31,7 @@ def configure_stuff(
         id_translation_level: Log level for the :mod:`id_translation` package. Default is ``logging.INFO``.
         matplotlib_level: Log level for the :mod:`matplotlib` package. Default is ``logging.WARNING``.
         **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
+
     """
     basic_config(
         level=level,
@@ -42,12 +43,10 @@ def configure_stuff(
 
     _configure_pandas()
 
-    try:
+    with contextlib.suppress(ModuleNotFoundError):
         from .plotting import configure
 
         configure()
-    except ModuleNotFoundError as e:
-        warnings.warn(f"Plotting configuration not done: {e}", stacklevel=2)
 
     print("👻 Configured some stuff just the way I like it!")
     _maybe_emit_warning()
@@ -56,8 +55,7 @@ def configure_stuff(
 def _configure_pandas() -> None:
     try:
         import pandas as pd
-    except ModuleNotFoundError as e:
-        warnings.warn(f"Pandas configuration not done: {e}", stacklevel=3)
+    except ModuleNotFoundError:
         return
 
     pd.options.display.max_columns = 50
@@ -67,15 +65,15 @@ def _configure_pandas() -> None:
     pd.options.display.float_format = "{:.6g}".format
 
     pd.options.mode.chained_assignment = "raise"
+    if hasattr(pd.options.mode, "copy_on_write") and pd.options.mode.copy_on_write is None:
+        pd.options.mode.copy_on_write = "warn"
 
-    try:
+    with contextlib.suppress(ImportError):
         pd.plotting.register_matplotlib_converters()
-    except ImportError:  # pragma: no cover
-        pass
 
 
 def _maybe_emit_warning() -> None:  # pragma: no cover
-    global _SKIP_WARNING
+    global _SKIP_WARNING  # noqa: PLW0603
     if _SKIP_WARNING:
         return
     _SKIP_WARNING = True
@@ -88,7 +86,7 @@ def _maybe_emit_warning() -> None:  # pragma: no cover
 
     try:
         get_ipython()  # type: ignore[name-defined]
-        return  # Typically in a console or notebook
+        return  # noqa: TRY300 # Typically in a console or notebook
     except NameError:
         pass
 

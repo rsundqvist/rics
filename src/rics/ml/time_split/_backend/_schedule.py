@@ -16,7 +16,9 @@ class MaterializedSchedule(NamedTuple):
     available_metadata: AvailableMetadata
 
 
-def materialize_schedule(schedule: Schedule, flex: Flex, *, available: DatetimeIterable = None) -> MaterializedSchedule:
+def materialize_schedule(
+    schedule: Schedule, flex: Flex, *, available: DatetimeIterable | None = None
+) -> MaterializedSchedule:
     """Materialize user schedule based on available data."""
     if available is None:
         try:
@@ -44,7 +46,8 @@ def materialize_schedule(schedule: Schedule, flex: Flex, *, available: DatetimeI
 
 
 def _cron_like(schedule: str) -> bool:
-    return len(schedule.split()) > 4 or schedule[0] == "@"
+    # CroniterBadCronError: Exactly 5 or 6 columns has to be specified for iterator expression.
+    return len(schedule.split()) > 4 or schedule[0] == "@"  # noqa: PLR2004
 
 
 def _from_timedelta(schedule: TimedeltaTypes, limits: LimitsTuple) -> DatetimeIndex:

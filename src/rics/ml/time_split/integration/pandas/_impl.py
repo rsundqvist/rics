@@ -1,6 +1,12 @@
-import sys
+from collections.abc import Hashable, Iterable
 from dataclasses import dataclass
-from typing import Generic, Hashable, Iterable, Literal, NamedTuple, Optional, Tuple, TypeVar, Union, get_args
+from typing import (
+    Generic,
+    Literal,
+    NamedTuple,
+    TypeVar,
+    get_args,
+)
 
 import pandas as pd
 from pandas import DataFrame, DatetimeIndex, Series, Timestamp
@@ -16,35 +22,16 @@ PandasT = TypeVar("PandasT", Series, DataFrame)
 """A splittable pandas type."""
 Inclusive = Literal["left", "right", "neither"]
 
-if sys.version_info < (3, 11):
 
-    @dataclass(frozen=True)
-    class PandasDatetimeSplit(Generic[PandasT]):
-        """Time-based split of a pandas type."""
+class PandasDatetimeSplit(NamedTuple, Generic[PandasT]):
+    """Time-based split of a pandas type."""
 
-        data: PandasT
-        """Data before ``bounds.mid``."""
-        future_data: PandasT
-        """Data after ``bounds.mid``."""
-        bounds: DatetimeSplitBounds
-        """The underlying bounds that produced this split."""
-
-else:
-
-    class PandasDatetimeSplit(NamedTuple, Generic[PandasT]):
-        """Time-based split of a pandas type.
-
-        .. warning::
-
-           When running Python < 3.11, this is a ``@dataclass`` rather than a tuple.
-        """
-
-        data: PandasT
-        """Data before ``bounds.mid``."""
-        future_data: PandasT
-        """Data after ``bounds.mid``."""
-        bounds: DatetimeSplitBounds
-        """The underlying bounds that produced this split."""
+    data: PandasT
+    """Data before ``bounds.mid``."""
+    future_data: PandasT
+    """Data after ``bounds.mid``."""
+    bounds: DatetimeSplitBounds
+    """The underlying bounds that produced this split."""
 
 
 @docs
@@ -54,7 +41,7 @@ def split_pandas(
     *,
     before: Span = "7d",
     after: Span = 1,
-    n_splits: Optional[int] = None,
+    n_splits: int | None = None,
     flex: Flex = "auto",
     step: int = 1,
     time_column: Hashable = None,
@@ -86,6 +73,7 @@ def split_pandas(
     Raises:
         TypeError: If the chosen split attribute is not a timestamp.
         ValueError: For disallowed `inclusive` values.
+
     """
     time = _verify_time_type(data, time_column)
 
@@ -109,7 +97,7 @@ def split_pandas(
 @dataclass(frozen=True, eq=False, repr=False)
 class _Indexer(Generic[PandasT]):
     data: PandasT
-    time: Union[Series, DatetimeIndex]
+    time: Series | DatetimeIndex
     inclusive: Inclusive
 
     def __post_init__(self) -> None:
@@ -123,7 +111,7 @@ class _Indexer(Generic[PandasT]):
         else:
             raise ValueError(f"Unknown argument {inclusive=}. Permitted options are {get_args(Inclusive)}.")
 
-    def __call__(self, bounds: DatetimeSplitBounds) -> Tuple[PandasT, PandasT]:
+    def __call__(self, bounds: DatetimeSplitBounds) -> tuple[PandasT, PandasT]:
         """Select data based on the given bounds."""
         start, mid, end = bounds
         data, time, inclusive = self.data, self.time, self.inclusive
@@ -143,7 +131,7 @@ class _Indexer(Generic[PandasT]):
         return data[start + r : mid - r], data[mid + r : end - r]
 
 
-def _verify_time_type(data: PandasT, time_column: Optional[Hashable]) -> Union[pd.DatetimeIndex, pd.Series]:
+def _verify_time_type(data: PandasT, time_column: Hashable | None) -> pd.DatetimeIndex | pd.Series:
     first = data.index[0] if time_column is None else data[time_column].iloc[0]
 
     if isinstance(first, Timestamp):

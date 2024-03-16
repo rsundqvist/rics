@@ -2,7 +2,6 @@ import logging
 
 import pandas as pd
 import pytest
-
 from rics.ml.time_split.integration._log_progress import handle_log_progress_arg
 from rics.ml.time_split.types import DatetimeSplitBounds, DatetimeSplits
 

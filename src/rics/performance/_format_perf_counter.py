@@ -1,7 +1,11 @@
 from time import perf_counter
 
+FORMAT_AS_MINUTE_LIMIT = 60.0
+FORMAT_SECOND_SINGLE_DECIMAL = 1.0
+FORMAT_SECOND_DOUBLE_DECIMAL = 0.5
 
-def format_perf_counter(start: float, end: float = None) -> str:
+
+def format_perf_counter(start: float, end: float | None = None) -> str:
     """Format performance counter output.
 
     This function formats performance counter output based on the time elapsed. For ``t < 120 sec``, accuracy is
@@ -24,12 +28,13 @@ def format_perf_counter(start: float, end: float = None) -> str:
 
     See Also:
         :py:func:`time.perf_counter`
+
     """
     t = (end or perf_counter()) - start
     return format_seconds(t)
 
 
-def format_seconds(t: float, allow_negative: bool = False, brief: bool = True) -> str:
+def format_seconds(t: float, *, allow_negative: bool = False) -> str:  # noqa: PLR0911
     """Format performance counter output.
 
     This function formats performance counter output based on the time elapsed. For ``t < 120 sec``, accuracy is
@@ -38,13 +43,13 @@ def format_seconds(t: float, allow_negative: bool = False, brief: bool = True) -
     Args:
         t: Time in seconds.
         allow_negative: If ``True``, format negative `t` with a leading minus sign.
-        brief: If ``True``,
 
     Returns:
         A formatted performance counter time.
 
     Raises:
         ValueError: If ``t < 0`` and ``allow_negative=False`` (the default).
+
     """
     if t < 0:
         if not allow_negative:
@@ -52,8 +57,7 @@ def format_seconds(t: float, allow_negative: bool = False, brief: bool = True) -
             raise ValueError(f"Refuse to format {t=} < 0; to allow, set {allow_negative=}")
         return f"-{format_seconds(abs(t))}"
 
-    # days, hours, minutes, seconds = round(days), round(hours), round(minutes), round(seconds)
-    if t > 60.0:
+    if t > FORMAT_AS_MINUTE_LIMIT:
         days, seconds = divmod(round(t), 86400)
         hours, seconds = divmod(seconds, 3600)
         minutes, seconds = divmod(seconds, 60)
@@ -63,9 +67,9 @@ def format_seconds(t: float, allow_negative: bool = False, brief: bool = True) -
         start, stop = nonzero.index(True), len(nonzero) - nonzero[::-1].index(True)
         return " ".join(f"{parts[i]}{'dhms'[i]}" for i in range(start, stop))
 
-    if t >= 1.0:
+    if t >= FORMAT_SECOND_SINGLE_DECIMAL:
         return f"{t:.1f}s"
-    if t > 0.5:
+    if t > FORMAT_SECOND_DOUBLE_DECIMAL:
         return f"{t:.2f}s"
     if t > 10**-3:
         return f"{t * 10 ** 3:.0f}ms"

@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from datetime import timedelta
-from typing import Callable, Literal, Optional, Union
+from typing import Literal, TypeAlias
 
 from pandas import DatetimeIndex, Timedelta, Timestamp
 
@@ -7,19 +8,25 @@ from ..types import Span
 from ._limits import LimitsTuple
 from ._schedule import NO_LIMITS
 
-StrictSpan = Union[int, Timedelta, Literal["all"]]
+StrictSpan: TypeAlias = int | Timedelta | Literal["all"]
 SpanArgumentName = Literal["before", "after"]
-FuncType = Callable[[int], Optional[Timestamp]]
+FuncType = Callable[[int], Timestamp | None]
 
 
 class InvalidSpanError(ValueError):
     """Raised when offsets values for 'before' and 'after' arguments are invalid."""
 
-    def __init__(self, span: Span, *, name: SpanArgumentName, reason: str = "must be greater than zero") -> None:
+    def __init__(
+        self,
+        span: Span,
+        *,
+        name: SpanArgumentName,
+        reason: str = "must be greater than zero",
+    ) -> None:
         super().__init__(f"Bad '{name}'-argument; offset {span!r} {reason}.")
 
 
-def _to_timedelta(span: Union[str, timedelta, Timedelta], *, name: SpanArgumentName) -> Timedelta:
+def _to_timedelta(span: str | timedelta | Timedelta, *, name: SpanArgumentName) -> Timedelta:
     retval = Timedelta(span)
     if retval <= Timedelta(0):
         raise InvalidSpanError(span, name=name)
@@ -39,6 +46,7 @@ def to_strict_span(span: Span, *, name: SpanArgumentName) -> StrictSpan:
     Raises:
         TypeError: For bad `span` types.
         InvalidSpanError: For invalid `span` arguments.
+
     """
     if span == "all":
         return "all"
@@ -58,14 +66,25 @@ def to_strict_span(span: Span, *, name: SpanArgumentName) -> StrictSpan:
 class OffsetCalculator:
     """Utility class for computing before/after offsets from the `schedule`."""
 
-    def __init__(self, span: Span, schedule: DatetimeIndex, limits: LimitsTuple, *, name: SpanArgumentName) -> None:
+    def __init__(
+        self,
+        span: Span,
+        schedule: DatetimeIndex,
+        limits: LimitsTuple,
+        *,
+        name: SpanArgumentName,
+    ) -> None:
         span = to_strict_span(span, name=name)
         is_before = name == "before"
 
         self.func: FuncType
         if span == "all":
             if limits == NO_LIMITS:
-                raise InvalidSpanError(span, name=name, reason="requires available data to bound the schedule")
+                raise InvalidSpanError(
+                    span,
+                    name=name,
+                    reason="requires available data to bound the schedule",
+                )
             self.func = self._make_all(is_before, limits)
         elif isinstance(span, int):
             self.func = self._make_int(is_before, span, schedule)
@@ -76,14 +95,14 @@ class OffsetCalculator:
     def _make_all(is_before: bool, limits: LimitsTuple) -> FuncType:
         retval = Timestamp(limits[0 if is_before else 1])
 
-        def func(i: int) -> Optional[Timestamp]:
+        def func(_: int) -> Timestamp | None:
             return retval
 
         return func
 
     @staticmethod
     def _make_int(is_before: bool, offset: int, schedule: DatetimeIndex) -> FuncType:
-        def func(i: int) -> Optional[Timestamp]:
+        def func(i: int) -> Timestamp | None:
             i = i - offset if is_before else i + offset
             if 0 <= i < len(schedule):
                 return schedule[i]
@@ -99,11 +118,11 @@ class OffsetCalculator:
         else:
             schedule = schedule + offset
 
-        def func(i: int) -> Optional[Timestamp]:
+        def func(i: int) -> Timestamp | None:
             return schedule[i]
 
         return func
 
-    def __call__(self, i: int) -> Optional[Timestamp]:
+    def __call__(self, i: int) -> Timestamp | None:
         """Get start/end timestamp."""
         return self.func(i)

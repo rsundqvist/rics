@@ -1,5 +1,3 @@
-from typing import Optional
-
 from .._backend import DatetimeIndexSplitter
 from .._docstrings import docs
 from ..types import DatetimeIterable, DatetimeSplits, Flex, Schedule, Span
@@ -12,8 +10,8 @@ def split(
     before: Span = "7d",
     after: Span = 1,
     step: int = 1,
-    n_splits: Optional[int] = None,
-    available: DatetimeIterable = None,
+    n_splits: int | None = None,
+    available: DatetimeIterable | None = None,
     flex: Flex = "auto",
 ) -> DatetimeSplits:
     """Create time-based cross-validation splits.
@@ -33,6 +31,7 @@ def split(
 
     Returns:
         A list of tuples ``[(start, mid, end), ...]``.
+
     """
     return DatetimeIndexSplitter(
         schedule,

@@ -7,10 +7,10 @@ from ._wrapper import run_multivariate_test
 
 __all__ = [
     "MultiCaseTimer",
-    "run_multivariate_test",
     "format_perf_counter",
     "format_seconds",
-    "plot_run",
-    "to_dataframe",
     "get_best",
+    "plot_run",
+    "run_multivariate_test",
+    "to_dataframe",
 ]

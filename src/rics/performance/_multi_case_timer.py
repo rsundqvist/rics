@@ -1,7 +1,8 @@
 import logging
 import warnings
+from collections.abc import Callable, Collection, Mapping
 from timeit import Timer
-from typing import Any, Callable, Collection, Dict, List, Mapping, Optional, Union
+from typing import Any
 
 from ..misc import tname
 from ._format_perf_counter import format_seconds as fmt_time
@@ -10,7 +11,7 @@ LOGGER = logging.getLogger(__package__)
 
 DataType = Any
 CandFunc = Callable[[DataType], None]
-ResultsDict = Dict[str, Dict[str, List[float]]]
+ResultsDict = dict[str, dict[str, list[float]]]
 
 
 class MultiCaseTimer:
@@ -19,12 +20,13 @@ class MultiCaseTimer:
     Args:
         candidate_method: A single method, collection of method or a dict {label: function} of candidates.
         test_data: A single datum or a dict ``{label: data}`` to evaluate candidates on.
+
     """
 
     def __init__(
         self,
-        candidate_method: Union[CandFunc, Collection[CandFunc], Mapping[str, CandFunc]],
-        test_data: Union[DataType, Mapping[str, DataType]],
+        candidate_method: CandFunc | Collection[CandFunc] | Mapping[str, CandFunc],
+        test_data: DataType | Mapping[str, DataType],
     ) -> None:
         self._candidates = _process_candidates(candidate_method)
         if not self._candidates:
@@ -38,7 +40,7 @@ class MultiCaseTimer:
         self,
         time_per_candidate: float = 6.0,
         repeat: int = 5,
-        number: int = None,
+        number: int | None = None,
     ) -> ResultsDict:
         """Run for all cases.
 
@@ -66,13 +68,14 @@ class MultiCaseTimer:
 
         See Also:
             The :py:class:`timeit.Timer` class which this implementation depends on.
+
         """
         per_candidate_number = self._compute_number_of_iterations(number, repeat, time_per_candidate)
 
         run_results = {}
         for candidate_label, func in self._candidates.items():
             candidate_number = per_candidate_number[candidate_label]
-            candidate_results: Dict[str, List[float]] = {}
+            candidate_results: dict[str, list[float]] = {}
             LOGGER.info(f"Evaluate candidate {candidate_label!r} {repeat}x{candidate_number} times..")
             for data_label, test_data in self._data.items():
                 raw_timings = self._get_raw_timings(func, test_data, candidate_number, repeat)
@@ -91,17 +94,15 @@ class MultiCaseTimer:
         return run_results
 
     @staticmethod
-    def _get_raw_timings(func: CandFunc, test_data: DataType, repeat: int, number: int) -> List[float]:
+    def _get_raw_timings(func: CandFunc, test_data: DataType, repeat: int, number: int) -> list[float]:
         """Exists so that it can be overridden for testing."""
         return Timer(lambda: func(test_data)).repeat(repeat, number)
 
-    def _compute_number_of_iterations(
-        self, number: Optional[int], repeat: int, time_allocation: float
-    ) -> Dict[str, int]:
+    def _compute_number_of_iterations(self, number: int | None, repeat: int, time_allocation: float) -> dict[str, int]:
         if isinstance(number, int):
-            ans = {case: number for case in self._data}
+            retval = dict.fromkeys(self._data, number)
         else:
-            ans = {}
+            retval = {}
             for candidate_label, candidate_func in self._candidates.items():
 
                 def _run_all() -> None:
@@ -110,14 +111,14 @@ class MultiCaseTimer:
 
                 auto_number, auto_time = Timer(_run_all).autorange()
                 candidate_number = int((time_allocation * auto_number) / (repeat * auto_time))
-                ans[candidate_label] = max(2, candidate_number)
+                retval[candidate_label] = max(2, candidate_number)
 
-        return ans
+        return retval
 
 
 def _process_candidates(
-    candidates: Union[CandFunc, Collection[CandFunc], Mapping[str, CandFunc]]
-) -> Dict[str, CandFunc]:
+    candidates: CandFunc | Collection[CandFunc] | Mapping[str, CandFunc],
+) -> dict[str, CandFunc]:
     if isinstance(candidates, dict):
         return candidates
     if callable(candidates):
@@ -127,13 +128,13 @@ def _process_candidates(
         name = tname(a)
         return name[len("candidate_") :] if name.startswith("candidate_") else name
 
-    ans = {make_label(c): c for c in candidates}
-    if len(ans) != len(candidates):
+    labeled_candidates = {make_label(c): c for c in candidates}
+    if len(labeled_candidates) != len(candidates):
         raise ValueError(f"Derived names for input {candidates=} are not unique. Use a dict to assign candidate names.")
-    return ans  # type: ignore[return-value]
+    return labeled_candidates  # type: ignore[return-value]
 
 
-def _process_single_test_datum(test_data: DataType) -> Dict[str, DataType]:
+def _process_single_test_datum(test_data: DataType) -> dict[str, DataType]:
     s = repr(test_data)
-    key = f"{s[:29]}..." if len(s) > 32 else s
+    key = f"{s[:29]}..." if len(s) > 32 else s  # noqa: PLR2004
     return {f"Sample data: '{key}'": test_data}

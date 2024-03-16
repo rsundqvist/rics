@@ -1,8 +1,11 @@
 import pytest
 from dask.datasets import timeseries
-
 from rics.ml.time_split import plot, split
 from rics.ml.time_split._backend._available import process_available
+
+pytestmark = pytest.mark.filterwarnings(
+    "ignore:The current Dask DataFrame implementation is deprecated.:DeprecationWarning"
+)
 
 
 @pytest.mark.parametrize("kind", ["index", "series"])

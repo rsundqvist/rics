@@ -1,7 +1,6 @@
 import pandas as pd
 import pytest
 from pandas import Timestamp
-
 from rics.ml.time_split.settings import auto_flex as settings
 from rics.ml.time_split.support import expand_limits
 
@@ -121,10 +120,10 @@ class TestErrors:
 
     def test_bad_hour_setting(self, monkeypatch):
         monkeypatch.setattr(settings, "hour", ("2 days", "day", "15 min"))
-        with pytest.raises(ValueError, match="Invalid settings: settings.hour="):
+        with pytest.raises(ValueError, match="Invalid settings: auto_flex.hour="):
             expand_limits(self.limits, flex=True)
 
     def test_bad_day_setting(self, monkeypatch):
         monkeypatch.setattr(settings, "day", ("2 hour", "hour", "1 hour"))
-        with pytest.raises(ValueError, match="Invalid settings: settings.day="):
+        with pytest.raises(ValueError, match="Invalid settings: auto_flex.day="):
             expand_limits(self.limits, flex=True)

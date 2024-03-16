@@ -33,3 +33,13 @@ git rebase -i <from-hash> --autosquash
 ```
 This will create a message like `fixup! Bad-commit-subject-line`. When rebasing, all `!fixup`-commits will be moved and
 merged into their "parent" commits automatically, assuming they are located after `<from-hash>`.
+
+## Configuration
+```bash
+git config --global rerere.enabled true  # Remember merge conflict resolutions
+git config --global column.ui auto  # Show >1 branch/row
+git config --global branch.sort -committerdate  # default=alphabetical
+```
+
+## Links
+* [So You Think You Know Git - FOSDEM 2024](https://www.youtube.com/watch?v=aolI_Rz0ZqY) for more.

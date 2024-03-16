@@ -1,4 +1,5 @@
 """Nox sessions."""
+
 import platform
 import tempfile
 from typing import Any
@@ -7,7 +8,7 @@ import nox
 from nox.sessions import Session
 
 nox.options.sessions = ["tests", "mypy"]
-python_versions = ["3.8", "3.9", "3.10", "3.11"]
+python_versions = ["3.11", "3.12"]
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
@@ -24,6 +25,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
         session: The Session object.
         args: Command-line arguments for pip.
         kwargs: Additional keyword arguments for Session.install.
+
     """
     with tempfile.NamedTemporaryFile(delete=False) as requirements:
         session.run(
@@ -76,7 +78,7 @@ def mypy(session: Session) -> None:
     session.run("inv", "mypy")
 
 
-@nox.session(python="3.10")
+@nox.session(python="3.12")
 def safety(session: Session) -> None:
     """Scan dependencies for insecure packages."""
     install_with_constraints(session, "invoke", "safety")

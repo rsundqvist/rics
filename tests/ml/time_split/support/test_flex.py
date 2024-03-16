@@ -1,6 +1,5 @@
 import pandas as pd
 import pytest
-
 from rics.ml.time_split import split
 
 
@@ -14,8 +13,8 @@ def fold_from_mid(arg):
     [
         ("h", "30 min", "06, 07, 08, 09"),
         ("d", "30 min", "06, 07, 08, 09"),
-        ("T", "30 min", "07, 08"),
-        # TODO: Asymmetrical flex?
+        ("min", "30 min", "07, 08"),
+        # Asymmetrical flex - not implemented
         # (("d", "h"), "30 min", "06, 07, 08, 09"),
         # (("h", "d"), "30 min", "06, 07, 08, 09"),
     ],

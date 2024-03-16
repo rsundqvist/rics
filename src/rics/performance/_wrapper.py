@@ -1,4 +1,5 @@
-from typing import Any, Collection, Mapping, Union
+from collections.abc import Collection, Mapping
+from typing import Any
 
 import pandas as pd
 
@@ -7,8 +8,8 @@ from ._util import plot_run, to_dataframe
 
 
 def run_multivariate_test(
-    candidate_method: Union[CandFunc, Collection[CandFunc], Mapping[str, CandFunc]],
-    test_data: Union[Any, Mapping[str, Any]],
+    candidate_method: CandFunc | Collection[CandFunc] | Mapping[str, CandFunc],
+    test_data: Any | Mapping[str, Any],
     time_per_candidate: float = 6.0,
     plot: bool = True,
     **figure_kwargs: Any,
@@ -31,6 +32,7 @@ def run_multivariate_test(
 
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed and ``plot=True``.
+
     """
     run_results = MultiCaseTimer(candidate_method, test_data).run(time_per_candidate=time_per_candidate)
 

@@ -1,11 +1,10 @@
 import shutil
 from pathlib import Path
-from typing import Dict, List
 
 from ..types import PathLikeType
 from ._patch_notes import PatchNotes
 
-BASE_LINES: List[str] = [
+BASE_LINES: list[str] = [
     "Changelog",
     "=========",
     "All notable changes to this project will be documented in this file.",
@@ -20,8 +19,8 @@ BASE_LINES: List[str] = [
 
 def write_changelog(
     output_dir: PathLikeType,
-    notes: List[PatchNotes],
-    refs: Dict[str, str],
+    notes: list[PatchNotes],
+    refs: dict[str, str],
 ) -> None:
     """Write changelog parts to several pages in an output directory.
 
@@ -29,6 +28,7 @@ def write_changelog(
         output_dir: Output directory where pages will be placed. Only ``index.rst`` needs to be manually imported.
         notes: A list of patch notes, in the order in which they should be added to the TOC.
         refs: Title references.
+
     """
     root = Path(str(output_dir))
     shutil.rmtree(root, ignore_errors=True)
@@ -46,9 +46,9 @@ def write_changelog(
             lines.extend(note.extras)
             lines.append("")
 
-        for section, l in note.sections.items():
+        for section, content in note.sections.items():
             lines.append("## " + section)
-            lines.extend(l)
+            lines.extend(content)
 
         lines.append("\n" + refs[note.title])
         file.write_text("\n".join(lines))

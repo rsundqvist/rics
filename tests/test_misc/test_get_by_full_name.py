@@ -1,10 +1,16 @@
-import sys
-
 import pytest
-
 from rics.misc import get_by_full_name
 
-from .data import MODULE, AbstractHello, Foo, HelloClassImpl, HiProtocol, hello_class_impl, hi_protocol_impl, my_foo
+from .data import (
+    MODULE,
+    AbstractHello,
+    Foo,
+    HelloClassImpl,
+    HiProtocol,
+    hello_class_impl,
+    hi_protocol_impl,
+    my_foo,
+)
 
 
 @pytest.mark.parametrize("name", ["Foo", "tests.test_misc.data.Foo"])
@@ -77,14 +83,12 @@ class TestLimitations:
         with pytest.raises(ValueError, match="least one of.*must be None"):
             get_by_full_name("my_foo", instance_of=int, subclass_of=int)  # type: ignore[call-overload]
 
-    if sys.version_info >= (3, 9):
+    def test_parameterized_generics(self):
+        with pytest.raises(TypeError, match="cannot be a parameterized generic"):
+            get_by_full_name("my_foo", default_module=MODULE, instance_of=list[int])
 
-        def test_parameterized_generics(self):
-            with pytest.raises(TypeError, match="cannot be a parameterized generic"):
-                get_by_full_name("my_foo", default_module=MODULE, instance_of=list[int])
-
-            with pytest.raises(TypeError, match="cannot be a parameterized generic"):
-                get_by_full_name("my_foo", default_module=MODULE, subclass_of=list[int])
+        with pytest.raises(TypeError, match="cannot be a parameterized generic"):
+            get_by_full_name("my_foo", default_module=MODULE, subclass_of=list[int])
 
     @pytest.mark.xfail(reason="Nested classes are not supported.")
     def test_nested(self):

@@ -1,5 +1,4 @@
 import pytest
-
 from rics.ml.time_split import split
 from rics.ml.time_split._backend._span import InvalidSpanError
 
