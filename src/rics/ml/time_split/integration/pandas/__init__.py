@@ -12,7 +12,7 @@ Examples:
     2022-01-04 14:00:00    86
     dtype: int64
 
-    Series may only be split on the index. The `log_progress` keyword argument is optional.
+    Series may only be split on the index. The `schedule` keyword argument is required, but `log_progress` is not.
 
     >>> for fold in split_pandas(
     ...     series, schedule="1d", log_progress="progress"
@@ -33,15 +33,10 @@ Examples:
       fold.future_data.mean()=203.5
     INFO:progress:Finished fold 2/2 [schedule: '2022-01-09' (Sunday)] after 873μs.
 
-    The ``split_pandas`` function returns :attr:`PandasDatetimeSplit`-tuples.
-
-
+    When splitting dataframes, you may optionally pass a `time_column` argument as well. By default, both frames and
+    series are split along the index.
 """
 
-from ._impl import PandasDatetimeSplit, PandasT, split_pandas
+from ._impl import PandasT, split_pandas
 
-__all__ = [
-    "PandasDatetimeSplit",
-    "PandasT",
-    "split_pandas",
-]
+__all__ = ["PandasT", "split_pandas"]

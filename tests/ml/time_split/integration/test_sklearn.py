@@ -15,7 +15,7 @@ def test_sklearn(caplog):
 
     assert splitter.get_n_splits(array) == 2
 
-    pandas_split = split_pandas(index.to_series(), "1d", log_progress=False)
+    pandas_split = split_pandas(index.to_series(), schedule="1d", log_progress=False)
     for (train_index, test_index), pandas_fold in zip(splitter.split(array), pandas_split):
         assert (pandas_fold.data.index == array[train_index]).all()
         assert (pandas_fold.future_data.index == array[test_index]).all()

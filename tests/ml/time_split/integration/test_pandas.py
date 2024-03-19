@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from rics.ml.time_split import split
 from rics.ml.time_split._backend._available import process_available
-from rics.ml.time_split.integration.pandas import PandasDatetimeSplit, split_pandas
+from rics.ml.time_split.integration.pandas import split_pandas
 
 
 @pytest.mark.parametrize("typ", [pd.Series, pd.DataFrame])
@@ -21,7 +21,6 @@ def test_pandas(typ, caplog):
         ),
         split("1d", available=index),
     ):
-        assert isinstance(pandas_fold, PandasDatetimeSplit)
         assert isinstance(expected_bounds, type(pandas_fold.bounds)), "bad"
         assert expected_bounds == pandas_fold.bounds
 
@@ -45,23 +44,11 @@ def test_bad_time():
         list(split_pandas(df, schedule="1d", time_column="not-time", log_progress=False))
 
 
-@pytest.mark.parametrize("inclusive", ["both", "LEFT", "righto"])
-def test_bad_inclusive(inclusive):
-    df = pd.DataFrame(index=pd.date_range("1999-04-30", "1999-05-11", freq="4h"))
-    list(split_pandas(df, "1d", inclusive="left"))
-    list(split_pandas(df, "1d", inclusive="right"))
-    list(split_pandas(df, "1d", inclusive="neither"))
-
-    with pytest.raises(ValueError, match=repr(inclusive)):
-        list(split_pandas(df, "1d", inclusive=inclusive))
-
-
-@pytest.mark.parametrize("inclusive", ["left", "right", "neither"])
-def test_inclusive_equality(inclusive):
+def test_inclusive_equality():
     df = pd.date_range("1999-04-30", end="1999-04-30 00:00:00.0000005", freq="1 ns").to_frame(name="time")
     assert len(df) < 3000, "test suite performance may suffer"
 
-    kwargs = dict(data=df, schedule="100ns", before="30 ns", inclusive=inclusive)
+    kwargs = dict(data=df, schedule="100ns", before="30 ns")
     by_index = split_pandas(**kwargs, time_column=None)
     by_column = split_pandas(**kwargs, time_column="time")
 
