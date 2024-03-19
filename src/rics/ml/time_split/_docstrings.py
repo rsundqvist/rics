@@ -32,4 +32,5 @@ _DOCSTRINGS = {
         "For more information about the `schedule`, `before/after` and `flex`-arguments" ", see the :ref:`User guide`."
     ),
     "OFFSET": _OFFSET,
+    "DatetimeIndexSplitterKwargs": "See :func:`~rics.ml.time_split.split`. The `available` keyword is managed by the integration.",
 }
