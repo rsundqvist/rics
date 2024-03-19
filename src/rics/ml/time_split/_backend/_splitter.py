@@ -1,6 +1,6 @@
 import logging
 from dataclasses import asdict, dataclass
-from typing import get_args
+from typing import cast, get_args
 
 from pandas import Timedelta, Timestamp
 
@@ -9,6 +9,7 @@ from rics.performance import format_seconds
 
 from ..settings import misc
 from ..types import (
+    DatetimeIndexSplitterKwargs,
     DatetimeIterable,
     DatetimeSplitBounds,
     DatetimeSplits,
@@ -94,9 +95,9 @@ class DatetimeIndexSplitter:
             retval.append(DatetimeSplitBounds(start, mid, end))
 
         if not retval:
-            limits = ms.available_metadata.limits
-            limits_info = f"limits={tuple(map(str, limits))} and "
-            raise ValueError(f"No valid splits with {limits_info}split params: ({format_kwargs(asdict(self))})")
+            limits_info = f"limits={tuple(map(str, ms.available_metadata.limits))} and "
+            msg = f"No valid splits with {limits_info}split params: ({format_kwargs(self.as_dict())})"
+            raise ValueError(msg)
 
         return self._filter(retval)
 
@@ -156,3 +157,7 @@ class DatetimeIndexSplitter:
 
         if self.step == 0:
             raise ValueError(f"Bad argument step={self.step}; must be a non-zero integer.")
+
+    def as_dict(self) -> DatetimeIndexSplitterKwargs:
+        """Returns the splitter as a ``dict``."""
+        return cast(DatetimeIndexSplitterKwargs, asdict(self))

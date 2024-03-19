@@ -10,10 +10,10 @@ DatetimeTypes: _t.TypeAlias = str | _pd.Timestamp | _dt.datetime | _dt.date | _n
 """Types that may be cast to :class:`pandas.Timestamp`."""
 DatetimeIterable = _t.Iterable[DatetimeTypes]
 """Iterable that may be cast to :class:`pandas.DatetimeIndex`."""
-TimedeltaTypes = str | _pd.Timedelta | _dt.timedelta | _np.timedelta64
+TimedeltaTypes: _t.TypeAlias = str | _pd.Timedelta | _dt.timedelta | _np.timedelta64
 """Types that may be cast to :class:`pandas.Timedelta`."""
 
-Schedule = _pd.DatetimeIndex | DatetimeIterable | TimedeltaTypes
+Schedule: _t.TypeAlias = _pd.DatetimeIndex | DatetimeIterable | TimedeltaTypes
 """User schedule type."""
 Span = int | _t.Literal["all"] | TimedeltaTypes
 """User span type. Used to determine limits from the timestamps given by a :attr:`Schedule`."""
@@ -44,3 +44,18 @@ class DatetimeSplitCounts(_t.NamedTuple):
 
     data: int
     future_data: int
+
+
+class DatetimeIndexSplitterKwargs(_t.TypedDict, total=False):
+    """Keyword arguments for creating a ``DatetimeIndexSplitter``.
+
+    The ``DatetimeIndexSplitter`` is the backing type for all splitting logic. It is not exposed directly to users. See
+    :func:`.split` or one of the related functions for user-facing APIs.
+    """
+
+    schedule: _t.Required[Schedule]
+    before: Span
+    after: Span
+    step: int
+    n_splits: int | None
+    flex: Flex
