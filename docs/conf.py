@@ -27,8 +27,42 @@ for tm in type_modules:
     import_module(tm)
 
 
+def monkeypatch_autosummary_toc() -> None:
+    from sphinx.addnodes import toctree
+    from sphinx.ext.autosummary import Autosummary, autosummary_toc
+
+    original = Autosummary.run
+
+    def make_toc_tree_titles_shorter(self: Autosummary):
+        # tocnode['entries'] = [(".".join(docn.partition("/")[-1].split(".")[-2:]), docn) for docn in docnames]
+        toc: toctree
+        nodes = original(self)
+
+        for node in nodes:
+            if not isinstance(node, autosummary_toc):
+                continue
+
+            for toc in node.children:
+                entries = toc["entries"]
+
+                for i, (title, ref) in enumerate(entries):
+                    if title is None and ref.count(".") >= 2:
+                        title = ".".join(ref.rsplit(".", 2)[-2:])
+                        entries[i] = (title, ref)
+
+        return nodes
+
+    Autosummary.run = make_toc_tree_titles_shorter
+
+
 def callback(_app, _env, node, _contnode):  # noqa
     reftarget = node.get("reftarget")
+
+    if reftarget == "polars.dataframe.frame.DataFrame":
+        # https://github.com/pola-rs/polars/issues/7027
+        ans_hax = reference(refuri="https://docs.pola.rs/py-polars/html/reference/dataframe/index.html", reftitle=reftarget)
+        ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
+        return ans_hax
 
     for m in type_modules:
         if reftarget.startswith(m):
@@ -41,6 +75,7 @@ def callback(_app, _env, node, _contnode):  # noqa
 
 def setup(app):  # noqa
     app.connect("missing-reference", callback)  # Fixes linking of typevars
+    monkeypatch_autosummary_toc()
 
 
 # If extensions (or modules to document with autodoc) are in another
@@ -220,6 +255,8 @@ autodoc_default_options = {
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
+    # https://github.com/pola-rs/polars/issues/7027
+    # "polars": ("https://docs.pola.rs/py-polars/html/reference/", None),
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
