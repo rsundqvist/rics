@@ -42,6 +42,7 @@ click = { version = "*", optional = true }
 # plotting
 matplotlib = { version = "*", optional = true }
 seaborn = { version = "*", optional = true }
+polars = "^0.20.16"
 
 [tool.poetry.extras]
 cli = ["click"]

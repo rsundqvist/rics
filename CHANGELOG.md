@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Python `3.12` is now fully tested and supported in CI/CD.
 - New support module `time_split.integration.split_data`.
+- New `time_split` integration: `integration.polars.split_polars`.
 
 ### Changed
 - Python minimum version is now `3.11` (was `3.8`).
