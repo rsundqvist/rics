@@ -281,7 +281,7 @@ def tname(
         raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
 
 
-def format_kwargs(kwargs: dict[str, _t.Any], *, max_value_length: int = 80) -> str:
+def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80) -> str:
     """Format keyword arguments.
 
     Args:
