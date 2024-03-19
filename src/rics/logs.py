@@ -25,7 +25,8 @@ def basic_config(
 
     Args:
         format: Format string for emitted messages; see :attr:`FORMAT`.
-        datefmt: Format string for date/time; see :attr:`DATE_FORMAT`.
+        datefmt: Format string for date/time; see :attr:`DATE_FORMAT`. If ``bool(datefmt)`` is ``False``, remove the
+            time components if ``format == FORMAT`` (the default).
         level: Log level for the root logger.
         force: If ``True``, override existing configuration if it exists.
         **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
@@ -37,7 +38,6 @@ def basic_config(
     Examples:
         Basic usage.
 
-        >>> from rics.logs import basic_config
         >>> import logging
         >>> basic_config(level=logging.INFO, rics_level=logging.DEBUG)
         >>> logging.getLogger("rics").debug("I'm a debug message!")
@@ -46,7 +46,17 @@ def basic_config(
         2022-02-05T11:17:05.378 [rics:DEBUG] I'm a debug message!
         2022-02-05T11:17:05.378 [root:CRITICAL] I'm a critical message!
 
+        Removing time from the message template. Setting ``datefmt=""`` works as well.
+
+        >>> import sys
+        >>> basic_config(datefmt=False, stream=sys.stdout)
+        >>> logging.info("No time!")
+        [root:INFO] No time!
+
     """
+    if not datefmt and format == FORMAT:
+        format = FORMAT.partition(" ")[-1]
+
     extra_levels, kwargs = _extract_extra_levels(**kwargs)
     _logging.basicConfig(level=level, format=format, datefmt=datefmt, force=force, **kwargs)
 

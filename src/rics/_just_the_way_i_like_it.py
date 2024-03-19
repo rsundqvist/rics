@@ -30,7 +30,7 @@ def configure_stuff(
         rics_level: Log level for the :mod:`rics` package. Default is ``logging.INFO``.
         id_translation_level: Log level for the :mod:`id_translation` package. Default is ``logging.INFO``.
         matplotlib_level: Log level for the :mod:`matplotlib` package. Default is ``logging.WARNING``.
-        **kwargs: Keyword arguments for :py:func:`logging.basicConfig`.
+        **kwargs: Keyword arguments for :func:`rics.logs.basic_config` and :py:func:`logging.basicConfig`.
 
     """
     basic_config(
