@@ -47,8 +47,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # os: [ Ubuntu, MacOS, Windows ]
-        os: [ Ubuntu, Windows ]
+        os: [ Ubuntu, MacOS, Windows ]
         python-version: [ '3.11', '3.12' ]
         experimental: [false]
     steps:
