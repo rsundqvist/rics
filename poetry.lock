@@ -3956,4 +3956,4 @@ plotting = ["matplotlib", "seaborn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11"
-content-hash = "c811172cc98c0a01f1e82a3a861ecb4339f64cc3199c6cb41c8696290bec90aa"
+content-hash = "b63f187d03bf7b7956bc0eff5df74ad6ae0d50cd0a4ef78d42ec74834b1d5415"

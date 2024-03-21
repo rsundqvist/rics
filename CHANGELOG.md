@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+* Fix RTD build. Docs for `4.0.0` are not available, but `4.0.1` docs are identical.
+
 ## [4.0.0] - 2024-03-21
 
 ### Added
