@@ -2405,6 +2405,10 @@ files = [
     {file = "polars-0.20.16.tar.gz", hash = "sha256:7a9ebb85bfc9dd964490612b6fee2afbde91eee6bfaa590b731c7868d225210b"},
 ]
 
+[package.dependencies]
+pandas = {version = "*", optional = true, markers = "extra == \"pandas\""}
+pyarrow = {version = ">=7.0.0", optional = true, markers = "extra == \"pandas\""}
+
 [package.extras]
 adbc = ["adbc-driver-manager", "adbc-driver-sqlite"]
 all = ["polars[adbc,cloudpickle,connectorx,deltalake,fastexcel,fsspec,gevent,numpy,pandas,plot,pyarrow,pydantic,pyiceberg,sqlalchemy,timezone,xlsx2csv,xlsxwriter]"]
@@ -3952,4 +3956,4 @@ plotting = ["matplotlib", "seaborn"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11"
-content-hash = "955674be5783d476cc187013c2d7134254636a7b67d3050779211d2df8f22730"
+content-hash = "c811172cc98c0a01f1e82a3a861ecb4339f64cc3199c6cb41c8696290bec90aa"

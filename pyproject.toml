@@ -42,7 +42,6 @@ click = { version = "*", optional = true }
 # plotting
 matplotlib = { version = "*", optional = true }
 seaborn = { version = "*", optional = true }
-polars = "^0.20.16"
 
 [tool.poetry.extras]
 cli = ["click"]
@@ -84,6 +83,7 @@ scikit-learn = "^1.4.0"
 #     UserWarning: dask_expr does not support the DataFrameIOFunction protocol for column projection
 # on dask == 2024.3.1
 dask = { version = "==2024.2.1", extras = ["dataframe"] }
+polars = { version = "^0.20.16", extras = ["pandas"] }
 
 [tool.poetry.group.devops.dependencies]
 invoke = "^2.2.0"

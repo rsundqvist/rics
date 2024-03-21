@@ -20,6 +20,7 @@ env:
   # Need to be explicit when using pip; this is only for the official Poetry (curl-based) installer.
   # https://github.com/python-poetry/poetry/issues/7611
   POETRY_VERSION: 1.8.2
+  POLARS_SKIP_CPU_CHECK: true
 
 jobs:
   linting:

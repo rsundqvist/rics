@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Python minimum version is now `3.11` (was `3.8`).
-- The `time_split` Pandas integration no longer supports the `inclusive=left|right|neither'` argument (now always `left`).
+- The `time_split` Pandas integration no longer supports the `inclusive=left|right|neither` argument (now always `left`).
 - Updates to `rics.performance`:
   * Functions and classes are  now generically typed.
   * Implement optional progress bars.
