@@ -5,7 +5,7 @@ Full documentation: https://jupyter-docker-stacks.readthedocs.io
 Installing JupyterLab and a few useful plugins.
 
 ```bash
-pip install -U jupyterlab jupyterlab-execute-time jupyterlab-git ipywidgets
+pip install -U jupyterlab jupyterlab-execute-time jupyterlab-git jupyterlab-code-formatter ipywidgets
 ```
 
 Installing a kernel.

@@ -8,7 +8,7 @@ causes the folds to align to the right edge of the ``available`` data.
 from rics import configure_stuff
 from rics.ml.time_split import log_split_progress, plot, settings, split
 
-configure_stuff(format="[%(name)s:%(levelname)s] %(message)s")
+configure_stuff(datefmt="")
 
 data = ("2022-02", "2022-03")
 config = dict(schedule="7d", before="3d", after="5d", available=data)

@@ -1,6 +1,5 @@
 """Plotting utility methods."""
 
-import math
 import typing as _t
 
 from matplotlib.axis import Axis as _Axis
@@ -45,7 +44,8 @@ def configure_seaborn() -> None:
     sns.set_theme(context="talk")
 
     sns.barplot = functools.partial(sns.barplot, capsize=ERROR_BAR_CAPSIZE)
-    sns.catplot = functools.partial(sns.catplot, capsize=ERROR_BAR_CAPSIZE, height=5)
+    # Doesn't play nice with all plot kinds
+    # sns.catplot = functools.partial(sns.catplot, capsize=ERROR_BAR_CAPSIZE, height=5)
 
 
 def configure_matplotlib() -> None:
@@ -102,7 +102,7 @@ def pi_ticks(ax: _Axis | HasXAxis, half_rep: HalfRep | None = None) -> None:
 
 
 class _PiTickHelper:
-    PI: float = math.pi
+    PI: float = 3.14159265359
     HALF_PI: float = PI / 2
 
     def __init__(
