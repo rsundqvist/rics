@@ -70,7 +70,7 @@ class auto_flex:  # noqa: N801
 
 
 class plot:  # noqa: N801
-    """Global settings for the :func:`.plot`-function."""
+    """Global settings for the :func:`.time_split.plot`-function."""
 
     THOUSANDS_SEPARATOR: str = "'"
     """Separator to use when printing `bar_labels`."""

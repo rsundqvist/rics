@@ -12,10 +12,10 @@ _SKIP_WARNING: bool = False
 
 
 def configure_stuff(
-    level: int | str = logging.INFO,
-    rics_level: int | str = logging.INFO,
-    id_translation_level: int | str = logging.INFO,
-    matplotlib_level: int | str = logging.WARNING,
+    level: int | str = "INFO",
+    rics_level: int | str = "INFO",
+    id_translation_level: int | str = "INFO",
+    matplotlib_level: int | str = "WARNING",
     **kwargs: Any,
 ) -> None:
     """Configure a bunch of stuff to match my personal preferences. May do strange stuff 👻.

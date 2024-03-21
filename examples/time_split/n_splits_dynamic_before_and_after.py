@@ -8,7 +8,7 @@ import pandas
 from rics import configure_stuff
 from rics.ml.time_split import log_split_progress, plot, split
 
-configure_stuff(format="[%(name)s:%(levelname)s] %(message)s")
+configure_stuff(datefmt="")
 
 data = pandas.date_range("2022", "2022-2", freq="15s")
 config = dict(schedule="0 0 * * MON,FRI", before=1, after=2, available=data, n_splits=4)

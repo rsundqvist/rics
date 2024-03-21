@@ -267,6 +267,7 @@ intersphinx_mapping = {
 sphinx_gallery_conf = {
     "backreferences_dir": "gen_modules/backreferences",
     "gallery_dirs": ["auto_examples"],
+    "filename_pattern": "/",
     "examples_dirs": ["../examples"],
     "doc_module": ("rics",),
 }
