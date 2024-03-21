@@ -147,7 +147,8 @@ ignore = [
     "PD901", # Avoid using the generic variable name `df` for DataFrames
     "PLC0415", # `import` should be at the top-level of a file
     "PLR0913", #
-    "SIM108", #  Use ternary operator - coverage issue, see https://github.com/nedbat/coveragepy/issues/509
+    "SIM108", # Use ternary operator - coverage issue, see https://github.com/nedbat/coveragepy/issues/509
+    "TD003", # Missing issue link
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -156,7 +157,6 @@ ignore = [
     "S101", # Allow 'assert' keyword
     "ANN",
     "PLR2004", # Allow magic values
-    "TD003", # Missing issue link
 ]
 "examples/*" = [
     "D205", # Clashes with sphinx_gallery (generated examples)

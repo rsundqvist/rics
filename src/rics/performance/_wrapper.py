@@ -1,15 +1,15 @@
-from collections.abc import Collection, Mapping
 from typing import Any
 
 import pandas as pd
 
-from ._multi_case_timer import CandFunc, MultiCaseTimer
+from ._multi_case_timer import CandidateMethodArg, MultiCaseTimer, TestDataArg
 from ._util import plot_run, to_dataframe
+from .types import DataType
 
 
 def run_multivariate_test(
-    candidate_method: CandFunc | Collection[CandFunc] | Mapping[str, CandFunc],
-    test_data: Any | Mapping[str, Any],
+    candidate_method: CandidateMethodArg[DataType],
+    test_data: TestDataArg[DataType],
     time_per_candidate: float = 6.0,
     plot: bool = True,
     **figure_kwargs: Any,
@@ -21,11 +21,11 @@ def run_multivariate_test(
     functionally these methods should be use directly.
 
     Args:
-        candidate_method: Candidate methods to evaluate.
-        test_data: Test data to evaluate.
+        candidate_method: A single method, collection of functions or a dict {label: function} of candidates.
+        test_data: A single datum, or a dict ``{label: data}`` to evaluate candidates on.
         time_per_candidate: Desired runtime for each repetition per candidate label.
         plot: If ``True``, plot a figure using :meth:`~rics.performance.plot_run`.
-        **figure_kwargs: Keyword arguments for the barplot. Ignored if ``plot=False``.
+        **figure_kwargs: Keyword arguments for the :seaborn.barplot`. Ignored if ``plot=False``.
 
     Returns:
         A long-format DataFrame of results.
@@ -33,15 +33,17 @@ def run_multivariate_test(
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed and ``plot=True``.
 
+    See Also:
+        The :func:`~rics.performance.plot_run` and :func:`~rics.performance.get_best` functions.
     """
-    run_results = MultiCaseTimer(candidate_method, test_data).run(time_per_candidate=time_per_candidate)
-
+    timer: MultiCaseTimer[DataType] = MultiCaseTimer(candidate_method, test_data)
+    run_results = timer.run(time_per_candidate=time_per_candidate)
     data = to_dataframe(run_results)
+
     if plot:
         from matplotlib.pyplot import show
 
         plot_run(data, **figure_kwargs)
         show(block=False)
-    else:
-        pass  # pragma: no cover
+
     return data

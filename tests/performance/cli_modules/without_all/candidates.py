@@ -6,7 +6,7 @@ from time import sleep as real_sleep
 class CandidateFunction:
     sleep_multiplier: int
 
-    def __call__(self, time):
+    def __call__(self, time: float) -> None:
         real_sleep(time * self.sleep_multiplier)
 
     @property
