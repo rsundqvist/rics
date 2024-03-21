@@ -260,6 +260,7 @@ intersphinx_mapping = {
     "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
+    "seaborn": ("https://seaborn.pydata.org/", None),
     "id_translation": (id_translation_docs, None),
 }
 

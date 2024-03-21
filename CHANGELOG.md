@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Python minimum version is now `3.11` (was `3.8`).
 - The `time_split` Pandas integration no longer supports the `inclusive=left|right|neither'` argument (now always `left`).
+- Updates to `rics.performance`:
+  * Functions and classes are  now generically typed.
+  * Implement optional progress bars.
+  * Added new plotting backend (**_experimental_**).
+  * Select suitable time unit automatically when plotting (was: milliseconds).
 
 ### Removed
 - Module `rics.mapping` was previously deprecated and has now been removed.
