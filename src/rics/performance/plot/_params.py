@@ -1,5 +1,6 @@
+from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, fields
-from typing import Any, ClassVar, Hashable, Iterable, Literal, Mapping, Self
+from typing import Any, ClassVar, Literal, Self
 
 import numpy as np
 import pandas as pd

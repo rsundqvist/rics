@@ -1,8 +1,8 @@
 import logging
 import warnings
-from collections.abc import Collection, Mapping
+from collections.abc import Collection, Hashable, Mapping
 from timeit import Timer
-from typing import Any, Generic, Hashable, TypeAlias
+from typing import Any, Generic, TypeAlias
 
 from ..misc import tname
 from ._format_perf_counter import format_seconds as fmt_time

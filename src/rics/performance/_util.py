@@ -1,4 +1,5 @@
-from typing import Any, Hashable, Iterable, Literal, TypeGuard, cast, get_args
+from collections.abc import Hashable, Iterable
+from typing import Any, Literal, TypeGuard, cast, get_args
 
 import pandas as pd
 

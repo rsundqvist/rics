@@ -202,14 +202,17 @@ def version(c: Context, part: str, dry_run: bool = False) -> None:
 
 
 @task
-def pyupgrade(c: Context) -> None:
+def pyupgrade(c: Context, check: bool = False) -> None:
     """Apply ``pyupgrade`` to all .py-files in ``PYTHON_TARGETS``."""
+    flags = ["--py311-plus"]
+    if not check:
+        flags.append("--exit-zero-even-if-changed")
 
     def apply(*paths: Path) -> None:
         for path in paths:
             if path.is_file() and path.suffix == ".py":
-                _run(c, f"pyupgrade --py311-plus {path}")
+                _run(c, f"pyupgrade {' '.join(flags)} {path}")
             elif path.is_dir():
-                apply(*path.rglob("**/*.py"))
+                apply(*path.rglob("*/*.py"))
 
     apply(*PYTHON_TARGETS)
