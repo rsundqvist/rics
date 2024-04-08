@@ -11,39 +11,14 @@ which demonstrates the (desired) usage.
 
 [minimal-reproducible-example]: https://stackoverflow.com/help/minimal-reproducible-example
 
-## PR guidelines
-To be merged, all tests (including generating documentation), must be successful.
-
-## Code requirements
-General requirements which applies to all code in the library.
-
-### Unchecked requirements
-These requirements are *not* verified in CI/CD.
-
-* User-facing changes should be recorded in the [changelog](https://github.com/rsundqvist/rics/blob/master/CHANGELOG.md).
-* Summarize the changes being made, and why they're made.
-* Expensive operations (especially related to logging) should only be done if the result is needed.
-* Coverage exceptions should be minimal.
-
-### Checked requirements
-These requirements are verified in CI/CD.
-
-* Coverage limit should not decrease unless it's well-motivated.
-* Public methods and classes must be documented.
-* Use the commit hooks to format and lint the code.
-
 ## Getting started
-Follow these steps to begin local development. I use Ubuntu LTS and PyCharm 
-(both are kept updated), so such environments will usually work without too much
-trouble.
+Follow these steps to begin local development.
 
-1. **Installing [Poetry](https://python-poetry.org/docs/) and [Invoke](https://www.pyinvoke.org/)**
+1. **Installing [Poetry](https://python-poetry.org/docs/)***
    
-   Poetry is a dependency management tool. You must have `poetry >= 1.2.2` as this project uses version 2.0 of the
-   lockfile  format.
+   See [poetry.lock](https://github.com/rsundqvist/rics/blob/master/poetry.lock) for the version used.
    ```bash
    curl -sSL https://install.python-poetry.org/ | python -
-   pip install invoke
    ```
 
 2. **Installing the project**
@@ -63,14 +38,13 @@ trouble.
    sudo apt-get install pandoc tree
    ```
    
-3. **Verify installation**
+3. **Verify installation (optional)**
 
-   This is similar to what the CI/CD pipeline will run for a single OS and major
-   Python version. It also skips the additional isolation provided by `nox`,
-   which may hide some dependency-gotchas.
+   Run all invocations.
    ```bash
    ./run-invocations.sh
    ```
+   This is similar to what the CI/CD pipeline does for a single OS and major Python version.
 
 ### Running GitHub Actions locally
 Relying on GitHub actions for new CI/CD features is quite slow. An alternative is to use 
