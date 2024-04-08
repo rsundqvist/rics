@@ -1,12 +1,4 @@
-import contextlib
-import logging
-import os
-import sys
-import traceback
-from multiprocessing import process
 from typing import Any
-
-from .logs import basic_config
 
 _SKIP_WARNING: bool = False
 
@@ -33,6 +25,10 @@ def configure_stuff(
         **kwargs: Keyword arguments for :func:`rics.logs.basic_config` and :py:func:`logging.basicConfig`.
 
     """
+    import contextlib
+
+    from .logs import basic_config
+
     basic_config(
         level=level,
         rics_level=rics_level,
@@ -58,6 +54,8 @@ def _configure_pandas() -> None:
     except ModuleNotFoundError:
         return
 
+    import contextlib
+
     pd.options.display.max_columns = 50
     pd.options.display.max_colwidth = 150
     pd.options.display.max_rows = 250
@@ -73,16 +71,22 @@ def _configure_pandas() -> None:
 
 
 def _maybe_emit_warning() -> None:  # pragma: no cover
+    import logging
+    import os
+    import sys
+    import traceback
+    from multiprocessing import process
+
     global _SKIP_WARNING  # noqa: PLW0603
     if _SKIP_WARNING:
         return
     _SKIP_WARNING = True
 
+    if os.environ.get("JTWILI", "").lower() == "true":
+        return
+
     if getattr(process.current_process(), "_inheriting", False):
         return  # From multiprocessing.spawn._check_not_importing_main
-
-    if os.environ.get("JTWILI", "false").lower() == "true":
-        return
 
     try:
         get_ipython()  # type: ignore[name-defined]

@@ -1,11 +1,12 @@
 from pathlib import Path
 
-from ..types import PathLikeType
+from rics.paths import AnyPath
+
 from ._patch_notes import PatchNotes
 from ._write_changelog import write_changelog
 
 
-def split_changelog(output_dir: PathLikeType, changelog: PathLikeType = "CHANGELOG.md") -> None:
+def split_changelog(output_dir: AnyPath, changelog: AnyPath = "CHANGELOG.md") -> None:
     """Split a Markdown changelog into multiple pages.
 
     Args:

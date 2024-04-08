@@ -5,8 +5,6 @@ from pathlib import Path
 from typing import Any, BinaryIO
 from urllib.parse import urljoin
 
-from .types import PathLikeType
-
 try:
     from tqdm.auto import tqdm
 
@@ -21,13 +19,13 @@ _GLOR_LOGGER = LOGGER.getChild("get_local_or_remote")
 
 
 def get_local_or_remote(
-    file: PathLikeType,
+    file: str,
     *,
-    remote_root: PathLikeType,
-    local_root: PathLikeType,
+    remote_root: str,
+    local_root: str,
     force: bool = False,
     postprocessor: Callable[[str], Any] | None = None,
-    show_progress: bool = TQDM_INSTALLED,
+    show_progress: bool | None = TQDM_INSTALLED,
 ) -> Path:
     """Retrieve a file from a local or remove (HTTP/HTTPS) source.
 
@@ -44,7 +42,9 @@ def get_local_or_remote(
         Location where `file` may be accessed locally. Transformations are applied if a `postprocessor` is given, in
         which case the returned ``Path`` will point to a transformed result.
     """
-    if show_progress and not TQDM_INSTALLED:
+    if show_progress is None:
+        show_progress = TQDM_INSTALLED
+    elif show_progress and not TQDM_INSTALLED:
         raise ModuleNotFoundError("The tqdm package is not installed; cannot show progress.")
 
     return _get_file(

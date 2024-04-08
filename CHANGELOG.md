@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+* New module `rics.paths`; `paths.parse_any_path()`, derived functions `any_path_to_str()` and `any_path_to_path()`.
+
 ## [4.0.1] - 2024-03-21
 
 ### Fixed

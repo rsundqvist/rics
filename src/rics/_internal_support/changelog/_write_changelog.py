@@ -1,7 +1,7 @@
 import shutil
-from pathlib import Path
 
-from ..types import PathLikeType
+from rics.paths import AnyPath, any_path_to_path
+
 from ._patch_notes import PatchNotes
 
 BASE_LINES: list[str] = [
@@ -18,7 +18,7 @@ BASE_LINES: list[str] = [
 
 
 def write_changelog(
-    output_dir: PathLikeType,
+    output_dir: AnyPath,
     notes: list[PatchNotes],
     refs: dict[str, str],
 ) -> None:
@@ -30,7 +30,7 @@ def write_changelog(
         refs: Title references.
 
     """
-    root = Path(str(output_dir))
+    root = any_path_to_path(output_dir)
     shutil.rmtree(root, ignore_errors=True)
     root.mkdir()
 

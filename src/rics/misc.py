@@ -6,10 +6,10 @@ from pathlib import Path as _Path
 from pprint import saferepr as _safe_repr
 from types import ModuleType as _ModuleType
 
-from ._internal_support import _local_or_remote
-from ._internal_support.types import PathLikeType
+from . import paths as _paths
 from .envinterp import UnsetVariableError as _UnsetVariableError
 from .envinterp import Variable as _Variable
+from .types import AnyPath as _AnyPath
 
 
 def interpolate_environment_variables(
@@ -314,13 +314,13 @@ def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80
 
 
 def get_local_or_remote(
-    file: PathLikeType,
+    file: _AnyPath,
     *,
-    remote_root: PathLikeType,
-    local_root: PathLikeType = ".",
+    remote_root: _AnyPath,
+    local_root: _AnyPath = ".",
     force: bool = False,
     postprocessor: _t.Callable[[str], _t.Any] | None = None,
-    show_progress: bool = _local_or_remote.TQDM_INSTALLED,
+    show_progress: bool | None = None,
 ) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
 
@@ -334,7 +334,8 @@ def get_local_or_remote(
         local_root: Local directory where the file may be cached.
         force: If ``True``, always download and apply processing (if applicable). Existing files will be overwritten.
         postprocessor: A function which takes a single argument `input_path` and returns a pickleable type.
-        show_progress: If ``True``, show a progress bar. Requires the `tqdm`_ package.
+        show_progress: If ``True``, show a progress bar. Requires the `tqdm`_ package. If ``None``, use only if TQDM
+            is installed.
 
     Returns:
         An absolute path to the data.
@@ -377,10 +378,12 @@ def get_local_or_remote(
         https://pypi.org/project/tqdm/
 
     """
-    return _local_or_remote.get_local_or_remote(
-        file=file,
-        local_root=local_root,
-        remote_root=remote_root,
+    from ._internal_support._local_or_remote import get_local_or_remote as _impl
+
+    return _impl(
+        file=_paths.any_path_to_str(file),
+        local_root=_paths.any_path_to_str(local_root),
+        remote_root=_paths.any_path_to_str(remote_root),
         force=force,
         postprocessor=postprocessor,
         show_progress=show_progress,
