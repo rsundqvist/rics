@@ -102,6 +102,7 @@ release = _metadata["Version"]
 version = ".".join(release.split(".")[:2])
 
 id_translation_docs = f"https://id-translation.readthedocs.io/en/{'latest' if 'dev' in release else 'stable'}/"
+time_split_docs = f"https://time-split.readthedocs.io/en/{'latest' if 'dev' in release else 'stable'}/"
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -208,16 +209,16 @@ html_context = {
             img="_static/toolbox.png",
         ),
         dict(
-            title="Cross Validation",
-            text="Temporal folds for heterogeneous data. Scikit-learn compatible.",
-            url="_autosummary/rics.ml.time_split.html",
-            img="_static/cross-validation.png",
+            title="Time Split <img src= https://img.shields.io/pypi/v/time-split.svg >",
+            text="Documentation for the <i>time-split</i> package.",
+            url=time_split_docs,
+            img="https://raw.githubusercontent.com/rsundqvist/time-split/master/docs/2x2-examples.jpg",
         ),
         dict(
-            title="ID Translation",
-            text="Documentation for the ID translation suite.",
+            title="ID Translation <img src= https://img.shields.io/pypi/v/id-translation.svg >",
+            text="Documentation for the <i>id-translation</i> package.",
             url=id_translation_docs,
-            img="_static/translation.png",
+            img="https://raw.githubusercontent.com/rsundqvist/id-translation/master/docs/_images/translation.png",
         ),
     ],
 }
@@ -262,6 +263,7 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "seaborn": ("https://seaborn.pydata.org/", None),
     "id_translation": (id_translation_docs, None),
+    "time_split": (time_split_docs, None),
 }
 
 # -- Gallery configuration -------------------------------------------------

@@ -14,7 +14,7 @@ which demonstrates the (desired) usage.
 ## Getting started
 Follow these steps to begin local development.
 
-1. **Installing [Poetry](https://python-poetry.org/docs/)***
+1. **Installing [Poetry](https://python-poetry.org/docs/)**
    
    See [poetry.lock](https://github.com/rsundqvist/rics/blob/master/poetry.lock) for the version used.
    ```bash
