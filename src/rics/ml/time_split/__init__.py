@@ -7,13 +7,6 @@
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/time-split.svg
                 :target: https://pypi.org/project/time-split/
 
-.. minigallery:: rics.ml.time_split.plot
-    :add-heading: Examples
-    :heading-level: =
-
-Examples demonstrate usage of :func:`.split` and :func:`.plot`. The :mod:`.integration` functions do not have examples,
-but mostly behave the same way as the :func:`.split`-function.
-
 .. _tsug:
 
 User guide

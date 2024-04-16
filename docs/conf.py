@@ -116,7 +116,6 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.autosectionlabel",
-    "sphinx_gallery.gen_gallery",
     "nbsphinx",
     "sphinx.ext.mathjax",
     "myst_parser",
@@ -265,16 +264,6 @@ intersphinx_mapping = {
     "id_translation": (id_translation_docs, None),
     "time_split": (time_split_docs, None),
 }
-
-# -- Gallery configuration -------------------------------------------------
-sphinx_gallery_conf = {
-    "backreferences_dir": "gen_modules/backreferences",
-    "gallery_dirs": ["auto_examples"],
-    "filename_pattern": "/",
-    "examples_dirs": ["../examples"],
-    "doc_module": ("rics",),
-}
-autosummary_generate = True
 
 # -- Nbsphinx
 nbsphinx_execute = "never"
