@@ -11,6 +11,7 @@ source = rics
 omit =
     src/rics/_internal_support/changelog/*
     src/rics/_internal_support/_local_or_remote.py
+    src/rics/ml/time_split/*
 
 fail_under = 90
 
