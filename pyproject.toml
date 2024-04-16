@@ -181,7 +181,7 @@ max-line-length = 150
 filterwarnings = [
     "error",
     "ignore:Matplotlib is currently using agg:UserWarning",
-    "ignore:.*utcfromtimestamp.*:DeprecationWarning", # Detta är farligt - ta bort
+    "ignore:.*rics.ml.time_split:DeprecationWarning",
 ]
 log_file_level = 10
 log_file = "pytest.log"

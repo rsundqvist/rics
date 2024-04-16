@@ -1,5 +1,12 @@
 """Create temporal k-folds for cross-validation with heterogeneous data.
 
+.. warning::
+
+   This module is deprecated. Use the :mod:`time_split` |pypi-badge| package instead.
+
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/time-split.svg
+                :target: https://pypi.org/project/time-split/
+
 .. minigallery:: rics.ml.time_split.plot
     :add-heading: Examples
     :heading-level: =
@@ -110,6 +117,8 @@ Data :attr:`~rics.ml.time_split.types.Flex` allows bounds inferred from and `ava
        than one hour in either direction.
 """
 
+from warnings import warn as _warn
+
 from ._frontend import log_split_progress, plot, split
 
 __all__ = [
@@ -117,3 +126,14 @@ __all__ = [
     "plot",
     "split",
 ]
+
+_warn(
+    (
+        f"The `{__package__}` submodule is now a stand-alone package.\n"
+        "Run `python -m pip install time-split` to install, or"
+        " pin `rics==4.0.1` to hide this warning."
+    ),
+    category=DeprecationWarning,
+    stacklevel=2,
+)
+del _warn
