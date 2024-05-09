@@ -4,8 +4,9 @@ from collections.abc import Collection, Hashable, Mapping
 from timeit import Timer
 from typing import Any, Generic, TypeAlias
 
+from rics.strings import format_seconds as fmt_time
+
 from ..misc import tname
-from ._format_perf_counter import format_seconds as fmt_time
 from .types import CandFunc, DataType, ResultsDict
 
 CandidateMethodArg: TypeAlias = dict[str, CandFunc[DataType]] | Collection[CandFunc[DataType]] | CandFunc[DataType]

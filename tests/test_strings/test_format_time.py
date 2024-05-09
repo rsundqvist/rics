@@ -1,12 +1,12 @@
 import pytest
-from rics.performance import format_perf_counter, format_seconds
+from rics.strings import format_perf_counter, format_seconds
 
 
 class Base:
     @staticmethod
     def test_positive(t, expected):
         assert format_seconds(t) == expected
-        assert format_perf_counter(0, t) == expected
+        assert format_perf_counter(0, end=t) == expected
 
     @staticmethod
     def test_negative(t, expected):
@@ -69,11 +69,25 @@ class TestClock(Base):
 @pytest.mark.parametrize(
     "t, expected",
     [
-        (119.5, "2m"),
+        (59.99, "60.0s"),
+        (60.00, "60.0s"),
+        (60.01, "1m"),
+        (61.0, "1m 1s"),
+    ],
+)
+class TestClockTransition(Base):
+    pass
+
+
+@pytest.mark.parametrize(
+    "t, expected",
+    [
         (119.49, "1m 59s"),
-        (3599.5, "1h"),
+        (119.50, "2m"),
+        (119.51, "2m"),
+        (3599.50, "1h"),
         (3599.49, "59m 59s"),
-        (3659.5, "1h 1m"),
+        (3659.50, "1h 1m"),
         (3659.49, "1h 0m 59s"),
     ],
 )

@@ -9,9 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 * New module `rics.paths`; `paths.parse_any_path()`, derived functions `any_path_to_str()` and `any_path_to_path()`.
+* New module `rics.strings`. Moved `format_perf_counter()` and `format_seconds()`.
+* New function `strings.format_bytes()`.
 
 ### Deprecated
-* Module `rics.ml.time_split` use `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead
+* Module `rics.ml.time_split` use `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead.
+* Functions `rics.performance.format_perf_counter()` and `format_seconds()`. Use `rics.strings`-functions instead.
 
 ## [4.0.1] - 2024-03-21
 
