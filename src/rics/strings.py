@@ -1,6 +1,97 @@
 """Utility functions that act on or produce strings."""
 
 
+def format_bytes(n: int, *, binary: bool = True, long: bool = False, decimals: int = 2) -> str:
+    """Format bytes as a string.
+
+    Args:
+        n: Number of bytes. Must be positive.
+        binary: Output `binary <https://en.wikipedia.org/wiki/Binary_prefix>`_ prefixes if ``True``,
+            use `metric (SI) <https://en.wikipedia.org/wiki/Metric_prefix>`_ prefixes otherwise.
+        long: Output out full unit and prefix if ``True``, use abbreviated versions otherwise.
+        decimals: Number of decimals to include. Ignored for when `n < base`.
+
+    Returns:
+        Formatted number of bytes.
+
+    Examples:
+        **Formatting on prefix bounds**
+
+        The jump as made at `base / 2`, where `base` is one of 1024 and 1000 (when ``binary=False``).
+
+        >>> format_bytes(512 * 1024)
+        '512.00 KiB'
+        >>> format_bytes(512 * 1024 + 1)
+        '0.50 MiB'
+
+        This rule does *not* apply when `n <= base`.
+
+        >>> format_bytes(1024, long=True)
+        1024 bytes
+        >>> format_bytes(1024 + 1)
+        '1.00 KiB'
+
+        **Output flags**
+
+        >>> format_bytes(20190511, binary=False, long=False)
+        '20.19 MB'
+        >>> format_bytes(20190511, binary=False, long=True)
+        '20.19 megabytes'
+        >>> format_bytes(20190511, binary=True, long=False)
+        '19.26 MiB'
+        >>> format_bytes(20190511, binary=True, long=True)
+        '19.26 mebibytes'
+
+        **Large outputs**
+
+        Metric and binary have different upper limits.
+
+        >>> format_bytes(21**21, binary=True)
+        '2416.44 YiB'
+        >>> format_bytes(21**21, binary=True, long=True)
+        '2416.44 yobibytes'
+        >>> format_bytes(21**21, binary=False)
+        '5.84 RB'
+        >>> format_bytes(21**21, binary=False, long=True)
+        '5.84 ronnabytes'
+
+        If you ever see output like this, please let me know so that I can brag that someone important is using my
+        little library.
+    """
+    base = 1024 if binary else 1000
+
+    if n <= base:
+        return f"{n} {'bytes' if long else 'B'}"
+
+    x: float = n * 2.0
+    n_divisions = -1
+    while x > base:
+        x /= base
+        n_divisions += 1
+
+    if binary:
+        # https://en.wikipedia.org/wiki/Binary_prefix
+        if long:
+            prefixes = ["kibi", "mebi", "gibi", "tebi", "pebi", "exbi", "zebi", "yobi"]
+        else:
+            prefixes = ["Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
+    else:  # noqa: PLR5501  # BUG: this rule doesn't preserve comments: https://github.com/astral-sh/ruff/issues/9790
+        # https://en.wikipedia.org/wiki/Metric_prefix
+        if long:
+            prefixes = ["kilo", "mega", "giga", "tera", "peta", "exa", "zetta", "yotta", "ronna", "quetta"]
+        else:
+            prefixes = ["k", "M", "G", "T", "P", "E", "Z", "Y", "R", "Q"]
+
+    try:
+        prefix = prefixes[n_divisions]
+    except IndexError:
+        prefix = prefixes[-1]
+        x = n / base ** len(prefixes)
+
+    prefix += "bytes" if long else "B"
+    return f"{x / 2:.{decimals}f} {prefix}"
+
+
 def format_perf_counter(start: float, *, end: float | None = None) -> str:
     """Format performance counter output.
 
