@@ -1,10 +1,11 @@
-from typing import Any
-
-import pandas as pd
+from typing import TYPE_CHECKING, Any, Union
 
 from ._multi_case_timer import CandidateMethodArg, MultiCaseTimer, TestDataArg
 from ._util import plot_run, to_dataframe
-from .types import DataType
+from .types import DataType, ResultsDict
+
+if TYPE_CHECKING:
+    import pandas
 
 
 def run_multivariate_test(
@@ -13,8 +14,13 @@ def run_multivariate_test(
     time_per_candidate: float = 6.0,
     plot: bool = True,
     **figure_kwargs: Any,
-) -> pd.DataFrame:
+) -> Union["pandas.DataFrame", ResultsDict]:
     """Run performance tests for multiple candidate methods on collections of test data.
+
+    .. note::
+
+       Returns a :attr:`~rics.performance.types.ResultsDict` if :mod:`pandas` is not
+       installed. Plotting requires :func:`seaborn <seaborn.barplot>`.
 
     This is a convenience method which combines :meth:`MultiCaseTimer.run() <rics.performance.MultiCaseTimer.run>`,
     :meth:`~rics.performance.to_dataframe` and -- if plotting is enabled -- :meth:`~rics.performance.plot_run`. For full
@@ -25,10 +31,10 @@ def run_multivariate_test(
         test_data: A single datum, or a dict ``{label: data}`` to evaluate candidates on.
         time_per_candidate: Desired runtime for each repetition per candidate label.
         plot: If ``True``, plot a figure using :meth:`~rics.performance.plot_run`.
-        **figure_kwargs: Keyword arguments for the :seaborn.barplot`. Ignored if ``plot=False``.
+        **figure_kwargs: Keyword arguments for the :func:`seaborn.barplot`. Ignored if ``plot=False``.
 
     Returns:
-        A long-format DataFrame of results.
+        A long-format :class:`pandas.DataFrame` of results.
 
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed and ``plot=True``.

@@ -35,7 +35,7 @@ mtimeit = { callable = "rics.performance.cli:main", extras = ["cli"] }
 [tool.poetry.dependencies]
 python = ">=3.11"
 
-pandas = ">=2.0.3"
+pandas = { version = ">=2.0.3", optional = true }
 
 # cli
 click = { version = "*", optional = true }
@@ -44,7 +44,8 @@ matplotlib = { version = "*", optional = true }
 seaborn = { version = "*", optional = true }
 
 [tool.poetry.extras]
-cli = ["click"]
+all = ["pandas", "click", "matplotlib", "seaborn"]
+cli = ["pandas", "click", "matplotlib", "seaborn"]
 plotting = ["matplotlib", "seaborn"]
 
 [tool.poetry.group.manual-extras.dependencies]
