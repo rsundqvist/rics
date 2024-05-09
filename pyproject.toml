@@ -50,7 +50,7 @@ plotting = ["matplotlib", "seaborn"]
 [tool.poetry.group.manual-extras.dependencies]
 # Extras that must be available for docs + tests go here. Doc/test-only deps go in their respective groups.
 croniter = "^2.0.1"
-pyarrow = "^15.0.0"
+pyarrow = "^16.0.0"
 polars = { version = "^0.20.16", extras = ["pandas"] }
 
 [tool.poetry.group.docs]
@@ -79,12 +79,8 @@ xdoctest = "^1.1.1"
 coverage = "^7.3.0"
 pytest-cov = "^4.1.0"
 
-scikit-learn = "^1.4.0"
-# TODO Unpin.
-# dask.datasets.timeseries() warns:
-#     UserWarning: dask_expr does not support the DataFrameIOFunction protocol for column projection
-# on dask == 2024.3.1
-dask = { version = "==2024.2.1", extras = ["dataframe"] }
+scikit-learn = "^1.4.2"
+dask = { version = "^2024.5.0 ", extras = ["dataframe"] }
 
 [tool.poetry.group.devops.dependencies]
 invoke = "^2.2.0"
@@ -181,7 +177,7 @@ max-line-length = 150
 filterwarnings = [
     "error",
     "ignore:Matplotlib is currently using agg:UserWarning",
-    "ignore:.*utcfromtimestamp.*:DeprecationWarning", # Detta är farligt - ta bort
+    "ignore:.*rics.ml.time_split:DeprecationWarning",
 ]
 log_file_level = 10
 log_file = "pytest.log"

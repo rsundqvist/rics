@@ -27,7 +27,6 @@ PYTHON_TARGETS = [
     NOTEBOOK_DIR,
     ROOT_DIR.joinpath("noxfile.py"),
     Path(__file__),
-    ROOT_DIR / "examples",
 ]
 PYTHON_TARGETS_STR = " ".join([str(p) for p in PYTHON_TARGETS])
 
@@ -70,7 +69,7 @@ def clean_docs(c: Context) -> None:
     _run(c, f"rm -fr {DOCS_BUILD_DIR}")
     _run(c, f"rm -fr {DOCS_NOTEBOOK_DIR}")
 
-    dirs = "_autosummary", "changelog", "auto_examples", "gen_modules"
+    dirs = "_autosummary", "changelog"
     more_dirs = " ".join(map(str, map(DOCS_DIR.joinpath, dirs)))
     _run(c, f"rm -fr {more_dirs}")
 
