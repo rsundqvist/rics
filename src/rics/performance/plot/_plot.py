@@ -1,8 +1,7 @@
 import logging
 from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Union
 
-import pandas as pd
 from seaborn import FacetGrid, catplot
 
 from rics.performance.types import ResultsDict
@@ -11,9 +10,12 @@ from ._params import CatplotParams
 from ._postprocessors import make_postprocessors
 from .types import Unit
 
+if TYPE_CHECKING:
+    import pandas
+
 
 def plot(
-    run_results: ResultsDict | pd.DataFrame,
+    run_results: Union[ResultsDict, "pandas.DataFrame"],
     x: Literal["candidate", "data"] | None = None,
     *,
     unit: Unit | None = None,

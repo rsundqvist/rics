@@ -1,12 +1,14 @@
 from collections.abc import Hashable, Iterable
-from typing import Any, Literal, TypeGuard, cast, get_args
-
-import pandas as pd
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Literal, TypeGuard, Union, cast, get_args
 
 from .types import ResultsDict
 
+if TYPE_CHECKING:
+    import pandas
 
-def to_dataframe(run_results: ResultsDict, names: Iterable[str] = ()) -> pd.DataFrame:
+
+def to_dataframe(run_results: ResultsDict, names: Iterable[str] = ()) -> "pandas.DataFrame":
     """Create a DataFrame from performance run output, adding derived values.
 
     Args:
@@ -20,6 +22,9 @@ def to_dataframe(run_results: ResultsDict, names: Iterable[str] = ()) -> pd.Data
         The `run_result` input wrapped in a DataFrame.
 
     """
+    with _import_context("pandas"):
+        from pandas import DataFrame, concat
+
     names = tuple(names)
     frames = []
     for candidate_label, candidate_results in run_results.items():
@@ -39,10 +44,10 @@ def to_dataframe(run_results: ResultsDict, names: Iterable[str] = ()) -> pd.Data
                         raise ValueError(msg)
                     data[name] = label_part
 
-            frame = pd.DataFrame.from_dict(data, orient="columns")
+            frame = DataFrame.from_dict(data, orient="columns")
             frames.append(frame)
 
-    df = pd.concat(frames, ignore_index=True)
+    df = concat(frames, ignore_index=True)
     df["Time [ms]"] = df["Time [s]"] * 1000
     df["Time [μs]"] = df["Time [ms]"] * 1000
     df["Time [ns]"] = df["Time [μs]"] * 1000
@@ -69,7 +74,7 @@ def _has_names(data_label: Hashable, *, names: tuple[str, ...]) -> TypeGuard[tup
     return True
 
 
-def get_best(run_results: ResultsDict | pd.DataFrame, per_candidate: bool = False) -> pd.DataFrame:
+def get_best(run_results: Union[ResultsDict, "pandas.DataFrame"], per_candidate: bool = False) -> "pandas.DataFrame":
     """Get a summarized view of the best run results for each candidate/data pair.
 
     Args:
@@ -81,7 +86,10 @@ def get_best(run_results: ResultsDict | pd.DataFrame, per_candidate: bool = Fals
         The best (lowest) times for each candidate/data pair.
 
     """
-    df = run_results if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results)
+    with _import_context("seaborn"):
+        from pandas import DataFrame
+
+    df = run_results if isinstance(run_results, DataFrame) else to_dataframe(run_results)
     return df.sort_values("Time [s]").groupby(["Candidate", "Test data"] if per_candidate else "Test data").head(1)
 
 
@@ -89,7 +97,7 @@ Unit = Literal["s", "ms", "μs", "us", "ns"]
 
 
 def plot_run(
-    run_results: ResultsDict | pd.DataFrame,
+    run_results: Union[ResultsDict, "pandas.DataFrame"],
     x: Literal["candidate", "data"] | None = None,
     unit: Unit | None = None,
     **kwargs: Any,
@@ -113,8 +121,9 @@ def plot_run(
     """
     import warnings
 
-    import matplotlib.pyplot as plt
-    from seaborn import barplot, move_legend
+    with _import_context("seaborn"):  # Seaborn installs matplotlib as well
+        import matplotlib.pyplot as plt
+        from seaborn import barplot, move_legend
 
     data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results.copy()
     data[["Test data", "Candidate"]] = data[["Test data", "Candidate"]].astype("category")
@@ -154,12 +163,12 @@ def plot_run(
     left.get_legend().remove()
 
 
-def _smaller_as_hue(data: pd.DataFrame) -> tuple[str, str]:
+def _smaller_as_hue(data: "pandas.DataFrame") -> tuple[str, str]:
     unique = data.nunique()
     return ("Test data", "Candidate") if unique["Test data"] < unique["Candidate"] else ("Candidate", "Test data")
 
 
-def _unit_from_data(df: pd.DataFrame) -> Unit:
+def _unit_from_data(df: "pandas.DataFrame") -> Unit:
     """Pick the unit with the most "human" scale; whole numbers around one hundred."""
     from numpy import log10
 
@@ -175,3 +184,16 @@ def _unit_from_data(df: pd.DataFrame) -> Unit:
 
     assert unit in get_args(Unit)  # noqa: S101
     return cast(Unit, unit)
+
+
+@contextmanager
+def _import_context(name: str):  # type: ignore[no-untyped-def]  # noqa: ANN202
+    try:
+        yield
+    except ModuleNotFoundError as e:
+        msg = (
+            f"Missing optional dependency '{name}'. Install this package manually, or run:\n"
+            "    pip install rics[all]"
+            "\nto get all optional dependencies."
+        )
+        raise ImportError(msg) from e

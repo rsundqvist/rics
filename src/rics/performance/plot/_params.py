@@ -1,13 +1,15 @@
 from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, fields
-from typing import Any, ClassVar, Literal, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self, Union
 
 import numpy as np
-import pandas as pd
 
 from ...collections.dicts import compute_if_absent
 from ..types import ResultsDict
 from .types import Candidate, FuncOrData, Kind, TestData, Unit
+
+if TYPE_CHECKING:
+    import pandas
 
 FUNC: Candidate = "Candidate"
 DATA: TestData = "Test data"
@@ -15,7 +17,7 @@ DATA: TestData = "Test data"
 
 @dataclass(frozen=True, kw_only=True)
 class CatplotParams:
-    data: pd.DataFrame = field(repr=False)
+    data: "pandas.DataFrame" = field(repr=False)
     x: FuncOrData
     y: str
     hue: FuncOrData
@@ -43,7 +45,7 @@ class CatplotParams:
     @classmethod
     def make(
         cls,
-        run_results: ResultsDict | pd.DataFrame,
+        run_results: Union[ResultsDict, "pandas.DataFrame"],
         *,
         x: Literal["candidate", "data"] | None = None,
         unit: Unit | None = None,
@@ -144,7 +146,7 @@ class CatplotParams:
         kwargs.update(updates)
 
 
-def _make_df(run_results: ResultsDict | pd.DataFrame) -> pd.DataFrame:
+def _make_df(run_results: Union[ResultsDict, "pandas.DataFrame"]) -> "pandas.DataFrame":
     from rics.performance import to_dataframe
 
     df = to_dataframe(run_results) if isinstance(run_results, dict) else run_results.copy()
@@ -153,7 +155,7 @@ def _make_df(run_results: ResultsDict | pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def _is_data_x(x_col: Literal["candidate", "data"] | None, *, df: pd.DataFrame) -> bool:
+def _is_data_x(x_col: Literal["candidate", "data"] | None, *, df: "pandas.DataFrame") -> bool:
     if x_col is None:
         n_data, n_func = df[[DATA, FUNC]].nunique()
         return n_data > n_func  # type: ignore[no-any-return]
@@ -161,7 +163,7 @@ def _is_data_x(x_col: Literal["candidate", "data"] | None, *, df: pd.DataFrame) 
         return x_col.lower().startswith("d")
 
 
-def _resolve_y(unit: Unit | None, *, df: pd.DataFrame) -> str:
+def _resolve_y(unit: Unit | None, *, df: "pandas.DataFrame") -> str:
     if unit is None:
         return _compute_nice_y(df)
 
@@ -175,7 +177,7 @@ def _resolve_y(unit: Unit | None, *, df: pd.DataFrame) -> str:
     return y
 
 
-def _compute_nice_y(df: pd.DataFrame) -> str:
+def _compute_nice_y(df: "pandas.DataFrame") -> str:
     """Pick the unit with the most "human" scale; whole numbers around one hundred."""
     from numpy import log10
 

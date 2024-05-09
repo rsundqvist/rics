@@ -20,7 +20,6 @@ from rics._internal_support.changelog import split_changelog
 type_modules = (
     "rics.collections.dicts",
     "rics.collections.misc",
-    "rics.ml.time_split.integration.pandas",
 )
 
 for tm in type_modules:

@@ -9,16 +9,19 @@ import inspect
 import os
 import sys
 from pathlib import Path as _Path
+from typing import TYPE_CHECKING
 from typing import Any as _Any
 
 import click
-import pandas as pd
 
 from .._just_the_way_i_like_it import configure_stuff as _configure_stuff
 from ._util import get_best as _get_best
 from ._wrapper import run_multivariate_test as _run
 
 LARGE_RESULT_ROW_LIMIT = 10000
+
+if TYPE_CHECKING:
+    import pandas
 
 
 def _get_test_data() -> _Any:
@@ -166,7 +169,7 @@ def main(time_per_candidate: float, name: str, create: bool, per_candidate: bool
     _save_report(name_path, result)
 
 
-def _print_best_result(per_candidate: bool, result: pd.DataFrame, title: str) -> None:
+def _print_best_result(per_candidate: bool, result: "pandas.DataFrame", title: str) -> None:
     click.secho("=" * 80, fg="green")
     click.secho("|  {f'  Best Times  ':^74}  |", fg="green")
     click.secho(f"|  {f'  {title!r}  ':^74}  |", fg="green")
@@ -175,7 +178,7 @@ def _print_best_result(per_candidate: bool, result: pd.DataFrame, title: str) ->
     click.secho("=" * 80, fg="green")
 
 
-def _save_report(name_path: _Path, result: pd.DataFrame) -> None:
+def _save_report(name_path: _Path, result: "pandas.DataFrame") -> None:
     performance_report_path = name_path.with_suffix(".csv")
 
     if len(result) > LARGE_RESULT_ROW_LIMIT:
