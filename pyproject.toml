@@ -50,7 +50,8 @@ plotting = ["matplotlib", "seaborn"]
 [tool.poetry.group.manual-extras.dependencies]
 # Extras that must be available for docs + tests go here. Doc/test-only deps go in their respective groups.
 croniter = "^2.0.1"
-pyarrow = "^15.0.0"
+pyarrow = "^16.0.0"
+polars = { version = "^0.20.16", extras = ["pandas"] }
 
 [tool.poetry.group.docs]
 [tool.poetry.group.docs.dependencies]
@@ -77,6 +78,9 @@ pytest = "^7.4.0"
 xdoctest = "^1.1.1"
 coverage = "^7.3.0"
 pytest-cov = "^4.1.0"
+
+scikit-learn = "^1.4.2"
+dask = { version = "^2024.5.0 ", extras = ["dataframe"] }
 
 [tool.poetry.group.devops.dependencies]
 invoke = "^2.2.0"
