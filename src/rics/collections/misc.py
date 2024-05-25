@@ -1,13 +1,13 @@
 """Miscellaneous utility methods for collections."""
 
-from collections.abc import Iterable
-from typing import Any, TypeVar
+import typing as _t
+from collections.abc import Iterable as _Iterable
 
-ArgType = TypeVar("ArgType")
+ArgType = _t.TypeVar("ArgType")
 """ArgType generic type."""
 
 
-def as_list(arg: ArgType | Iterable[ArgType] | None = None, excl_types: tuple[type[Any]] = (str,)) -> list[ArgType]:
+def as_list(arg: ArgType | _Iterable[ArgType] | None = None, excl_types: tuple[type[_t.Any]] = (str,)) -> list[ArgType]:
     """Create a list or list-wrapping of `arg`.
 
     Args:
@@ -22,7 +22,7 @@ def as_list(arg: ArgType | Iterable[ArgType] | None = None, excl_types: tuple[ty
 
     """
     # https://github.com/python/mypy/issues/10835
-    if isinstance(arg, Iterable) and not isinstance(arg, excl_types):
+    if isinstance(arg, _Iterable) and not isinstance(arg, excl_types):
         return list(arg)
     else:
         return [arg]  # type: ignore[list-item]

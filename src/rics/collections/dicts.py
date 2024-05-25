@@ -1,6 +1,7 @@
 """Dict utility functions."""
 
 import typing as _t
+from functools import cached_property as _cached_property
 from warnings import warn as _warn
 
 from ..action_level import ActionLevel as _ActionLevel
@@ -11,6 +12,8 @@ KT = _t.TypeVar("KT", bound=_t.Hashable)
 """Key type."""
 VT = _t.TypeVar("VT")
 """Value type."""
+VT_co = _t.TypeVar("VT_co", covariant=True)
+"""Covariant type."""
 HVT = _t.TypeVar("HVT", bound=_t.Hashable)
 """Hashable value type."""
 OKT = _t.TypeVar("OKT", bound=_t.Hashable)
@@ -317,3 +320,196 @@ class _MakeDict(_t.TypedDict, _t.Generic[OKT, KT, VT], total=False):
 
 MakeType = InheritedKeysDict[OKT, KT, VT] | _MakeDict[OKT, KT, VT]
 """Valid input types for making the :meth:`InheritedKeysDict.make` function."""
+
+
+def format_changed_keys(
+    mapping: _t.Mapping[KT, VT_co],
+    *,
+    baseline: _t.Mapping[KT, VT_co],
+    added: bool | _t.Literal["keys"] = True,
+    updated: bool | _t.Literal["keys"] = True,
+    removed: bool | _t.Literal["keys"] = "keys",
+) -> str:
+    """Format difference from a `baseline` mapping.
+
+    Pass ``'keys'`` instead of ``True`` / ``False`` to show affected keys without values.
+
+    Args:
+        mapping: The current mapping.
+        baseline: A baseline mapping.
+        added: Determines how and if to print :attr:`~DictComparer.added` keys.
+        updated: Determines how and if to print :attr:`~DictComparer.updated` keys.
+        removed: Determines how and if to print :attr:`~DictComparer.removed` keys.
+
+    Returns:
+        Stylized difference between a `mapping` and the `baseline`.
+
+    Examples:
+        >>> mapping = {0: None, 1: 1, -1: None}
+        >>> b = {0: 0, 1: 1, 2: 2}  # baseline
+
+        Default behavior.
+
+        >>> format_changed_keys(mapping, baseline=b)
+        'added(1): {-1: None}, updated(1): {0: None}, removed(1): {2}'
+
+        Showing added keys without values.
+
+        >>> format_changed_keys(mapping, baseline=b, added="keys")
+        'added(1): {-1}, updated(1): {0: None}, removed(1): {2}'
+
+        Removed keys are printed without values by default. Passing ``True`` prints the values.
+
+        >>> format_changed_keys(mapping, baseline=b, removed=True)
+        'added(1): {-1: None}, updated(1): {0: None}, removed(1): {2: 2}'
+
+        To hide a change type entirely, pass ``False`` instead.
+
+        >>> format_changed_keys(mapping, baseline=b, updated=False)
+        'added(1): {-1: None}, removed(1): {2}'
+
+    Notes:
+        This is a convenience function that warps :func:`DictComparer.to_string`.
+    """
+    return DictComparer(mapping, baseline=baseline).to_string(added=added, updated=updated, removed=removed)
+
+
+_ChangesByType = dict[str, set[KT] | dict[KT, VT_co]]
+
+
+class DictComparer(_t.Generic[KT, VT_co]):
+    """Utility class for comparing mapping types.
+
+    Args:
+        mapping: The current mapping.
+        baseline: A baseline mapping.
+        preference: Determines values in :attr:`updated`. Set to `'old'` to prefer `baseline` values.
+        formatter: Used by :meth:`to_string`. A callable ``({change_type: {key: value} | {changed_keys, ...}) -> str``,
+            where ``change_type = 'added' | 'updated' | 'removed'``. Join values on ``', '`` if ``None``.
+
+    Notes:
+        Properties are cached.
+    """
+
+    Preference = _t.Literal["old", "new"]
+    """Value preference for :attr:`updated` keys."""
+
+    def __init__(
+        self,
+        mapping: _t.Mapping[KT, VT_co],
+        *,
+        baseline: _t.Mapping[KT, VT_co],
+        preference: Preference = "new",
+        formatter: _t.Callable[[_ChangesByType[KT, VT_co]], str] | None = None,
+    ) -> None:
+        self._baseline = baseline
+        self._mapping = {} if mapping is None else mapping
+
+        allowed = _t.get_args(DictComparer.Preference)
+        if preference not in allowed:
+            msg = f"{preference=} not in {allowed=}"
+            raise TypeError(msg)
+        self._prefer_new = preference == "new"
+        self._formatter = formatter or self.default_formatter
+
+    def to_string(
+        self,
+        *,
+        added: bool | _t.Literal["keys"] = True,
+        updated: bool | _t.Literal["keys"] = True,
+        removed: bool | _t.Literal["keys"] = "keys",
+        flatten: bool = False,
+    ) -> str:
+        """Format :attr:`changed` keys.
+
+        Pass ``'keys'`` instead of ``True`` / ``False`` to show affected keys without values.
+
+        Args:
+            added: Determines how and if to print :attr:`added` keys.
+            updated: Determines how and if to print :attr:`updated` keys.
+            removed: Determines how and if to print :attr:`removed` keys.
+            flatten: If ``True``, flatten dicts using :func:`flatten_dict`. Keys are converted to ``str``.
+
+        Returns:
+            Pretty-printed changes.
+        """
+        if not (added or updated or removed):
+            msg = "At least one of {'added', 'updated', 'removed'} must be set"
+            raise TypeError(msg)
+
+        changes_by_type: _ChangesByType[KT, VT_co] = {}
+        if added and (added_ := self.added):
+            if flatten:
+                added_ = flatten_dict(added_)  # type: ignore[assignment]
+            changes_by_type["added"] = added_ if added is True else set(added_)
+        if updated and (updated_ := self.updated):
+            if flatten:
+                updated_ = flatten_dict(updated_)  # type: ignore[assignment]
+            changes_by_type["updated"] = updated_ if updated is True else set(updated_)
+        if removed and (removed_ := self.removed):
+            if flatten:
+                removed_ = flatten_dict(removed_)  # type: ignore[assignment]
+            changes_by_type["removed"] = removed_ if removed is True else set(removed_)
+
+        return self._formatter(changes_by_type)
+
+    @property
+    def baseline(self) -> _t.Mapping[KT, VT_co]:
+        """Get the original `baseline` mapping."""
+        return self._baseline
+
+    @property
+    def mapping(self) -> _t.Mapping[KT, VT_co]:
+        """Get the original `mapping`."""
+        return self._mapping
+
+    @property
+    def preference(self) -> Preference:
+        """Value preference for :attr:`updated` key."""
+        return "new" if self._prefer_new else "old"
+
+    __str__ = to_string
+
+    @property
+    def total(self) -> int:
+        """Total number of :attr:`changed` keys."""
+        return len(self.changed)
+
+    @_cached_property
+    def changed(self) -> dict[KT, VT_co]:
+        """Get a dict containing all :attr:`added`, :attr:`changed` or :attr:`removed` keys."""
+        return {**self.added, **self.updated, **self.removed}
+
+    @_cached_property
+    def added(self) -> dict[KT, VT_co]:
+        """Get a dict containing new keys."""
+        return {k: v for k, v in self._mapping.items() if k not in self._baseline}
+
+    @_cached_property
+    def removed(self) -> dict[KT, VT_co]:
+        """Get a dict containing removed keys."""
+        return {k: v for k, v in self._baseline.items() if k not in self._mapping}
+
+    @_cached_property
+    def updated(self) -> dict[KT, VT_co]:
+        """Get a dict containing updated values (see :attr:`preference`) for :attr:`baseline` keys."""
+        baseline = self._baseline
+        mapping = self._mapping
+
+        updated = {}
+        for key in set(baseline).intersection(mapping):
+            old = baseline[key]
+            new = mapping[key]
+
+            if old != new:
+                updated[key] = new if self._prefer_new else old
+
+        return updated
+
+    @classmethod
+    def default_formatter(cls, changes_by_type: _ChangesByType[_t.Any, _t.Any]) -> str:
+        """Default formatting implementation."""
+        return ", ".join(
+            f"{change_type}({len(changes):_d}): {changes!r}"  # count and type
+            for change_type, changes in changes_by_type.items()
+        )
