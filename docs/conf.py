@@ -183,28 +183,28 @@ html_context = {
     "conf_py_path": "/docs/",  # Path in the checkout to the docs root
     "default_mode": "light",  # Dark mode doesn't work properly; disable it
     "carousel": [
-        dict(
-            title="Performance",
-            text="Convenience functions related to performance testing.",
-            url="_autosummary/rics.performance.html",
-            img="_static/performance.png",
-        ),
-        dict(
-            title="Cookbook",
-            text="Like copy-pasting? Me too!",
-            url="documentation/cookbook/git.html",
-            img="_static/chef.png",
-        ),
-        dict(
-            title="Mapping",
-            text="An introduction to the mapping framework.",
-            url="documentation/mapping-primer.html",
-            img="_static/mapping.png",
-        ),
+        # dict(
+        #     title="Performance",
+        #     text="Convenience functions related to performance testing.",
+        #     url="_autosummary/rics.performance.html",
+        #     img="_static/performance.png",
+        # ),
+        # dict(
+        #     title="Cookbook",
+        #     text="Like copy-pasting? Me too!",
+        #     url="documentation/cookbook/git.html",
+        #     img="_static/chef.png",
+        # ),
+        # dict(
+        #     title="Collections",
+        #     text="Convenience functions and extensions for built-in collections.",
+        #     url="_autosummary/rics.collections.dicts.html",
+        #     img="_static/mapping.png",
+        # ),
         dict(
             title="Utilities",
             text="Various utility methods.",
-            url="_autosummary/rics.misc.html",
+            url="_autosummary/rics.misc.html#rics.misc.get_by_full_name",
             img="_static/toolbox.png",
         ),
         dict(
