@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0] - 2024-05-25
+
 ### Added
 * New module `rics.paths`; `paths.parse_any_path()`, derived functions `any_path_to_str()` and `any_path_to_path()`.
 * New module `rics.strings`. Moved `format_perf_counter()` and `format_seconds()`.
@@ -474,7 +476,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v4.0.1...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/rsundqvist/rics/compare/v4.0.1...v4.1.0
 [4.0.1]: https://github.com/rsundqvist/rics/compare/v4.0.0...v4.0.1
 [4.0.0]: https://github.com/rsundqvist/rics/compare/v3.3.0...v4.0.0
 [3.3.0]: https://github.com/rsundqvist/rics/compare/v3.2.0...v3.3.0

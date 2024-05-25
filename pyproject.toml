@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rics"
-version = "4.0.1.dev1"
+version = "4.1.0"
 description = "My personal little ML engineering library."
 authors = ["Richard Sundqvist <richard.sundqvist@live.se>"]
 

@@ -9,6 +9,6 @@ __all__ = [
     "__version__",
 ]
 
-__version__ = "4.0.1.dev1"
+__version__ = "4.1.0"
 
 _logging.getLogger(__name__).addHandler(_logging.NullHandler())
