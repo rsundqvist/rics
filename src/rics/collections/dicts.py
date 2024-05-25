@@ -384,11 +384,10 @@ class DictComparer(_t.Generic[KT, VT_co]):
         mapping: The current mapping.
         baseline: A baseline mapping.
         preference: Determines values in :attr:`updated`. Set to `'old'` to prefer `baseline` values.
-        formatter: Used by :meth:`to_string`. A callable ``({change_type: {key: value} | {changed_keys, ...}) -> str``,
-            where ``change_type = 'added' | 'updated' | 'removed'``. Join values on ``', '`` if ``None``.
 
     Notes:
-        Properties are cached.
+        * Properties are cached.
+        * ``DictComparer.__str__`` is :meth:`DictComparer.to_string`.
     """
 
     Preference = _t.Literal["old", "new"]
@@ -400,7 +399,6 @@ class DictComparer(_t.Generic[KT, VT_co]):
         *,
         baseline: _t.Mapping[KT, VT_co],
         preference: Preference = "new",
-        formatter: _t.Callable[[_ChangesByType[KT, VT_co]], str] | None = None,
     ) -> None:
         self._baseline = baseline
         self._mapping = {} if mapping is None else mapping
@@ -410,7 +408,6 @@ class DictComparer(_t.Generic[KT, VT_co]):
             msg = f"{preference=} not in {allowed=}"
             raise TypeError(msg)
         self._prefer_new = preference == "new"
-        self._formatter = formatter or self.default_formatter
 
     def to_string(
         self,
@@ -418,7 +415,7 @@ class DictComparer(_t.Generic[KT, VT_co]):
         added: bool | _t.Literal["keys"] = True,
         updated: bool | _t.Literal["keys"] = True,
         removed: bool | _t.Literal["keys"] = "keys",
-        flatten: bool = False,
+        formatter: _t.Callable[[_ChangesByType[KT, VT_co]], str] | None = None,
     ) -> str:
         """Format :attr:`changed` keys.
 
@@ -428,7 +425,8 @@ class DictComparer(_t.Generic[KT, VT_co]):
             added: Determines how and if to print :attr:`added` keys.
             updated: Determines how and if to print :attr:`updated` keys.
             removed: Determines how and if to print :attr:`removed` keys.
-            flatten: If ``True``, flatten dicts using :func:`flatten_dict`. Keys are converted to ``str``.
+            formatter: A callable ``({change_type: {key: value} | {key, ...}) -> str``, where
+                ``change_type = 'added'|'updated'|'removed'``. Use :meth:`default_formatter` if ``None``.
 
         Returns:
             Pretty-printed changes.
@@ -439,19 +437,15 @@ class DictComparer(_t.Generic[KT, VT_co]):
 
         changes_by_type: _ChangesByType[KT, VT_co] = {}
         if added and (added_ := self.added):
-            if flatten:
-                added_ = flatten_dict(added_)  # type: ignore[assignment]
             changes_by_type["added"] = added_ if added is True else set(added_)
         if updated and (updated_ := self.updated):
-            if flatten:
-                updated_ = flatten_dict(updated_)  # type: ignore[assignment]
             changes_by_type["updated"] = updated_ if updated is True else set(updated_)
         if removed and (removed_ := self.removed):
-            if flatten:
-                removed_ = flatten_dict(removed_)  # type: ignore[assignment]
             changes_by_type["removed"] = removed_ if removed is True else set(removed_)
 
-        return self._formatter(changes_by_type)
+        if formatter is None:
+            formatter = self.default_formatter
+        return formatter(changes_by_type)
 
     @property
     def baseline(self) -> _t.Mapping[KT, VT_co]:
@@ -469,6 +463,12 @@ class DictComparer(_t.Generic[KT, VT_co]):
         return "new" if self._prefer_new else "old"
 
     __str__ = to_string
+
+    def __repr__(self) -> str:
+        mapping = self.mapping
+        baseline = self.baseline
+        preference = self.preference
+        return f"{type(self).__name__}({mapping=}, {baseline=}, {preference=})"
 
     @property
     def total(self) -> int:
@@ -502,6 +502,11 @@ class DictComparer(_t.Generic[KT, VT_co]):
             new = mapping[key]
 
             if old != new:
+                # if self._recursive and isinstance(new, _t.Mapping) and isinstance(old, _t.Mapping):
+                #    cls = type(self)
+                #    updated_child = cls(new, baseline=old, preference=self.preference, recursive=True).updated
+                #    updated[key] = updated_child
+                # else:
                 updated[key] = new if self._prefer_new else old
 
         return updated

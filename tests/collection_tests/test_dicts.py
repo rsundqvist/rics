@@ -208,6 +208,7 @@ class TestDictComparer:
         assert dc.changed == {-1: None, 0: None, 2: 2}
         assert dc.to_string() == "added(1): {-1: None}, updated(1): {0: None}, removed(1): {2}"
 
-    def test_wrapper(self):
-        actual = DictComparer({"foo": {"bar": 1}, "baz": 0}, baseline={"foo": 1, "bar": None}).to_string(flatten=True)
-        assert actual == "added(1): {'baz': 0}, updated(1): {'foo.bar': 1}, removed(1): {'bar'}"
+    def test_dunder(self):
+        dc = DictComparer({0: None, 1: 1}, baseline={i: i for i in range(3)})
+        assert str(dc) == dc.to_string()
+        assert repr(dc) == "DictComparer(mapping={0: None, 1: 1}, baseline={0: 0, 1: 1, 2: 2}, preference='new')"
