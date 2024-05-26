@@ -7,7 +7,7 @@ from rics.types import AnyPath as _AnyPath
 
 AnyPath = _AnyPath
 """Reexport of :attr:`rics.types.AnyPath`."""
-PathT = _t.TypeVar("PathT", str, _Path)
+PathT = _t.TypeVar("PathT", str, _Path)  # Would be nice to allow Any or a bound
 """A specific path-like type."""
 PathPostprocessor = _t.Callable[[PathT], PathT | bool | None]
 
@@ -41,10 +41,15 @@ def parse_any_path(
 
     if postprocessor is not None:
         result = postprocessor(converted_path)
-        if result is None or isinstance(result, bool):
-            pass  # postprocessor was a validation function
-        elif isinstance(result, cls):
+        if isinstance(result, cls):
             converted_path = result
+        elif result is None or result is True:
+            pass  # postprocessor was a validation function
+        elif result is False:
+            from rics.misc import tname
+
+            msg = f"Validator {tname(postprocessor, prefix_classname=True)}({converted_path!r}) returned False."
+            raise ValueError(msg)
         else:
             from rics.misc import tname
 
@@ -65,7 +70,7 @@ def _convert_path(path: _AnyPath, *, cls: type[PathT]) -> PathT:
         return cls(path)
 
     if issubclass(cls, _Path) and isinstance(path, str):
-        return _Path(path)
+        return cls(path)
 
     try:
         return cls(str(path))
@@ -111,7 +116,17 @@ def _set_path_func_docstring(func: _t.Any, cls: str | type[_t.Any], tail: str = 
 _set_path_func_docstring(
     parse_any_path,
     cls="of type `cls`",
-    tail="""Examples:
+    tail="""Raises:
+        TypeError: If the `postprocessor` returns an invalid type.
+        ValueError: If the `postprocessor` returns ``False``.
+
+    Postprocessor return types:
+        * ``None``: Validator. Should raise if there's an issue.
+        * ``bool``: Validator, e.g. :meth:`~pathlib.Path.is_dir`. Raises a ``ValueError`` if the
+          function returns ``False``.
+        * ``PathT``: Postprocessor, e.g. :meth:`~pathlib.Path.absolute`. Result is returned as-is.
+
+    Examples:
         >>> from pathlib import Path
         >>> parse_any_path("/home/dev/", cls=Path)
         PosixPath('/home/dev')

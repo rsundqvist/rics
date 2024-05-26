@@ -55,6 +55,11 @@ class TestPostprocessors:
                 postprocessor=lambda _: 1,  # type: ignore[arg-type, return-value]
             )
 
+    def test_bool(self):
+        assert any_path_to_path(Path.home(), postprocessor=Path.is_dir) == Path.home()
+        with pytest.raises(ValueError, match="Path.is_file"):
+            any_path_to_path(Path.home(), postprocessor=Path.is_file)
+
 
 class TestWonky:
     def test_strange_path_type(self):

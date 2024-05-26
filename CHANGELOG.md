@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix handling of `paths.parse_any_path()` bool-type postprocessors (raise on `False`).
+
 ## [4.1.0] - 2024-05-25
 
 ### Added
