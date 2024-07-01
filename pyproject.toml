@@ -51,7 +51,7 @@ plotting = ["matplotlib", "seaborn"]
 # Extras that must be available for docs + tests go here. Doc/test-only deps go in their respective groups.
 croniter = "^2.0.1"
 pyarrow = "^15.0.0"
-polars = { version = "^0.20.16", extras = ["pandas"] }
+polars = { version = ">=0.20.16,<1.1.0", extras = ["pandas"] }
 
 [tool.poetry.group.docs]
 [tool.poetry.group.docs.dependencies]
