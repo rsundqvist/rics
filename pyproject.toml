@@ -77,7 +77,7 @@ tqdm = "*"
 pytest = "^7.4.0"
 xdoctest = "^1.1.1"
 coverage = "^7.3.0"
-pytest-cov = "^4.1.0"
+pytest-cov = ">=4.1,<6.0"
 
 scikit-learn = "^1.4.0"
 # TODO Unpin.
