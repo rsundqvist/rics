@@ -61,7 +61,7 @@ polars = { version = "^0.20.16", extras = ["pandas"] }
 sphinx = "^7.2.6"
 sphinx-gallery = "^0.15.0"
 pydata-sphinx-theme = "^0.15.2"
-myst-parser = "^2.0.0"
+myst-parser = ">=2,<4"
 nbsphinx = "^0.9.3"
 ipython = "^8.22.1"
 
