@@ -8,7 +8,7 @@ import nox
 from nox.sessions import Session
 
 nox.options.sessions = ["tests", "mypy"]
-python_versions = ["3.11", "3.12"]
+python_versions = ["3.11", "3.12", "3.13"]
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
@@ -78,7 +78,7 @@ def mypy(session: Session) -> None:
     session.run("inv", "mypy")
 
 
-@nox.session(python="3.12")
+@nox.session(python="3.11")
 def safety(session: Session) -> None:
     """Scan dependencies for insecure packages."""
     install_with_constraints(session, "invoke", "safety")
