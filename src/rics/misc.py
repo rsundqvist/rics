@@ -74,7 +74,7 @@ def get_by_full_name(
     name: str,
     default_module: str | _ModuleType = ...,
     *,
-    instance_of: _t.Type[GBFNReturnType],
+    instance_of: type[GBFNReturnType],
     subclass_of: _t.Literal[None] = None,
 ) -> GBFNReturnType:
     pass
@@ -86,8 +86,8 @@ def get_by_full_name(
     default_module: str | _ModuleType = ...,
     *,
     instance_of: _t.Literal[None] = None,
-    subclass_of: _t.Type[GBFNReturnType],
-) -> _t.Type[GBFNReturnType]:
+    subclass_of: type[GBFNReturnType],
+) -> type[GBFNReturnType]:
     pass
 
 
@@ -95,8 +95,8 @@ def get_by_full_name(
     name: str,
     default_module: str | _ModuleType | None = None,
     *,
-    instance_of: _t.Type[GBFNReturnType] | None = None,
-    subclass_of: _t.Type[GBFNReturnType] | None = None,
+    instance_of: type[GBFNReturnType] | None = None,
+    subclass_of: type[GBFNReturnType] | None = None,
 ) -> _t.Any:
     """Combine :py:func:`~importlib.import_module` and :py:func:`getattr` to retrieve items by name.
 
@@ -236,9 +236,10 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
 
 
 def tname(
-    arg: _t.Type[_t.Any] | _t.Any | None,
+    arg: type[_t.Any] | _t.Any | None,
     prefix_classname: bool = False,
     attrs: str | _t.Iterable[str] | None = "func",
+    include_module: bool = False,
 ) -> str:
     """Get name of method or class.
 
@@ -247,6 +248,7 @@ def tname(
         prefix_classname: If ``True``, prepend the class name if `arg` belongs to a class.
         attrs: Attribute names to search for wrapped functions. The default, `'func'`, is the name used by the built-in
             :py:func:`functools.partial` wrapper. May cause infinite recursion.
+        include_module: If ``True``, prepend the public module (see :func:`get_public_module`).
 
     Returns:
         A name for `arg`.
@@ -258,6 +260,11 @@ def tname(
     if arg is None:
         return "None"
 
+    if include_module:
+        module = _get_module(arg)
+        name = tname(arg, prefix_classname=prefix_classname, attrs=attrs, include_module=False)
+        return f"{module}.{name}"
+
     if attrs:
         from rics.collections.misc import as_list
 
@@ -268,6 +275,10 @@ def tname(
                 break
             return tname(wrapped, prefix_classname=prefix_classname, attrs=attrs)
 
+    return _get_name(arg, prefix_classname)
+
+
+def _get_name(arg: type[_t.Any] | _t.Any, prefix_classname: bool) -> str:
     if hasattr(arg, "__qualname__"):
         return arg.__qualname__ if prefix_classname else arg.__name__
     if hasattr(arg, "__name__"):
@@ -279,6 +290,20 @@ def tname(
         return arg.__class__.__qualname__ if prefix_classname else arg.__class__.__name__
     else:
         raise ValueError(f"Could not derive a name for {arg=}.")  # pragma: no cover
+
+
+def _get_module(arg: type[_t.Any] | _t.Any) -> str:
+    if hasattr(arg, "__name__"):
+        obj = arg
+    elif hasattr(arg, "__self__"):
+        obj = arg.__self__
+    elif hasattr(arg, "fget"):
+        # Instance-level properties accessed using the class.
+        obj = arg.fget
+    else:
+        obj = type(arg)
+
+    return get_public_module(obj, include_name=False, resolve_reexport=True)
 
 
 def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80) -> str:
@@ -324,7 +349,7 @@ def get_local_or_remote(
 ) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
 
-    If `file` is not available at the local root path, it will be downloaded using `requests.get`_. A postprocessor may
+    If `file` is not available at the local root path, it will be downloaded using `requests`_. A postprocessor may
     be given in which case the name of the final file will be ``local_root/<name-of-postprocessor>/file``. Removing
     a raw local file (i.e. ``local_root/file``) will invalidate postprocessed files as well.
 
@@ -372,8 +397,8 @@ def get_local_or_remote(
 
     .. _IMDb dataset:
         https://www.imdb.com/interfaces/
-    .. _requests.get:
-        https://2.python-requests.org/en/master/api/#requests.get
+    .. _requests:
+        https://requests.readthedocs.io/en/latest/api/#requests
     .. _tqdm:
         https://pypi.org/project/tqdm/
 

@@ -1,6 +1,7 @@
 import os
 
 import pytest
+
 from rics import misc
 from rics.envinterp import UnsetVariableError
 

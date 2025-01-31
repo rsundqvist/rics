@@ -17,9 +17,7 @@ on:
     branches:
 
 env:
-  # Need to be explicit when using pip; this is only for the official Poetry (curl-based) installer.
-  # https://github.com/python-poetry/poetry/issues/7611
-  POETRY_VERSION: 1.8.2
+  POETRY_VERSION: 2.0.1
   POLARS_SKIP_CPU_CHECK: true
 
 jobs:
@@ -36,7 +34,7 @@ jobs:
 
       - name: Linting
         run: |
-          pip install poetry==$POETRY_VERSION
+          pip install poetry==$POETRY_VERSION poetry-plugin-export
           poetry install --only=main,devops
           poetry run inv lint
 
@@ -63,7 +61,7 @@ jobs:
         shell: bash
         run: |
           pip install nox
-          pip install poetry==$POETRY_VERSION
+          pip install poetry==$POETRY_VERSION poetry-plugin-export
 
       - name: Run mypy with nox
         shell: bash
@@ -83,7 +81,9 @@ jobs:
         with:
           name: coverage-data-${{ matrix.python-version }}+${{ matrix.os }}
           path: ".coverage.*"
-  
+          if-no-files-found: "error"
+          include-hidden-files: true
+
   coverage:
     needs: tests
     runs-on: ubuntu-latest
@@ -99,7 +99,7 @@ jobs:
         shell: bash
         run: |
           pip install nox
-          pip install poetry==$POETRY_VERSION
+          pip install poetry==$POETRY_VERSION poetry-plugin-export
 
       - name: Download coverage data
         uses: actions/download-artifact@v4
@@ -113,6 +113,6 @@ jobs:
           nox --force-color --session=coverage -- --fmt xml
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v4.3.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

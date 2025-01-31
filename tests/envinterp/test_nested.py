@@ -1,8 +1,8 @@
 from typing import TypeVar
 
 import pytest
-from rics.envinterp import UnsetVariableError, Variable
 
+from rics.envinterp import UnsetVariableError, Variable
 from tests.envinterp.conftest import set_variables
 
 ExcType = TypeVar("ExcType", bound=Exception)

@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 from click.testing import CliRunner
+
 from rics.performance import MultiCaseTimer, cli, run_multivariate_test
 
 pytestmark = pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive:UserWarning")

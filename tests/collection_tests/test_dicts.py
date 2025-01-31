@@ -1,4 +1,5 @@
 import pytest
+
 from rics.collections.dicts import (
     DictComparer,
     InheritedKeysDict,

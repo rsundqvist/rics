@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+
 from rics.logs import _extract_extra_levels, basic_config, disable_temporarily
 
 

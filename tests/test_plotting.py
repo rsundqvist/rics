@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+
 from rics.plotting import _PiTickHelper, pi_ticks
 
 PI = _PiTickHelper.PI

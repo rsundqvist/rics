@@ -8,6 +8,8 @@ def configure_stuff(
     rics_level: int | str = "INFO",
     id_translation_level: int | str = "INFO",
     matplotlib_level: int | str = "WARNING",
+    pandas: bool = True,
+    plotting: bool = True,
     **kwargs: Any,
 ) -> None:
     """Configure a bunch of stuff to match my personal preferences. May do strange stuff 👻.
@@ -22,6 +24,8 @@ def configure_stuff(
         rics_level: Log level for the :mod:`rics` package. Default is ``logging.INFO``.
         id_translation_level: Log level for the :mod:`id_translation` package. Default is ``logging.INFO``.
         matplotlib_level: Log level for the :mod:`matplotlib` package. Default is ``logging.WARNING``.
+        pandas: If ``True``, attempt to perform pandas configuration.
+        plotting: If ``True``, attempt to perform plotting (e.g. matplotlib) configuration.
         **kwargs: Keyword arguments for :func:`rics.logs.basic_config` and :py:func:`logging.basicConfig`.
 
     """
@@ -37,12 +41,14 @@ def configure_stuff(
         **kwargs,
     )
 
-    _configure_pandas()
+    if pandas:
+        _configure_pandas()
 
-    with contextlib.suppress(ModuleNotFoundError):
-        from .plotting import configure
+    if plotting:
+        with contextlib.suppress(ModuleNotFoundError):
+            from .plotting import configure
 
-        configure()
+            configure()
 
     print("👻 Configured some stuff just the way I like it!")
     _maybe_emit_warning()

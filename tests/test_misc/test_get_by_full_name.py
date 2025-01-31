@@ -1,4 +1,5 @@
 import pytest
+
 from rics.misc import get_by_full_name
 
 from .data import (

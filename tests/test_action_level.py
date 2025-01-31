@@ -2,6 +2,7 @@ from collections.abc import Callable
 from typing import Any
 
 import pytest
+
 from rics.action_level import ActionLevel, ActionLevelHelper, BadActionLevelError
 
 

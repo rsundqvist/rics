@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+env:
+  POETRY_VERSION: 2.0.1
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -19,26 +22,26 @@ jobs:
       - name: Install system deps
         shell: bash
         run: |
-          pip install poetry
+          pip install poetry==$POETRY_VERSION poetry-plugin-export
 
       - name: Build package
         run: |
           poetry build --ansi
 
       - name: Publish package on PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.11
+        uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
 
       - name: Publish package on TestPyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.11
+        uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
 
-  
+
   github_release:
     needs: release
     name: Create Github Release
@@ -54,7 +57,7 @@ jobs:
 
       - name: Get Changelog Entry
         id: changelog_reader
-        uses: mindsers/changelog-reader-action@v2.2.2
+        uses: mindsers/changelog-reader-action@v2.2.3
         with:
           version: ${{ steps.tag_name.outputs.current_version }}
           path: ./CHANGELOG.md

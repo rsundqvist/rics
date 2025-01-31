@@ -21,7 +21,7 @@ def test_get_local_or_remote(tmp_path):
 
     with path.open("rb") as f:
         actual = pickle.load(f)  # noqa: S301
-    assert ["my-data", {"is": "amazing"}] == actual
+    assert actual == ["my-data", {"is": "amazing"}]
 
 
 def test_serializable():

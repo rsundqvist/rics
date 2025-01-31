@@ -187,10 +187,10 @@ def _format_seconds(t: float) -> str:
         return f"{t:.2f}s"
 
     if t > 10**-3:
-        return f"{t * 10 ** 3:.0f}ms"
+        return f"{t * 10**3:.0f}ms"
     if t > 10**-6:  # 1 μs
-        return f"{t * 10 ** 6:.0f}μs"
+        return f"{t * 10**6:.0f}μs"
     if t > 10**-9:
-        return f"{t * 10 ** 9:.0f}ns"
+        return f"{t * 10**9:.0f}ns"
 
     return f"{t:.3g}s"

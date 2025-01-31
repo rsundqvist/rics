@@ -145,7 +145,7 @@ class MultiCaseTimer(Generic[DataType]):
 
         def make_label(a: Any) -> str:
             name = tname(a)
-            return name[len("candidate_") :] if name.startswith("candidate_") else name
+            return name.removeprefix("candidate_")
 
         labeled_candidates = {make_label(c): c for c in candidates}
         if len(labeled_candidates) != len(candidates):

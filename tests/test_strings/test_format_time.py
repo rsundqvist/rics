@@ -1,4 +1,5 @@
 import pytest
+
 from rics.strings import format_perf_counter, format_seconds
 
 

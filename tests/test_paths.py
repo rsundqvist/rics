@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from rics.paths import any_path_to_path, any_path_to_str, parse_any_path
 
 if os.getenv("CI") == "true" and os.name == "nt":

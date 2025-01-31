@@ -59,9 +59,9 @@ class CatplotParams:
 
         return cls(
             data=df,
-            x=x_col,  # type: ignore[arg-type]
+            x=x_col,
             y=_resolve_y(unit, df=df),
-            hue=hue_col,  # type: ignore[arg-type]
+            hue=hue_col,
             kind=kind,
             names=list(names),
             user_kwargs=dict(kwargs),

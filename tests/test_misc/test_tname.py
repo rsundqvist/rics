@@ -1,4 +1,5 @@
 import pytest
+
 from rics import misc
 
 from .data import Foo, say_hi

@@ -13,4 +13,4 @@ from ._postprocessors import make_postprocessors
 
 warnings.warn(message="The rics.performance.plot API is experimental.", stacklevel=2)
 
-__all__ = ["CatplotParams", "plot", "plot_params", "make_postprocessors"]
+__all__ = ["CatplotParams", "make_postprocessors", "plot", "plot_params"]

@@ -7,6 +7,7 @@ from typing import Any, cast, get_args
 
 import pytest
 from matplotlib import pyplot as plt
+
 from rics.performance.types import ResultsDict
 
 with pytest.warns(UserWarning, match="The rics.performance.plot API is experimental."):
@@ -30,7 +31,14 @@ def run(kind: Kind, **kwargs: Any) -> None:
     path = root / name
     assert not path.exists()
 
-    facet_grid = plot(run_results(), kind=kind, path=path, **kwargs)
+    results = run_results()
+    if kind == "box":
+        # seaborn==0.13.2 / matplotlib==3.10.0
+        with pytest.warns(PendingDeprecationWarning, match="vert: bool will be deprecated"):
+            facet_grid = plot(results, kind=kind, path=path, **kwargs)
+    else:
+        facet_grid = plot(results, kind=kind, path=path, **kwargs)
+
     plt.close(facet_grid.fig)
 
 

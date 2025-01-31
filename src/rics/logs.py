@@ -60,8 +60,8 @@ def basic_config(
     extra_levels, kwargs = _extract_extra_levels(**kwargs)
     _logging.basicConfig(level=level, format=format, datefmt=datefmt, force=force, **kwargs)
 
-    for name, level in extra_levels.items():
-        _logging.getLogger(name).setLevel(level)
+    for name, level_ in extra_levels.items():
+        _logging.getLogger(name).setLevel(level_)
 
 
 @_contextmanager
