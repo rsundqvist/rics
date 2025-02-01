@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -58,7 +59,9 @@ class TestPostprocessors:
 
     def test_bool(self):
         assert any_path_to_path(Path.home(), postprocessor=Path.is_dir) == Path.home()
-        with pytest.raises(ValueError, match="Path.is_file"):
+
+        cls = "Path" if sys.version_info < (3, 13) else "PathBase"
+        with pytest.raises(ValueError, match=f"{cls}.is_file"):
             any_path_to_path(Path.home(), postprocessor=Path.is_file)
 
 

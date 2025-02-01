@@ -281,11 +281,11 @@ def tname(
 def _get_name(arg: type[_t.Any] | _t.Any, prefix_classname: bool) -> str:
     if hasattr(arg, "__qualname__"):
         return arg.__qualname__ if prefix_classname else arg.__name__
-    if hasattr(arg, "__name__"):
-        return arg.__name__
     if hasattr(arg, "fget"):
         # Instance-level properties accessed using the class.
         return tname(arg.fget, prefix_classname=prefix_classname)
+    if hasattr(arg, "__name__"):
+        return arg.__name__
     if hasattr(arg, "__class__"):
         return arg.__class__.__qualname__ if prefix_classname else arg.__class__.__name__
     else:
@@ -293,13 +293,13 @@ def _get_name(arg: type[_t.Any] | _t.Any, prefix_classname: bool) -> str:
 
 
 def _get_module(arg: type[_t.Any] | _t.Any) -> str:
-    if hasattr(arg, "__name__"):
-        obj = arg
-    elif hasattr(arg, "__self__"):
-        obj = arg.__self__
-    elif hasattr(arg, "fget"):
+    if hasattr(arg, "fget"):
         # Instance-level properties accessed using the class.
         obj = arg.fget
+    elif hasattr(arg, "__self__"):
+        obj = arg.__self__
+    elif hasattr(arg, "__name__"):
+        obj = arg
     else:
         obj = type(arg)
 

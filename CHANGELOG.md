@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Argument `include_module=False` for function `misc.tname()`.
 - New function `plotting.percentage_ticks()`
 
+### Fixed
+- Handling of gh-101860 (new `@property.__name__`) under 3.13 in `misc.tname()` and `misc.get_public_module()`.
+
 ### Removed
 - Module `rics.ml.time_split`. use the `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead.
 
