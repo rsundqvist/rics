@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Argument `include_module=False` for function `misc.tname()`.
 
 ### Removed
-* Module `rics.ml.time_split`. use the `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead.
+- Module `rics.ml.time_split`. use the `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead.
 
 ## [4.1.1] - 2024-06-29
 
@@ -19,19 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [4.1.0] - 2024-05-25
 
 ### Added
-* New module `rics.paths`; `paths.parse_any_path()`, derived functions `any_path_to_str()` and `any_path_to_path()`.
-* New module `rics.strings`. Moved `format_perf_counter()` and `format_seconds()`.
-* New function `strings.format_bytes()`.
-* New function `rics.collections.dicts.format_changed_keys()`.
+- New module `rics.paths`; `paths.parse_any_path()`, derived functions `any_path_to_str()` and `any_path_to_path()`.
+- New module `rics.strings`. Moved `format_perf_counter()` and `format_seconds()`.
+- New function `strings.format_bytes()`.
+- New function `rics.collections.dicts.format_changed_keys()`.
 
 ### Deprecated
-* Module `rics.ml.time_split`. use the `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead.
-* Functions `rics.performance.format_perf_counter()` and `format_seconds()`. Use `rics.strings`-functions instead.
+- Module `rics.ml.time_split`. use the `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead.
+- Functions `rics.performance.format_perf_counter()` and `format_seconds()`. Use `rics.strings`-functions instead.
 
 ## [4.0.1] - 2024-03-21
 
 ### Fixed
-* Fix RTD build. Docs for `4.0.0` are not available, but `4.0.1` docs are identical.
+- Fix RTD build. Docs for `4.0.0` are not available, but `4.0.1` docs are identical.
 
 ## [4.0.0] - 2024-03-21
 

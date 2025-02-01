@@ -9,7 +9,8 @@ class Foo:
         self.n = n
 
     class Bar:
-        pass
+        def inner_bar(self):
+            pass
 
     @classmethod
     def bar(cls) -> str:
