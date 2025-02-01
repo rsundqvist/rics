@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0] - 2025-02-01
+
 ### Added
 - Argument `include_module=False` for function `misc.tname()`.
 - New function `plotting.percentage_ticks()`
@@ -491,7 +493,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v4.1.1...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/rsundqvist/rics/compare/v4.1.1...v5.0.0
 [4.1.1]: https://github.com/rsundqvist/rics/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/rsundqvist/rics/compare/v4.0.1...v4.1.0
 [4.0.1]: https://github.com/rsundqvist/rics/compare/v4.0.0...v4.0.1
