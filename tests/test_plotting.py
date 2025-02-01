@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
-from rics.plotting import _PiTickHelper, pi_ticks
+from rics.plotting import _make_percent_formatter, _PiTickHelper, percentage_ticks, pi_ticks
 
 PI = _PiTickHelper.PI
 HALF_PI = PI / 2
@@ -41,4 +41,33 @@ def test_pi_tick_helper(half, start, start_rounded_to_pi, expected):
 
     # Test formatting
     actual = [helper._format(x, pos) for x, pos in values]
+    assert actual == expected
+
+
+def test_percent_ticks_doesnt_crash():
+    ax = plt.axes()
+    ax.plot(range(10))
+    percentage_ticks(ax)
+    plt.close("all")
+
+
+@pytest.mark.parametrize(
+    "x, sign, decimals, expected",
+    [
+        (-0.111, False, 0, "-11%"),
+        (-0.111, False, 1, "-11.1%"),
+        (-0.111, True, 1, "-11.1%"),
+        (-0.000, False, 0, "-0%"),
+        (-0.000, False, 1, "-0.0%"),
+        (-0.000, True, 1, "-0.0%"),
+        (+0.000, False, 0, "0%"),
+        (+0.000, False, 1, "0.0%"),
+        (+0.000, True, 1, "+0.0%"),
+        (+0.111, False, 0, "11%"),
+        (+0.111, False, 1, "11.1%"),
+        (+0.111, True, 1, "+11.1%"),
+    ],
+)
+def test_percent_formatter(x, sign, decimals, expected):
+    actual = _make_percent_formatter(sign, decimals).format(x=x)
     assert actual == expected

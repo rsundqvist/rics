@@ -4,12 +4,14 @@ import typing as _t
 
 from matplotlib.axis import Axis as _Axis
 from matplotlib.axis import XAxis as _XAxis
+from matplotlib.axis import YAxis as _YAxis
 from matplotlib.ticker import FuncFormatter as _FuncFormatter
 from matplotlib.ticker import IndexLocator as _IndexLocator
 
 ERROR_BAR_CAPSIZE: float = 0.1
 
-HalfRep = _t.Literal["fraction", "decimal", "frac", "dec", "f", "d"]
+HalfRep = _t.Literal["fraction", "f", "decimal", "d"]
+Decimals = int | _t.Literal[False] | None
 
 
 class HasXAxis(_t.Protocol):
@@ -17,6 +19,13 @@ class HasXAxis(_t.Protocol):
 
     xaxis: _XAxis
     """X-Axis attribute."""
+
+
+class HasYAxis(_t.Protocol):
+    """Protocol class indicating something that as an Y-axis."""
+
+    yaxis: _YAxis
+    """Y-Axis attribute."""
 
 
 def configure() -> None:
@@ -57,15 +66,10 @@ def configure_matplotlib() -> None:
         ModuleNotFoundError: If matplotlib is not installed.
 
     """
-    import functools
-
     import matplotlib.pyplot as plt
-    import matplotlib.ticker as mtick
 
     plt.rcParams["figure.figsize"] = (20, 5)
-    plt.subplots = functools.partial(plt.subplots, tight_layout=True)
-
-    mtick.PercentFormatter = functools.partial(mtick.PercentFormatter, xmax=1)  # type: ignore[misc, assignment]
+    plt.rcParams["figure.autolayout"] = True
 
 
 def pi_ticks(ax: _Axis | HasXAxis, half_rep: HalfRep | None = None) -> None:
@@ -81,13 +85,13 @@ def pi_ticks(ax: _Axis | HasXAxis, half_rep: HalfRep | None = None) -> None:
          - Example output
        * - ``None``
          - Show integer multiples only.
-         - `0, π, 2π, 3π..`
+         - `0, π, 2π, 3π, ...`
        * - `'f'` or `'fraction'`
          - Halves of `π` use fractional representation.
-         - `0/2π, 1/2π, 2/2π, 3/2π..`
+         - `0/2π, 1/2π, 2/2π, 3/2π, ...`
        * - `'d'` or `'decimal'`
          - Halves of `π` use decimal representation.
-         - `0.0π, 0.5π, 1.0π, 1.5π..`
+         - `0.0π, 0.5π, 1.0π, 1.5π, ...`
 
     Args:
         ax: An axis to decorate, or an object with an `xaxis` attribute.
@@ -131,7 +135,8 @@ class _PiTickHelper:
         if parsed_half.startswith("d"):
             return "dec"
 
-        raise TypeError(f"Argument {half_rep=} not in ('[f]raction', '[d]ecimal', None).")
+        msg = f"Argument {half_rep=} not in ('[f]raction', '[d]ecimal', None)."
+        raise TypeError(msg)
 
     def _format(self, x: float, _pos: int) -> str:
         n = round(x / self.PI, 1)
@@ -148,3 +153,31 @@ class _PiTickHelper:
             return f"{n}π"
 
         return f"{int(n * 2)}/2π"
+
+
+def percentage_ticks(
+    ax: _Axis | HasYAxis,
+    *,
+    sign: bool = False,
+    decimals: Decimals = 1,
+) -> None:
+    """Decorate an axis by formatting ticks as percentages.
+
+    Args:
+        ax: An axis to decorate, or an object with a `yaxis` attribute.
+        sign: If ``True``, show prepend `'+'` for positive ticks.
+        decimals: Number of decimals to keep.
+
+    Return:
+        The formatting string.
+    """
+    axis: _Axis = ax.yaxis if hasattr(ax, "yaxis") else ax
+
+    formatter = _make_percent_formatter(sign, decimals)
+    axis.set_major_formatter(formatter)
+
+
+def _make_percent_formatter(sign: bool, decimals: Decimals) -> str:
+    plus = "+" if sign else ""
+    decimals = decimals or 0
+    return "{" + f"x:{plus}.{decimals}%" + "}"

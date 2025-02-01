@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Argument `include_module=False` for function `misc.tname()`.
+- New function `plotting.percentage_ticks()`
 
 ### Removed
 - Module `rics.ml.time_split`. use the `time-split` [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split) package instead.
