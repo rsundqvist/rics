@@ -49,8 +49,7 @@ class MultiCaseTimer(Generic[DataType]):
         Args:
             time_per_candidate: Desired runtime for each repetition per candidate label. Ignored if `number` is set.
             repeat: Number of times to repeat for all candidates per data label.
-            number: Number of times to execute each test case, per repetition. Compute based on
-                `per_case_time_allocation` if ``None``.
+            number: Number of times to execute each candidate, per repetition.
             progress: If ``True``, display a progress bar. Required ``tqdm``.
 
         Examples:
@@ -119,18 +118,18 @@ class MultiCaseTimer(Generic[DataType]):
 
     def _compute_number_of_iterations(self, number: int | None, repeat: int, time_allocation: float) -> dict[str, int]:
         if isinstance(number, int):
-            retval = dict.fromkeys(self._data, number)
-        else:
-            retval = {}
-            for candidate_label, candidate_func in self._candidates.items():
+            return dict.fromkeys(self._candidates, number)
 
-                def _run_all() -> None:
-                    for data in self._data.values():
-                        candidate_func(data)  # noqa: B023
+        retval = {}
+        for candidate_label, candidate_func in self._candidates.items():
 
-                auto_number, auto_time = Timer(_run_all).autorange()
-                candidate_number = int((time_allocation * auto_number) / (repeat * auto_time))
-                retval[candidate_label] = max(2, candidate_number)
+            def _run_all() -> None:
+                for data in self._data.values():
+                    candidate_func(data)  # noqa: B023
+
+            auto_number, auto_time = Timer(_run_all).autorange()
+            candidate_number = int((time_allocation * auto_number) / (repeat * auto_time))
+            retval[candidate_label] = max(2, candidate_number)
 
         return retval
 

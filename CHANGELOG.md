@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Update `basic_config.basic_config()`: Allow and handle `level=None` to avoid logging from root.
 
+### Fixed
+- Calling `MultiCaseTimer.run(number=<int>)` no longer crashes.
+
 ## [5.0.1] - 2025-02-01
 
 ### Fixed
