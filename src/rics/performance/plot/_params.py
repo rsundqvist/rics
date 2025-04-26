@@ -5,7 +5,9 @@ from typing import Any, ClassVar, Literal, Self
 import numpy as np
 import pandas as pd
 
-from ...collections.dicts import compute_if_absent
+from rics.collections.dicts import compute_if_absent
+from rics.types import LiteralHelper
+
 from ..types import ResultsDict
 from .types import Candidate, FuncOrData, Kind, TestData, Unit
 
@@ -39,6 +41,10 @@ class CatplotParams:
         if keys := self.reserved_keys().intersection(self.user_kwargs):
             msg = f"Bad `kwargs`: {keys=} are reserved."
             raise ValueError(msg)
+
+        helper = LiteralHelper[FuncOrData](FuncOrData)
+        helper.check(self.x, "x")
+        helper.check(self.hue, "hue")
 
     @classmethod
     def make(

@@ -400,13 +400,12 @@ class DictComparer(_t.Generic[KT, VT_co]):
         baseline: _t.Mapping[KT, VT_co],
         preference: Preference = "new",
     ) -> None:
+        from rics.types import verify_literal
+
         self._baseline = baseline
         self._mapping = {} if mapping is None else mapping
 
-        allowed = _t.get_args(DictComparer.Preference)
-        if preference not in allowed:
-            msg = f"{preference=} not in {allowed=}"
-            raise TypeError(msg)
+        verify_literal(preference, DictComparer.Preference, name="preference")
         self._prefer_new = preference == "new"
 
     def to_string(

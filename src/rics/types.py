@@ -72,7 +72,7 @@ def verify_enum(
 
 def verify_literal(
     value: _t.Any,
-    literal_type: _abc.Collection[T] | _t.Any,  # Runtime type is typically <typing special form>.
+    literal_type: _abc.Collection[T] | type[T] | _t.Any,  # Runtime type is typically <typing special form>.
     name: str = "value",
     *,
     type_name: str | None = None,
@@ -165,7 +165,7 @@ class LiteralHelper(_t.Generic[T]):
 
     def __init__(
         self,
-        literal_type: _abc.Collection[T] | _t.Any,  # Runtime type is typically <typing special form>.
+        literal_type: _abc.Collection[T] | type[T] | _t.Any,  # Runtime type is typically <typing special form>.
         *,
         default_name: str = "value",
         type_name: str | None = None,
@@ -182,7 +182,7 @@ class LiteralHelper(_t.Generic[T]):
         self._options = options
         self._normalizer = normalizer
 
-    def check(self, value: _t.Any, *, name: str | None = None) -> T:
+    def check(self, value: _t.Any, name: str | None = None) -> T:
         """Alias of ``__call__``.
 
         Args:
@@ -226,5 +226,26 @@ class LiteralHelper(_t.Generic[T]):
         if isinstance(literal_type, _abc.Collection) and not isinstance(literal_type, str):
             return (*literal_type,)
 
-        msg = f"Invalid type: {literal_type!r}. Expected a Literal, Collection, or Enum."
+        union_type = type(_t.Union[str, int])  # noqa: UP007
+        if isinstance(literal_type, union_type):
+            from_union = cls._from_union(literal_type)
+            if from_union:
+                return from_union
+
+        msg = f"Invalid type: {literal_type!r}. Expected a Literal, Union of Literal, Collection, or Enum."
         raise TypeError(msg)
+
+    @classmethod
+    def _from_union(cls, literal_type: _t.Any) -> tuple[T, ...]:
+        literal_cls = type(_t.Literal[None])
+
+        literals = []
+        types = _t.get_args(literal_type)
+        for t in types:
+            if not isinstance(t, literal_cls):
+                return ()
+            for literal in _t.get_args(t):
+                if literal not in literals:
+                    literals.append(literal)
+
+        return (*literals,)

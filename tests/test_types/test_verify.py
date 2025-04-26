@@ -51,10 +51,22 @@ class TestInvalidType:
         with pytest.raises(TypeError) as exc_info:
             LiteralHelper("im a string!")
 
-        assert str(exc_info.value) == "Invalid type: 'im a string!'. Expected a Literal, Collection, or Enum."
+        expected = "Invalid type: 'im a string!'. Expected a Literal, Union of Literal, Collection, or Enum."
+        assert str(exc_info.value) == expected
 
     def test_empty(self):
         with pytest.raises(ValueError) as exc_info:
             LiteralHelper([])
 
         assert str(exc_info.value) == "Could not derive options from []."
+
+
+Single = Literal["a"]
+Double = Literal["b", "c"]
+UnionLiteral = Single | Double | Literal["b"]
+
+
+class TestLiteralUnions:
+    def test_deduplicate(self):
+        actual = LiteralHelper(UnionLiteral)._options  # type: ignore[var-annotated]
+        assert actual == ("a", "b", "c")

@@ -3,6 +3,8 @@ from typing import Any, Literal, TypeGuard, cast, get_args
 
 import pandas as pd
 
+from rics.types import verify_literal
+
 from .types import ResultsDict
 
 
@@ -86,11 +88,12 @@ def get_best(run_results: ResultsDict | pd.DataFrame, per_candidate: bool = Fals
 
 
 Unit = Literal["s", "ms", "μs", "us", "ns"]
+X = Literal["candidate", "data"]
 
 
 def plot_run(
     run_results: ResultsDict | pd.DataFrame,
-    x: Literal["candidate", "data"] | None = None,
+    x: X | None = None,
     unit: Unit | None = None,
     **kwargs: Any,
 ) -> None:
@@ -102,7 +105,7 @@ def plot_run(
 
     Args:
         run_results: Output of :meth:`rics.performance.MultiCaseTimer.run`.
-        x: The value to plot on the X-axis. Default=derive.
+        x: The value to plot on the X-axis, using the other to determine hue. Default=derive.
         unit: Time unit to plot on the Y-axis. Default=derive.
         **kwargs: Keyword arguments for :func:`seaborn.barplot`.
 
@@ -119,14 +122,16 @@ def plot_run(
     data = to_dataframe(run_results) if isinstance(run_results, dict) else run_results.copy()
     data[["Test data", "Candidate"]] = data[["Test data", "Candidate"]].astype("category")
 
-    x_arg, hue = (
-        _smaller_as_hue(data)
-        if x is None
-        else (("Test data", "Candidate") if x == "data" else ("Candidate", "Test data"))
-    )
+    if x is None:
+        x_arg, hue = _smaller_as_hue(data)
+    else:
+        verify_literal(x, X, name="x")
+        x_arg, hue = ("Test data", "Candidate") if x == "data" else ("Candidate", "Test data")
 
     if unit is None:
         unit = _unit_from_data(data)
+    else:
+        verify_literal(unit, Unit, name="unit")
 
     y = f"Time [{unit.replace('us', 'μs')}]"
 
