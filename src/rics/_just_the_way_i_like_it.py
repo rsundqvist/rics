@@ -8,8 +8,10 @@ def configure_stuff(
     rics_level: int | str = "INFO",
     id_translation_level: int | str = "INFO",
     matplotlib_level: int | str = "WARNING",
+    logging: bool = True,
     pandas: bool = True,
     plotting: bool = True,
+    ghost: bool = True,
     **kwargs: Any,
 ) -> None:
     """Configure a bunch of stuff to match my personal preferences. May do strange stuff 👻.
@@ -19,27 +21,32 @@ def configure_stuff(
        This function can and will change without warning, and will not be documented in the changelog. Don't use for
        anything important.
 
+    Set :envvar:`JTWILI=true <JTWILI>` to disable the warning.
+
     Args:
         level: Log level for the root logger. Default is ``logging.INFO``.
         rics_level: Log level for the :mod:`rics` package. Default is ``logging.INFO``.
         id_translation_level: Log level for the :mod:`id_translation` package. Default is ``logging.INFO``.
         matplotlib_level: Log level for the :mod:`matplotlib` package. Default is ``logging.WARNING``.
+        logging: If ``True``, attempt to perform logging configuration.
         pandas: If ``True``, attempt to perform pandas configuration.
         plotting: If ``True``, attempt to perform plotting (e.g. matplotlib) configuration.
+        ghost: Set to ``False`` to disable `'👻 Configured some stuff just the way I like it!'`.
         **kwargs: Keyword arguments for :func:`rics.logs.basic_config` and :py:func:`logging.basicConfig`.
 
     """
     import contextlib
 
-    from .logs import basic_config
+    if logging:
+        from .logs import basic_config
 
-    basic_config(
-        level=level,
-        rics_level=rics_level,
-        id_translation_level=id_translation_level,
-        matplotlib_level=matplotlib_level,
-        **kwargs,
-    )
+        basic_config(
+            level=level,
+            rics_level=rics_level,
+            id_translation_level=id_translation_level,
+            matplotlib_level=matplotlib_level,
+            **kwargs,
+        )
 
     if pandas:
         _configure_pandas()
@@ -50,7 +57,8 @@ def configure_stuff(
 
             configure()
 
-    print("👻 Configured some stuff just the way I like it!")
+    if ghost:
+        print("👻 Configured some stuff just the way I like it!")
     _maybe_emit_warning()
 
 

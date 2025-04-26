@@ -1,13 +1,12 @@
-[tool.poetry]
+[project]
 name = "rics"
 version = "5.0.1.dev1"
 description = "My personal little ML engineering library."
-authors = ["Richard Sundqvist <richard.sundqvist@live.se>"]
-
+authors = [
+    { name = "Richard Sundqvist", email = "richard.sundqvist@live.se" },
+]
+license = { text = "MIT" }
 readme = "README.md"
-homepage = "https://github.com/rsundqvist/rics"
-repository = "https://github.com/rsundqvist/rics"
-documentation = "https://rics.readthedocs.io"
 keywords = ["rics"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -18,51 +17,56 @@ classifiers = [
     "Operating System :: Microsoft :: Windows",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
+    "Typing :: Typed",
     "Programming Language :: Python :: 3",
-    'Programming Language :: Python :: 3 :: Only',
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.11"
+
+dependencies = [
+    "pandas >= 2.0.3",
 ]
 
+[project.optional-dependencies]
+cli = [
+    "click >= 8.1.0",
+]
+plotting = [
+    "matplotlib",
+    "seaborn"
+]
 
-[tool.poetry.urls]
+[project.urls]
+homepage = "https://github.com/rsundqvist/rics"
+repository = "https://github.com/rsundqvist/rics"
+documentation = "https://rics"
 "Bug Tracker" = "https://github.com/rsundqvist/rics/issues"
 "Changelog" = "https://github.com/rsundqvist/rics/blob/master/CHANGELOG.md"
 
-[tool.poetry.scripts]
-mtimeit = { callable = "rics.performance.cli:main", extras = ["cli"] }
+[project.scripts]
+mtimeit = "rics.performance.cli:main"  # TODO(6.0.0): Remove old entrypoint.
 
-[tool.poetry.dependencies]
-python = ">=3.11"
-
-pandas = ">=2.0.3"
-
-# cli
-click = { version = "*", optional = true }
-# plotting
-matplotlib = { version = "*", optional = true }
-seaborn = { version = "*", optional = true }
-
-[tool.poetry.extras]
-cli = ["click"]
-plotting = ["matplotlib", "seaborn"]
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
 
 [tool.poetry.group.manual-extras.dependencies]
 # Extras that must be available for docs + tests go here. Doc/test-only deps go in their respective groups.
 croniter = "^2.0.1"
-polars = { version = "^1.21.0", extras=["pandas"] }
+polars = { version = "^1.21.0", extras = ["pandas"] }
 
 [tool.poetry.group.docs]
 [tool.poetry.group.docs.dependencies]
 # duplicate object warnings for sphinx>=4
 # description: https://github.com/astropy/astropy/issues/11723
 # https://github.com/astropy/astropy/pull/12270
-sphinx = "^8.1.3"
-sphinx-gallery = "^0.18.0"
-pydata-sphinx-theme = "^0.16.1"
-myst-parser = "^4.0.0"
-nbsphinx = "^0.9.6"
-ipython = "^8.31.0"
+sphinx = "~8.1.3"
+pydata-sphinx-theme = "~0.16.1"
+myst-parser = "~4.0.0"
+nbsphinx = "~0.9.6"
+ipython = "~8.31.0"
 
 [tool.poetry.group.notebooks]
 optional = true
@@ -83,8 +87,8 @@ dask = { version = "^2025.1.0", extras = ["dataframe"] }
 
 [tool.poetry.group.devops.dependencies]
 invoke = "^2.2.0"
-mypy = "^1.14.1"
-ruff = "^0.9.3"
+mypy = "^1.15.0"
+ruff = "^0.11.4"
 
 safety = "^3.0.1"
 codespell = "^2.2.6"
@@ -143,6 +147,7 @@ ignore = [
     "PLR0913", #
     "SIM108", # Use ternary operator - coverage issue, see https://github.com/nedbat/coveragepy/issues/509
     "TD003", # Missing issue link
+    "TC006", # Add quotes to type expression in `typing.cast()`
 ]
 
 [tool.ruff.lint.per-file-ignores]

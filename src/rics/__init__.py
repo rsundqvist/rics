@@ -1,4 +1,13 @@
-"""My personal little ML engineering library."""
+"""My personal little ML engineering library.
+
+Environment variables
+---------------------
+.. envvar:: JTWILI
+
+    Set ``JTWILI=true`` to disable the warning emitted by :func:`rics.configure_stuff`.
+
+
+"""
 
 import logging as _logging
 
