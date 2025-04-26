@@ -194,3 +194,43 @@ def _format_seconds(t: float) -> str:
         return f"{t * 10**9:.0f}ns"
 
     return f"{t:.3g}s"
+
+
+def camel_to_snake(s: str) -> str:
+    """Naive ``CamelCase`` to ``snake_case`` conversion.
+
+    Args:
+        s: A string to convert.
+
+    Returns:
+        A ``snake_case`` string.
+
+    Raises:
+        IndexError: If `string` is empty.
+
+    Examples:
+        Converting camel case strings.
+
+        >>> camel_to_snake("ClassName")
+        'class_name'
+        >>> camel_to_snake("variableName")
+        'variable_name'
+
+        Proper ``snake_case`` strings will not be changed.
+
+        >>> camel_to_snake("already_snake_case")
+        'already_snake_case'
+
+        Passing ``SCREAMING_SNAKE_CASE`` strings is **not** supported.
+
+    Notes:
+       Upper camel case is sometimes called Pascal case.
+    """
+    parts = [s[0]]
+
+    for ch in s[1:]:
+        if ch.isupper():
+            parts.append("_")
+        parts.append(ch)
+
+    return "".join(parts).lower()
