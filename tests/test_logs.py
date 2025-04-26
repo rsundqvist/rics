@@ -2,7 +2,16 @@ import logging
 
 import pytest
 
-from rics.logs import _extract_extra_levels, basic_config, disable_temporarily
+from rics.logs import (
+    LoggingSetupHelper,
+    LogLevelError,
+    _extract_extra_levels,
+    basic_config,
+    convert_log_level,
+    disable_temporarily,
+)
+
+logging.addLevelName(1, "EXTRA_VERBOSE_DEBUG")
 
 
 @pytest.mark.skip(reason="Messes up logging for other tests.")
@@ -70,3 +79,98 @@ def test_disable_temporarily(loggers, caplog):
 def test_extract_extra_levels(arg, expected):
     actual = next(iter(_extract_extra_levels(**{f"{arg}_level": logging.INFO})[0]))
     assert actual == expected.replace(":", ".")
+
+
+class TestLoggingSetupHelper:
+    @pytest.fixture
+    def helper(self) -> LoggingSetupHelper:
+        levels: list[dict[str, str | int]] = [
+            {"rics": "INFO", "root": logging.WARNING, "id_translation": logging.INFO},
+            {"rics.jupyter": "DEBUG", "id_translation": "DEBUG"},
+            {"root": logging.DEBUG, "rics.jupyter": "EXTRA_VERBOSE_DEBUG"},
+            {"rics": 5},
+        ]
+        return LoggingSetupHelper(levels)
+
+    class TestBadLevels:
+        def test_empty_list(self):
+            with pytest.raises(TypeError) as exc_info:
+                LoggingSetupHelper([])
+            assert exc_info.value.args[0] == "No levels given."
+
+        def test_empty_dict(self):
+            with pytest.raises(TypeError) as exc_info:
+                LoggingSetupHelper([{"rics": logging.INFO}, {}])
+            assert exc_info.value.args[0] == "Level 2 (index=1): No items."
+
+        def test_same(self):
+            with pytest.raises(ValueError) as exc_info:
+                LoggingSetupHelper([{"rics": logging.INFO}, {"rics": logging.INFO}])
+            exc_info.value.args[0].startswith(
+                "Level 2 (index=1), logger='rics': Found transition 'INFO (20) -> INFO (20)'."
+            )
+
+        def test_lower(self):
+            with pytest.raises(ValueError) as exc_info:
+                LoggingSetupHelper([{"rics": logging.INFO}, {"rics": "WARN"}])
+            assert exc_info.value.args[0].startswith(
+                "Level 2 (index=1), logger='rics': Found transition 'INFO (20) -> WARNING (30)'."
+            )
+
+    class TestFormatting:
+        def test_by_log_level(self, helper):
+            assert helper._by_log_level() == [
+                {20: ["id_translation", "rics"], 30: ["root"]},
+                {10: ["id_translation", "rics.jupyter"], 20: ["rics"], 30: ["root"]},
+                {1: ["rics.jupyter"], 10: ["id_translation", "root"], 20: ["rics"]},
+                {1: ["rics.jupyter"], 5: ["rics"], 10: ["id_translation", "root"]},
+            ]
+
+        def test_get_verbosity_lines(self, helper):
+            assert helper.get_level_descriptions() == [
+                "id_translation & rics: INFO (20), root: WARNING (30)",
+                "id_translation & rics.jupyter: DEBUG (10)",
+                "rics.jupyter: EXTRA_VERBOSE_DEBUG (1), root: DEBUG (10)",
+                "rics: <no name> (5)",
+            ]
+
+
+class TestBadLogLevel:
+    def test_unknown_int(self):
+        name = self.test_unknown_int.__name__ + "_log_level"
+
+        with pytest.raises(LogLevelError) as exc_info:
+            convert_log_level(5, name=name, verify=True)
+
+        assert str(exc_info.value) == f"Unknown {name}=5."
+        assert exc_info.value.argument_name
+        assert exc_info.value.log_level == 5
+        assert exc_info.value.__notes__ == [
+            "Hint: Set `verify=False` to allow.",
+            "Hint: Register this level using `logging.addLevelName()`",
+        ]
+
+    def test_unknown_str(self):
+        name = self.test_unknown_str.__name__ + "_log_level"
+
+        with pytest.raises(LogLevelError) as exc_info:
+            convert_log_level("Unknown", name=name, verify=True)
+
+        assert str(exc_info.value) == f"Unknown {name}='Unknown'."
+        assert exc_info.value.argument_name
+        assert exc_info.value.log_level == "Unknown"
+        assert exc_info.value.__notes__ == ["Hint: Register this level using `logging.addLevelName()`"]
+
+    def test_upper_str(self):
+        name = self.test_upper_str.__name__ + "_log_level"
+
+        with pytest.raises(LogLevelError) as exc_info:
+            convert_log_level("info", name=name, verify=True)
+
+        assert str(exc_info.value) == f"Unknown {name}='info'."
+        assert exc_info.value.argument_name
+        assert exc_info.value.log_level == "info"
+        assert exc_info.value.__notes__ == [
+            f"Hint: Did you mean {name}='INFO'?",
+            "Hint: Register this level using `logging.addLevelName()`",
+        ]
