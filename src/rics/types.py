@@ -182,6 +182,11 @@ class LiteralHelper(_t.Generic[T]):
         self._options = options
         self._normalizer = normalizer
 
+    @property
+    def options(self) -> tuple[T, ...]:
+        """Permitted options as explicit values."""
+        return self._options
+
     def check(self, value: _t.Any, name: str | None = None) -> T:
         """Alias of ``__call__``.
 
