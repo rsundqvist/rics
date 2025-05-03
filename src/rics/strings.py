@@ -197,7 +197,7 @@ def _format_seconds(t: float) -> str:
 
 
 def camel_to_snake(s: str) -> str:
-    """Naive ``CamelCase`` to ``snake_case`` conversion.
+    """Naive ``camelCase`` or ``PascalCase`` to ``snake_case`` conversion.
 
     Args:
         s: A string to convert.
@@ -221,10 +221,8 @@ def camel_to_snake(s: str) -> str:
         >>> camel_to_snake("already_snake_case")
         'already_snake_case'
 
-        Passing ``SCREAMING_SNAKE_CASE`` strings is **not** supported.
-
     Notes:
-       Upper camel case is sometimes called Pascal case.
+        Passing ``SCREAMING_SNAKE_CASE`` strings is **not** supported.
     """
     parts = [s[0]]
 
@@ -234,3 +232,42 @@ def camel_to_snake(s: str) -> str:
         parts.append(ch)
 
     return "".join(parts).lower()
+
+
+def snake_to_camel(s: str, *, lower: bool = True) -> str:
+    """Naive ``snake_case`` to ``camelCase`` conversion.
+
+    Args:
+        s: A string to convert.
+        lower: If ``False``, return ``PamelCase`` instead of ``camelCase``.
+
+    Returns:
+        A ``camelCase`` string.
+
+    Raises:
+        IndexError: If `string` is empty.
+
+    Examples:
+        Converting snake case strings.
+
+        >>> snake_to_camel("snake_case")
+        'snakeCase'
+
+        Passing ``SCREAMING_SNAKE_CASE`` strings is supported.
+
+        >>> snake_to_camel("SCREAMING_SNAKE_CASE")
+        'screamingSnakeCase'
+
+        Set ``lower=False`` to convert to ``PascalCase`` or ``UpperCamelCase``.
+
+        >>> snake_to_camel("SCREAMING_SNAKE_CASE", lower=False)
+        'ScreamingSnakeCase'
+
+    Notes:
+        Passing ``camelCase`` strings is **not** supported.
+    """
+    s = s.title().replace("_", "")
+    s0 = s[0]
+    if lower:
+        s0 = s0.lower()
+    return s0 + s[1:]

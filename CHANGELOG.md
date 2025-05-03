@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `logs.FORMAT_SEC`, rename `FORMAT` -> `FORMAT_MS`.
 - New class `logs.LoggingSetupHelper`.
 - New functions `logs.get_logger()` and `convert_log_level()`.
-- New function `strings.camel_to_snake()`.
+- New ***naive*** functions `strings.camel_to_snake()` and `snake_to_camel()`.
 
 ### Changed
 - Update `basic_config.basic_config()`: Allow and handle `level=None` to avoid logging from root.
