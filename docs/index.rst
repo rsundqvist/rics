@@ -5,7 +5,7 @@ My personal little library. Written to help with common Machine Learning and Dat
 .. toctree::
    :hidden:
 
-   API reference <_autosummary/rics>
+   API reference <api/rics>
    documentation/index
    development
    License <LICENSE>

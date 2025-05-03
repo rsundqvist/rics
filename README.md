@@ -25,7 +25,7 @@ typically converted to [stand-alone PyPI packages](#related-libraries) once they
 - [get_by_full_name()]: Import functions, objects and classes by name.
 - [rics.collections.dicts]: Extended functionality for the built-in `dict` type.
 - [basic_config()]: Configure logging for development.
-- And much more; click [here](https://rics.readthedocs.io/en/stable/_autosummary/rics.html) for the full API.
+- And much more; click [here](https://rics.readthedocs.io/en/stable/api/rics.html) for the full API.
 
 ## Related libraries
 The following packages started life as RiCS submodules.
@@ -42,13 +42,13 @@ The following packages started life as RiCS submodules.
 
   **_Time-based k-fold validation splits for heterogeneous data._**
 
-[perf]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.run_multivariate_test
-[perf-plot]: https://rics.readthedocs.io/en/stable/_autosummary/rics.performance.html#rics.performance.plot_run
+[perf]: https://rics.readthedocs.io/en/stable/api/rics.performance.html#rics.performance.run_multivariate_test
+[perf-plot]: https://rics.readthedocs.io/en/stable/api/rics.performance.html#rics.performance.plot_run
 
-[get_by_full_name()]: https://rics.readthedocs.io/en/stable/_autosummary/rics.misc.html#rics.misc.get_by_full_name
+[get_by_full_name()]: https://rics.readthedocs.io/en/stable/api/rics.misc.html#rics.misc.get_by_full_name
 
-[basic_config()]: https://rics.readthedocs.io/en/stable/_autosummary/rics.logs.html#rics.logs.basic_config
-[rics.collections.dicts]: https://rics.readthedocs.io/en/stable/_autosummary/rics.collections.dicts.html
+[basic_config()]: https://rics.readthedocs.io/en/stable/api/rics.logs.html#rics.logs.basic_config
+[rics.collections.dicts]: https://rics.readthedocs.io/en/stable/api/rics.collections.dicts.html
 
 ## Installation
 The package is published through the [Python Package Index (PyPI)]. Source code

@@ -185,7 +185,7 @@ html_context = {
         # dict(
         #     title="Performance",
         #     text="Convenience functions related to performance testing.",
-        #     url="_autosummary/rics.performance.html",
+        #     url="api/rics.performance.html",
         #     img="_static/performance.png",
         # ),
         # dict(
@@ -197,13 +197,13 @@ html_context = {
         # dict(
         #     title="Collections",
         #     text="Convenience functions and extensions for built-in collections.",
-        #     url="_autosummary/rics.collections.dicts.html",
+        #     url="api/rics.collections.dicts.html",
         #     img="_static/mapping.png",
         # ),
         dict(
             title="Utilities",
             text="Various utility methods.",
-            url="_autosummary/rics.misc.html#rics.misc.get_by_full_name",
+            url="api/rics.misc.html#rics.misc.get_by_full_name",
             img="_static/toolbox.png",
         ),
         dict(

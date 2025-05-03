@@ -10,6 +10,7 @@ codecov
 jupyterlab/data-cache/*
 docs/**/notebooks/
 docs/_autosummary/*
+docs/api/*
 docs/changelog/*
 
 # Byte-compiled / optimized / DLL files

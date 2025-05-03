@@ -41,5 +41,25 @@ git config --global column.ui auto  # Show >1 branch/row
 git config --global branch.sort -committerdate  # default=alphabetical
 ```
 
+## Various issues
+In no particular order.
+
+### Object file is empty.
+Not sure what causes this. Use the solution below with care.
+
+#### Symptom
+```
+error: object file .git/objects/ea/3378edd19b7797e2ef21a0670ca2d5e59a1f2d is empty
+error: object file .git/objects/ea/3378edd19b7797e2ef21a0670ca2d5e59a1f2d is empty
+fatal: bad object HEAD
+```
+
+#### Solution
+```bash
+find .git/objects/ -type f -empty | xargs rm
+git fetch -p
+git fsck --full
+```
+
 ## Links
 * [So You Think You Know Git - FOSDEM 2024](https://www.youtube.com/watch?v=aolI_Rz0ZqY) for more.

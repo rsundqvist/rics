@@ -69,7 +69,7 @@ def clean_docs(c: Context) -> None:
     _run(c, f"rm -fr {DOCS_BUILD_DIR}")
     _run(c, f"rm -fr {DOCS_NOTEBOOK_DIR}")
 
-    dirs = "_autosummary", "changelog"
+    dirs = "_autosummary", "api", "changelog"
     more_dirs = " ".join(map(str, map(DOCS_DIR.joinpath, dirs)))
     _run(c, f"rm -fr {more_dirs}")
 
