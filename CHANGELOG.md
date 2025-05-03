@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Update `basic_config.basic_config()`: Allow and handle `level=None` to avoid logging from root.
+- The `misc.get_by_full_name()` function now supports reading member attributes. Uses
+  [entrypoint](https://packaging.python.org/en/latest/specifications/entry-points/) syntax, e.g.
+  `pandas:DataFrame.sum`.
 
 ### Fixed
 - Calling `MultiCaseTimer.run(number=<int>)` no longer crashes.

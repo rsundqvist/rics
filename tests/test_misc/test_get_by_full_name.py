@@ -21,6 +21,14 @@ def test_untyped(name):
     assert actual is Foo
 
 
+def test_nested_with_default_module():
+    actual = get_by_full_name(":Foo.Bar", default_module=MODULE)
+    assert actual is Foo.Bar
+
+    with pytest.raises(ValueError, match=r"Cannot use name=':Foo.Bar' \(with leading ':'\) without a default module."):
+        get_by_full_name(":Foo.Bar")
+
+
 class TestInstance:
     def test_plain(self):
         actual = get_by_full_name("my_foo", default_module=MODULE, instance_of=Foo)
@@ -91,10 +99,6 @@ class TestLimitations:
         with pytest.raises(TypeError, match="cannot be a parameterized generic"):
             get_by_full_name("my_foo", default_module=MODULE, subclass_of=list[int])
 
-    @pytest.mark.xfail(reason="Nested classes are not supported.")
-    def test_nested(self):
-        get_by_full_name("Foo.Bar", default_module=MODULE)
-
     def test_no_default(self):
-        with pytest.raises(ValueError, match="fully qualified when no default module"):
+        with pytest.raises(ValueError, match="Name must not be empty."):
             get_by_full_name("")

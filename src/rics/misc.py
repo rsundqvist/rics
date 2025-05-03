@@ -61,7 +61,7 @@ GBFNReturnType = _t.TypeVar("GBFNReturnType")
 @_t.overload
 def get_by_full_name(
     name: str,
-    default_module: str | _ModuleType = ...,
+    default_module: str | _ModuleType | object = ...,
     *,
     instance_of: _t.Literal[None] = None,
     subclass_of: _t.Literal[None] = None,
@@ -72,7 +72,7 @@ def get_by_full_name(
 @_t.overload
 def get_by_full_name(
     name: str,
-    default_module: str | _ModuleType = ...,
+    default_module: str | _ModuleType | object = ...,
     *,
     instance_of: type[GBFNReturnType],
     subclass_of: _t.Literal[None] = None,
@@ -83,7 +83,7 @@ def get_by_full_name(
 @_t.overload
 def get_by_full_name(
     name: str,
-    default_module: str | _ModuleType = ...,
+    default_module: str | _ModuleType | object = ...,
     *,
     instance_of: _t.Literal[None] = None,
     subclass_of: type[GBFNReturnType],
@@ -93,21 +93,26 @@ def get_by_full_name(
 
 def get_by_full_name(
     name: str,
-    default_module: str | _ModuleType | None = None,
+    default_module: str | _ModuleType | object | None = None,
     *,
     instance_of: type[GBFNReturnType] | None = None,
     subclass_of: type[GBFNReturnType] | None = None,
 ) -> _t.Any:
-    """Combine :py:func:`~importlib.import_module` and :py:func:`getattr` to retrieve items by name.
+    """Combine :py:func:`importlib.import_module` and :py:func:`getattr` to retrieve items by name.
+
+    You may retrieve top-level module members such as classes by adding the class name after the module path (e.g.
+    ``logging.Logger``). The member may also be specifying using the ``':'``-syntax, e.g. ``logging:Logger``. The
+    ``':'``-syntax also supports retrieving object members e.g. ``logging:Logger.info``. This is not possible using the
+    dot-based syntax since ``logging.Logger`` cannot be imported by the ``importlib.import_module`` function.
 
     Args:
         name: A name or fully qualified name.
-        default_module: A namespace to search if `name` is not fully qualified (contains no ``'.'``-characters).
+        default_module: A namespace to search if `name` does not contain any ``'.'`` or ``':'`` characters.
         instance_of: If given, perform :py:func:`isinstance` check on `name`.
         subclass_of: If given, perform :py:func:`issubclass` check on `name`.
 
     Returns:
-        An object with the fully qualified name `name`.
+        The object specified by `name`.
 
     Raises:
         ValueError: If `name` does not contain any dots and ``default_module=None``.
@@ -129,12 +134,29 @@ def get_by_full_name(
         >>> get_by_full_name("logging.Logger", subclass_of=logging.Filterer)
         <class 'logging.Logger'>
 
-        Falling back to builtins.
+        Default namespaces may be specified using the `default_module` keyword argument.
 
-        >>> get_by_full_name("int", default_module="builtins")
-        <class 'int'>
+        >>> get_by_full_name("Logger", default_module="logging")
+        <class 'logging.Logger'>
 
+        The default namespace doesn't have to be a module.
+
+        >>> get_by_full_name("info", default_module="logging.Logger").__qualname__
+        'Logger.info'
+
+        To retrieve an attribute of anything other than a module (e.g. a class member), you must use the ``:``-syntax to
+        separate the module path from the attribute path.
+
+        >>> get_by_full_name("logging:Logger.info").__qualname__
+        'Logger.info'
+
+        When using this syntax, the path to the left of the separator must be a valid module path.
     """
+    name = name.strip()
+    if name == "":
+        msg = "Name must not be empty."
+        raise ValueError(msg)
+
     if not (instance_of is None or subclass_of is None):
         msg = f"At least one of ({instance_of=}, {subclass_of=}) must be None."
         raise ValueError(msg)
@@ -165,18 +187,43 @@ def get_by_full_name(
     return obj
 
 
-def _get_by_full_name(name: str, *, default_module: str | _ModuleType | None = None) -> _t.Any:
-    if "." in name:
+def _get_by_full_name(name: str, *, default_module: str | object | None = None) -> _t.Any:
+    path: list[str]
+
+    force_default_module = name[0] == ":"
+
+    if force_default_module and not default_module:
+        msg = f"Cannot use {name=} (with leading ':') without a default module."
+        raise ValueError(msg)
+
+    root: object
+    if ":" in name and not force_default_module:
+        module_name, _, member = name.rpartition(":")
+        root = _import_module(module_name)
+        path = member.split(".")
+    elif "." in name and not force_default_module:
         module_name, _, member = name.rpartition(".")
-        module = _import_module(module_name)
+        root = _import_module(module_name)
+        path = [member]
     else:
         if not default_module:
             msg = "Name must be fully qualified when no default module is given."
             raise ValueError(msg)
-        module = _import_module(default_module) if isinstance(default_module, str) else default_module
-        member = name
 
-    return getattr(module, member)
+        if isinstance(default_module, str):
+            if ":" in default_module or "." in default_module:
+                root = _get_by_full_name(default_module)
+            else:
+                root = _import_module(default_module)
+        else:
+            root = default_module
+
+        path = name.removeprefix(":").split(".")
+
+    obj = root
+    for attr in path:
+        obj = getattr(obj, attr)
+    return obj
 
 
 def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name: bool = False) -> str:
