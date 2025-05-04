@@ -39,7 +39,7 @@ def read_int(var: str, default: int = 0, *, strict: bool = True, split: str | No
         >>> read_int("MY_INT", default=2019, strict=False)
         2019
 
-        Values may be mixed and matched when using `split`. Blank items are skipped.
+        When using `split`, elements are cleaned individually and blank items are skipped.
 
         >>> os.environ["MY_INT_LIST"] = "0, 1, , 5"
         >>> read_int("MY_INT_LIST", split=",")
@@ -80,7 +80,7 @@ def read_float(var: str, default: float = 0.0, *, strict: bool = True, split: st
         >>> read_float("MY_FLOAT", strict=False)
         0.0
 
-        Values may be mixed and matched when using `split`. Blank items are skipped.
+        When using `split`, elements are cleaned individually and blank items are skipped.
 
         >>> os.environ["MY_FLOAT_LIST"] = "0, 1.1, , 5"
         >>> read_float("MY_FLOAT_LIST", split=",")
