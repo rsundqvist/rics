@@ -271,3 +271,63 @@ def snake_to_camel(s: str, *, lower: bool = True) -> str:
     if lower:
         s0 = s0.lower()
     return s0 + s[1:]
+
+
+TRUE = "1", "true", "yes", "on", "enable", "enabled"
+FALSE = "0", "false", "no", "off", "disable", "disabled"
+
+
+def str_as_bool(s: str) -> bool:
+    """Convert a string `s` to a boolean value.
+
+    The output is determined by the content of `s`, as per the mapping shown below.
+
+    Keys:
+        * False: ``{false}``
+        * True: ``{true}``
+
+    Matching is case-insensitive.
+
+    Args:
+        s: A string.
+
+    Returns:
+        A ``bool`` value.
+
+    Raises:
+        TypeError: If `s` is not a string.
+        ValueError: If `s` cannot be converted to ``bool`` using the keys above.
+
+    Examples:
+        Basic usage.
+
+        >>> str_as_bool("true"), str_as_bool("false")
+        (True, False)
+
+        The input is cleaned and normalized.
+
+        >>> str_as_bool(" TRUE"), str_as_bool("False")
+        (True, False)
+
+        Input strings are normalized using :py:meth:`str.strip` and :py:meth:`str.lower`.
+
+    Notes:
+        Using ``bool(<str>)`` is equivalent to ``len(<str>) == 0``.
+    """
+    if not isinstance(s, str):
+        msg = f"Input must be a string; got {type(s).__name__}."
+        raise TypeError(msg)
+
+    s = s.strip().lower()
+    if s in FALSE:
+        return False
+    if s in TRUE:
+        return True
+
+    error = ValueError(f"Cannot cast {s!r} to `bool`.")
+    error.add_note(f"{FALSE=}")
+    error.add_note(f"{TRUE=}")
+    raise error
+
+
+str_as_bool.__doc__ = str_as_bool.__doc__.format(false=FALSE, true=TRUE)  # type: ignore[union-attr]
