@@ -10,7 +10,7 @@ def read_bool(var: str, default: bool = False, *, strict: bool = True, split: st
 @overload
 def read_bool(var: str, default: bool = False, *, strict: bool = True, split: None = None) -> bool: ...
 def read_bool(var: str, default: bool = False, *, strict: bool = True, split: str | None = None) -> bool | list[bool]:
-    """Read and convert boolean variable.
+    """Read ``bool`` variable.
 
     Args:
         var: Variable to read.

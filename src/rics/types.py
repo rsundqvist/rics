@@ -55,26 +55,16 @@ def verify_enum(
         TypeError: Bad response='x'; expected a Response enum option: Response.Yes | Response.No).
 
     Notes:
-        This function wraps :class:`LiteralHelper`.
+        This function wraps :meth:`LiteralHelper.from_enum`.
     """
-    if name is None:
-        from rics.strings import camel_to_snake
-
-        name = camel_to_snake(enum_type.__name__)
-
-    return LiteralHelper(
-        literal_type=enum_type,
-        default_name=name,
-        type_name=None,
-        normalizer=lambda arg: arg.name.lower() if isinstance(arg, _Enum) else str(arg).strip().lower(),
-    ).check(value)
+    return LiteralHelper.from_enum(enum_type, default_name=name).check(value)
 
 
 def verify_literal(
     value: _t.Any,
     literal_type: _abc.Collection[T] | type[T] | _t.Any,  # Runtime type is typically <typing special form>.
-    name: str = "value",
     *,
+    name: str = "value",
     type_name: str | None = None,
     exc_type: type[Exception] | None = None,
     normalizer: _abc.Callable[[_t.Any], _t.Any] | None = None,
@@ -169,7 +159,7 @@ class LiteralHelper(_t.Generic[T]):
         *,
         default_name: str = "value",
         type_name: str | None = None,
-        exc_type: type[Exception] | None = None,
+        exc_type: type[BaseException] | None = None,
         normalizer: _abc.Callable[[_t.Any | T], _t.Any] | None = None,
     ) -> None:
         options = self._extract_options(literal_type)
@@ -178,9 +168,71 @@ class LiteralHelper(_t.Generic[T]):
 
         self._name = default_name
         self._type_name = type_name
-        self._exc_type = TypeError if exc_type is None else exc_type
+        self._exc_type: type[BaseException] = TypeError if exc_type is None else exc_type
         self._options = options
         self._normalizer = normalizer
+
+    @classmethod
+    def from_enum(cls, enum_type: type[EnumT], *, default_name: str | None = None) -> "LiteralHelper[EnumT]":
+        """Construct helper for an :class:`enum.Enum` type.
+
+        Args:
+            enum_type: Desired enum type.
+            default_name: Default name of the user-facing argument. Used in error messages. Derive if ``None``.
+
+        Returns:
+            A ``LiteralHelper`` constructor.
+        """
+        if default_name is None:
+            from rics.strings import camel_to_snake
+
+            default_name = camel_to_snake(enum_type.__name__)
+
+        return LiteralHelper(
+            literal_type=enum_type,
+            default_name=default_name,
+            type_name=None,  # Derived and pretty-printed on failure if None.
+            normalizer=cls._enum_normalizer,
+        )
+
+    @_t.overload
+    def read_env(self, variable: str, *, default: T | None, split: str) -> list[T]: ...
+    @_t.overload
+    def read_env(self, variable: str, *, default: T | None, split: None = None) -> T: ...
+    def read_env(self, variable: str, *, default: T | None, split: str | None = None) -> T | list[T]:
+        """Read environment value.
+
+        Args:
+            variable: Environment variable name.
+            default: Value to use is `variable` is not set or blank. Pass ``None`` to raise.
+            split: Character to split on. Returns ``list[T]`` when set.
+
+        Returns:
+            A :attr:`T`, or a list thereof (if `split` is set).
+
+        Notes:
+            Use the :mod:`rics.env.read` functions to read primitive types such as booleans.
+        """
+        import os
+
+        value = os.environ.get(variable, "").strip()
+        if default is None:
+            if variable not in os.environ:
+                self._raise("<not set>", variable)
+            elif not value:
+                self._raise("<blank>", variable)
+        elif not value:
+            return default if split is None else [default]
+
+        if split is None:
+            return self.check(value, name=variable)
+
+        values = value.split(split)
+        return [self.check(value, name=f"{variable}[{i}]") for i, value in enumerate(map(str.strip, values)) if value]
+
+    @classmethod
+    def _enum_normalizer(cls, arg: _t.Any) -> str:
+        return arg.name.lower() if isinstance(arg, _Enum) else str(arg).strip().lower()
 
     @property
     def options(self) -> tuple[T, ...]:
@@ -195,7 +247,7 @@ class LiteralHelper(_t.Generic[T]):
             name: Name to use for this call.
 
         Returns:
-            A valid ``Literal`` value.
+            A valid value.
         """
         name = self._name if name is None else name
         options = self._options
@@ -210,6 +262,13 @@ class LiteralHelper(_t.Generic[T]):
                 if normalizer(option) == normalized_value:
                     return option
 
+        self._raise(repr(value), name)
+
+    __call__ = check
+
+    def _raise(self, value: str, name: str) -> _t.Never:
+        options = self._options
+
         if self._type_name is None:
             if isinstance(options[0], _Enum):
                 pretty_options = f"a {type(options[0]).__name__} enum option: {{ {' | '.join(map(str, options))} }}"
@@ -218,10 +277,8 @@ class LiteralHelper(_t.Generic[T]):
         else:
             pretty_options = f"a {self._type_name}[{', '.join(map(repr, options))}]"
 
-        msg = f"Bad {name}={value!r}; expected {pretty_options}."
+        msg = f"Bad {name}={value}; expected {pretty_options}."
         raise self._exc_type(msg)
-
-    __call__ = check
 
     @classmethod
     def _extract_options(cls, literal_type: _abc.Collection[T] | _t.Any) -> tuple[T, ...]:
