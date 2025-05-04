@@ -42,7 +42,7 @@ def read_bool(var: str, default: bool = False, *, strict: bool = True, split: st
         >>> read_bool("MY_BOOL", default=True, strict=False)
         True
 
-        Values may be mixed and matched when using `split`. Blank items are skipped.
+        When using `split`, elements are cleaned individually and blank items are skipped.
 
         >>> os.environ["MY_BOOL_LIST"] = "true, 0, no, yes, enable,, false"
         >>> read_bool("MY_BOOL_LIST", split=",")

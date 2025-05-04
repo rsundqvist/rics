@@ -161,13 +161,6 @@ ignore = [
     "D205", # Clashes with sphinx_gallery (generated examples)
     "B007",
 ]
-"**/time_split/*" = [
-    "PLR0913", # Too many arguments in function definition
-]
-"**/time_split/integration/sklearn/*" = [
-    "N803", # Argument name `X` should be lowercase
-    "ARG002", # Unused method argument: `groups`
-]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

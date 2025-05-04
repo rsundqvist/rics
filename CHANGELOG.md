@@ -12,12 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New class `logs.LoggingSetupHelper`.
 - New functions `logs.get_logger()` and `convert_log_level()`.
 - New ***naive*** functions `strings.camel_to_snake()` and `snake_to_camel()`.
+- New class `types.LiteralHelper[T]`.
+- New wrapper functions `types.verify_literal()` and `verify_enum()`.
+- New module `rics.env`:
+  * Added `read`-functions for primitive types; `read_bool()`, `read_int`, `read_enum()`.
+  * Added `types.LiteralHelper[T].read_env()`.
+- New function `strings.str_as_bool()`.
 
 ### Changed
 - Update `basic_config.basic_config()`: Allow and handle `level=None` to avoid logging from root.
 - The `misc.get_by_full_name()` function now supports reading member attributes. Uses
   [entrypoint](https://packaging.python.org/en/latest/specifications/entry-points/) syntax, e.g.
   `pandas:DataFrame.sum`.
+- Moved some functions to new `rics.env` module:
+  * Moves implementation `rics.envinterp` -> `rics.env.interpolation`.
+  * Moved implementation of `misc.interpolate_environment_variables()` -> `env.interpolation.replace_in_string()`.
+
+  Aliases above will be deprecated in `0.6.0` and removed in `0.7.0`.
 
 ### Fixed
 - Calling `MultiCaseTimer.run(number=<int>)` no longer crashes.
