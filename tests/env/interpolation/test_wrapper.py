@@ -2,8 +2,7 @@ import os
 
 import pytest
 
-from rics import misc
-from rics.envinterp import UnsetVariableError
+from rics.env.interpolation import UnsetVariableError, replace_in_string
 
 
 @pytest.mark.parametrize(
@@ -20,7 +19,7 @@ from rics.envinterp import UnsetVariableError
 def test_interpolate_environment_variables_default_args(s, expected):
     os.environ["ENV_VAR0"] = "VALUE0"
     os.environ["ENV_VAR1"] = "VALUE1"
-    assert misc.interpolate_environment_variables(s) == expected
+    assert replace_in_string(s) == expected
 
 
 @pytest.mark.parametrize(
@@ -41,7 +40,7 @@ def test_interpolate_environment_variables(s, expected, kwargs):
     os.environ["HACKY"] = "${NESTED}"
 
     try:
-        actual = misc.interpolate_environment_variables(s, **kwargs)
+        actual = replace_in_string(s, **kwargs)
     except (ValueError, UnsetVariableError, NotImplementedError) as e:
         actual = e  # type: ignore
 
