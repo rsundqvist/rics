@@ -8,7 +8,7 @@ def read_int(var: str, default: int = 0, *, strict: bool = True, split: str) -> 
 @overload
 def read_int(var: str, default: int = 0, *, strict: bool = True, split: None = None) -> int: ...
 def read_int(var: str, default: int = 0, *, strict: bool = True, split: str | None = None) -> int | list[int]:
-    """Read and convert integer variable.
+    """Read ``int`` variable.
 
     Args:
         var: Variable to read.
@@ -55,7 +55,7 @@ def read_float(var: str, default: float = 0.0, *, strict: bool = True, split: st
 @overload
 def read_float(var: str, default: float = 0.0, *, strict: bool = True, split: None = None) -> float: ...
 def read_float(var: str, default: float = 0.0, *, strict: bool = True, split: str | None = None) -> float | list[float]:
-    """Read and convert float variable.
+    """Read ``float`` variable.
 
     Args:
         var: Variable to read.

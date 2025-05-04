@@ -70,3 +70,101 @@ class TestLiteralUnions:
     def test_deduplicate(self):
         actual = LiteralHelper(UnionLiteral)._options  # type: ignore[var-annotated]
         assert actual == ("a", "b", "c")
+
+
+class FromEnvBase:
+    VAR_NAME: str
+
+    @classmethod
+    def setup_helper(cls, monkeypatch: pytest.MonkeyPatch, value: str | None) -> LiteralHelper[AOrB]:
+        if value is None:
+            monkeypatch.delenv(cls.VAR_NAME, raising=False)
+        else:
+            monkeypatch.setenv(cls.VAR_NAME, value)
+
+        return LiteralHelper.from_enum(AOrB)
+
+
+class TestFromEnv(FromEnvBase):
+    VAR_NAME = "TestFromEnv"
+
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            ("b", AOrB.b),
+            ("B", AOrB.b),
+            (" B ", AOrB.b),
+        ],
+    )
+    def test_read(self, monkeypatch, value, expected):
+        helper = self.setup_helper(monkeypatch, value)
+        actual = helper.read_env(self.VAR_NAME, default=None)
+        assert actual == expected
+
+    @pytest.mark.parametrize(
+        "value, err_value",
+        [
+            (None, "<not set>"),
+            ("c", "'c'"),
+            ("", "<blank>"),
+            ("   ", "<blank>"),
+        ],
+    )
+    def test_error(self, monkeypatch, value, err_value):
+        expected = f"Bad TestFromEnv={err_value}; expected a AOrB enum option: {{ AOrB.a | AOrB.b }}."
+        helper = self.setup_helper(monkeypatch, value)
+
+        with pytest.raises(TypeError) as exc_info:
+            helper.read_env(self.VAR_NAME, default=None)
+
+        assert str(exc_info.value) == expected
+
+    @pytest.mark.parametrize("value", [None, "", "   "])
+    @pytest.mark.parametrize("default", [AOrB.b, AOrB.b])
+    def test_default(self, monkeypatch, value, default):
+        helper = self.setup_helper(monkeypatch, value)
+        actual = helper.read_env(self.VAR_NAME, default=default)
+        assert actual == default
+
+
+class TestFromEnvList(FromEnvBase):
+    VAR_NAME = "TestFromEnvList"
+
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            ("b, B", [AOrB.b, AOrB.b]),
+            ("B,a", [AOrB.b, AOrB.a]),
+            (" B ", [AOrB.b]),
+        ],
+    )
+    def test_read(self, monkeypatch, value, expected):
+        helper = self.setup_helper(monkeypatch, value)
+        actual = helper.read_env(self.VAR_NAME, default=None, split=",")
+        assert actual == expected
+
+    @pytest.mark.parametrize("value", [None, "", "   "])
+    @pytest.mark.parametrize("default", [AOrB.b, AOrB.b])
+    def test_default(self, monkeypatch, value, default):
+        helper = self.setup_helper(monkeypatch, value)
+        actual = helper.read_env(self.VAR_NAME, default=default, split=",")
+        assert actual == [default]
+
+    @pytest.mark.parametrize(
+        "value, err_value",
+        [
+            (None, "TestFromEnvList=<not set>"),
+            ("c", "TestFromEnvList[0]='c'"),
+            ("a, c, b", "TestFromEnvList[1]='c'"),
+            ("", "TestFromEnvList=<blank>"),
+            ("   ", "TestFromEnvList=<blank>"),
+        ],
+    )
+    def test_error(self, monkeypatch, value, err_value):
+        expected = f"Bad {err_value}; expected a AOrB enum option: {{ AOrB.a | AOrB.b }}."
+        helper = self.setup_helper(monkeypatch, value)
+
+        with pytest.raises(TypeError) as exc_info:
+            helper.read_env(self.VAR_NAME, default=None, split=",")
+
+        assert str(exc_info.value) == expected

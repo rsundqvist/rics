@@ -8,7 +8,7 @@ def read_str(var: str, default: str = "", *, strict: bool = True, split: str) ->
 @overload
 def read_str(var: str, default: str = "", *, strict: bool = True, split: None = None) -> str: ...
 def read_str(var: str, default: str = "", *, strict: bool = True, split: str | None = None) -> str | list[str]:
-    """Read and convert string variable.
+    """Read ``str`` variable.
 
     Args:
         var: Variable to read.
