@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Moved implementation of `misc.interpolate_environment_variables()` -> `env.interpolation.replace_in_string()`.
 
   Aliases above will be deprecated in `0.6.0` and removed in `0.7.0`.
+- Added `strings.format_seconds(full=False)`; round to nearest minute for durations above four hours.
 
 ### Fixed
 - Calling `MultiCaseTimer.run(number=<int>)` no longer crashes.

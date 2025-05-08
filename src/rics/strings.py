@@ -92,7 +92,7 @@ def format_bytes(n: int, *, binary: bool = True, long: bool = False, decimals: i
     return f"{x / 2:.{decimals}f} {prefix}"
 
 
-def format_perf_counter(start: float, *, end: float | None = None) -> str:
+def format_perf_counter(start: float, *, end: float | None = None, full: bool = False) -> str:
     """Format performance counter output.
 
     This function formats performance counter output based on the time elapsed. This is a thin wrapper around the
@@ -101,6 +101,7 @@ def format_perf_counter(start: float, *, end: float | None = None) -> str:
     Args:
         start: Start time.
         end: End time. Retrieved using :py:func:`time.perf_counter` if ``None``.
+        full: If ``True``, show all non-zero components above four hours.
 
     Returns:
         A formatted performance counter time.
@@ -119,15 +120,16 @@ def format_perf_counter(start: float, *, end: float | None = None) -> str:
     from time import perf_counter
 
     end = perf_counter() if end is None else end
-    return format_seconds(end - start)
+    return format_seconds(end - start, full=full)
 
 
-def format_seconds(t: float, *, allow_negative: bool = False) -> str:
+def format_seconds(t: float, *, allow_negative: bool = False, full: bool = False) -> str:
     """Format performance counter output.
 
     Args:
         t: Time in seconds.
         allow_negative: If ``True``, format negative `t` with a leading minus sign.
+        full: If ``True``, show all non-zero components above four hours.
 
     Returns:
         A formatted performance counter time.
@@ -150,8 +152,15 @@ def format_seconds(t: float, *, allow_negative: bool = False) -> str:
         '60.0s'
         >>> format_seconds(60.01)
         '1m'
-        >>> format_seconds(309613.49)
-        '3d 14h 0m 13s'
+        >>> format_seconds(309623.49)
+        '3d 14h'
+
+        Large intervals is rounded by default. You may set ``full=True`` to show full output.
+
+        >>> format_seconds(309623.49)
+        '3d 14h'
+        >>> format_seconds(309633.51, full=True)
+        '3d 14h 0m 34s'
 
     Raises:
         ValueError: If ``t < 0`` and ``allow_negative=False`` (the default).
@@ -161,19 +170,26 @@ def format_seconds(t: float, *, allow_negative: bool = False) -> str:
         if not allow_negative:
             allow_negative = True
             raise ValueError(f"Refuse to format {t=} < 0; to allow, set {allow_negative=}")
-        return f"-{format_seconds(abs(t))}"
+        return f"-{format_seconds(abs(t), full=full)}"
 
     long_limit: float = 60.0
-    return _format_seconds(t) if t <= long_limit else _format_minutes(t)
+    return _format_seconds(t) if t <= long_limit else _format_minutes(t, full)
 
 
-def _format_minutes(t: float) -> str:
-    days, seconds = divmod(round(t), 86400)
+def _format_minutes(t: float, full: bool) -> str:
+    if full or t < 4 * 3600.0:
+        total_seconds = round(t)
+    else:
+        total_seconds = 60 * round(t / 60)  # Drop seconds above four hours
+
+    days, seconds = divmod(total_seconds, 86400)
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
+
     parts = (days, hours, minutes, seconds)
     nonzero = tuple(p > 0 for p in parts)
-    start, stop = nonzero.index(True), len(nonzero) - nonzero[::-1].index(True)
+    start = nonzero.index(True)
+    stop = len(nonzero) - nonzero[::-1].index(True)
     return " ".join(f"{parts[i]}{'dhms'[i]}" for i in range(start, stop))
 
 
