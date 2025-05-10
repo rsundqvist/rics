@@ -1,6 +1,7 @@
 import datetime
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Self
 
 
 @dataclass(frozen=True)
@@ -24,7 +25,7 @@ class PatchNotes:
                 yield section.title(), lines
 
     @classmethod
-    def from_markdown(cls, raw: str) -> tuple[list["PatchNotes"], dict[str, str]]:
+    def from_markdown(cls, raw: str) -> tuple[list[Self], dict[str, str]]:
         """Create ``PatchNotes`` and references from the lines of a Markdown file.
 
         Args:
@@ -55,7 +56,7 @@ class PatchNotes:
         raise ValueError("Failed to parse final section:\n", "\n".join(last_lines))
 
     @classmethod
-    def _consume(cls, content: str) -> "PatchNotes":
+    def _consume(cls, content: str) -> Self:
         title, _, the_rest = map(str.strip, content.partition("\n"))
 
         if "-" in title:
@@ -69,4 +70,4 @@ class PatchNotes:
 
         sections = {section_lines[0]: section_lines[1:] for section_lines in subsection_content_lines[1:]}
 
-        return PatchNotes(title.strip(), date.strip(), extra, sections)
+        return cls(title.strip(), date.strip(), extra, sections)

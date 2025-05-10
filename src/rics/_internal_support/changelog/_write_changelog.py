@@ -37,6 +37,9 @@ def write_changelog(
     index_lines = BASE_LINES.copy()
 
     for note in notes:
+        if not note.sections:
+            continue
+
         page = note.title.replace("[", "").replace("]", "").replace("#", "").lower().strip()
         index_lines.append(f"   {page}")
         file = root.joinpath(f"{page}.md")
