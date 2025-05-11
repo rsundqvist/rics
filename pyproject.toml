@@ -32,7 +32,8 @@ dependencies = [
 
 [project.optional-dependencies]
 cli = [
-    "click >= 8.1.0",
+    "click      >= 8.1.0",
+    "requests   >= 2.30.0", # repos
 ]
 plotting = [
     "matplotlib",
@@ -48,6 +49,11 @@ documentation = "https://rics"
 
 [project.scripts]
 mtimeit = "rics.performance.cli:main"  # TODO(6.0.0): Remove old entrypoint.
+rics = "rics.cli:main"
+
+[project.entry-points."rics.cli"]
+repos = "rics._cli_repos:main"
+timeit = "rics.performance.cli:main"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"
@@ -82,8 +88,7 @@ xdoctest = "^1.2.0"
 coverage = "^7.6.10"
 pytest-cov = "^6.0.0"
 
-scikit-learn = "^1.4.2"
-dask = { version = "^2025.1.0", extras = ["dataframe"] }
+responses = "~0.25.7"  # 0.25.7: Added support for python 3.13
 
 [tool.poetry.group.devops.dependencies]
 invoke = "^2.2.0"

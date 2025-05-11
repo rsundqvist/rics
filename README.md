@@ -33,12 +33,14 @@ The following packages started life as RiCS submodules.
 * ID Translation
   [![PyPI - Version](https://img.shields.io/pypi/v/id-translation.svg)](https://pypi.python.org/pypi/id-translation) 
   [![Read the Docs](https://readthedocs.org/projects/id-translation/badge/)](https://id-translation.readthedocs.io/)
+  [![Cookiecutter template](https://img.shields.io/badge/cookiecutter-template-red?logo=Cookiecutter)](https://github.com/rsundqvist/id-translation-project?tab=readme-ov-file#id-translation-cookiecutter-template)
 
   **_Turn meaningless IDs into human-readable labels._**
 
 * Time Split
   [![PyPI - Version](https://img.shields.io/pypi/v/time-split.svg)](https://pypi.python.org/pypi/time-split)
   [![Read the Docs](https://readthedocs.org/projects/time-split/badge/)](https://time-split.readthedocs.io/)
+  [![Docker Image Size (tag)](https://img.shields.io/docker/image-size/rsundqvist/time-split/latest?logo=docker&label=time-split)](https://hub.docker.com/r/rsundqvist/time-split/)
 
   **_Time-based k-fold validation splits for heterogeneous data._**
 
@@ -69,6 +71,14 @@ you through the process.
 
 ## Documentation
 Hosted on Read the Docs: https://rics.readthedocs.io
+
+## Command line program
+The `rics` CLI is bundled with the package. Some [related libraries](#related-libraries) will add new subroutines. To 
+get an overview, run:
+```bash
+rics --help
+```
+in the terminal.
 
 ## Contributing
 

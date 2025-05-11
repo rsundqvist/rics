@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * Added `read`-functions for primitive types; `read_bool()`, `read_int`, `read_enum()`.
   * Added `types.LiteralHelper[T].read_env()`.
 - New function `strings.str_as_bool()`.
+- New module `rics.click`.
 
 ### Changed
 - Update `basic_config.basic_config()`: Allow and handle `level=None` to avoid logging from root.

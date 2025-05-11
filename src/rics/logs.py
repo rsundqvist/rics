@@ -363,7 +363,7 @@ class LoggingSetupHelper:
                 msg = f"Level {i + 1} (index={i}): No items."
                 raise TypeError(msg)
 
-            # Convert to fixed format, e.g. {"rics.performance": logging:INFO}.
+            # Convert to fixed format, e.g. {"rics.performance": logging.INFO}.
             converted: dict[str, int] = {}
             for user_logger, user_log_level in user_dict.items():
                 logger = cls._get_logger_name(user_logger, i)
