@@ -34,6 +34,7 @@ dependencies = [
 cli = [
     "click      >= 8.1.0",
     "requests   >= 2.30.0", # repos
+    "ipykernel  >= 6.29.3", # kernel
 ]
 plotting = [
     "matplotlib",
@@ -54,6 +55,7 @@ rics = "rics.cli:main"
 [project.entry-points."rics.cli"]
 repos = "rics._cli_repos:main"
 timeit = "rics.performance.cli:main"
+kernel = "rics.jupyter.cli:main"
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"
