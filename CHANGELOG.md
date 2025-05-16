@@ -34,6 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Calling `MultiCaseTimer.run(number=<int>)` no longer crashes.
+- Calling `tname()` with `prefix_classname=True` when `arg` is an inherited instance method (e.g.
+  `pd.Series().describe`) now uses the child name. This parent is still shown for methods of uninitialized child types 
+  (e.g. `pd.Series.describe`).
 
 ## [5.0.1] - 2025-02-01
 

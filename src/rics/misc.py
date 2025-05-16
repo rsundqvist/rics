@@ -4,6 +4,7 @@ import typing as _t
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
 from pprint import saferepr as _safe_repr
+from types import MethodType as _MethodType
 from types import ModuleType as _ModuleType
 
 from . import paths as _paths
@@ -294,6 +295,16 @@ def tname(
 
 
 def _get_name(arg: type[_t.Any] | _t.Any, prefix_classname: bool) -> str:
+    if prefix_classname and hasattr(arg, "__self__"):
+        arg_self = arg.__self__
+        if isinstance(arg_self, type):
+            cls_name = arg_self.__name__
+        elif isinstance(arg, _MethodType):
+            cls_name = type(arg_self).__qualname__
+        else:
+            cls_name = type(arg).__name__
+        return f"{cls_name}.{arg.__name__}"
+
     if hasattr(arg, "__qualname__"):
         return arg.__qualname__ if prefix_classname else arg.__name__
     if hasattr(arg, "fget"):

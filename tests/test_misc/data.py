@@ -27,6 +27,12 @@ class Foo:
         return "property value"
 
 
+class ChildFoo(Foo):
+    @classmethod
+    def bar(cls) -> str:
+        return "overridden string"
+
+
 my_foo = Foo(1999)
 
 

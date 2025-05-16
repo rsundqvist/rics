@@ -2,7 +2,7 @@ import pytest
 
 from rics import misc
 
-from .data import Foo, say_hi
+from .data import ChildFoo, Foo, say_hi
 
 
 @pytest.mark.parametrize(
@@ -55,3 +55,19 @@ class Test:
         for _ in range(n_wraps):
             obj = Wrapper(obj)
         assert misc.tname(obj, prefix_classname=True) == expected
+
+
+@pytest.mark.parametrize(
+    "obj, expected",
+    [
+        # Known limitation - can't get child through parent method
+        (ChildFoo.a_property, "Foo.a_property"),
+        (ChildFoo().a_property, "str"),
+        (ChildFoo.hi, "Foo.hi"),  # No way to access the "real" parent from method
+        (ChildFoo().hi, "ChildFoo.hi"),
+        (ChildFoo.bar, "ChildFoo.bar"),
+        (ChildFoo().bar, "ChildFoo.bar"),
+    ],
+)
+def test_inheritance(obj, expected):
+    assert misc.tname(obj, prefix_classname=True) == expected
