@@ -176,7 +176,7 @@ max-line-length = 150
 [tool.pytest.ini_options]
 filterwarnings = [
     "error",
-    "ignore:Matplotlib is currently using agg:UserWarning",
+    "ignore:FigureCanvasAgg is non-interactive:UserWarning",
 ]
 log_file_level = 10
 log_file = "pytest.log"

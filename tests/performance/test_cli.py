@@ -11,7 +11,6 @@ from .test_wrapper import get_raw_timings, unload_modules, verify
 
 
 @pytest.mark.filterwarnings("ignore:The test results may be unreliable:UserWarning")
-@pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive:UserWarning")
 def test_cli_create():
     unload_modules()
 
@@ -25,7 +24,6 @@ def test_cli_create():
     assert result.exit_code == 0, result.stderr
 
 
-@pytest.mark.filterwarnings("ignore:FigureCanvasAgg is non-interactive:UserWarning")
 @pytest.mark.parametrize("with_all", (False, True))
 def test_cli(monkeypatch, with_all):
     monkeypatch.setattr(MultiCaseTimer, "_get_raw_timings", get_raw_timings)
@@ -52,7 +50,7 @@ def test_cli(monkeypatch, with_all):
             catch_exceptions=False,
         )
         assert result.exit_code == 0
-        assert Path(tmp).joinpath("unit-test.png").is_file()
+        assert Path(tmp).joinpath("unit-test.jpg").is_file()
         csv = Path(tmp).joinpath("unit-test.csv")
         assert csv.is_file()
         verify(pd.read_csv(csv))

@@ -147,7 +147,7 @@ class TestBadLogLevel:
         assert exc_info.value.log_level == 5
         assert exc_info.value.__notes__ == [
             "Hint: Set `verify=False` to allow.",
-            "Hint: Register this level using `logging.addLevelName()`",
+            "Hint: Register this level using `logging.addLevelName()`.",
         ]
 
     def test_unknown_str(self):
@@ -159,7 +159,7 @@ class TestBadLogLevel:
         assert str(exc_info.value) == f"Unknown {name}='Unknown'."
         assert exc_info.value.argument_name
         assert exc_info.value.log_level == "Unknown"
-        assert exc_info.value.__notes__ == ["Hint: Register this level using `logging.addLevelName()`"]
+        assert exc_info.value.__notes__ == ["Hint: Register this level using `logging.addLevelName()`."]
 
     def test_upper_str(self):
         name = self.test_upper_str.__name__ + "_log_level"
@@ -172,5 +172,5 @@ class TestBadLogLevel:
         assert exc_info.value.log_level == "info"
         assert exc_info.value.__notes__ == [
             f"Hint: Did you mean {name}='INFO'?",
-            "Hint: Register this level using `logging.addLevelName()`",
+            "Hint: Register this level using `logging.addLevelName()`.",
         ]

@@ -20,6 +20,9 @@ def interpolate_environment_variables(
     """Alias of :func:`rics.env.interpolation.replace_in_string`."""
     from rics.env.interpolation import replace_in_string
 
+    # TODO(6.0.0): Deprecate this function
+    # TODO(7.0.0): Remove this function
+
     return replace_in_string(s, allow_nested=allow_nested, allow_blank=allow_blank)
 
 

@@ -6,10 +6,10 @@ import numpy as np
 import pandas as pd
 
 from rics.collections.dicts import compute_if_absent
+from rics.performance.plot_types import Candidate, FuncOrData, Kind, TestData, Unit
 from rics.types import LiteralHelper
 
 from ..types import ResultsDict
-from .types import Candidate, FuncOrData, Kind, TestData, Unit
 
 FUNC: Candidate = "Candidate"
 DATA: TestData = "Test data"
@@ -23,6 +23,7 @@ class CatplotParams:
     hue: FuncOrData
     kind: Kind
 
+    horizontal: bool = field(metadata={"skip": True})
     names: list[str] = field(metadata={"skip": True})
     user_kwargs: Mapping[str, Any] = field(metadata={"skip": True})
 
@@ -40,7 +41,16 @@ class CatplotParams:
     def __post_init__(self) -> None:
         if keys := self.reserved_keys().intersection(self.user_kwargs):
             msg = f"Bad `kwargs`: {keys=} are reserved."
-            raise ValueError(msg)
+            error = ValueError(msg)
+
+            if "y" in keys:
+                y = self.user_kwargs["y"]
+                error.add_note(f"HINT ({y=}): Use `horizontal=True` to plot timings on the X-axis.")
+            if "hue" in keys:
+                hue = self.user_kwargs["hue"]
+                error.add_note(f"HINT ({hue=}): Use `x='data' | 'candidate'` to control X-axis and Hue variables.")
+
+            raise error
 
         helper = LiteralHelper[FuncOrData](FuncOrData)
         helper.check(self.x, "x")
@@ -52,13 +62,15 @@ class CatplotParams:
         run_results: ResultsDict | pd.DataFrame,
         *,
         x: Literal["candidate", "data"] | None = None,
+        horizontal: bool = False,
         unit: Unit | None = None,
         kind: Kind = "bar",
         names: Iterable[str] = (),
         **kwargs: Any,
     ) -> Self:
         """Create instance from run results."""
-        df = _make_df(run_results)
+        names = [*names]
+        df = _make_df(run_results, names)
 
         # MyPy thinks these are both string
         x_col, hue_col = (DATA, FUNC) if _is_data_x(x, df=df) else (FUNC, DATA)
@@ -67,10 +79,11 @@ class CatplotParams:
             data=df,
             x=x_col,
             y=_resolve_y(unit, df=df),
+            horizontal=horizontal,
             hue=hue_col,
             kind=kind,
-            names=list(names),
-            user_kwargs=dict(kwargs),
+            names=names,
+            user_kwargs={**kwargs},
         )
 
     def to_kwargs(self) -> dict[str, Any]:
@@ -91,6 +104,11 @@ class CatplotParams:
 
         if self.names:
             self._handle_row_col(kwargs)
+
+        if self.horizontal:
+            x = kwargs["x"]
+            kwargs["x"] = kwargs["y"]
+            kwargs["y"] = x
 
         return kwargs
 
@@ -128,6 +146,8 @@ class CatplotParams:
         # We could print something like f"{label}: [row]", but this could add a lot of additional text to the legend
         # or x-axis. I think this is a better way to do it.
         hidden = {names.index(name) for key in ("row", "col") if (name := kwargs.get(key)) in names}
+
+        # Would be nice if data label formatting was configurable. For now though, we'll settle for this.
         formatters = {i: f"{name} = {{}}" for i, name in enumerate(names) if i not in hidden}
 
         def format_label(label: tuple[Hashable]) -> str:
@@ -150,10 +170,19 @@ class CatplotParams:
         kwargs.update(updates)
 
 
-def _make_df(run_results: ResultsDict | pd.DataFrame) -> pd.DataFrame:
+def _make_df(run_results: ResultsDict | pd.DataFrame, names: list[str]) -> pd.DataFrame:
     from rics.performance import to_dataframe
 
-    df = to_dataframe(run_results) if isinstance(run_results, dict) else run_results.copy()
+    if isinstance(run_results, dict):
+        df = to_dataframe(run_results, names=names)
+    else:
+        df = run_results.copy()
+
+        if names and {*names}.difference(df.columns):
+            df[names] = pd.DataFrame.from_records(df[DATA])
+
+        return df
+
     as_category = [DATA, FUNC]
     df[as_category] = df[as_category].astype("category")
     return df

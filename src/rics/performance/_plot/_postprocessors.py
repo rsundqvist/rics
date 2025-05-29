@@ -3,7 +3,7 @@ from typing import Any
 
 from seaborn import FacetGrid
 
-from rics.performance.plot.types import Postprocessor
+from rics.performance.plot_types import Postprocessor
 
 
 def make_postprocessors(kwargs: dict[str, Any]) -> list[Postprocessor]:
@@ -13,32 +13,37 @@ def make_postprocessors(kwargs: dict[str, Any]) -> list[Postprocessor]:
         kwargs: Keyword arguments for :func:`seaborn.catplot`. May be modified.
 
     Returns:
-        A list of postprocessors.
+        A list of postprocessors ``(FacetGrid) -> None``.
     """
     kind = kwargs["kind"]
     postprocessors: list[Postprocessor] = []
 
     if kind == "bar":
         # TODO(seaborn==0.13.2): log_scale makes bars vanish, so we do this instead.
-        set_log_y = kwargs.pop("log_scale", None)
-        postprocessors.append(BarPlotProcessor(bool(set_log_y)))
+        log_scale = kwargs.pop("log_scale", None)
+        horizontal = kwargs["x"].startswith("Time ")
+        postprocessors.append(BarPlotProcessor(bool(log_scale), horizontal))
 
     return postprocessors
 
 
 @dataclass(frozen=True)
-class BarPlotProcessor(Postprocessor):
-    set_log_y: bool
+class BarPlotProcessor:
+    log_scale: bool
+    horizontal: bool
 
     def __call__(self, facet_grid: FacetGrid) -> None:
-        fmt = "{:.3g}" if self.set_log_y else "{:.1f}"
+        fmt = "{:.3g}" if self.log_scale else "{:.2f}"
 
-        axes = facet_grid.axes.flat
+        axes = [*facet_grid.axes.flat]
         for ax in axes:
             for c in ax.containers:
-                ax.bar_label(c, fmt=fmt, label_type="center", bbox={"boxstyle": "round", "fc": "0.8"})
+                ax.bar_label(c, fmt=fmt, padding=10, bbox={"boxstyle": "round", "fc": "0.8"})
 
-        if self.set_log_y:
+        if self.log_scale:
             # TODO(seaborn==0.13.2): log_scale makes bars vanish, so we do this instead.
             for ax in axes:
-                ax.set_yscale("log")
+                if self.horizontal:
+                    ax.set_xscale("log")
+                else:
+                    ax.set_yscale("log")

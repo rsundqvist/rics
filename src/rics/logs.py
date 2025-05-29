@@ -126,7 +126,7 @@ class LogLevelError(Exception):
         for note in extra_notes:
             self.add_note(note)
 
-        self.add_note("Hint: Register this level using `logging.addLevelName()`")
+        self.add_note("Hint: Register this level using `logging.addLevelName()`.")
 
     @property
     def log_level(self) -> LogLevel:

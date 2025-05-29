@@ -12,15 +12,12 @@ def to_dataframe(run_results: ResultsDict, names: Iterable[str] = ()) -> pd.Data
     """Create a DataFrame from performance run output, adding derived values.
 
     Args:
-        run_results: Output from :meth:`rics.performance.MultiCaseTimer.run`.
         run_results: A dict `run_results` on the form ``{candidate_label: {data_label: [runtime, ...]}}``, returned
             by :meth:`rics.performance.MultiCaseTimer.run`.
-        names: Categories for keys in the data. If given, all data labels must be tuples of the same length
-            as `names`.
+        names: Level names for tuple keys in the data (creates new columns). See :func:`.plot_run` for details.
 
     Returns:
-        The `run_result` input wrapped in a DataFrame.
-
+        The `run_result` input as a DataFrame.
     """
     names = tuple(names)
     frames = []
@@ -71,19 +68,24 @@ def _has_names(data_label: Hashable, *, names: tuple[str, ...]) -> TypeGuard[tup
     return True
 
 
-def get_best(run_results: ResultsDict | pd.DataFrame, per_candidate: bool = False) -> pd.DataFrame:
+def get_best(
+    run_results: ResultsDict | pd.DataFrame,
+    per_candidate: bool = False,
+    names: Iterable[str] = (),
+) -> pd.DataFrame:
     """Get a summarized view of the best run results for each candidate/data pair.
 
     Args:
         run_results: Output of :meth:`rics.performance.MultiCaseTimer.run`.
         per_candidate: If ``True``, show the best times for all candidate/data pairs. Otherwise, just show the best
             candidate per data label.
+        names: Data label columns to show. Use single `'Test data'` column if not given.
 
     Returns:
         The best (lowest) times for each candidate/data pair.
 
     """
-    df = run_results if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results)
+    df = run_results if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results, names=names)
     return df.sort_values("Time [s]").groupby(["Candidate", "Test data"] if per_candidate else "Test data").head(1)
 
 
@@ -91,13 +93,15 @@ Unit = Literal["s", "ms", "μs", "us", "ns"]
 X = Literal["candidate", "data"]
 
 
-def plot_run(
+def legacy_plot_run(  # pragma: no coverage
     run_results: ResultsDict | pd.DataFrame,
     x: X | None = None,
     unit: Unit | None = None,
     **kwargs: Any,
 ) -> None:
     """Plot the results of a performance test.
+
+    This is a legacy method that does not support facets.
 
     .. figure:: ../_images/perf_plot.png
 
@@ -112,7 +116,6 @@ def plot_run(
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed.
         TypeError: For unknown `unit` arguments.
-
     """
     import warnings
 
@@ -159,12 +162,12 @@ def plot_run(
     left.get_legend().remove()
 
 
-def _smaller_as_hue(data: pd.DataFrame) -> tuple[str, str]:
+def _smaller_as_hue(data: pd.DataFrame) -> tuple[str, str]:  # pragma: no coverage
     unique = data.nunique()
     return ("Test data", "Candidate") if unique["Test data"] < unique["Candidate"] else ("Candidate", "Test data")
 
 
-def _unit_from_data(df: pd.DataFrame) -> Unit:
+def _unit_from_data(df: pd.DataFrame) -> Unit:  # pragma: no coverage
     """Pick the unit with the most "human" scale; whole numbers around one hundred."""
     from numpy import log10
 

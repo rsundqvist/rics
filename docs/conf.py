@@ -57,10 +57,11 @@ def monkeypatch_autosummary_toc() -> None:
 def callback(_app, _env, node, _contnode):  # noqa
     reftarget = node.get("reftarget")
 
-    if reftarget == "polars.dataframe.frame.DataFrame":
-        # https://github.com/pola-rs/polars/issues/7027
-        ans_hax = reference(refuri="https://docs.pola.rs/py-polars/html/reference/dataframe/index.html", reftitle=reftarget)
-        ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
+    if reftarget == "Ts":
+        # https://github.com/sphinx-doc/sphinx/issues/11007
+        m = "rics.performance.types"
+        ans_hax = reference(refuri=f"{m}.html#{m}.Ts", reftitle=reftarget)
+        ans_hax.children.append(Text(reftarget))
         return ans_hax
 
     for m in type_modules:

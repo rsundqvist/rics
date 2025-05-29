@@ -1,0 +1,13 @@
+   Candidate  Run no  Time [s]      Test data  n_units unit  Time [ms]  Time [μs]  Time [ns]  Times min  Times mean
+0   sleep_x1       0     0.003        (1, ms)        1   ms          3      3e+03      3e+06        1.1        0.43
+1   sleep_x1       1    0.0028        (1, ms)        1   ms        2.8    2.8e+03    2.8e+06          1         0.4
+2   sleep_x1       0    0.0052        (2, ms)        2   ms        5.2    5.2e+03    5.2e+06          1         0.4
+3   sleep_x1       1    0.0056        (2, ms)        2   ms        5.6    5.6e+03    5.6e+06        1.1        0.43
+4   sleep_x1       0     0.013  (5000000, ns)  5000000   ns         13    1.3e+04    1.3e+07          1         0.4
+5   sleep_x1       1     0.013  (5000000, ns)  5000000   ns         13    1.3e+04    1.3e+07        1.1        0.43
+6   sleep_x4       0     0.012        (1, ms)        1   ms         12    1.2e+04    1.2e+07        4.2         1.7
+7   sleep_x4       1      0.01        (1, ms)        1   ms         10      1e+04      1e+07        3.7         1.5
+8   sleep_x4       0      0.02        (2, ms)        2   ms         20      2e+04      2e+07        3.9         1.6
+9   sleep_x4       1     0.021        (2, ms)        2   ms         21    2.1e+04    2.1e+07          4         1.6
+10  sleep_x4       0      0.05  (5000000, ns)  5000000   ns         50      5e+04      5e+07          4         1.6
+11  sleep_x4       1      0.05  (5000000, ns)  5000000   ns         50      5e+04      5e+07          4         1.6
