@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from seaborn import FacetGrid
+if TYPE_CHECKING:
+    from seaborn import FacetGrid
 
 from rics.performance.plot_types import Postprocessor
 
@@ -32,7 +33,7 @@ class BarPlotProcessor:
     log_scale: bool
     horizontal: bool
 
-    def __call__(self, facet_grid: FacetGrid) -> None:
+    def __call__(self, facet_grid: "FacetGrid") -> None:
         fmt = "{:.3g}" if self.log_scale else "{:.2f}"
 
         axes = [*facet_grid.axes.flat]

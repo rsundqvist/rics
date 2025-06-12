@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- CLI updates
+  * Fix immediate crash when `seaborn` is missing.
+  * Added `rics timeit --no-plot` (default `False`) to allow `timeit` without seaborn.
+
 ## [5.1.0] - 2025-05-29
 
 ### Added

@@ -54,6 +54,9 @@ def run_multivariate_test(
     See Also:
         The :func:`~rics.performance.plot_run` and :func:`~rics.performance.get_best` functions.
     """
+    if plot:
+        _verify_can_plot()
+
     timer: MultiCaseTimer[DataType, *Ts] = MultiCaseTimer(
         candidate_method,
         test_data,
@@ -82,3 +85,16 @@ def run_multivariate_test(
             show_figure(block=False)
 
     return data
+
+
+def _verify_can_plot() -> None:
+    from importlib.util import find_spec
+
+    if find_spec("seaborn") is None:
+        msg = (
+            "Package `seaborn` not installed. Run of one:"
+            "\n  pip install seaborn"
+            "\n  pip install rics[plotting]"
+            "\nto enable plots."
+        )
+        raise RuntimeError(msg)

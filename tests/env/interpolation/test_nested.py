@@ -32,7 +32,7 @@ def test_parsing(s, expected):
 @pytest.mark.parametrize(
     "s, match",
     [
-        ("${ENV_VAR1:use ${ENV_VAR2}}!", ""),
+        ("${ENV_VAR1:use ${ENV_VAR2}}!", "inner match must be stripped"),
         ("${ENV_VAR1:${ENV_VAR2}${ENV_VAR2}}!", "Multiple inner"),
     ],
 )

@@ -30,7 +30,7 @@ exclude_lines =
     LOGGER.isEnabledFor
     logger.isEnabledFor
     if not isinstance\(other
-    if TYPE_CHECKING
+    TYPE_CHECKING
     if VERBOSE
     if __name__ == "__main__"
     except ModuleNotFoundError

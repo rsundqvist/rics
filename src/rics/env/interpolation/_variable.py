@@ -122,7 +122,7 @@ class Variable:
             if len(inners) == 1:
                 inner = inners[0]
                 if inner.full_match != stripped:
-                    raise NotImplementedError
+                    raise NotImplementedError("inner match must be stripped")
 
                 return inner.get_value(resolve_nested_defaults=resolve_nested_defaults)
 

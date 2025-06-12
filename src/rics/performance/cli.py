@@ -76,6 +76,11 @@ _show_warning_orig = _warnings.showwarning
     help=f"Automatic yes to prompts for things like writing large (>{LARGE_RESULT_ROW_LIMIT:_d} rows) result files.",
     is_flag=True,
 )
+@click.option(
+    "--plot/--no-plot",
+    help="Plotting requires `seaborn`.",
+    is_flag=True,
+)
 def main(
     cxt: click.Context,
     time_per_candidate: float,
@@ -83,6 +88,7 @@ def main(
     create: bool,
     per_candidate: bool,
     yes: bool,
+    plot: bool,
 ) -> None:
     """Multivariate performance testing.
 
@@ -151,7 +157,7 @@ def main(
     try:
         _warnings.showwarning = _show_warnings
 
-        result = _run(candidates, test_data, time_per_candidate=time_per_candidate, show=False)
+        result = _run(candidates, test_data, time_per_candidate=time_per_candidate, plot=plot, show=False)
     except ValueError as e:  # pragma: no cover
         _handle_value_error(e)
         raise
