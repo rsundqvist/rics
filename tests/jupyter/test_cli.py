@@ -1,4 +1,5 @@
 import json
+import logging
 
 import pytest
 from click.testing import CliRunner
@@ -6,25 +7,31 @@ from click.testing import CliRunner
 from rics import __version__ as expected_version
 from rics import cli
 from rics.jupyter import KernelHelper
+from rics.jupyter._venv_helper import Resolve
 
 
-def test_jupyter(tmp_path, monkeypatch):
-    called = 0
+@pytest.mark.parametrize("dummy_project", ["uv", "poetry"], indirect=True)
+def test_jupyter(dummy_project, monkeypatch):
+    def check_call(_, args):
+        assert args[1:] == [
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--quiet",
+            "--require-virtualenv",
+            "ipykernel",
+        ]
 
-    def do_nothing(_):
-        # Default is to set logging.root.disabled=True, breaking other tests.
-        nonlocal called
-        called += 1
-
-    monkeypatch.setattr("rics.logs.LoggingSetupHelper._on_verbosity_zero", do_nothing)
+    monkeypatch.setattr("rics.logs.LoggingSetupHelper._on_verbosity_zero", lambda _: None)
+    monkeypatch.setattr("rics.jupyter._kernel_helper.KernelHelper._check_call", check_call)
 
     result = CliRunner().invoke(
         cli.main,
-        ["kernel", "-e", "TEST_ENV_KEY", "TEST_ENV_VALUE", "--prefix", tmp_path],
-        env={"JUPYTER_PLATFORM_DIRS": "1"},
+        ["k", "-p0", "-e", "TEST_ENV_KEY", "TEST_ENV_VALUE", "--prefix", dummy_project.working_dir],
+        env={"JUPYTER_PLATFORM_DIRS": "1", "POETRY_VIRTUALENVS_IN_PROJECT": "1"},
     )
     assert result.exit_code == 0
-    assert called == 1
 
     lines = result.stdout.splitlines()
     assert len(lines) == 2
@@ -32,7 +39,7 @@ def test_jupyter(tmp_path, monkeypatch):
     helper = KernelHelper()
 
     # Verify target
-    expected_path = tmp_path / "share/jupyter/kernels" / helper.resolve_kernel_name()
+    expected_path = dummy_project.working_dir / "share/jupyter/kernels" / helper.resolve_kernel_name()
     assert str(expected_path) in lines[-1]
 
     # Verify KernelSpec JSON.
@@ -46,11 +53,14 @@ def test_jupyter(tmp_path, monkeypatch):
     metadata = kernel_spec["metadata"]["rics.jupyter"]
 
     venv = metadata["venv"]
-    assert venv["manager"] == "poetry"
+    assert venv["manager"] == dummy_project.expected_manager
     assert venv["slug"] == helper.venv.slug
+    assert "dummy-project" in helper.venv.slug
 
     installer = metadata["installer"]
     assert installer["version"] == expected_version
+
+    dummy_project.verify_system_paths()
 
 
 @pytest.mark.parametrize("drop", ["argv", "display_name", "language"])
@@ -76,3 +86,12 @@ def test_corrupt_kernel_spec(tmp_path, drop):
 
     with pytest.raises(TypeError, match=repr(drop)):
         KernelHelper.read_kernel_spec(path)
+
+
+def test_uv_bad_pyproject(tmp_path, monkeypatch, caplog):
+    monkeypatch.chdir(tmp_path)
+    tmp_path.joinpath("pyproject.toml").write_text("[uv]\n# Bad project file!")
+
+    actual = Resolve.uv(tmp_path, logging.getLogger(test_uv_bad_pyproject.__name__))
+    assert actual is None
+    assert "No `project` table found" in caplog.text
