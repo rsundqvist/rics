@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix crashes when using `python -OO`.
+
 ## [5.1.1] - 2025-06-12
 
 ### Fixed

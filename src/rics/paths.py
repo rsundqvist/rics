@@ -113,10 +113,11 @@ def _set_path_func_docstring(func: _t.Any, cls: str | type[_t.Any], tail: str = 
     func.__doc__ = docstring
 
 
-_set_path_func_docstring(
-    parse_any_path,
-    cls="of type `cls`",
-    tail="""Raises:
+if __doc__:
+    _set_path_func_docstring(
+        parse_any_path,
+        cls="of type `cls`",
+        tail="""Raises:
         TypeError: If the `postprocessor` returns an invalid type.
         ValueError: If the `postprocessor` returns ``False``.
 
@@ -138,6 +139,6 @@ _set_path_func_docstring(
         * :func:`any_path_to_str`: Alias of ``parse_any_path(cls=str)``
         * :func:`any_path_to_path`: Alias of ``parse_any_path(cls=pathlib.Path)``
 """,
-)
-_set_path_func_docstring(any_path_to_str, cls=str)
-_set_path_func_docstring(any_path_to_path, cls=_Path)
+    )
+    _set_path_func_docstring(any_path_to_str, cls=str)
+    _set_path_func_docstring(any_path_to_path, cls=_Path)

@@ -191,5 +191,5 @@ DOCSTRINGS = {
     "frozen_modules": "Set for potentially faster startup. Prevents debugging of built-in modules.",
 }
 
-assert isinstance(KernelHelper.install.__doc__, str)  # noqa: S101
-KernelHelper.install.__doc__ = KernelHelper.install.__doc__.format_map(DOCSTRINGS)
+if KernelHelper.install.__doc__:
+    KernelHelper.install.__doc__ = KernelHelper.install.__doc__.format_map(DOCSTRINGS)

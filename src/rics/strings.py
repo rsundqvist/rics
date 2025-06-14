@@ -346,4 +346,5 @@ def str_as_bool(s: str) -> bool:
     raise error
 
 
-str_as_bool.__doc__ = str_as_bool.__doc__.format(false=FALSE, true=TRUE)  # type: ignore[union-attr]
+if str_as_bool.__doc__:
+    str_as_bool.__doc__ = str_as_bool.__doc__.format(false=FALSE, true=TRUE)
