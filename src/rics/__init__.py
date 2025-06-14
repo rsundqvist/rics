@@ -18,6 +18,6 @@ __all__ = [
     "configure_stuff",
 ]
 
-__version__ = "5.1.1.dev1"
+__version__ = "5.1.2"
 
 _logging.getLogger(__name__).addHandler(_logging.NullHandler())

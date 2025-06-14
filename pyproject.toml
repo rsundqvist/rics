@@ -1,6 +1,6 @@
 [project]
 name = "rics"
-version = "5.1.1.dev1"
+version = "5.1.2"
 description = "My personal little ML engineering library."
 authors = [
     { name = "Richard Sundqvist", email = "richard.sundqvist@live.se" },
