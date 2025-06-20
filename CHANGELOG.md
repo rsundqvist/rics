@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Make `pandas` an optional dependency.
+
 ## [5.1.2] - 2025-06-14
 
 ### Fixed

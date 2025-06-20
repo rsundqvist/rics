@@ -27,12 +27,13 @@ classifiers = [
 requires-python = ">=3.11"
 
 dependencies = [
-    "pandas >= 2.0.3",
+    # No hard dependencies!
 ]
 
 [project.optional-dependencies]
 cli = [
     "click      >= 8.1.0",
+    "pandas     >= 2.0.3",
     "requests   >= 2.30.0", # repos
     "ipykernel  >= 6.29.3", # kernel
 ]

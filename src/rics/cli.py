@@ -3,6 +3,7 @@
 For details, see the :doc:`CLI documentation </documentation/cli/notebooks/cli>` page.
 """
 
+from importlib.metadata import EntryPoint as _EntryPoint
 from importlib.metadata import entry_points as _entry_points
 
 import click as _c
@@ -44,11 +45,35 @@ def main(cxt: _c.Context, verbose: tuple[int, _logs.LoggingSetupHelper]) -> None
     cxt.meta["logging_setup_helper"] = helper
 
 
-for ep in _entry_points(group="rics.cli"):
-    result = ep.load()
-    assert isinstance(result, _c.Command), f"{result=} | {type(result)=}"  # noqa: S101
-    main.add_command(result, ep.name)  # Register
+def _register_dummy(entrypoint: _EntryPoint, exc: Exception) -> None:  # pragma: no cover
+    import sys
 
+    @_c.command(entrypoint.name, help=f"[unavailable] {exc}", add_help_option=False)
+    def _dummy(*kwargs, **args):  # type: ignore # noqa
+        msg = f"Command '{entrypoint.name}' @ '{entrypoint.value}' is unavailable: "
+
+        _c.secho(msg, err=True, fg="white", nl=False)
+        _c.secho(repr(exc), err=True, fg="red")
+        sys.exit(1)
+
+    main.add_command(_dummy, entrypoint.name)
+
+
+def _register_entrypoints() -> None:
+    for ep in _entry_points(group="rics.cli"):
+        try:
+            result = ep.load()
+
+            if isinstance(result, _c.Command):
+                main.add_command(result, ep.name)
+            else:
+                msg = f"not a {_c.Command.__module__}.{_c.Command.__qualname__} subtype"
+                _register_dummy(ep, TypeError(msg))
+        except Exception as e:
+            _register_dummy(ep, e)
+
+
+_register_entrypoints()
 
 if __name__ == "__main__":
     main()
