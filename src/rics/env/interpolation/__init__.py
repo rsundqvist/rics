@@ -55,8 +55,6 @@ Examples:
 
     >>> Variable.parse_first("${ENV_VAR3:${ENV_VAR4:${ENV_VAR0}}}").get_value(True)
     'VALUE0'
-
-    TODO infinite recursion ovan?
 """
 
 from ._file_utils import replace_in_string
