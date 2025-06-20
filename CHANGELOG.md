@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Make `pandas` an optional dependency.
+- Args `run_multivariate_test(time_per_candidate, plot)` are now kw-only
 
 ### Deprecated
 - The `rics.envinterp` module

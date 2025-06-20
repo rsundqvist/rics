@@ -11,12 +11,11 @@ from .types import DataFunc, DataType, Ts
 def run_multivariate_test(
     candidate_method: CandidateMethodArg[DataType],
     test_data: TestDataArg[DataType] | DataFunc[*Ts, DataType],  # DataFunc[DataFuncP, DataType]
-    # *, TODO(6.0.0): KW only at this point.
+    *,
     # case_args: Collection[tuple[*Ts]] | None = None,
     # kwargs: Any | None = None,
     time_per_candidate: float = 6.0,
     plot: bool = True,
-    *,
     show: bool = True,
     names: Iterable[str] | None = (),
     progress: bool = False,
