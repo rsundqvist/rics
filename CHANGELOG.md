@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.0] - 2025-06-20
+
 ### Changed
 - Make `pandas` an optional dependency.
-- Args `run_multivariate_test(time_per_candidate, plot)` are now kw-only
+- Args `run_multivariate_test(time_per_candidate, plot)` are now kw-only.
 
 ### Deprecated
-- The `rics.envinterp` module
-- The `mics.interpolate_environment_variables()` function
+- The `rics.envinterp` module.
+- The `mics.interpolate_environment_variables()` function.
 
 ## [5.1.2] - 2025-06-14
 
@@ -556,7 +558,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v5.1.2...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.0.0...HEAD
+[6.0.0]: https://github.com/rsundqvist/rics/compare/v5.1.2...v6.0.0
 [5.1.2]: https://github.com/rsundqvist/rics/compare/v5.1.1...v5.1.2
 [5.1.1]: https://github.com/rsundqvist/rics/compare/v5.1.0...v5.1.1
 [5.1.0]: https://github.com/rsundqvist/rics/compare/v5.0.1...v5.1.0
