@@ -138,18 +138,18 @@ def format_seconds(t: float, *, allow_negative: bool = False, full: bool = False
         Basic usage.
 
         >>> format_seconds(0.0000154)
-        '15μs'
+        '15 μs'
         >>> format_seconds(0.154)
-        '154ms'
+        '154 ms'
         >>> format_seconds(31.39)
-        '31.4s'
+        '31.4 sec'
 
         Clock units are used for `t > 60` seconds.
 
         >>> format_seconds(59.99)
-        '60.0s'
+        '60.0 sec'
         >>> format_seconds(60.00)
-        '60.0s'
+        '60.0 sec'
         >>> format_seconds(60.01)
         '1m'
         >>> format_seconds(309623.49)
@@ -196,20 +196,20 @@ def _format_minutes(t: float, full: bool) -> str:
 def _format_seconds(t: float) -> str:
     single_decimal_limit: float = 1.0
     if t >= single_decimal_limit:
-        return f"{t:.1f}s"
+        return f"{t:.1f} sec"
 
     double_decimal_limit: float = 0.5
     if t > double_decimal_limit:
-        return f"{t:.2f}s"
+        return f"{t:.2f} sec"
 
     if t > 10**-3:
-        return f"{t * 10**3:.0f}ms"
+        return f"{t * 10**3:.0f} ms"
     if t > 10**-6:  # 1 μs
-        return f"{t * 10**6:.0f}μs"
+        return f"{t * 10**6:.0f} μs"
     if t > 10**-9:
-        return f"{t * 10**9:.0f}ns"
+        return f"{t * 10**9:.0f} ns"
 
-    return f"{t:.3g}s"
+    return f"{t:.3g} sec"
 
 
 def camel_to_snake(s: str) -> str:

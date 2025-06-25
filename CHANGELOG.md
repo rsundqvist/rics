@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Add missing space in `format_seconds(t <= 60.0)` output, e.g. ***'12ms' → '12 ms'***.
+
 ## [6.0.0] - 2025-06-20
 
 ### Changed
