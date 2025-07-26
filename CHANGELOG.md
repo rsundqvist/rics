@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- CLI fixes for `rics kernel`:
+  * Ensure that `VIRTUAL_ENV` is unset (not just blank) when running commands; caused Poetry to purge venv.
+  * Increase package install timeout.
+
 ## [6.0.1] - 2025-06-25
 
 ### Fixed

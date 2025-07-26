@@ -12,7 +12,9 @@ from rics.jupyter._venv_helper import Resolve
 
 @pytest.mark.parametrize("dummy_project", ["uv", "poetry"], indirect=True)
 def test_jupyter(dummy_project, monkeypatch):
-    def check_call(_, args):
+    real = KernelHelper._check_call
+
+    def check_call(_, args, timeout):
         assert args[1:] == [
             "-m",
             "pip",
@@ -22,6 +24,8 @@ def test_jupyter(dummy_project, monkeypatch):
             "--require-virtualenv",
             "ipykernel",
         ]
+        assert timeout >= 180
+        real(args, timeout)
 
     monkeypatch.setattr("rics.logs.LoggingSetupHelper._on_verbosity_zero", lambda _: None)
     monkeypatch.setattr("rics.jupyter._kernel_helper.KernelHelper._check_call", check_call)
@@ -60,7 +64,7 @@ def test_jupyter(dummy_project, monkeypatch):
     installer = metadata["installer"]
     assert installer["version"] == expected_version
 
-    dummy_project.verify_system_paths()
+    dummy_project.verify_project()
 
 
 @pytest.mark.parametrize("drop", ["argv", "display_name", "language"])

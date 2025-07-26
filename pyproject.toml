@@ -163,6 +163,7 @@ ignore = [
     "S101", # Allow 'assert' keyword
     "ANN",
     "PLR2004", # Allow magic values
+    "S",
 ]
 "examples/*" = [
     "D205", # Clashes with sphinx_gallery (generated examples)

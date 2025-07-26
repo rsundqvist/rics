@@ -165,10 +165,8 @@ def _print_paths(logger: logging.Logger, *args: str) -> tuple[str, str] | None:
 def _get_output(logger: logging.Logger, *args: str) -> str | None:
     logger.debug("Executing command: %s", args)
 
-    env = {
-        **os.environ,
-        "VIRTUAL_ENV": "",  # Break out of current virtualenv.
-    }
+    env = {**os.environ}  # This is basically what `subprocess.run` does when env=None (the default).
+    env.pop("VIRTUAL_ENV", None)  # Break out of current virtualenv. Must be unset; blank value breaks poetry.
 
     try:
         process = subprocess.run(args, capture_output=True, check=False, env=env)  # noqa: S603

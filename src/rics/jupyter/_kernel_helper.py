@@ -175,11 +175,11 @@ class KernelHelper:
         flags = ["--disable-pip-version-check", "--quiet", "--require-virtualenv"]
         args = [self.venv.executable, "-m", "pip", "install", *flags, *packages]
         self.logger.debug("Installing packages: Command: %s", " ".join(args))
-        self._check_call(args)
+        self._check_call(args, timeout=180 + 20 * len(packages))
 
     @classmethod
-    def _check_call(cls, args: list[str]) -> None:
-        subprocess.check_call(args, timeout=30)  # noqa: S603
+    def _check_call(cls, args: list[str], timeout: float) -> None:
+        subprocess.check_call(args, timeout=timeout)  # noqa: S603
 
 
 DOCSTRINGS = {

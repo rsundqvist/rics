@@ -20,7 +20,7 @@ def test_get_local_or_remote(tmp_path):
     assert path == tmp_path / "my_postprocessor/foo.pkl"
 
     with path.open("rb") as f:
-        actual = pickle.load(f)  # noqa: S301
+        actual = pickle.load(f)
     assert actual == ["my-data", {"is": "amazing"}]
 
 
