@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.2] - 2025-07-27
+
 ### Fixed
 - CLI fixes for `rics kernel`:
   * Ensure that `VIRTUAL_ENV` is unset (not just blank) when running commands; caused Poetry to purge venv.
@@ -568,7 +570,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.0.1...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.0.2...HEAD
+[6.0.2]: https://github.com/rsundqvist/rics/compare/v6.0.1...v6.0.2
 [6.0.1]: https://github.com/rsundqvist/rics/compare/v6.0.0...v6.0.1
 [6.0.0]: https://github.com/rsundqvist/rics/compare/v5.1.2...v6.0.0
 [5.1.2]: https://github.com/rsundqvist/rics/compare/v5.1.1...v5.1.2
