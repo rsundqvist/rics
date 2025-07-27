@@ -36,6 +36,7 @@ def dummy_project(request: pytest.FixtureRequest, tmp_path: Path, monkeypatch: p
 
     env = {**os.environ}
     env.pop("VIRTUAL_ENV", None)
+    env["POETRY_VIRTUALENVS_IN_PROJECT"] = "1"
 
     subprocess.check_output([manager, "lock"], env=env)
     assert tmp_path.joinpath(f"{manager}.lock").is_file()
