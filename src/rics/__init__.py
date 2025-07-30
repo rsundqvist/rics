@@ -18,6 +18,6 @@ __all__ = [
     "configure_stuff",
 ]
 
-__version__ = "6.0.2.dev1"
+__version__ = "6.0.3"
 
 _logging.getLogger(__name__).addHandler(_logging.NullHandler())
