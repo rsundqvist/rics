@@ -241,8 +241,11 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
     if include_name and not resolve_reexport:
         raise ValueError(f"Cannot combine {include_name=} with {resolve_reexport=}.")
 
+    module_name = obj.__module__
+    assert isinstance(module_name, str), f"{module_name=}"  # noqa: S101
+
     parts = []
-    for part in obj.__module__.split("."):
+    for part in module_name.split("."):
         if part[0] == "_":
             break
         parts.append(part)
@@ -257,6 +260,9 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
                 if include_name:
                     parts.append(name)
                 return ".".join(parts)
+
+    if not parts:
+        return module_name
 
     return ".".join(parts)
 

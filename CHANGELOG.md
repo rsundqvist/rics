@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- In `get_public_module()`:
+  * Handle objects defined in `'__main__'`.
+  * Handle objects with no public exports (fall back to full private path).
+
 ## [6.0.2] - 2025-07-27
 
 ### Fixed
