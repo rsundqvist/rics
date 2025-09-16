@@ -7,7 +7,7 @@ from enum import Enum as _Enum
 class ActionLevel(_Enum):
     """Action level enumeration type for events."""
 
-    _ignore_: _t.ClassVar = ("ParseType",)  # type: ignore[misc]
+    _ignore_: _t.ClassVar = ("ParseType",)  # type: ignore[assignment, misc]
 
     ParseType: _t.TypeAlias = "str | ActionLevel"
     """Types that may be interpreted as an ``ActionLevel``."""
