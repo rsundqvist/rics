@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix handling `format_kwargs(max_value_length=0)` and clarify docstring.
+
 ## [6.0.3] - 2025-07-30
 
 ### Fixed

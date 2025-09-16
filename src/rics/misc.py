@@ -353,8 +353,8 @@ def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80
 
     Args:
         kwargs: Arguments to format.
-        max_value_length: If given, replace ``repr(value)`` with ``tname(value)`` if repr is longer than
-            `max_value_length` characters.
+        max_value_length: If greater than zero, replace ``safe_repr(value)`` with ``tname(value)`` if repr is longer
+            than `max_value_length` characters.
 
     Returns:
         A string on the form `'key0=repr(value0), key1=repr(value1)'`.
@@ -363,17 +363,21 @@ def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80
         ValueError: For keys in `kwargs` that are not valid Python argument names.
 
     Examples:
+        Basic usage.
+
         >>> format_kwargs({"an_int": 1, "a_string": "Hello!"})
         "an_int=1, a_string='Hello!'"
 
+        Use ``max_value_length=0`` to prevent truncating long values.
     """
+    # TODO(0.7.0): max_value_length=0
     invalid = [k for k in kwargs if not k.isidentifier()]
     if invalid:
         raise ValueError(f"Got {len(invalid)} invalid identifiers: {invalid}.")
 
     def repr_value(value: _t.Any) -> str:
         value_repr = _safe_repr(value)
-        if len(value_repr) <= max_value_length:
+        if max_value_length <= 0 or len(value_repr) <= max_value_length:
             return value_repr
         return tname(value)
 
