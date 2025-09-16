@@ -458,7 +458,9 @@ def get_logger(logger: LoggerArg | _l.LoggerAdapter[_t.Any]) -> _l.Logger | _l.L
     if isinstance(logger, str):
         return _l.getLogger(logger)
 
-    if isinstance(logger, (_l.Logger, _l.LoggerAdapter)):  # noqa: UP038  # Rule is deprecated. https://github.com/astral-sh/ruff/pull/16681
+    if isinstance(
+        logger, (_l.Logger, _l.LoggerAdapter)
+    ):  # Rule is deprecated. https://github.com/astral-sh/ruff/pull/16681
         return logger
 
     msg = f"{logger=} is not a logging.Logger"

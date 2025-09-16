@@ -72,7 +72,7 @@ class TestErrors:
 
     @pytest.mark.parametrize("test_data", [generate_data, {}])
     def test_no_cases(self, test_data):
-        with pytest.raises(ValueError, match="No case data given."):
+        with pytest.raises(ValueError, match=r"No case data given."):
             MultiCaseTimer(pd.Series.describe, test_data)
 
     @pytest.mark.parametrize(

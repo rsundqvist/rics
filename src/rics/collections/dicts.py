@@ -191,7 +191,7 @@ def unflatten_dict(
     return ret
 
 
-class InheritedKeysDict(_t.Mapping[OKT, dict[KT, VT]]):
+class InheritedKeysDict(_t.Mapping[OKT, dict[KT, VT]]):  # noqa: PLW1641
     """A nested dictionary that returns default-backed child dictionaries.
 
     The length of an ``InheritedKeysDict`` is equal to the number of specific outer keys, and is considered ``True``

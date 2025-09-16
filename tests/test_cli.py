@@ -60,7 +60,7 @@ def run(monkeypatch: pytest.MonkeyPatch, verbose: str | None = None) -> Result:
     if verbose:
         args = [verbose, *args]
 
-    return CliRunner(mix_stderr=False).invoke(
+    return CliRunner().invoke(
         cli.main,
         args,
         env={"RICS_REPOS_USER": "astral-sh", "RICS_VERBOSE": "4"},

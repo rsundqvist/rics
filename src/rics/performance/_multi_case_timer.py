@@ -313,7 +313,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         for data in test_data:
             s = str(data)
 
-            if isinstance(data, (bool, float, int, str, tuple)):  # noqa: UP038
+            if isinstance(data, (bool, float, int, str, tuple)):
                 key = s
             else:
                 key = f"{s[:29]}..." if len(s) > 32 else s  # noqa: PLR2004

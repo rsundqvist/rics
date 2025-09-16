@@ -48,7 +48,7 @@ def test_unset(string):
     set_variables(0, 2, 4)
     var = Variable.parse_first(string)
 
-    with pytest.raises(UnsetVariableError, match="Not set."):
+    with pytest.raises(UnsetVariableError, match=r"Not set."):
         var.get_value(resolve_nested_defaults=True)
 
 

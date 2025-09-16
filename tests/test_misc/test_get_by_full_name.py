@@ -89,7 +89,7 @@ class TestSubclass:
 
 class TestLimitations:
     def test_dual_of_args(self):
-        with pytest.raises(ValueError, match="least one of.*must be None"):
+        with pytest.raises(ValueError, match=r"least one of.*must be None"):
             get_by_full_name("my_foo", instance_of=int, subclass_of=int)  # type: ignore[call-overload]
 
     def test_parameterized_generics(self):
@@ -100,5 +100,5 @@ class TestLimitations:
             get_by_full_name("my_foo", default_module=MODULE, subclass_of=list[int])
 
     def test_no_default(self):
-        with pytest.raises(ValueError, match="Name must not be empty."):
+        with pytest.raises(ValueError, match=r"Name must not be empty."):
             get_by_full_name("")
