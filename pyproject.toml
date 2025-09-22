@@ -94,8 +94,8 @@ uv = "==0.8.17"  # 0.7.13 doesn't work on Windows (project can't install at all)
 
 [tool.poetry.group.devops.dependencies]
 invoke = "^2.2.0"
-mypy = "~1.18.0"
-ruff = "~0.13.0"
+mypy = "~1.18.2"
+ruff = "~0.13.1"
 
 safety = "~3.6.1"
 codespell = "~2.4.1"

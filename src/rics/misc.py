@@ -352,8 +352,7 @@ def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80
 
     Args:
         kwargs: Arguments to format.
-        max_value_length: If greater than zero, replace ``safe_repr(value)`` with ``tname(value)`` if repr is longer
-            than `max_value_length` characters.
+        max_value_length: Replace value with class name above this limit. 0=no limit, -1=always use class name.
 
     Returns:
         A string on the form `'key0=repr(value0), key1=repr(value1)'`.
@@ -377,7 +376,6 @@ def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80
         raise ValueError(f"Got {len(invalid)} invalid identifiers: {invalid}.")
 
     formatter = KwargsFormatter(max_value_length=max_value_length)
-
     return ", ".join(f"{k}={formatter.format_value(v)}" for k, v in kwargs.items())
 
 

@@ -1,5 +1,5 @@
 import pandas as pd
-import polars as pl
+import numpy as np
 
 from rics.misc import format_kwargs
 
@@ -17,7 +17,20 @@ def test_collection():
 
 
 def test_ndim_array():
-    data = {"a": [1, 2, 3], "b": [4, 5, 6]}
-    kwargs = {"df_pandas": (pd.DataFrame(data)), "df_polars": (pl.DataFrame(data))}
+    data = [
+        [1, 2, 3],
+        [1, 2, 3]
+    ]
+    kwargs = {"df": pd.DataFrame(data), "array2d": np.array(data), "array3d": np.array([data]*5)}
     actual = format_kwargs(kwargs)
-    assert actual == "df_pandas=DataFrame[3x2], df_polars=DataFrame[3x2]"
+    assert actual == "df=DataFrame[2x3], array2d=ndarray[2x3], array3d=ndarray[5x2x3]"
+
+
+def test_ndim_array2():
+    data = [
+        [1, 2, 3],
+        [1, 2, 3]
+    ]
+    kwargs = {"df": pd.DataFrame(data), "array2d": np.array(data), "array3d": np.array([data]*5)}
+    actual = format_kwargs(kwargs, max_value_length=0)
+    assert actual == "df=DataFrame[2x3], array2d=ndarray[2x3], array3d=ndarray[5x2x3]"
