@@ -3,7 +3,6 @@
 import typing as _t
 from importlib import import_module as _import_module
 from pathlib import Path as _Path
-from pprint import saferepr as _safe_repr
 from types import MethodType as _MethodType
 from types import ModuleType as _ModuleType
 
@@ -370,18 +369,16 @@ def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80
 
         Use ``max_value_length=0`` to prevent truncating long values.
     """
+    from ._kwargs_formatter import KwargsFormatter
+
     # TODO(0.7.0): max_value_length=0
     invalid = [k for k in kwargs if not k.isidentifier()]
     if invalid:
         raise ValueError(f"Got {len(invalid)} invalid identifiers: {invalid}.")
 
-    def repr_value(value: _t.Any) -> str:
-        value_repr = _safe_repr(value)
-        if max_value_length <= 0 or len(value_repr) <= max_value_length:
-            return value_repr
-        return tname(value)
+    formatter = KwargsFormatter(max_value_length=max_value_length)
 
-    return ", ".join(f"{k}={repr_value(v)}" for k, v in kwargs.items())
+    return ", ".join(f"{k}={formatter.format_value(v)}" for k, v in kwargs.items())
 
 
 def get_local_or_remote(
