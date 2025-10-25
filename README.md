@@ -60,11 +60,8 @@ is available on GitHub: https://github.com/rsundqvist/rics
 pip install -U rics
 ```
 
-This is the preferred method to install ``rics``, as it will always install the
+This is the preferred method to install `rics`, as it will always install the
 most recent stable release.
-
-If you don't have [pip] installed, this [Python installation guide] can guide
-you through the process.
 
 ## License
 [MIT](LICENSE.md)
@@ -86,5 +83,3 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 started, see the [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
 
 [Python Package Index (PyPI)]: https://pypi.org/project/rics
-[pip]: https://pip.pypa.io
-[Python installation guide]: http://docs.python-guide.org/en/stable/starting/installation/
