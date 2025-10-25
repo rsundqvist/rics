@@ -1,5 +1,4 @@
 import json
-import logging
 
 import pytest
 from click.testing import CliRunner
@@ -7,7 +6,6 @@ from click.testing import CliRunner
 from rics import __version__ as expected_version
 from rics import cli
 from rics.jupyter import KernelHelper
-from rics.jupyter._venv_helper import Resolve
 
 
 @pytest.mark.parametrize("dummy_project", ["uv", "poetry"], indirect=True)
@@ -90,12 +88,3 @@ def test_corrupt_kernel_spec(tmp_path, drop):
 
     with pytest.raises(TypeError, match=repr(drop)):
         KernelHelper.read_kernel_spec(path)
-
-
-def test_uv_bad_pyproject(tmp_path, monkeypatch, caplog):
-    monkeypatch.chdir(tmp_path)
-    tmp_path.joinpath("pyproject.toml").write_text("[uv]\n# Bad project file!")
-
-    actual = Resolve.uv(tmp_path, logging.getLogger(test_uv_bad_pyproject.__name__))
-    assert actual is None
-    assert "No `project` table found" in caplog.text

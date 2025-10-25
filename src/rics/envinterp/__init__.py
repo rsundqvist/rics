@@ -1,7 +1,7 @@
 """Legacy module.
 
 Schedule:
-    * ``rics==0.7.0``: Drop legacy module.
+    * ``rics==7.0.0``: Drop legacy module.
 
 Please use :mod:`rics.env.interpolation` instead.
 """
