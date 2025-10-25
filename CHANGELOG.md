@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.4] - 2025-10-25
+
 ### Added
 - Python `3.14` is now fully tested and supported in CI/CD.
 
@@ -583,7 +585,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.0.3...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.0.4...HEAD
+[6.0.4]: https://github.com/rsundqvist/rics/compare/v6.0.3...v6.0.4
 [6.0.3]: https://github.com/rsundqvist/rics/compare/v6.0.2...v6.0.3
 [6.0.2]: https://github.com/rsundqvist/rics/compare/v6.0.1...v6.0.2
 [6.0.1]: https://github.com/rsundqvist/rics/compare/v6.0.0...v6.0.1
