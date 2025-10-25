@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Python `3.14` is now fully tested and supported in CI/CD.
+
 ### Fixed
 - Fix handling `format_kwargs(max_value_length=0)` and clarify docstring.
 
