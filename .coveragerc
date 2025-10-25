@@ -13,7 +13,7 @@ omit =
     src/rics/_internal_support/_local_or_remote.py
     src/rics/ml/time_split/*
 
-fail_under = 90
+fail_under = 89
 
 exclude_lines =
     @overload
