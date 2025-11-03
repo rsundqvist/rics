@@ -91,7 +91,7 @@ coverage = "~7.11.0"
 pytest-cov = "~7.0.0"
 
 responses = "~0.25.8"  # 0.25.7: Added support for python 3.13
-uv = "~0.9.5"
+uv = "~0.9.7"
 
 [tool.poetry.group.devops.dependencies]
 invoke = "~2.2.1"
