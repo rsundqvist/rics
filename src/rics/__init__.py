@@ -11,9 +11,10 @@ Environment variables
 
 import logging as _logging
 
-from ._just_the_way_i_like_it import configure_stuff
+from ._just_the_way_i_like_it import ConfigureStuff, configure_stuff
 
 __all__ = [
+    "ConfigureStuff",
     "__version__",
     "configure_stuff",
 ]

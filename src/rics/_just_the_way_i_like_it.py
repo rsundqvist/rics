@@ -3,6 +3,21 @@ from typing import Any
 _SKIP_WARNING: bool = False
 
 
+class ConfigureStuff:
+    """Magical return type of :func:`configure_stuff`. The same caveats apply."""
+
+    def __init__(self) -> None:
+        self._configured: list[str] = []
+
+    @property
+    def configured(self) -> list[str]:
+        """Things that were configured."""
+        return self._configured
+
+    def __repr__(self) -> str:
+        return "👻 Configured some stuff just the way I like it!"
+
+
 def configure_stuff(
     level: int | str = "INFO",
     rics_level: int | str = "INFO",
@@ -11,9 +26,8 @@ def configure_stuff(
     logging: bool = True,
     pandas: bool = True,
     plotting: bool = True,
-    ghost: bool = True,
     **kwargs: Any,
-) -> None:
+) -> ConfigureStuff:
     """Configure a bunch of stuff to match my personal preferences. May do strange stuff 👻.
 
     .. warning::
@@ -31,11 +45,13 @@ def configure_stuff(
         logging: If ``True``, attempt to perform logging configuration.
         pandas: If ``True``, attempt to perform pandas configuration.
         plotting: If ``True``, attempt to perform plotting (e.g. matplotlib) configuration.
-        ghost: Set to ``False`` to disable `'👻 Configured some stuff just the way I like it!'`.
         **kwargs: Keyword arguments for :func:`rics.logs.basic_config` and :py:func:`logging.basicConfig`.
 
     """
     import contextlib
+
+    stuff = ConfigureStuff()
+    configured = stuff.configured
 
     if logging:
         from .logs import basic_config
@@ -47,19 +63,22 @@ def configure_stuff(
             matplotlib_level=matplotlib_level,
             **kwargs,
         )
+        configured.append("logging")
 
     if pandas:
         _configure_pandas()
+        configured.append("pandas")
 
     if plotting:
         with contextlib.suppress(ModuleNotFoundError):
             from .plotting import configure
 
             configure()
+            configured.append("plotting")
 
-    if ghost:
-        print("👻 Configured some stuff just the way I like it!")
     _maybe_emit_warning()
+
+    return stuff
 
 
 def _configure_pandas() -> None:
