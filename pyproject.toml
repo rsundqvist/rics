@@ -1,7 +1,7 @@
 [project]
 name = "rics"
 version = "6.0.4.dev1"
-description = "My personal little ML engineering library."
+description = "My personal Python toolbox."
 authors = [
     { name = "Richard Sundqvist", email = "richard.sundqvist@live.se" },
 ]
@@ -87,16 +87,16 @@ tqdm = "*"
 [tool.poetry.group.test.dependencies]
 pytest = "~8.4.2"
 xdoctest = "~1.3.0"
-coverage = "~7.11.0"
+coverage = "~7.13.0"
 pytest-cov = "~7.0.0"
 
 responses = "~0.25.8"  # 0.25.7: Added support for python 3.13
-uv = "~0.9.5"
+uv = "~0.9.16"
 
 [tool.poetry.group.devops.dependencies]
 invoke = "~2.2.1"
-mypy = "~1.18.2"
-ruff = "~0.14.2"
+mypy = "~1.19.0"
+ruff = "~0.14.8"
 
 safety = "~3.6.2"
 codespell = "~2.4.1"

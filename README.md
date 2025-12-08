@@ -4,7 +4,7 @@
 
 -----------------
 
-# RiCS: my personal little ML engineering library. <!-- omit in toc -->
+# RiCS: My personal Python toolbox. <!-- omit in toc -->
 [![PyPI - Version](https://img.shields.io/pypi/v/rics.svg)](https://pypi.python.org/pypi/rics)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/rics.svg)](https://pypi.python.org/pypi/rics)
 [![Tests](https://github.com/rsundqvist/rics/workflows/tests/badge.svg)](https://github.com/rsundqvist/rics/actions?workflow=tests)

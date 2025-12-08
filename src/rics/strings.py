@@ -1,5 +1,7 @@
 """Utility functions that act on or produce strings."""
 
+import typing as _t
+
 
 def format_bytes(n: int, *, binary: bool = True, long: bool = False, decimals: int = 2) -> str:
     """Format bytes as a string.
@@ -348,3 +350,205 @@ def str_as_bool(s: str) -> bool:
 
 if str_as_bool.__doc__:
     str_as_bool.__doc__ = str_as_bool.__doc__.format(false=FALSE, true=TRUE)
+
+
+def format_kwargs(
+    kwargs: _t.Mapping[str, _t.Any],
+    *,
+    max_value_length: int = 120,
+    prefix_classname: bool = False,
+    include_module: bool = False,
+) -> str:
+    """Format keyword arguments.
+
+    Args:
+        kwargs: Arguments to format.
+        prefix_classname: If ``True``, prepend the class name if a value belongs to a class.
+        include_module: If ``True``, prepend the public module (see :func:`.misc.get_public_module`).
+        max_value_length: Replace value with the class name above this limit. 0=no limit.
+
+    Returns:
+        A string on the form `'key0=repr(value0), key1=repr(value1)'`.
+
+    Raises:
+        ValueError: For keys in `kwargs` that are not valid Python argument names.
+
+    Examples:
+        Basic usage.
+
+        >>> format_kwargs({"an_int": 1, "a_string": "Hello!"})
+        "an_int=1, a_string='Hello!'"
+
+    Notes:
+        Uses :class:`ReprFormatter` to format values.
+    """
+    invalid = [k for k in kwargs if not k.isidentifier()]
+    if invalid:
+        raise ValueError(f"Got {len(invalid)} invalid identifiers: {invalid}.")
+
+    rf = ReprFormatter(
+        max_value_length=max_value_length,
+        prefix_classname=prefix_classname,
+        include_module=include_module,
+    )
+
+    return ", ".join(f"{k}={rf.format_value(v)}" for k, v in kwargs.items())
+
+
+class ReprFormatter:
+    """Alternative :py:func:`repr` implementation.
+
+    Values above `max_value_length` characters are replaced by stylized class names.
+
+    Args:
+        max_value_length: Use class name above this length. 0=no limit, -1=force class name.
+        prefix_classname: If ``True``, prepend the class name if a value belongs to a class.
+        include_module: If ``True``, prepend the public module (see :func:`.misc.get_public_module`).
+        module_aliases: A mapping of module replacements, e.g. ``{"pandas": "pd"}``. Default is
+            :attr:`DEFAULT_MODULE_ALIASES`. Trailing dots are added automatically. Ignored when `include_module` is
+            ``False``.
+
+    See Also:
+        The :func:`format_kwargs`, :func:`.misc.tname`, and :func:`.misc.get_public_module` functions.
+    """
+
+    DEFAULT_MODULE_ALIASES: _t.Mapping[str, str] = {
+        "numpy": "np",
+        "pandas": "pd",
+        "polars": "pl",
+        "tensorflow": "tf",
+        "matplotlib.pyplot": "plt",
+    }
+
+    def __init__(
+        self,
+        *,
+        max_value_length: int = 120,
+        prefix_classname: bool = False,
+        include_module: bool = False,
+        module_aliases: _t.Mapping[str, str] | None = None,
+    ) -> None:
+        self._max_value_length = max_value_length
+
+        if module_aliases is None:
+            module_aliases = self.DEFAULT_MODULE_ALIASES
+        self._module_aliases = {k + ".": v + "." for k, v in module_aliases.items()}
+
+        self._prefix_classname = prefix_classname
+        self._include_module = include_module
+
+        self._cache: dict[int, str] = {}
+
+    def format_value(self, value: _t.Any) -> str:
+        """Convert any value to string."""
+        value_id = id(value)
+        value_repr = self._cache.get(value_id)
+        if value_repr is None:
+            value_repr = self._format_value(value)
+            self._cache[value_id] = value_repr
+
+        return value_repr
+
+    def _format_value(self, value: _t.Any) -> str:
+        """Convert any value to string."""
+        if self._max_value_length == 0:
+            return self._serialize_as_value(value)
+        if self._max_value_length < 0:
+            shape = self._get_shape(value)
+            return self._serialize_as_class(value, shape)
+
+        for serializer in [
+            self._repr_str,
+            self._repr_builtin_collection,
+            self._format_ndim_array,
+        ]:
+            value_repr = serializer(value)
+            if isinstance(value_repr, str):
+                return value_repr
+            elif value_repr is False:
+                break
+
+        value_repr = self._serialize_as_value(value)
+        if len(value_repr) <= self._max_value_length:
+            return value_repr
+
+        return self._serialize_as_class(value, ())
+
+    def format_ndim_array(self, value: _t.Any) -> str:
+        """Format shaped types, e.g. attr:`pandas.DataFrame.shape`."""
+        shape = self._get_shape(value)
+        if shape:
+            return self._serialize_as_class(value, shape)
+
+        msg = f"{type(value).__name__}.shape={shape} not valid"
+        raise TypeError(msg)
+
+    def _format_ndim_array(self, value: _t.Any) -> str | None:
+        if shape := self._get_shape(value):
+            return self._serialize_as_class(value, shape)
+        return None
+
+    @classmethod
+    def _serialize_as_value(cls, value: _t.Any) -> str:
+        from pprint import PrettyPrinter
+
+        pp = PrettyPrinter(
+            indent=2,
+            width=120,
+            depth=4,
+            compact=True,
+            sort_dicts=True,
+            underscore_numbers=True,
+        )
+        return pp.pformat(value)
+
+    def _serialize_as_class(self, value: _t.Any, shape: tuple[int, ...]) -> str:
+        from rics.misc import tname
+
+        value_cls = tname(value, prefix_classname=self._prefix_classname, include_module=self._include_module)
+
+        if self._include_module:
+            for module, alias in self._module_aliases.items():
+                if value_cls.startswith(module):
+                    value_cls = value_cls.replace(module, alias)
+
+        if not shape:
+            return value_cls
+
+        dims = "x".join(map(str, shape))
+        return f"{value_cls}[{dims}]"
+
+    def _repr_str(self, value: _t.Any) -> str | bool:
+        if isinstance(value, str):
+            sz = len(value)
+            if sz > self._max_value_length:
+                return f"str[{sz}]"
+            else:
+                return repr(value)  # Might be longer than max_value_length if there's a lot of escaping.
+
+        return True
+
+    def _repr_builtin_collection(self, value: _t.Any) -> str | bool:
+        if isinstance(value, (list, tuple, set)):
+            if len(value) * 3 > self._max_value_length:
+                shape = (len(value),)
+                return self._serialize_as_class(value, shape)
+            else:
+                return False
+
+        if isinstance(value, dict):
+            if len(value) * 6 > self._max_value_length:
+                shape = (len(value),)
+                return self._serialize_as_class(value, shape)
+            else:
+                return False
+
+        return True
+
+    @classmethod
+    def _get_shape(cls, value: _t.Any) -> tuple[int, ...]:
+        if hasattr(value, "shape") and isinstance(value.shape, tuple):
+            return value.shape
+        elif hasattr(value, "__len__"):
+            return (len(value),)
+        return ()

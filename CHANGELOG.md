@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- New class `strings.ReprFormatter`.
+- Function `strings.format_kwargs()`, backed by `strings.ReprFormatter`.
+
+### Changed
+- The `misc.format_kwargs()` now delegates to `strings.format_kwargs()`, and will be deprecated in `0.7.0`.
+
 ## [6.0.4] - 2025-10-25
 
 ### Added
