@@ -119,6 +119,7 @@ extensions = [
     "nbsphinx",
     "sphinx.ext.mathjax",
     "myst_parser",
+    "sphinx_llm.txt",
 ]
 autosummary_ignore_module_all = True
 autosummary_imported_members = True
@@ -146,8 +147,6 @@ exclude_patterns = [
     "Thumbs.db",
     ".DS_Store",
     "**.ipynb_checkpoints",
-    "auto_examples/**/*.ipynb",
-    "auto_examples/**/*.py",
 ]
 shutil.rmtree("/tmp/example/", ignore_errors=True)  # noqa: 1S108
 
