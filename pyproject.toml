@@ -96,7 +96,7 @@ uv = "~0.9.16"
 [tool.poetry.group.devops.dependencies]
 invoke = "~2.2.1"
 mypy = "~1.19.0"
-ruff = "~0.14.8"
+ruff = "~0.14.9"
 
 safety = "~3.6.2"
 codespell = "~2.4.1"
