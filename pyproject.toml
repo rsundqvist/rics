@@ -74,7 +74,7 @@ sphinx = "~8.1.3" # 8.2 breaks xdoc refs in README.md; maybe https://github.com/
 pydata-sphinx-theme = "~0.16.1"
 myst-parser = "~4.0.1"
 nbsphinx = "~0.9.7"
-ipython = "~9.6.0"
+ipython = "~9.8.0"
 
 [tool.poetry.group.notebooks]
 optional = true
