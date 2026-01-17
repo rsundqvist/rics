@@ -28,7 +28,7 @@ Follow these steps to begin local development.
    ```bash
    git clone --recurse-submodules git@github.com:rsundqvist/rics.git
    cd rics
-   poetry install --all-extras
+   uv sync --all-extras
    ```
    
    Generating documentation has a few dependencies which may need to be installed

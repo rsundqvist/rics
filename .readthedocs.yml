@@ -11,16 +11,15 @@ build:
       # Installing doesn't work; the wrong target is used even with 'virtualenvs.create false'. There is a GitHub issue
       # which may be a better solution in the future: https://github.com/python-poetry/poetry/issues/1937
       - curl -LsSf https://astral.sh/uv/install.sh | UV_VERSION=0.9.26 sh
-      - $HOME/.local/bin/poetry self add poetry-plugin-export
-      - $HOME/.local/bin/poetry export --only=docs,manual-extras --without-hashes --output=requirements-from-poetry.txt
-      - cat requirements-from-poetry.txt
+      - $HOME/.local/bin/uv export --only=docs,manual-extras --no-hashes --output=requirements-from-poetry.txt
+      - cat requirements.txt
 
     # pre_build:
     #   - python -m sphinx -b linkcheck docs/ _build/linkcheck  # Fails for valid GitHub links?
 
 python:
   install:
-    - requirements: requirements-from-uv.txt
+    - requirements: requirements.txt
     - method: pip
       path: .
       extra_requirements:
