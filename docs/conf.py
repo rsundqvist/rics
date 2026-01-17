@@ -1,4 +1,5 @@
 """Sphinx configuration."""
+
 import os
 from datetime import datetime, timezone
 
@@ -14,8 +15,8 @@ import shutil
 from importlib import import_module, metadata
 
 import rics
-from docutils.nodes import Text, reference
 from rics._internal_support.changelog import split_changelog
+from rics._internal_support import myst_parser_markdown_doc_refs, make_toc_tree_titles_shorter
 
 type_modules = (
     "rics.collections.dicts",
@@ -26,63 +27,8 @@ for tm in type_modules:
     import_module(tm)
 
 
-def monkeypatch_autosummary_toc() -> None:
-    from sphinx.addnodes import toctree
-    from sphinx.ext.autosummary import Autosummary, autosummary_toc
-
-    original = Autosummary.run
-
-    def make_toc_tree_titles_shorter(self: Autosummary):
-        # tocnode['entries'] = [(".".join(docn.partition("/")[-1].split(".")[-2:]), docn) for docn in docnames]
-        toc: toctree
-        nodes = original(self)
-
-        for node in nodes:
-            if not isinstance(node, autosummary_toc):
-                continue
-
-            for toc in node.children:
-                entries = toc["entries"]
-
-                for i, (title, ref) in enumerate(entries):
-                    if title is None and ref.count(".") >= 2:
-                        title = ".".join(ref.rsplit(".", 2)[-2:])
-                        entries[i] = (title, ref)
-
-        return nodes
-
-    Autosummary.run = make_toc_tree_titles_shorter
-
-
-def callback(_app, _env, node, _contnode):  # noqa
-    reftarget = node.get("reftarget")
-
-    if reftarget == "Ts":
-        # https://github.com/sphinx-doc/sphinx/issues/11007
-        m = "rics.performance.types"
-        ans_hax = reference(refuri=f"{m}.html#{m}.Ts", reftitle=reftarget)
-        ans_hax.children.append(Text(reftarget))
-        return ans_hax
-
-    for m in type_modules:
-        if reftarget.startswith(m):
-            ans_hax = reference(refuri=m + ".html#" + reftarget, reftitle=reftarget)
-            ans_hax.children.append(Text(reftarget.rpartition(".")[-1]))
-            return ans_hax
-
-    return None
-
-
-def setup(app):  # noqa
-    app.connect("missing-reference", callback)  # Fixes linking of typevars
-    monkeypatch_autosummary_toc()
-
-
-# If extensions (or modules to document with autodoc) are in another
-# directory, add these directories to sys.path here. If the directory is
-# relative to the documentation root, use os.path.abspath to make it
-# absolute, like shown here.
-#
+myst_parser_markdown_doc_refs.patch()
+make_toc_tree_titles_shorter.patch()
 
 
 # -- Project information -------------------------------------------------------
@@ -110,7 +56,6 @@ time_split_docs = f"https://time-split.readthedocs.io/en/{'latest' if 'dev' in r
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.autodoc.typehints",
     "sphinx.ext.autosummary",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
@@ -148,7 +93,7 @@ exclude_patterns = [
     ".DS_Store",
     "**.ipynb_checkpoints",
 ]
-shutil.rmtree("/tmp/example/", ignore_errors=True)  # noqa: 1S108
+# shutil.rmtree("/tmp/example/", ignore_errors=True)  # noqa: 1S108
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -232,10 +177,9 @@ html_favicon = "logo-icon.png"
 # -- Nitpicky configuration ----------------------------------------------------
 nitpicky = True
 nitpick_ignore = [
-    ("py:class", "module"),
+    # ("py:class", "module"),
     # Third party
-    ("py:class", "Axes"),
-    ("py:class", "sklearn.model_selection._split.BaseCrossValidator"),
+    # ("py:class", "Axes"),
 ]
 # nitpick_ignore_regex = [
 #     ("py:obj", r".*\.Any"),
@@ -254,10 +198,7 @@ autodoc_default_options = {
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pandas": ("http://pandas.pydata.org/pandas-docs/stable/", None),
-    # https://github.com/pola-rs/polars/issues/7027
-    # "polars": ("https://docs.pola.rs/py-polars/html/reference/", None),
-    "numpy": ("http://docs.scipy.org/doc/numpy/", None),
-    "sqlalchemy": ("https://docs.sqlalchemy.org/en/14/", None),
+    # "numpy": ("http://docs.scipy.org/doc/numpy/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
     "seaborn": ("https://seaborn.pydata.org/", None),
     "id_translation": (id_translation_docs, None),
