@@ -33,7 +33,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
 
 def install_with_project_extras(session: Session) -> None:
     """Install the project using poetry."""
-    session.run_always("uv", "sync", "--all-extras", external=True)
+    session.run_always("uv", "sync", "--active", "--all-extras", external=True)
     session.install(".")
 
 
