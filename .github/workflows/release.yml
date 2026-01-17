@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  POETRY_VERSION: 2.2.1
+  UV_VERSION: 0.9.26
 
 jobs:
   release:
@@ -24,11 +24,11 @@ jobs:
       - name: Install system deps
         shell: bash
         run: |
-          pip install poetry==$POETRY_VERSION poetry-plugin-export
+          pip install uv==$UV_VERSION
 
       - name: Build package
         run: |
-          poetry build --ansi
+          uv build --ansi
 
       - name: Publish package on PyPI
         uses: pypa/gh-action-pypi-publish@v1.13.0
