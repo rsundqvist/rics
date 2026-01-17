@@ -26,7 +26,6 @@ Follow these steps to begin local development.
    Clone and install the virtual environment used for development. Some material
    is placed in submodules, so we need to clone recursively.
    ```bash
-   git clone --recurse-submodules git@github.com:rsundqvist/rics.git
    cd rics
    uv sync --all-extras
    ```

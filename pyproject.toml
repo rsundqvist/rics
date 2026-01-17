@@ -86,7 +86,7 @@ test = [
     "coverage~=7.13.1",
     "pytest-cov~=7.0.0",
     "responses~=0.25.8",
-    "uv~=0.9.26",
+    "poetry~=2.2.1",
 ]
 types = [
     "types-pysocks>=1.7.1.20251001",
