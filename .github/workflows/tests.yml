@@ -31,7 +31,7 @@ jobs:
 
       - name: Linting
         run: |
-          pip install uv==$UV
+          pip install uv==$UV_VERSION
           uv sync --only=main,devops
           uv run inv lint
 
