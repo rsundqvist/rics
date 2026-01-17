@@ -9,14 +9,13 @@ on:
         default: "info"
   push:
     branches:
-     - master
-     - ci/*
+      - master
+      - ci/*
   pull_request:
     branches:
 
 env:
-  POETRY_VERSION: 2.2.1
-  POLARS_SKIP_CPU_CHECK: true
+  UV_VERSION: 0.9.26
 
 jobs:
   linting:
@@ -32,9 +31,9 @@ jobs:
 
       - name: Linting
         run: |
-          pip install poetry==$POETRY_VERSION poetry-plugin-export
-          poetry install --only=main,devops
-          poetry run inv lint
+          pip install uv==$UV_VERSION
+          uv sync --only-group=devops
+          uv run inv lint
 
   tests:
     needs: linting
@@ -44,9 +43,9 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ Ubuntu, MacOS, Windows ]
+        os: [ 'Ubuntu', 'MacOS', 'Windows' ]
         python-version: [ '3.11', '3.12', '3.13', '3.14' ]
-        experimental: [false]
+        experimental: [ false ]
     steps:
       - uses: actions/checkout@v6
 
@@ -59,7 +58,7 @@ jobs:
         shell: bash
         run: |
           pip install nox
-          pip install poetry==$POETRY_VERSION poetry-plugin-export
+          pip install uv==$UV_VERSION
 
       - name: Run mypy with nox
         shell: bash
@@ -97,7 +96,7 @@ jobs:
         shell: bash
         run: |
           pip install nox
-          pip install poetry==$POETRY_VERSION poetry-plugin-export
+          pip install uv==$UV_VERSION
 
       - name: Download coverage data
         uses: actions/download-artifact@v7

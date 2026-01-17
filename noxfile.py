@@ -12,14 +12,7 @@ python_versions = ["3.11", "3.12", "3.13", "3.14"]
 
 
 def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> None:
-    """Install packages constrained by Poetry's lock file.
-
-    This function is a wrapper for nox.sessions.Session.install. It
-    invokes pip to install packages inside of the session's virtualenv.
-    Additionally, pip is passed a constraints file generated from
-    Poetry's lock file, to ensure that the packages are pinned to the
-    versions specified in poetry.lock. This allows you to manage the
-    packages as Poetry development dependencies.
+    """Install packages constrained by `uv.lock`.
 
     Args:
         session: The Session object.
@@ -29,10 +22,10 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
     """
     with tempfile.NamedTemporaryFile(delete=False) as requirements:
         session.run(
-            "poetry",
+            "uv",
             "export",
-            "--without-hashes",
-            f"--output={requirements.name}",
+            "--no-hashes",
+            f"--output-file={requirements.name}",
             external=True,
         )
         session.install("-r", requirements.name, *args, **kwargs)
@@ -40,7 +33,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
 
 def install_with_project_extras(session: Session) -> None:
     """Install the project using poetry."""
-    session.run_always("poetry", "install", "--no-interaction", "--all-extras", external=True)
+    session.run_always("uv", "sync", "--active", "--all-extras", external=True)
     session.install(".")
 
 

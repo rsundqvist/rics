@@ -14,11 +14,11 @@ which demonstrates the (desired) usage.
 ## Getting started
 Follow these steps to begin local development.
 
-1. **Installing [Poetry](https://python-poetry.org/docs/)**
+1. **Installing [uv](https://docs.astral.sh/uv/)**
    
-   See [poetry.lock](https://github.com/rsundqvist/rics/blob/master/poetry.lock) for the version used.
+   See [uv.lock](https://github.com/rsundqvist/rics/blob/master/uv.lock) for the version used.
    ```bash
-   curl -sSL https://install.python-poetry.org/ | python -
+   curl -LsSf https://astral.sh/uv/install.sh | sh
    ```
 
 2. **Installing the project**
@@ -26,9 +26,8 @@ Follow these steps to begin local development.
    Clone and install the virtual environment used for development. Some material
    is placed in submodules, so we need to clone recursively.
    ```bash
-   git clone --recurse-submodules git@github.com:rsundqvist/rics.git
    cd rics
-   poetry install --all-extras
+   uv sync --all-extras
    ```
    
    Generating documentation has a few dependencies which may need to be installed
