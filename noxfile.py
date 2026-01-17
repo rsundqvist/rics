@@ -25,7 +25,7 @@ def install_with_constraints(session: Session, *args: str, **kwargs: Any) -> Non
             "uv",
             "export",
             "--no-hashes",
-            f"--output={requirements.name}",
+            f"--output-file={requirements.name}",
             external=True,
         )
         session.install("-r", requirements.name, *args, **kwargs)
