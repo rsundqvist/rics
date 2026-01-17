@@ -313,13 +313,17 @@ class InheritedKeysDict(_t.Mapping[OKT, dict[KT, VT]]):  # noqa: PLW1641
         return InheritedKeysDict(default=default, specific=specific)
 
 
-class _MakeDict(_t.TypedDict, _t.Generic[OKT, KT, VT], total=False):
+class MakeDict(_t.TypedDict, _t.Generic[OKT, KT, VT], total=False):
+    """See :meth:`InheritedKeysDict.make`."""
+
     default: dict[KT, VT]
     specific: dict[OKT, dict[KT, VT]]
 
 
-MakeType = InheritedKeysDict[OKT, KT, VT] | _MakeDict[OKT, KT, VT]
-"""Valid input types for making the :meth:`InheritedKeysDict.make` function."""
+_MakeDict = MakeDict  # TODO(7.0.0): Remove alias.
+
+MakeType = InheritedKeysDict[OKT, KT, VT] | MakeDict[OKT, KT, VT]
+"""See :meth:`InheritedKeysDict.make`."""
 
 
 def format_changed_keys(

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Various docstrings.
+- Expose the `MakeDict` type (was already "exposed" through `rics.collections.dict.MakeType`).
+
 ## [6.1.0] - 2025-12-08
 
 ### Added

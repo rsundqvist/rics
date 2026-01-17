@@ -371,7 +371,7 @@ def format_kwargs(kwargs: _t.Mapping[str, _t.Any], *, max_value_length: int = 80
         >>> format_kwargs({"an_int": 1, "a_string": "Hello!"})
         "an_int=1, a_string='Hello!'"
     """
-    # TODO(0.7.0): deprecate in favor of string.format_kwargs() + update docstring ::warning
+    # TODO(7.0.0): deprecate in favor of string.format_kwargs() + update docstring ::warning
 
     invalid = [k for k in kwargs if not k.isidentifier()]
     if invalid:

@@ -78,7 +78,6 @@ rics --help
 in the terminal.
 
 ## Contributing
-
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome. To get 
 started, see the [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
 
