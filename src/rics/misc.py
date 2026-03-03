@@ -219,10 +219,10 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
         Public module of `obj`.
 
     Examples:
-        Public module of ``pandas.DataFrame``.
+        Public module of ``pandas.DataFrame`` (legacy versions).
 
         >>> from pandas import DataFrame as obj
-        >>> get_public_module(obj)
+        >>> get_public_module(obj)  # doctest: +SKIP
         'pandas.core.frame'
         >>> get_public_module(obj, resolve_reexport=True)
         'pandas'

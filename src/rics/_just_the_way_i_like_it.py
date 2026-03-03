@@ -96,7 +96,11 @@ def _configure_pandas() -> None:
     pd.options.display.float_format = "{:.6g}".format
 
     pd.options.mode.chained_assignment = "raise"
-    if hasattr(pd.options.mode, "copy_on_write") and pd.options.mode.copy_on_write is None:
+    if (
+        pd.__version__.startswith("2.")
+        and hasattr(pd.options.mode, "copy_on_write")
+        and pd.options.mode.copy_on_write is None
+    ):
         pd.options.mode.copy_on_write = "warn"
 
     with contextlib.suppress(ImportError):

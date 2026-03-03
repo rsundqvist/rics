@@ -35,7 +35,7 @@ def test_generated_data():
     number = 2
     results = timer.run(repeat=repeat, number=number)
     df = to_dataframe(results, names=timer.derive_names())
-    assert df.dtypes["dtype"] == "object"
+    assert df.dtypes["dtype"] == "str"
     assert df.dtypes["size"] == "int"
     assert len(df) == repeat * 3
 

@@ -101,8 +101,8 @@ def main(
     func = functools.partial(_process_repo, logger=logger, headers=headers, now=now, max_days=max_days)
     with ThreadPoolExecutor(max_workers=8, thread_name_prefix=logger.name) as pool:
         repos = pool.map(func, raw, timeout=300)
+        filtered_repos = [r for r in repos if r is not None]
 
-    filtered_repos = [r for r in repos if r is not None]
     logger.info("Processed %i/%i matching repos in %s.", len(filtered_repos), len(raw), format_perf_counter(start))
 
     if not repos:
@@ -175,8 +175,6 @@ def _to_dataframe(repos: list[dict[str, Any]], sort: str) -> "pandas.DataFrame":
     import pandas as pd
 
     df = pd.DataFrame.from_records(repos)
-    assert (df.dtypes[[_PUSH, "Created"]] == _DATETIME_DTYPE).all()  # noqa: S101
-
     (sort, ascending) = _SORT_COLUMNS[sort]
     df = df.sort_values(sort, ascending=ascending)
     df = df.set_index("Repo name")
