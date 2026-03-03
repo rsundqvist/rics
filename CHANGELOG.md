@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.1.2] - 2026-03-03
+
 ### Fixed
 - Fix `rics kernel` sometimes producing invalid kernel names.
 
@@ -603,7 +605,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.1.1...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.1.2...HEAD
+[6.1.2]: https://github.com/rsundqvist/rics/compare/v6.1.1...v6.1.2
 [6.1.1]: https://github.com/rsundqvist/rics/compare/v6.1.0...v6.1.1
 [6.1.0]: https://github.com/rsundqvist/rics/compare/v6.0.4...v6.1.0
 [6.0.4]: https://github.com/rsundqvist/rics/compare/v6.0.3...v6.0.4
