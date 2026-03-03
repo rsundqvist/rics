@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix `rics kernel` sometimes producing invalid kernel names.
+
 ## [6.1.1] - 2026-01-17
 
 ### Fixed

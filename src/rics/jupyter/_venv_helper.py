@@ -75,7 +75,13 @@ class VenvHelper:
             msg = f"Not a virtualenv: '{self.exec_prefix}'."
             raise RuntimeError(msg)
 
-        lines = self.config_path.read_text().splitlines()
+        text = self.config_path.read_text()
+        self.logger.debug(
+            "Processing pyvenv.cfg content:\n----------------------------------------\n%s\n----------------------------------------",
+            text,
+        )
+
+        lines = text.splitlines()
         rv = {key: value for key, value in map(self._convert_pyenvcfg_line, lines)}
         self.logger.debug("Found %i keys in pyvenv.cfg: %s.", len(rv), [*rv])
         return rv

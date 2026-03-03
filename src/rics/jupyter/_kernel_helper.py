@@ -47,7 +47,10 @@ class KernelHelper:
 
         kernel_name = f"{__package__}.{self.venv.slug}"
         if variant := self.variant:
-            kernel_name = f"{kernel_name}.{variant.replace(' ', '-')}".lower()
+            kernel_name = f"{kernel_name}.{variant}"
+
+        kernel_name = kernel_name.replace(" ", "-")
+        kernel_name = kernel_name.replace('"', "")
 
         return kernel_name
 
