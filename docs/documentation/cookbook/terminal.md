@@ -1,5 +1,10 @@
 # Terminal
 
+## Try until success
+```bash
+while ! (uv lock && uv sync --all-extras --inexact); do echo "Trying again in 10 sec.."; sleep 10; done
+```
+
 ## SSH
 Recipes for [ssh](https://linux.die.net/man/1/ssh).
 

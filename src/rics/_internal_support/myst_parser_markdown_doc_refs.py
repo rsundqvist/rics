@@ -8,11 +8,11 @@ _real = MystReferenceResolver.resolve_myst_ref_doc
 
 def patch() -> None:
     if MystReferenceResolver.resolve_myst_ref_doc is _real:
-        MystReferenceResolver.resolve_myst_ref_doc = _hack  # type: ignore[method-assign]
+        MystReferenceResolver.resolve_myst_ref_doc = _myst_parser_markdown_doc_refs  # type: ignore[method-assign]
         print("patch: MystReferenceResolver.resolve_myst_ref_doc")
 
 
-def _hack(self: MystReferenceResolver, node: pending_xref) -> Any:
+def _myst_parser_markdown_doc_refs(self: MystReferenceResolver, node: pending_xref) -> Any:
     ref_docname: str = node["reftarget"]
     prefix, _, name = ref_docname.rpartition("/")
 

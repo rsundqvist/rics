@@ -19,11 +19,11 @@ def patch(*, max_parents: int = 1) -> None:
         raise ValueError(f"bad {max_parents=} < 0")
 
     if Autosummary.run is _real:
-        Autosummary.run = partial(_hack, n=max_parents + 1)  #  type: ignore[method-assign]
+        Autosummary.run = partial(_make_toc_tree_titles_shorter, n=max_parents + 1)  #  type: ignore[method-assign]
         print("patch: Autosummary.run")
 
 
-def _hack(self: Autosummary, n: int) -> list[Node]:
+def _make_toc_tree_titles_shorter(self: Autosummary, n: int) -> list[Node]:
     nodes = _real(self)
 
     for node in nodes:
