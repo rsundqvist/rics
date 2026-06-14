@@ -39,3 +39,16 @@ def test_value_is_set():
     expected = set_variables(*range(10))
     for var in VARIABLES:
         assert var.get_value() == expected[var.name]
+
+
+@pytest.mark.parametrize(
+    "s, expected",
+    [
+        ("{ ${ENV_VAR2:default}", [Variable("ENV_VAR2", "default", "${ENV_VAR2:default}")]),
+        ('{"key": "${ENV_VAR2:default}"}', [Variable("ENV_VAR2", "default", "${ENV_VAR2:default}")]),
+        ("} ${ENV_VAR2:default}", [Variable("ENV_VAR2", "default", "${ENV_VAR2:default}")]),
+        ("{ ${ENV_VAR0} }", [Variable("ENV_VAR0", None, "${ENV_VAR0}")]),
+    ],
+)
+def test_parsing_with_surrounding_braces(s, expected):
+    assert Variable.parse_string(s) == expected

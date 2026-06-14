@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Fix multiple issues in the `Variable.parse_string()` method.
+
 ## [6.1.3] - 2026-03-07
 
 ### Changed

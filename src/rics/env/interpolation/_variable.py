@@ -8,8 +8,8 @@ from typing import ClassVar
 class Variable:
     """Representation of an environment variable."""
 
-    PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\${[ \t]*(\w+)[ \t]*(?::(.*))?}?}")
-    """The Regex pattern used to find variables in strings."""
+    # TODO(7.0.0): Not used - remove.
+    PATTERN: ClassVar[re.Pattern[str]] = re.compile(r"\${[ \t]*(\w+)[ \t]*(?::(.*))?}")
 
     name: str
     """Name of the environment variable, e.g. ``PATH`` or ``USER``."""
@@ -66,6 +66,7 @@ class Variable:
                 if prev_is_dollar_sign and c == "{":
                     full_match.append("${")
                     state = "name"
+                    n_open = 1
             elif state == "name":
                 if c == "}":
                     make(make_default=False)
@@ -97,8 +98,8 @@ class Variable:
         """Return the value of this ``Variable``.
 
         Args:
-            resolve_nested_defaults: If ``True``, look for nested variables within this variable's `argument`-value
-                if :attr:`name` is not set.
+            resolve_nested_defaults: If ``True``, look for nested variables within this variable's :attr:`default` value
+                if :attr:`name` is not set in the environment.
 
         Returns:
             The value of :attr:`name` in the system environment, or the specified default value.
