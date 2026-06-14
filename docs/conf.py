@@ -1,7 +1,7 @@
 """Sphinx configuration."""
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 if True:  # E402 hack
     os.environ["SPHINX_BUILD"] = "true"
@@ -15,8 +15,8 @@ import shutil
 from importlib import import_module, metadata
 
 import rics
+from rics._internal_support import make_toc_tree_titles_shorter, myst_parser_markdown_doc_refs
 from rics._internal_support.changelog import split_changelog
-from rics._internal_support import myst_parser_markdown_doc_refs, make_toc_tree_titles_shorter
 
 type_modules = (
     "rics.collections.dicts",
@@ -36,7 +36,7 @@ make_toc_tree_titles_shorter.patch()
 # General information about the project.
 _metadata = metadata.metadata(rics.__name__)
 project = _metadata["Name"]
-copyright = _metadata["Author"] + f", {datetime.now(tz=timezone.utc).year}"
+copyright = _metadata["Author"] + f", {datetime.now(tz=UTC).year}"
 author = _metadata["Author"]
 # The version info for the project you're documenting, acts as replacement
 # for |version| and |release|, also used in various other places throughout
@@ -93,7 +93,6 @@ exclude_patterns = [
     ".DS_Store",
     "**.ipynb_checkpoints",
 ]
-# shutil.rmtree("/tmp/example/", ignore_errors=True)  # noqa: 1S108
 
 # -- Options for HTML output ---------------------------------------------------
 
