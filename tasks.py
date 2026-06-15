@@ -56,6 +56,12 @@ def clean_python(c: Context) -> None:
 
 
 @task
+def clean_nox(c: Context) -> None:
+    """Clean up nox files."""
+    _run(c, "rm -fr .nox/")
+
+
+@task
 def clean_tests(c: Context) -> None:
     """Clean up files from testing."""
     _run(c, f"rm -f {COVERAGE_FILE}")
@@ -80,7 +86,7 @@ def clean_ruff(c: Context) -> None:
     _run(c, "ruff clean")
 
 
-@task(pre=[clean_build, clean_python, clean_ruff, clean_tests, clean_docs])
+@task(pre=[clean_build, clean_python, clean_ruff, clean_nox, clean_tests, clean_docs])
 def clean(_: Context) -> None:
     """Run all clean sub-tasks."""
 

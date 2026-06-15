@@ -108,13 +108,7 @@ types = [
 ]
 
 [tool.uv]
-default-groups = [
-    "manual-extras",
-    "docs",
-    "test",
-    "devops",
-    "types",
-]
+default-groups = "all"
 
 [tool.ruff]
 line-length = 120

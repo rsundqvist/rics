@@ -1,6 +1,10 @@
 codecov
 .flakeheaven_cache
 
+x.*
+y.*
+tmp.*
+
 # Data
 *.sqlite
 *.pkl
