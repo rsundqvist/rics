@@ -11,14 +11,12 @@ python_versions = ["3.11", "3.12", "3.13", "3.14"]
 
 
 def install(session: Session) -> None:
-    """Install the project using uv."""
-    session.run_install(
-        "uv",
-        "sync",
-        f"--python={session.virtualenv.location}",
-        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
-    )
-    session.run_always("uv", "sync", "--active", "--all-extras", external=True)
+    """Install the project using uv.
+
+    The ``uv`` backend exports ``UV_PROJECT_ENVIRONMENT``/``UV_PYTHON`` into the session, so ``uv`` targets the session
+    venv without an explicit ``--python``/``--active``.
+    """
+    session.run_install("uv", "sync", "--all-extras")
     session.install(".")
 
 

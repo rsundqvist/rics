@@ -168,11 +168,27 @@ def _print_paths(logger: logging.Logger, *args: str) -> tuple[str, str] | None:
     return exec_prefix, executable
 
 
+# Variables that pin a package manager to a specific venv/project. These must be unset (not blanked); a blank
+# VIRTUAL_ENV breaks poetry. UV_PROJECT_ENVIRONMENT/UV_PYTHON are injected by e.g. nox's uv backend, and UV_PROJECT
+# overrides cwd-based project discovery; any of these would otherwise make `uv run`/`uv pip` target the caller's venv.
+_VENV_BREAKOUT_VARS = ("VIRTUAL_ENV", "UV_PROJECT_ENVIRONMENT", "UV_PYTHON", "UV_PROJECT")
+
+
+def _make_breakout_env() -> dict[str, str]:
+    """Copy of the current environment with venv/project-targeting variables removed.
+
+    Lets a package manager resolve the target project's venv from ``cwd`` instead of inheriting the caller's.
+    """
+    env = {**os.environ}  # This is basically what `subprocess.run` does when env=None (the default).
+    for key in _VENV_BREAKOUT_VARS:
+        env.pop(key, None)
+    return env
+
+
 def _get_output(logger: logging.Logger, *args: str) -> str | None:
     logger.debug("Executing command: %s", args)
 
-    env = {**os.environ}  # This is basically what `subprocess.run` does when env=None (the default).
-    env.pop("VIRTUAL_ENV", None)  # Break out of current virtualenv. Must be unset; blank value breaks poetry.
+    env = _make_breakout_env()
 
     try:
         process = subprocess.run(args, capture_output=True, check=False, env=env)  # noqa: S603

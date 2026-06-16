@@ -1,4 +1,3 @@
-import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -6,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from rics.jupyter import VenvHelper
+from rics.jupyter._venv_helper import _make_breakout_env
 
 
 @dataclass(frozen=True)
@@ -34,8 +34,9 @@ def dummy_project(request: pytest.FixtureRequest, tmp_path: Path, monkeypatch: p
     tmp_path.joinpath("pyproject.toml").write_text(_PYPROJECT)
     # tmp_path.joinpath("src/").write_text()
 
-    env = {**os.environ}
-    env.pop("VIRTUAL_ENV", None)
+    # Break out of the caller's environment so `uv`/`poetry` operate on the dummy project's own venv; otherwise the
+    # nox-injected UV_PROJECT_ENVIRONMENT/UV_PYTHON would make `uv sync` prune the nox venv instead.
+    env = _make_breakout_env()
     env["POETRY_VIRTUALENVS_IN_PROJECT"] = "1"
 
     subprocess.check_output([manager, "lock"], env=env)
