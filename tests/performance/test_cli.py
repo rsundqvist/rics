@@ -10,7 +10,7 @@ from rics.performance import MultiCaseTimer
 from .test_wrapper import get_raw_timings, unload_modules, verify
 
 
-@pytest.mark.filterwarnings("ignore:The test results may be unreliable:UserWarning")
+@pytest.mark.filterwarnings("ignore:Results may be unreliable:UserWarning")
 def test_cli_create():
     unload_modules()
 
