@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.1.4] - 2026-06-17
+
 ### Fixed
 - Fix multiple issues in the `Variable.parse_string()` method.
 - Fix `VenvHelper` breakout issues for; would sync the wrong `uv` environment.
@@ -614,7 +616,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.1.3...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.1.4...HEAD
+[6.1.4]: https://github.com/rsundqvist/rics/compare/v6.1.3...v6.1.4
 [6.1.3]: https://github.com/rsundqvist/rics/compare/v6.1.2...v6.1.3
 [6.1.2]: https://github.com/rsundqvist/rics/compare/v6.1.1...v6.1.2
 [6.1.1]: https://github.com/rsundqvist/rics/compare/v6.1.0...v6.1.1
