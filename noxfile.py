@@ -53,7 +53,7 @@ def mypy(session: Session) -> None:
 
 
 @nox.session(python="3.11")
-def safety(session: Session) -> None:
-    """Scan dependencies for insecure packages."""
+def audit(session: Session) -> None:
+    """Audit dependencies for known vulnerabilities."""
     install(session)
-    session.run("inv", "safety")
+    session.run("inv", "audit")
