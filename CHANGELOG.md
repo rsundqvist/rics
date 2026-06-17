@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fix multiple issues in the `Variable.parse_string()` method.
+- Fix `VenvHelper` breakout issues for; would sync the wrong `uv` environment.
 
 ## [6.1.3] - 2026-03-07
 
