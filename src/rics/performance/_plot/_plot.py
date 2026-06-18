@@ -13,6 +13,8 @@ from ._postprocessors import make_postprocessors
 if TYPE_CHECKING:
     import seaborn
 
+    from ..plot_types import Aggregation
+
 
 def plot_run(
     run_results: ResultsDict | pd.DataFrame,
@@ -23,6 +25,8 @@ def plot_run(
     unit: Unit | None = None,
     kind: Kind = "bar",
     names: Iterable[str] = (),
+    relative_to: str | None = None,
+    agg: "Aggregation" = "min",
     **kwargs: Any,
 ) -> "seaborn.FacetGrid":
     """Create a :func:`seaborn.catplot` from run results.
@@ -67,10 +71,14 @@ def plot_run(
             to the complement of `hue` (or the higher-cardinality of candidate/data).
         hue: Hue quantity: ``'candidate'``, ``'data'``, or one of `names`. If omitted, defaults to the complement of `x`
             (or the candidate when `x` is a named dimension).
-        horizontal: If ``True``, plot timings on the X-axis instead. The `x` becomes the new Y-axis quantity.
-        unit: Y-axis time :attr:`~rics.performance.plot_types.Unit`.
+        horizontal: If ``True``, plot the metric on the X-axis instead. The `x` becomes the new Y-axis quantity.
+        unit: Y-axis time :attr:`~rics.performance.plot_types.Unit`. Not allowed in `relative_to` mode.
         kind: The :attr:`~rics.performance.plot_types.Kind` of plot to draw.
         names: Test data level names.
+        relative_to: If given, plot the speedup of each candidate relative to this baseline candidate (see
+            :func:`.relative_to`) instead of absolute timings. The Y-axis becomes a dimensionless ``speedup`` and a
+            reference line is drawn at ``1.0``.
+        agg: How to summarize the repeated timings in `relative_to` mode; one of ``'min'``, ``'median'``, ``'mean'``.
         **kwargs: Keyword arguments for :func:`seaborn.catplot` (e.g. ``col``, ``row``, ``col_wrap``).
 
     Returns:
@@ -79,10 +87,19 @@ def plot_run(
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed.
         TypeError: For unknown `unit` arguments.
-        ValueError: For unknown `x`/`hue` arguments.
+        ValueError: For unknown `x`/`hue` arguments, or `unit` combined with `relative_to`.
     """
     params = CatplotParams.make(
-        run_results, x=x, hue=hue, horizontal=horizontal, unit=unit, kind=kind, names=names, **kwargs
+        run_results,
+        x=x,
+        hue=hue,
+        horizontal=horizontal,
+        unit=unit,
+        kind=kind,
+        names=names,
+        relative_to=relative_to,
+        agg=agg,
+        **kwargs,
     )
     return plot_params(params)
 
@@ -92,7 +109,7 @@ def plot_params(params: CatplotParams) -> "seaborn.axisgrid.FacetGrid":
     from seaborn import catplot
 
     kwargs = params.to_kwargs()
-    postprocessors = make_postprocessors(kwargs)
+    postprocessors = make_postprocessors(kwargs, params)
     facet_grid = catplot(**kwargs)
 
     logger = logging.getLogger(__package__).getChild("plot")

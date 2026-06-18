@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `performance.relative_to()`: compare candidates against a baseline candidate (per-pair speedup table + geometric mean).
 - `performance.to_dataframe(tidy=True)`: return a minimal analysis frame (`candidate`/`data`/`*names`/`run`/`seconds`)
   without presentation columns.
+- `performance.plot_run(relative_to=<baseline>)`: plot per-candidate speedup against a baseline (dimensionless y-axis
+  with a reference line at `1.0`) instead of absolute timings.
 
 ### Changed
 - `performance.plot_run()` now accepts an explicit `hue` argument, and both `x` and `hue` may reference a test-data
