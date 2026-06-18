@@ -83,6 +83,15 @@ def test_relative_to(kind: Kind) -> None:
     plt.close(facet_grid.fig)
 
 
+def test_relative_to_excludes_baseline(kind: Kind) -> None:
+    # The baseline is the reference line; it must not appear as a (flat 1.0) bar/hue.
+    facet_grid = plot_run(_GRID_RESULTS, kind=kind, relative_to="baseline", names=_GRID_NAMES, hue="candidate")
+    legend_texts = {t.get_text() for t in facet_grid.legend.texts} if facet_grid.legend else set()
+    assert "baseline" not in legend_texts
+    assert "optimized" in legend_texts
+    plt.close(facet_grid.fig)
+
+
 def test_relative_to_horizontal(kind: Kind) -> None:
     facet_grid = plot_run(_GRID_RESULTS, kind=kind, relative_to="baseline", names=_GRID_NAMES, horizontal=True)
     assert facet_grid.axes.flat[0].get_xlabel() == "speedup"

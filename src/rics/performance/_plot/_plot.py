@@ -77,7 +77,8 @@ def plot_run(
         names: Test data level names.
         relative_to: If given, plot the speedup of each candidate relative to this baseline candidate (see
             :func:`.relative_to`) instead of absolute timings. The Y-axis becomes a dimensionless ``speedup`` and a
-            reference line is drawn at ``1.0``.
+            reference line is drawn at ``1.0``. The baseline itself (always ``1.0``) is represented by the reference
+            line and omitted from the bars.
         agg: How to summarize the repeated timings in `relative_to` mode; one of ``'min'``, ``'median'``, ``'mean'``.
         **kwargs: Keyword arguments for :func:`seaborn.catplot` (e.g. ``col``, ``row``, ``col_wrap``).
 

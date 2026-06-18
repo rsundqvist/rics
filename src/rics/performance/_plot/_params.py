@@ -223,6 +223,8 @@ def _make_speedup_df(
     from rics.performance import relative_to
 
     summary = relative_to(run_results, baseline=baseline, names=names, agg=agg)
+    # The baseline is definitionally speedup==1.0; it's shown as the reference line, so drop its (flat) bars.
+    summary = summary[summary["candidate"] != baseline]
     df = summary.rename(columns={"candidate": FUNC, "data": DATA})
     df[[DATA, FUNC]] = df[[DATA, FUNC]].astype("category")
     return df
