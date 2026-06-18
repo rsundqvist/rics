@@ -131,8 +131,11 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
     ) -> ResultsDict:
         """Run for all cases.
 
-        Note that the test case variant data isn't included in the expected runtime computation, so increasing the
-        amount of test data variants (at initialization) will reduce the amount of times each candidate is evaluated.
+        Time budget:
+            The total runtime is approximately ``repeat * time_per_candidate * n_candidates`` -- a single ``number`` is
+            derived **per candidate** (shared across all test-data variants, so candidates stay comparable). Adding more
+            test-data variants therefore does *not* increase the total time; it divides the per-candidate budget across
+            the variants. Pass `number` explicitly to bypass this calibration.
 
         Args:
             time_per_candidate: Minimum runtime per repetition and candidate label. Ignored if `number` is set.
@@ -147,8 +150,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                 otherwise (so ``tqdm`` is optional).
 
         Examples:
-            If `repeat=5` and `time_per_candidate=3` for an instance with and 2 candidates, the total
-            runtime will be approximately ``5 * 3 * 2 = 30`` seconds.
+            If `repeat=5` and `time_per_candidate=3` for an instance with 2 candidates, the total runtime will be
+            approximately ``5 * 3 * 2 = 30`` seconds -- regardless of how many test-data variants are used.
 
         Returns:
             A dict `run_results` on the form ``{candidate_label: {data_label: [runtime, ...]}}``.

@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   col='source')`.
 - `performance.MultiCaseTimer.run(progress=True)` falls back to periodic `logging` when output is not a TTY (instead of
   `tqdm` carriage-return spam), making `tqdm` optional in non-interactive runs.
+- Clarified the `run()` time-budget docstring: total runtime is ``repeat * time_per_candidate * n_candidates`` and is
+  independent of the number of test-data variants.
 
 ## [6.1.4] - 2026-06-17
 
