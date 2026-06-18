@@ -9,13 +9,17 @@ from .plot_types import Aggregation
 from .types import ResultsDict
 
 
-def to_dataframe(run_results: ResultsDict, names: Iterable[str] = ()) -> pd.DataFrame:
+def to_dataframe(run_results: ResultsDict, names: Iterable[str] = (), *, tidy: bool = False) -> pd.DataFrame:
     """Create a DataFrame from performance run output, adding derived values.
 
     Args:
         run_results: A dict `run_results` on the form ``{candidate_label: {data_label: [runtime, ...]}}``, returned
             by :meth:`rics.performance.MultiCaseTimer.run`.
         names: Level names for tuple keys in the data (creates new columns). See :func:`.plot_run` for details.
+        tidy: If ``True``, return a minimal analysis-friendly frame with lowercase columns
+            ``['candidate', 'data', *names, 'run', 'seconds']`` and **no** presentation columns (unit conversions,
+            ``'Times min'`` etc.). The default (``False``) returns the plotting-oriented frame consumed by
+            :func:`.plot_run`, which mixes data with presentation (multiple ``'Time [<unit>]'`` columns).
 
     Returns:
         The `run_result` input as a DataFrame.
@@ -43,6 +47,11 @@ def to_dataframe(run_results: ResultsDict, names: Iterable[str] = ()) -> pd.Data
             frames.append(frame)
 
     df = pd.concat(frames, ignore_index=True)
+
+    if tidy:
+        renames = {"Candidate": "candidate", "Test data": "data", "Run no": "run", "Time [s]": "seconds"}
+        return df.rename(columns=renames)[["candidate", "data", *names, "run", "seconds"]]
+
     df["Time [ms]"] = df["Time [s]"] * 1000
     df["Time [μs]"] = df["Time [ms]"] * 1000
     df["Time [ns]"] = df["Time [μs]"] * 1000
