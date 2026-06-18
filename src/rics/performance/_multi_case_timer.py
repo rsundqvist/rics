@@ -14,6 +14,9 @@ from rics.strings import format_seconds as fmt_time
 
 from .types import CandFunc, DataFunc, DataType, ResultsDict, Ts
 
+SetupFunc: TypeAlias = Callable[[DataType], DataType]
+"""A callable ``(data) -> data`` run -- unmeasured -- before each timed repetition to produce a fresh input."""
+
 UNRELIABLE_RESULTS_LIMIT = 1e-6  # Prevent spurious "4x" warnings.
 
 CandidateMethodArg: TypeAlias = Mapping[str, CandFunc[DataType]] | Collection[CandFunc[DataType]] | CandFunc[DataType]
@@ -121,6 +124,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         repeat: int = 5,
         number: int | None = None,
         skip_if: Callable[["SkipIfParams[DataType, *Ts]"], bool] | None = None,
+        setup: SetupFunc[DataType] | None = None,
+        warmup: int = 0,
         progress: bool = False,
     ) -> ResultsDict:
         """Run for all cases.
@@ -133,6 +138,10 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             repeat: Number of times to repeat for all candidates per data label.
             number: Number of times to execute each candidate, per repetition.
             skip_if: A callable ``(skip_if) -> bool``; see the :class:`params <SkipIfParams>` type.
+            setup: A callable ``(data) -> data`` invoked -- **not** measured -- before each timed repetition to produce a
+                fresh input (mirrors :py:class:`timeit.Timer`'s ``setup``). Use for candidates that mutate their input,
+                or to reset shared state (e.g. caches) between repetitions.
+            warmup: Number of untimed calls per candidate/data pair before timing begins (warms caches/JIT/imports).
             progress: If ``True``, display a progress bar. Requires ``tqdm``.
 
         Examples:
@@ -159,7 +168,9 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
 
         logger.debug("Begin evaluating %i combinations: %i candidates and %i test cases.", total, n_cand, n_data)
 
-        per_candidate_number = self._compute_number_of_iterations(number, repeat, time_per_candidate, progress, skip_if)
+        per_candidate_number = self._compute_number_of_iterations(
+            number, repeat, time_per_candidate, progress, skip_if=skip_if, setup=setup
+        )
 
         if progress:
             from tqdm.auto import tqdm
@@ -203,7 +214,9 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
 
                 logger.debug(f"Start evaluating combination {i}/{total}: {candidate_label!r} @ {data_label!r}.")
 
-                raw_timings = self._get_raw_timings(func, test_data, repeat, candidate_number)
+                raw_timings = self._get_raw_timings(
+                    func, test_data, repeat, candidate_number, setup=setup, warmup=warmup
+                )
 
                 timings = [dt / candidate_number for dt in raw_timings]
 
@@ -225,10 +238,38 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
 
         return run_results
 
-    @staticmethod
-    def _get_raw_timings(func: CandFunc[DataType], test_data: DataType, repeat: int, number: int) -> list[float]:
+    @classmethod
+    def _get_raw_timings(
+        cls,
+        func: CandFunc[DataType],
+        test_data: DataType,
+        repeat: int,
+        number: int,
+        *,
+        setup: SetupFunc[DataType] | None = None,
+        warmup: int = 0,
+    ) -> list[float]:
         """Exists so that it can be overridden for testing."""
-        return Timer(lambda: func(test_data)).repeat(repeat, number)
+        timer = cls._make_timer(func, test_data, setup)
+        for _ in range(warmup):
+            timer.timeit(1)
+        return timer.repeat(repeat, number)
+
+    @staticmethod
+    def _make_timer(func: CandFunc[DataType], test_data: DataType, setup: SetupFunc[DataType] | None) -> Timer:
+        """Build a :class:`timeit.Timer`. With `setup`, fresh input is produced (unmeasured) before each repetition."""
+        if setup is None:
+            return Timer(functools.partial(func, test_data))
+
+        holder: dict[str, DataType] = {}
+
+        def _setup() -> None:
+            holder["data"] = setup(test_data)
+
+        def _stmt() -> None:
+            func(holder["data"])
+
+        return Timer(_stmt, _setup)
 
     def _compute_number_of_iterations(
         self,
@@ -237,6 +278,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         time_allocation: float,
         progress: bool,
         skip_if: "Callable[[SkipIfParams[DataType, *Ts]], bool] | None" = None,
+        setup: SetupFunc[DataType] | None = None,
     ) -> dict[str, tuple[int, float | None] | None]:
         logger = self.LOGGER
 
@@ -260,7 +302,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                 pbar.desc = f"autorange('{label}')"
                 pbar.refresh()
 
-            autonumber = self._autonumber(time_allocation, label, skip_if)
+            autonumber = self._autonumber(time_allocation, label, skip_if, setup)
             if autonumber is None:
                 logger.warning(f"Discarding candidate={label!r}; skipped by {tname(skip_if)} at {time_allocation=}.")
                 numbers[label] = None
@@ -288,6 +330,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         time_allocation: float,
         candidate_label: str,
         skip_if: "Callable[[SkipIfParams[DataType, *Ts]], bool] | None",
+        setup: SetupFunc[DataType] | None = None,
     ) -> tuple[int, float] | None:
         """Based on Timer.autorange()."""
         func = self._candidates[candidate_label]
@@ -318,8 +361,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                     if should_skip(data_label, data):
                         continue
                     all_skipped = False
-                    partial = functools.partial(func, data)
-                    total_time_taken += Timer(partial).timeit(number)
+                    total_time_taken += self._make_timer(func, data, setup).timeit(number)
 
                 if all_skipped:
                     return None

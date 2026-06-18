@@ -3,7 +3,7 @@ from typing import Any
 
 import pandas as pd
 
-from ._multi_case_timer import CandidateMethodArg, MultiCaseTimer, TestDataArg
+from ._multi_case_timer import CandidateMethodArg, MultiCaseTimer, SetupFunc, TestDataArg
 from ._util import to_dataframe
 from .types import DataFunc, DataType, Ts
 
@@ -19,6 +19,8 @@ def run_multivariate_test(
     show: bool = True,
     names: Iterable[str] | None = (),
     progress: bool = False,
+    setup: "SetupFunc[DataType] | None" = None,
+    warmup: int = 0,
     case_args: Collection[tuple[*Ts]] | None = None,
     kwargs: Any | None = None,
     **plot_kwargs: Any,
@@ -38,6 +40,9 @@ def run_multivariate_test(
         names: Level names for tuple keys in the data (creates new columns). See :func:`.plot_run` for details. Set to
             ``None`` to disable derived names when `test_data` is callable.
         progress: If ``True``, display a progress bar. Requires ``tqdm``.
+        setup: A callable ``(data) -> data`` run -- unmeasured -- before each timed repetition. See
+            :meth:`.MultiCaseTimer.run`.
+        warmup: Number of untimed calls per candidate/data pair before timing begins.
         case_args: These are positional arguments for the `test_data` callable.
         kwargs: Shared keyword arguments for the `test_data` callable.
         **plot_kwargs: See :func:`.plot_run` for details. Ignored if ``plot=False``.
@@ -62,7 +67,7 @@ def run_multivariate_test(
         case_args=case_args,
         kwargs=kwargs,
     )
-    run_results = timer.run(time_per_candidate=time_per_candidate, progress=progress)
+    run_results = timer.run(time_per_candidate=time_per_candidate, progress=progress, setup=setup, warmup=warmup)
 
     if names is None:
         names = ()

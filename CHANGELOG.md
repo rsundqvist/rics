@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `performance.MultiCaseTimer.run()` now accepts `setup` (a ``(data) -> data`` callable run unmeasured before each
+  timed repetition, mirroring `timeit`) and `warmup` (untimed calls before timing). Resolves #398.
+
 ## [6.1.4] - 2026-06-17
 
 ### Fixed

@@ -13,7 +13,7 @@ def unload_modules():
         del sys.modules[key]
 
 
-def get_raw_timings(_self, func, test_data, repeat, _number, /):
+def get_raw_timings(_self, func, test_data, repeat, _number, /, **_):
     return [func.sleep_multiplier * test_data] * repeat
 
 
