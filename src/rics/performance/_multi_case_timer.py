@@ -159,7 +159,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
 
         logger.debug("Begin evaluating %i combinations: %i candidates and %i test cases.", total, n_cand, n_data)
 
-        per_candidate_number = self._compute_number_of_iterations(number, repeat, time_per_candidate, progress)
+        per_candidate_number = self._compute_number_of_iterations(number, repeat, time_per_candidate, progress, skip_if)
 
         if progress:
             from tqdm.auto import tqdm
@@ -171,7 +171,11 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         i = 0
         run_results: ResultsDict = {}
         for candidate_label, func in self._candidates.items():
-            candidate_number, candidate_est_time = per_candidate_number[candidate_label]
+            params = per_candidate_number[candidate_label]
+            if params is None:
+                continue
+
+            candidate_number, candidate_est_time = params
             run_results[candidate_label] = candidate_results = {}
 
             logger.info(f"Evaluate candidate {candidate_label!r} {repeat}x{candidate_number} times per datum..")
@@ -232,7 +236,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         repeat: int,
         time_allocation: float,
         progress: bool,
-    ) -> dict[str, tuple[int, float]] | dict[str, tuple[int, None]]:
+        skip_if: "Callable[[SkipIfParams[DataType, *Ts]], bool] | None" = None,
+    ) -> dict[str, tuple[int, float | None] | None]:
         logger = self.LOGGER
 
         if isinstance(number, int):
@@ -248,14 +253,21 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         else:
             pbar = None
 
-        candidate_numbers = {}
+        # {candidate: (number, est_time | None) | None}, where None values are skip_if-filtered candidates.
+        numbers: dict[str, tuple[int, float | None] | None] = {}
         for label in self._candidates:
             if pbar:
                 pbar.desc = f"autorange('{label}')"
                 pbar.refresh()
 
-            number, time = self._autonumber(time_allocation, label)
-            candidate_numbers[label] = number, time
+            autonumber = self._autonumber(time_allocation, label, skip_if)
+            if autonumber is None:
+                logger.warning(f"Discarding candidate={label!r}; skipped by {tname(skip_if)} at {time_allocation=}.")
+                numbers[label] = None
+                continue
+
+            number, time = autonumber
+            numbers[label] = number, time
             logger.debug("Candidate number for candidate=%r: %i (time=%f).", label, number, time)
             if pbar:
                 pbar.update()
@@ -263,25 +275,54 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         if pbar:
             pbar.clear()
 
-        logger.info(
-            f"Computed shared number for {len(candidate_numbers)} candidates in {format_perf_counter(start)}: "
-            f"{candidate_numbers}."
-        )
+        kept = {k: v for k, v in numbers.items() if v is not None}
+        if kept:
+            logger.info(f"Computed shared number for {len(kept)} candidates in {format_perf_counter(start)}: {kept}.")
+        else:
+            logger.warning(f"All candidates {len(numbers)} discarded by {tname(skip_if)} at {time_allocation=}.")
 
-        return candidate_numbers
+        return numbers
 
-    def _autonumber(self, time_allocation: float, candidate_label: str) -> tuple[int, float]:
+    def _autonumber(
+        self,
+        time_allocation: float,
+        candidate_label: str,
+        skip_if: "Callable[[SkipIfParams[DataType, *Ts]], bool] | None",
+    ) -> tuple[int, float] | None:
         """Based on Timer.autorange()."""
+        func = self._candidates[candidate_label]
+
+        def should_skip(data_label: Hashable, data: DataType) -> bool:
+            if skip_if is None:
+                return False
+
+            params: SkipIfParams[DataType, *Ts] = SkipIfParams(
+                candidate=func,
+                candidate_label=candidate_label,
+                data=data,
+                data_label=data_label,
+                est_time=None,
+                results_so_far={},
+            )
+
+            return skip_if(params)
+
         i = 1
         while True:
             for j in 1, 2, 3, 5:
                 number = i * j
 
                 total_time_taken = 0.0
-                for data in self._data.values():
-                    func = self._candidates[candidate_label]
+                all_skipped = True
+                for data_label, data in self._data.items():
+                    if should_skip(data_label, data):
+                        continue
+                    all_skipped = False
                     partial = functools.partial(func, data)
                     total_time_taken += Timer(partial).timeit(number)
+
+                if all_skipped:
+                    return None
 
                 if total_time_taken >= time_allocation:
                     if total_time_taken > 1:
