@@ -12,6 +12,7 @@ from rics.misc import format_kwargs, tname
 from rics.strings import format_perf_counter
 from rics.strings import format_seconds as fmt_time
 
+from ._progress import make_progress
 from .types import CandFunc, DataFunc, DataType, ResultsDict, Ts
 
 SetupFunc: TypeAlias = Callable[[DataType], DataType]
@@ -142,7 +143,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                 fresh input (mirrors :py:class:`timeit.Timer`'s ``setup``). Use for candidates that mutate their input,
                 or to reset shared state (e.g. caches) between repetitions.
             warmup: Number of untimed calls per candidate/data pair before timing begins (warms caches/JIT/imports).
-            progress: If ``True``, display a progress bar. Requires ``tqdm``.
+            progress: If ``True``, display progress. Uses ``tqdm`` on a TTY and falls back to periodic logging
+                otherwise (so ``tqdm`` is optional).
 
         Examples:
             If `repeat=5` and `time_per_candidate=3` for an instance with and 2 candidates, the total
@@ -172,12 +174,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             number, repeat, time_per_candidate, progress, skip_if=skip_if, setup=setup
         )
 
-        if progress:
-            from tqdm.auto import tqdm
-
-            pbar = tqdm(total=total)
-        else:
-            pbar = None
+        pbar = make_progress(total, enabled=progress, logger=logger)
 
         i = 0
         run_results: ResultsDict = {}
@@ -192,9 +189,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             logger.info(f"Evaluate candidate {candidate_label!r} {repeat}x{candidate_number} times per datum..")
             for data_label, test_data in self._data.items():
                 i += 1
-                if pbar:
-                    pbar.desc = f"{candidate_label}({data_label})"
-                    pbar.refresh()
+                pbar.set_description(f"{candidate_label}({data_label})")
 
                 if skip_if:
                     skip_if_params: SkipIfParams[DataType, *Ts] = SkipIfParams(
@@ -207,8 +202,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                     )
 
                     if skip_if(skip_if_params):
-                        if pbar:
-                            pbar.update()
+                        pbar.update()
                         logger.debug(f"Skip combination {i}/{total}: {candidate_label!r} @ {data_label!r}.")
                         continue
 
@@ -233,9 +227,9 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                     )
 
                 candidate_results[data_label] = timings
-                if pbar:
-                    pbar.update()
+                pbar.update()
 
+        pbar.close()
         return run_results
 
     @classmethod
@@ -288,19 +282,12 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         logger.debug("Computing number of iterations with repeat=%i and time_allocation=%f.", repeat, time_allocation)
         start = perf_counter()
 
-        if progress:
-            from tqdm.auto import tqdm
-
-            pbar = tqdm(total=len(self._candidates))
-        else:
-            pbar = None
+        pbar = make_progress(len(self._candidates), enabled=progress, logger=logger)
 
         # {candidate: (number, est_time | None) | None}, where None values are skip_if-filtered candidates.
         numbers: dict[str, tuple[int, float | None] | None] = {}
         for label in self._candidates:
-            if pbar:
-                pbar.desc = f"autorange('{label}')"
-                pbar.refresh()
+            pbar.set_description(f"autorange('{label}')")
 
             autonumber = self._autonumber(time_allocation, label, skip_if, setup)
             if autonumber is None:
@@ -311,11 +298,9 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             number, time = autonumber
             numbers[label] = number, time
             logger.debug("Candidate number for candidate=%r: %i (time=%f).", label, number, time)
-            if pbar:
-                pbar.update()
+            pbar.update()
 
-        if pbar:
-            pbar.clear()
+        pbar.close()
 
         kept = {k: v for k, v in numbers.items() if v is not None}
         if kept:

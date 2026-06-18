@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `performance.plot_run()` now accepts an explicit `hue` argument, and both `x` and `hue` may reference a test-data
   dimension `name` (not just `'candidate'`/`'data'`). Enables e.g. `plot_run(..., x='rows', hue='candidate',
   col='source')`.
+- `performance.MultiCaseTimer.run(progress=True)` falls back to periodic `logging` when output is not a TTY (instead of
+  `tqdm` carriage-return spam), making `tqdm` optional in non-interactive runs.
 
 ## [6.1.4] - 2026-06-17
 

@@ -39,7 +39,7 @@ def run_multivariate_test(
         show: If ``True``, attempt to display the figure. Ignored when ``plot=False``.
         names: Level names for tuple keys in the data (creates new columns). See :func:`.plot_run` for details. Set to
             ``None`` to disable derived names when `test_data` is callable.
-        progress: If ``True``, display a progress bar. Requires ``tqdm``.
+        progress: If ``True``, display progress (``tqdm`` on a TTY, periodic logging otherwise).
         setup: A callable ``(data) -> data`` run -- unmeasured -- before each timed repetition. See
             :meth:`.MultiCaseTimer.run`.
         warmup: Number of untimed calls per candidate/data pair before timing begins.
