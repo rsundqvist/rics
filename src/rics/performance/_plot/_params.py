@@ -1,26 +1,29 @@
 from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, fields
-from typing import Any, ClassVar, Literal, Self
+from typing import Any, ClassVar, Self
 
 import numpy as np
 import pandas as pd
 
 from rics.collections.dicts import compute_if_absent
-from rics.performance.plot_types import Candidate, FuncOrData, Kind, TestData, Unit
-from rics.types import LiteralHelper
+from rics.performance.plot_types import Candidate, Kind, TestData, Unit
 
 from ..types import ResultsDict
 
 FUNC: Candidate = "Candidate"
 DATA: TestData = "Test data"
 
+# Keyword aliases accepted for the `x`/`hue` arguments, in addition to test-data dimension names.
+_ALIASES: dict[str, str] = {"candidate": FUNC, "func": FUNC, "data": DATA, "test data": DATA, FUNC: FUNC, DATA: DATA}
+_COMPLEMENT: dict[str, str] = {FUNC: DATA, DATA: FUNC}
+
 
 @dataclass(frozen=True, kw_only=True)
 class CatplotParams:
     data: pd.DataFrame = field(repr=False)
-    x: FuncOrData
+    x: str
     y: str
-    hue: FuncOrData
+    hue: str
     kind: Kind
 
     horizontal: bool = field(metadata={"skip": True})
@@ -48,20 +51,22 @@ class CatplotParams:
                 error.add_note(f"HINT ({y=}): Use `horizontal=True` to plot timings on the X-axis.")
             if "hue" in keys:
                 hue = self.user_kwargs["hue"]
-                error.add_note(f"HINT ({hue=}): Use `x='data' | 'candidate'` to control X-axis and Hue variables.")
+                error.add_note(f"HINT ({hue=}): Use the `hue=` argument of `plot_run` instead.")
 
             raise error
 
-        helper = LiteralHelper[FuncOrData](FuncOrData)
-        helper.check(self.x, "x")
-        helper.check(self.hue, "hue")
+        for role, column in (("x", self.x), ("hue", self.hue)):
+            if column not in self.data.columns:
+                msg = f"Bad {role}={column!r}; not a column in the data ({list(self.data.columns)})."
+                raise ValueError(msg)
 
     @classmethod
     def make(
         cls,
         run_results: ResultsDict | pd.DataFrame,
         *,
-        x: Literal["candidate", "data"] | None = None,
+        x: str | None = None,
+        hue: str | None = None,
         horizontal: bool = False,
         unit: Unit | None = None,
         kind: Kind = "bar",
@@ -72,8 +77,7 @@ class CatplotParams:
         names = [*names]
         df = _make_df(run_results, names)
 
-        # MyPy thinks these are both string
-        x_col, hue_col = (DATA, FUNC) if _is_data_x(x, df=df) else (FUNC, DATA)
+        x_col, hue_col = _resolve_x_hue(x, hue, names=names, df=df)
 
         return cls(
             data=df,
@@ -156,11 +160,11 @@ class CatplotParams:
             g = (template.format(lv) for i, lv in enumerate(label) if (template := formatters.get(i)))
             return " | ".join(g)
 
-        order_key = "hue_order" if self.hue == DATA else "order"
-        if old_order := kwargs.get(order_key):
-            updates[order_key] = np.unique([format_label(label) for label in old_order]).tolist()
-
-        # assert sorted(self.data.columns.intersection(names)) == sorted(names)
+        # Only the axis that actually shows the composite DATA label needs its order reformatted; x/hue bound to a
+        # single named dimension (or the candidate) keep their raw order.
+        for axis, order_key in (("x", "order"), ("hue", "hue_order")):
+            if getattr(self, axis) == DATA and (old_order := kwargs.get(order_key)):
+                updates[order_key] = np.unique([format_label(label) for label in old_order]).tolist()
 
         data = kwargs["data"].copy()
         data[DATA] = data[DATA].map(format_label)
@@ -188,12 +192,44 @@ def _make_df(run_results: ResultsDict | pd.DataFrame, names: list[str]) -> pd.Da
     return df
 
 
-def _is_data_x(x_col: Literal["candidate", "data"] | None, *, df: pd.DataFrame) -> bool:
+def _resolve_x_hue(
+    x: str | None,
+    hue: str | None,
+    *,
+    names: list[str],
+    df: pd.DataFrame,
+) -> tuple[str, str]:
+    """Resolve `x` and `hue` to real column names.
+
+    Accepts the ``'candidate'``/``'data'`` aliases, a test-data dimension `name`, or a raw column. When omitted, `x`
+    defaults to the complement of `hue` (or the higher-cardinality of candidate/data), and `hue` to the complement of
+    `x` (falling back to the candidate column when `x` is a named dimension).
+    """
+
+    def resolve(value: str | None, role: str) -> str | None:
+        if value is None:
+            return None
+        column = _ALIASES.get(value.lower(), value)
+        if column not in df.columns and column not in names:
+            allowed = ["candidate", "data", *names]
+            msg = f"Bad {role}={value!r}; expected one of {allowed} or a data column."
+            raise ValueError(msg)
+        return column
+
+    x_col = resolve(x, "x")
+    hue_col = resolve(hue, "hue")
+
     if x_col is None:
-        n_data, n_func = df[[DATA, FUNC]].nunique()
-        return n_data > n_func  # type: ignore[no-any-return]
-    else:
-        return x_col.lower().startswith("d")
+        if hue_col in _COMPLEMENT:
+            x_col = _COMPLEMENT[hue_col]
+        else:
+            n_data, n_func = df[[DATA, FUNC]].nunique()
+            x_col = DATA if n_data > n_func else FUNC
+
+    if hue_col is None:
+        hue_col = _COMPLEMENT.get(x_col, FUNC)
+
+    return x_col, hue_col
 
 
 def _resolve_y(unit: Unit | None, *, df: pd.DataFrame) -> str:

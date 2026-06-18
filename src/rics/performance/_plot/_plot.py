@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
@@ -17,7 +17,8 @@ if TYPE_CHECKING:
 def plot_run(
     run_results: ResultsDict | pd.DataFrame,
     *,
-    x: Literal["candidate", "data"] | None = None,
+    x: str | None = None,
+    hue: str | None = None,
     horizontal: bool = False,
     unit: Unit | None = None,
     kind: Kind = "bar",
@@ -62,12 +63,15 @@ def plot_run(
 
     Args:
         run_results: Output of :meth:`.MultiCaseTimer.run`.
-        x: X-axis quantity; ``candidate'`` or ``'data'``. The other will be used as the hue.
+        x: X-axis quantity: ``'candidate'``, ``'data'``, or one of `names` (a test-data dimension). If omitted, defaults
+            to the complement of `hue` (or the higher-cardinality of candidate/data).
+        hue: Hue quantity: ``'candidate'``, ``'data'``, or one of `names`. If omitted, defaults to the complement of `x`
+            (or the candidate when `x` is a named dimension).
         horizontal: If ``True``, plot timings on the X-axis instead. The `x` becomes the new Y-axis quantity.
         unit: Y-axis time :attr:`~rics.performance.plot_types.Unit`.
         kind: The :attr:`~rics.performance.plot_types.Kind` of plot to draw.
         names: Test data level names.
-        **kwargs: Keyword arguments for :func:`seaborn.catplot`.
+        **kwargs: Keyword arguments for :func:`seaborn.catplot` (e.g. ``col``, ``row``, ``col_wrap``).
 
     Returns:
         A :class:`seaborn.FacetGrid`.
@@ -75,8 +79,11 @@ def plot_run(
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed.
         TypeError: For unknown `unit` arguments.
+        ValueError: For unknown `x`/`hue` arguments.
     """
-    params = CatplotParams.make(run_results, x=x, horizontal=horizontal, unit=unit, kind=kind, names=names, **kwargs)
+    params = CatplotParams.make(
+        run_results, x=x, hue=hue, horizontal=horizontal, unit=unit, kind=kind, names=names, **kwargs
+    )
     return plot_params(params)
 
 

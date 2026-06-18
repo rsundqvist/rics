@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `performance.to_dataframe(tidy=True)`: return a minimal analysis frame (`candidate`/`data`/`*names`/`run`/`seconds`)
   without presentation columns.
 
+### Changed
+- `performance.plot_run()` now accepts an explicit `hue` argument, and both `x` and `hue` may reference a test-data
+  dimension `name` (not just `'candidate'`/`'data'`). Enables e.g. `plot_run(..., x='rows', hue='candidate',
+  col='source')`.
+
 ## [6.1.4] - 2026-06-17
 
 ### Fixed
