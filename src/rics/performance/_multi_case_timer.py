@@ -162,6 +162,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             number=number,
             repeat=repeat,
             time_allocation=time_per_candidate,
+            skip_if=skip_if,
             progress=progress,
             logger=logger,
         )
@@ -176,7 +177,11 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         i = 0
         run_results: ResultsDict = {}
         for candidate_label, func in self._candidates.items():
-            candidate_number, candidate_est_time = per_candidate_number[candidate_label]
+            calibration = per_candidate_number[candidate_label]
+            if calibration is None:
+                # Every datum was skip_if-filtered during calibration; the candidate is discarded.
+                continue
+            candidate_number, candidate_est_time = calibration
             run_results[candidate_label] = candidate_results = {}
 
             logger.info(f"Evaluate candidate {candidate_label!r} {repeat}x{candidate_number} times per datum..")
