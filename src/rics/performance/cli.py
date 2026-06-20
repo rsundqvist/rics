@@ -49,6 +49,21 @@ _show_warning_orig = _warnings.showwarning
     show_default=True,
 )
 @click.option(
+    "--repeat",
+    "-r",
+    default=5,
+    help="Number of timing repetitions per candidate/data pair. The best time is reported.",
+    type=click.IntRange(min=1),
+    show_default=True,
+)
+@click.option(
+    "--warmup",
+    default=0,
+    help="Untimed warmup calls per candidate/data pair before timing (warms caches/JIT/imports).",
+    type=click.IntRange(min=0),
+    show_default=True,
+)
+@click.option(
     "--name",
     "-n",
     default="performance.png",
@@ -84,6 +99,8 @@ _show_warning_orig = _warnings.showwarning
 def main(
     cxt: click.Context,
     time_per_candidate: float,
+    repeat: int,
+    warmup: int,
     name: str,
     create: bool,
     per_candidate: bool,
@@ -157,7 +174,15 @@ def main(
     try:
         _warnings.showwarning = _show_warnings
 
-        result = _run(candidates, test_data, time_per_candidate=time_per_candidate, plot=plot, show=False)
+        result = _run(
+            candidates,
+            test_data,
+            time_per_candidate=time_per_candidate,
+            repeat=repeat,
+            warmup=warmup,
+            plot=plot,
+            show=False,
+        )
     except ValueError as e:  # pragma: no cover
         _handle_value_error(e)
         raise

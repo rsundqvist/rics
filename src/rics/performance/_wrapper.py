@@ -5,7 +5,7 @@ import pandas as pd
 
 from ._multi_case_timer import CandidateMethodArg, MultiCaseTimer, TestDataArg
 from ._util import to_dataframe
-from .types import DataFunc, DataType, Ts
+from .types import DataFunc, DataType, SetupFunc, Ts
 
 
 def run_multivariate_test(
@@ -15,10 +15,13 @@ def run_multivariate_test(
     # case_args: Collection[tuple[*Ts]] | None = None,
     # kwargs: Any | None = None,
     time_per_candidate: float = 6.0,
+    repeat: int = 5,
     plot: bool = True,
     show: bool = True,
     names: Iterable[str] | None = (),
     progress: bool = False,
+    setup: SetupFunc[DataType] | None = None,
+    warmup: int = 0,
     case_args: Collection[tuple[*Ts]] | None = None,
     kwargs: Any | None = None,
     **plot_kwargs: Any,
@@ -33,11 +36,16 @@ def run_multivariate_test(
         candidate_method: A single method, collection of functions or a dict {label: function} of candidates.
         test_data: A single datum, or a dict ``{label: data}`` to evaluate candidates on.
         time_per_candidate: Desired runtime for each repetition per candidate label.
+        repeat: Number of times to repeat for all candidates per data label.
         plot: If ``True``, plot a figure using :meth:`~rics.performance.plot_run`.
         show: If ``True``, attempt to display the figure. Ignored when ``plot=False``.
         names: Level names for tuple keys in the data (creates new columns). See :func:`.plot_run` for details. Set to
             ``None`` to disable derived names when `test_data` is callable.
         progress: If ``True``, display a progress bar. Requires ``tqdm``.
+        setup: A callable ``(data) -> data`` invoked -- **not** measured -- before each timed repetition to produce a
+            fresh input (mirrors :py:class:`timeit.Timer`'s ``setup``). Use for candidates that mutate their input, or
+            to reset shared state (e.g. caches) between repetitions.
+        warmup: Number of untimed calls per candidate/data pair before timing begins (warms caches/JIT/imports).
         case_args: These are positional arguments for the `test_data` callable.
         kwargs: Shared keyword arguments for the `test_data` callable.
         **plot_kwargs: See :func:`.plot_run` for details. Ignored if ``plot=False``.
@@ -61,8 +69,10 @@ def run_multivariate_test(
         test_data,
         case_args=case_args,
         kwargs=kwargs,
+        setup=setup,
+        warmup=warmup,
     )
-    run_results = timer.run(time_per_candidate=time_per_candidate, progress=progress)
+    run_results = timer.run(time_per_candidate=time_per_candidate, repeat=repeat, progress=progress)
 
     if names is None:
         names = ()

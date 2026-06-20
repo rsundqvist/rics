@@ -8,6 +8,35 @@ from rics.performance import MultiCaseTimer, SkipIfParams
 pytestmark = pytest.mark.filterwarnings("ignore:Results may be unreliable:UserWarning")
 
 
+def test_setup_runs_unmeasured_per_repeat():
+    setup_calls = {"n": 0}
+
+    def setup(data):
+        setup_calls["n"] += 1
+        return list(data)  # fresh copy each repetition
+
+    def candidate(lst):
+        lst.sort()  # mutates input; would be wrong without fresh data
+
+    repeat, number = 3, 2
+    MultiCaseTimer(candidate, test_data={"x": [3, 1, 2]}, setup=setup).run(repeat=repeat, number=number)
+
+    # timeit calls setup once per repeat (per timeit() call); autonumber is skipped because number= is fixed.
+    assert setup_calls["n"] == repeat
+
+
+def test_warmup_adds_untimed_calls():
+    calls = {"n": 0}
+
+    def candidate(_data):
+        calls["n"] += 1
+
+    repeat, number, warmup = 2, 3, 5
+    MultiCaseTimer(candidate, test_data={"x": 1}, warmup=warmup).run(repeat=repeat, number=number)
+
+    assert calls["n"] == warmup + repeat * number
+
+
 def test_skip():
     calls: dict[int, int] = defaultdict(int)
 

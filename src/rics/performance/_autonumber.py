@@ -1,8 +1,7 @@
 """Standalone ``timeit.Timer.autorange``-style calibration of the iteration ``number``."""
 
-import functools
 import logging
-from collections.abc import Hashable
+from collections.abc import Callable, Hashable
 from time import perf_counter
 from timeit import Timer
 from typing import Any, TypeAlias
@@ -28,6 +27,7 @@ def compute_candidate_numbers(
     repeat: int,
     time_allocation: float,
     skip_if: SkipIfFunc[DataType, *Ts] | None,
+    make_timer: Callable[[CandFunc[DataType], DataType], Timer],
     progress: bool,
     logger: logging.Logger | logging.LoggerAdapter[Any],
 ) -> _CandidateNumbers:
@@ -50,7 +50,14 @@ def compute_candidate_numbers(
             pbar.desc = f"autorange('{label}')"
             pbar.refresh()
 
-        calibration = autonumber(func, label, test_data, time_allocation=time_allocation, skip_if=skip_if)
+        calibration = autonumber(
+            func,
+            label,
+            test_data,
+            time_allocation=time_allocation,
+            skip_if=skip_if,
+            make_timer=make_timer,
+        )
         candidate_numbers[label] = calibration
         if calibration is None:
             logger.warning(f"Discarding candidate={label!r}; skipped by {tname(skip_if)} at {time_allocation=}.")
@@ -77,6 +84,7 @@ def autonumber(
     *,
     time_allocation: float,
     skip_if: SkipIfFunc[DataType, *Ts] | None,
+    make_timer: Callable[[CandFunc[DataType], DataType], Timer],
 ) -> tuple[int, float] | None:
     """Based on ``timeit.Timer.autorange()``; returns ``None`` if every datum is filtered by `skip_if`."""
 
@@ -105,7 +113,7 @@ def autonumber(
                 if should_skip(data_label, data):
                     continue
                 all_skipped = False
-                total_time_taken += Timer(functools.partial(func, data)).timeit(number)
+                total_time_taken += make_timer(func, data).timeit(number)
 
             if all_skipped:
                 return None

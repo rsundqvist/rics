@@ -14,3 +14,7 @@ Ts = _t.TypeVarTuple("Ts")
 """Argument types for a :attr:`DataFunc` callable."""
 DataFunc = _abc.Callable[[*Ts], DataType]
 """A function ``(*Ts) -> DataType`` used to generate test data."""
+
+
+SetupFunc: _t.TypeAlias = _abc.Callable[[DataType], DataType]
+"""A callable ``(data) -> data`` run -- unmeasured -- before each timed repetition to produce a fresh input."""
