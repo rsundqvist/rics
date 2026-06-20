@@ -64,6 +64,14 @@ _show_warning_orig = _warnings.showwarning
     show_default=True,
 )
 @click.option(
+    "--stratify/--no-stratify",
+    default=False,
+    help="Calibrate the iteration count per data variant instead of once per candidate. "
+    "Use when variants differ wildly in cost.",
+    is_flag=True,
+    show_default=True,
+)
+@click.option(
     "--progress/--no-progress",
     default=True,
     help="Show a progress bar (uses `tqdm` on a TTY, periodic logging otherwise).",
@@ -108,6 +116,7 @@ def main(
     time_per_candidate: float,
     repeat: int,
     warmup: int,
+    stratify: bool,
     progress: bool,
     name: str,
     create: bool,
@@ -188,6 +197,7 @@ def main(
             time_per_candidate=time_per_candidate,
             repeat=repeat,
             warmup=warmup,
+            stratify="full" if stratify else None,
             progress=progress,
             plot=plot,
             show=False,

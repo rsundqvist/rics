@@ -3,7 +3,8 @@ from collections.abc import Collection, Iterator
 from inspect import Parameter, signature
 from typing import Any, Generic
 
-from rics.misc import format_kwargs, tname
+from rics.misc import tname
+from rics.strings import ReprFormatter
 
 from .types import DataFunc, DataType, Ts
 
@@ -56,17 +57,26 @@ class GeneratedData(Generic[DataType, *Ts]):
     def __iter__(self) -> Iterator[tuple[*Ts]]:
         return iter(self._cases)
 
+    def generate(self, case: tuple[*Ts]) -> DataType:
+        """Generate the data for a single `case` on demand, without materializing the other cases.
+
+        Used by calibration so that probing one variant keeps a single dataset in memory at a time.
+        """
+        return self._func(*case, **self._kwargs)
+
     def items(self) -> Iterator[tuple[tuple[*Ts], DataType]]:
-        kwargs = self._kwargs
         func = self._func
 
         for n, case in enumerate(self._cases, start=1):
-            data = func(*case, **kwargs)
+            data = self.generate(case)
 
             if self._logger_enabled:
-                args = ", ".join(map(repr, case))
-                if kwargs:
-                    args = args + ", " + format_kwargs(kwargs)
+                formatter = ReprFormatter()
+                items = [
+                    *map(formatter.format_value, case),
+                    *(f"{k}={formatter.format_value(v)}" for k, v in self._kwargs.items()),
+                ]
+                args = ", ".join(items)
                 self._logger.debug(
                     f"Yield case {n}/{len(self._cases)}: "
                     f"{tname(func, prefix_classname=True)}({args})={tname(data, prefix_classname=True)}.",

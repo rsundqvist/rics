@@ -2,18 +2,21 @@ import functools
 import logging
 import warnings
 from collections.abc import Collection, Hashable, Mapping
+from time import perf_counter
 from timeit import Timer
-from typing import Any, ClassVar, Generic, TypeAlias
+from typing import Any, ClassVar, Generic, Self, TypeAlias
 
 from rics.logs import LoggerArg, get_logger
 from rics.misc import tname
+from rics.strings import format_perf_counter as fmt_perf
 from rics.strings import format_seconds as fmt_time
 
 from ._autonumber import compute_candidate_numbers
 from ._generated_data import GeneratedData
 from ._progress import make_progress
 from ._skip_if import SkipIfFunc, SkipIfParams
-from .types import CandFunc, DataFunc, DataType, ResultsDict, SetupFunc, Ts
+from ._strata import _AUTO_PROBE_SECONDS, Strata, estimate_label_costs, make_strata
+from .types import CandFunc, DataFunc, DataType, ResultsDict, SetupFunc, StratifyArg, Ts
 
 UNRELIABLE_RESULTS_LIMIT = 1e-6  # Prevent spurious "4x" warnings.
 
@@ -40,6 +43,22 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             provided by the built-in :py:mod:`timeit` module).
 
         Data access time is *not* measured by the ``run`` method.
+
+    Timing model:
+        :meth:`run` derives a single iteration ``number`` **per candidate** (shared across all test-data variants, so
+        candidates stay comparable), calibrated so each repetition takes about ``time_per_candidate``. The total
+        runtime is therefore approximately ``repeat * time_per_candidate * n_candidates``: adding more test-data
+        variants does *not* increase it, it divides the per-candidate budget across the variants. Pass ``number``
+        explicitly to bypass calibration.
+
+        When variants differ wildly in cost (e.g. tiny and huge inputs in one run), the shared ``number`` is driven
+        by the slowest variants, leaving the fast ones under-sampled and noisy. Stratification (below) fixes this.
+
+    Stratification:
+        The first ``run(stratify="auto")`` probes once and caches the resulting :class:`.Strata` on the instance, so
+        later runs reuse it. Use :meth:`compute_strata` to derive a grouping without side effects -- to inspect what
+        ``"auto"`` chose or share it across timers -- or :meth:`fit_strata` to derive *and* cache it (e.g. with a
+        tuned probe). Either result, or any mapping, can be passed back as ``run(stratify=...)``.
 
     Args:
         candidate_method: A dict ``{label: function}``. Alternatively, you may pass a collection of functions or a
@@ -92,6 +111,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
 
         self._setup = setup
         self._warmup = warmup
+        self._strata: Strata | None = None  # Lazily fit + cached on the first run(stratify="auto").
 
     @classmethod
     def process_candidates(cls, candidates: CandidateMethodArg[DataType]) -> dict[str, CandFunc[DataType]]:
@@ -125,37 +145,163 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         """Returns ``True`` if the `test_data` is callable."""
         return isinstance(self._data, GeneratedData)
 
+    def compute_strata(
+        self,
+        stratify: StratifyArg = "auto",
+        *,
+        min_probe_time: float = _AUTO_PROBE_SECONDS,
+        skip_if: SkipIfFunc[DataType, *Ts] | None = None,
+    ) -> Strata:
+        """Derive a :class:`Strata` grouping for this timer's candidates and data, without side effects.
+
+        Valid ``stratify`` input types:
+            * A callable ``(data_label) -> stratum_key``.
+            * An ``int`` ``case_args`` level (group by ``case_args[level]``).
+            * Literal ``"full"`` -- one stratum per variant.
+            * ``"auto"`` -- derive a single ``case_args`` level automatically; see below.
+            * A precomputed ``{stratum_key: {data_label, ...}}`` mapping.
+
+        Automatic stratification:
+            For ``stratify="auto"`` a quick timing probe measures each variant's cost, then the single ``case_args``
+            level whose strata best cluster variants of *comparable* cost is chosen -- formally, the level minimizing
+            the worst within-stratum cost ratio (usually the input size/cost dimension).
+
+            The probe is deliberately cheap; increase `min_probe_time` to increase accuracy.
+
+        Use :meth:`fit_strata` to cache the result for later ``run(stratify="auto")`` calls, or set the
+        :attr:`.MultiCaseTimer.strata` property.
+
+        Args:
+            stratify: Any :data:`.StratifyArg`. A :class:`Strata` is returned unchanged; any other mapping is wrapped
+                (and validated to cover the data).
+            min_probe_time: Per ``(candidate, variant)`` budget for the ``"auto"`` probe; larger is less noisy but
+                slower. Ignored unless `stratify` is ``"auto"``.
+            skip_if: Filter applied while probing (``"auto"`` only); recorded on the result.
+
+        Returns:
+            The grouping.
+        """
+        if isinstance(stratify, Strata):
+            return stratify
+
+        cost = None
+        if stratify == "auto":
+            cost = estimate_label_costs(
+                self._candidates,
+                self._data,
+                skip_if=skip_if,
+                make_timer=self._new_timer,
+                logger=self._logger,
+                min_probe_time=min_probe_time,
+            )
+
+        return make_strata(self._data, stratify, cost=cost, skip_if=skip_if)
+
+    @property
+    def strata(self) -> Strata:
+        """Cached :class:`Strata` instance; see :meth:`fit_strata`."""
+        if self._strata is None:
+            raise RuntimeError("not fitted")
+        return self._strata
+
+    @strata.setter
+    def strata(self, value: Strata | None) -> None:
+        if value is not None and not isinstance(value, Strata):
+            raise TypeError(f"expected {Strata.__name__} or None, got {type(value).__name__}")
+        self._strata = value
+
+    def fit_strata(
+        self,
+        stratify: StratifyArg = "auto",
+        *,
+        min_probe_time: float = _AUTO_PROBE_SECONDS,
+        skip_if: SkipIfFunc[DataType, *Ts] | None = None,
+    ) -> Self:
+        """:meth:`compute_strata`, then cache the result so later ``run(stratify="auto")`` calls reuse it.
+
+        This is how :meth:`run` memoizes its first implicit ``"auto"`` fit; call it yourself to control the probe
+        (`min_probe_time`) or to pin a grouping before running. Any previously cached grouping is overwritten
+        silently. See :meth:`compute_strata` for the arguments and how ``"auto"`` is derived.
+
+        Use :attr:`strata` to access the cached instance.
+
+        Returns:
+            Self, for chained assignment.
+        """
+        start = perf_counter()
+        strata = self.compute_strata(stratify, min_probe_time=min_probe_time, skip_if=skip_if)
+        self.strata = strata
+        self._logger.info(f"Cached {strata!r} in {fmt_perf(start)}; subsequent run(stratify='auto') will reuse it.")
+        return self
+
+    def _resolve_strata(
+        self,
+        stratify: StratifyArg,
+        *,
+        skip_if: SkipIfFunc[DataType, *Ts] | None,
+        number: int | None,
+    ) -> Strata:
+        if isinstance(stratify, Strata):
+            uncovered = [label for label in self._data if label not in stratify.labels]
+            if uncovered:
+                raise ValueError(f"Reused strata does not cover every data label; missing: {uncovered}.")
+            if stratify.skip_if is not skip_if:
+                warnings.warn(
+                    f"Reusing strata fit with skip_if={stratify.skip_if!r} under a run with skip_if={skip_if!r}; "
+                    "the grouping is kept as-is (it depends only on the data labels, not on skip_if).",
+                    UserWarning,
+                    stacklevel=3,
+                )
+            return stratify
+
+        if stratify == "auto" and number is None:
+            # Probe once, then reuse across runs; an explicit `number` makes grouping moot, so fall through instead.
+            if self._strata is None:
+                self.fit_strata("auto", skip_if=skip_if)
+            return self.strata
+
+        # No probe needed: None/full/int/callable, or any stratify when `number` makes the grouping moot.
+        return make_strata(self._data, stratify, skip_if=skip_if)
+
+    def _new_timer(self, func: CandFunc[DataType], data: DataType) -> Timer:
+        return self._make_timer(func, data, self._setup)
+
     def run(
         self,
         *,
         time_per_candidate: float = 6.0,
         repeat: int = 5,
         number: int | None = None,
+        stratify: StratifyArg = None,
         skip_if: SkipIfFunc[DataType, *Ts] | None = None,
         progress: bool = False,
     ) -> ResultsDict:
         """Run for all cases.
 
-        Note that the test case variant data isn't included in the expected runtime computation, so increasing the
-        amount of test data variants (at initialization) will reduce the amount of times each candidate is evaluated.
-
         Args:
-            time_per_candidate: Minimum runtime per repetition and candidate label. Ignored if `number` is set.
+            time_per_candidate: Minimum runtime per repetition and candidate label. When `stratify` is set this budget
+                applies **per** ``(candidate, stratum)`` **instead**, so total runtime scales with the number of strata.
+                Ignored if `number` is set.
             repeat: Number of times to repeat for all candidates per data label.
             number: Number of times to execute each candidate, per repetition.
+            stratify: Groups variants of comparable cost so that ``number`` is calibrated once per ``(candidate,
+                stratum)`` instead of once per candidate function. Using ``"auto"`` implicitly calls :meth:`fit_strata`
+                the first time. Set to ``None`` to disable.
             skip_if: A callable ``(skip_if) -> bool``; see the :class:`params <SkipIfParams>` type.
             progress: If ``True``, display progress. Uses ``tqdm`` on a TTY and falls back to periodic logging
                 otherwise (so ``tqdm`` is optional).
 
         Examples:
-            If `repeat=5` and `time_per_candidate=3` for an instance with and 2 candidates, the total
-            runtime will be approximately ``5 * 3 * 2 = 30`` seconds.
+            If `repeat=5` and `time_per_candidate=3` for an instance with 2 candidates, the total runtime will be
+            approximately ``5 * 3 * 2 = 30`` seconds -- regardless of how many test-data variants are used (unless
+            `stratify` is set).
 
         Returns:
             A dict `run_results` on the form ``{candidate_label: {data_label: [runtime, ...]}}``.
 
         Notes:
-            * Precomputed runtime is inaccurate for functions where a single call are longer than `time_per_candidate`.
+            * Calibration is inaccurate for candidates where a single call already exceeds `time_per_candidate`; the
+              derived ``number`` then bottoms out at 1.
 
         See Also:
             The :py:class:`timeit.Timer` class which this implementation depends on.
@@ -168,9 +314,12 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
 
         logger.debug("Begin evaluating %i combinations: %i candidates and %i test cases.", total, n_cand, n_data)
 
-        per_candidate_number = compute_candidate_numbers(
+        strata = self._resolve_strata(stratify, skip_if=skip_if, number=number)
+
+        candidate_to_stratum_to_number = compute_candidate_numbers(
             self._candidates,
             self._data,
+            strata,
             number=number,
             repeat=repeat,
             time_allocation=time_per_candidate,
@@ -185,17 +334,21 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         i = 0
         run_results: ResultsDict = {}
         for candidate_label, func in self._candidates.items():
-            calibration = per_candidate_number[candidate_label]
-            if calibration is None:
-                # Every datum was skip_if-filtered during calibration; the candidate is discarded.
+            by_stratum = candidate_to_stratum_to_number[candidate_label]
+            if by_stratum is None:
                 continue
-            candidate_number, candidate_est_time = calibration
+
             run_results[candidate_label] = candidate_results = {}
 
-            logger.info(f"Evaluate candidate {candidate_label!r} {repeat}x{candidate_number} times per datum..")
+            iters = ", ".join(f"{repeat}x{n}" for n, _ in by_stratum.values())
+            logger.info(f"Evaluate candidate {candidate_label!r} {iters} times per datum..")
             for data_label, test_data in self._data.items():
                 i += 1
                 pbar.set_description(f"{candidate_label}({data_label})")
+
+                entry = by_stratum.get(strata.stratum_of(data_label))
+                candidate_number = None if entry is None else entry[0]
+                candidate_est_time = None if entry is None else entry[1]
 
                 if skip_if:
                     skip_if_params: SkipIfParams[DataType, *Ts] = SkipIfParams(
@@ -211,6 +364,11 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                         pbar.update()
                         logger.debug(f"Skip combination {i}/{total}: {candidate_label!r} @ {data_label!r}.")
                         continue
+
+                if candidate_number is None:
+                    # The whole stratum was skip_if-filtered during calibration, so no number was derived.
+                    pbar.update()
+                    continue
 
                 logger.debug(f"Start evaluating combination {i}/{total}: {candidate_label!r} @ {data_label!r}.")
 
@@ -242,9 +400,6 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
 
         pbar.close()
         return run_results
-
-    def _new_timer(self, func: CandFunc[DataType], data: DataType) -> Timer:
-        return self._make_timer(func, data, self._setup)
 
     @classmethod
     def _get_raw_timings(
