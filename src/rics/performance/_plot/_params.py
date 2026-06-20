@@ -1,6 +1,6 @@
 from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, fields
-from typing import Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,9 @@ from rics.collections.dicts import compute_if_absent
 from rics.performance.plot_types import Candidate, Kind, TestData, Unit
 
 from ..types import ResultsDict
+
+if TYPE_CHECKING:
+    from ..plot_types import Aggregation
 
 FUNC: Candidate = "Candidate"
 DATA: TestData = "Test data"
@@ -30,6 +33,8 @@ class CatplotParams:
     horizontal: bool = field(metadata={"skip": True})
     names: list[str] = field(metadata={"skip": True})
     user_kwargs: Mapping[str, Any] = field(metadata={"skip": True})
+    reference: float | None = field(default=None, metadata={"skip": True})
+    """Reference value for the metric axis (e.g. ``1.0`` in speedup mode); draws a guide line. ``None`` disables."""
 
     DEFAULTS: ClassVar[dict[str, Any]] = {"errorbar": "sd", "estimator": "min", "aspect": 2}
     DEFAULTS_BY_KIND: ClassVar[dict[Kind, dict[str, Any]]] = {
@@ -72,22 +77,36 @@ class CatplotParams:
         unit: Unit | None = None,
         kind: Kind = "bar",
         names: Iterable[str] = (),
+        relative_to: str | None = None,
+        agg: "Aggregation" = "min",
         **kwargs: Any,
     ) -> Self:
         """Create instance from run results."""
         names = [*names]
-        df = _make_df(run_results, names)
+
+        if relative_to is None:
+            df = _make_df(run_results, names)
+            y = _resolve_y(unit, df=df)
+            reference = None
+        else:
+            if unit is not None:
+                msg = f"Cannot combine {unit=} with relative_to={relative_to!r}; speedup is dimensionless."
+                raise ValueError(msg)
+            df = _make_speedup_df(run_results, baseline=relative_to, names=names, agg=agg)
+            y = "speedup"
+            reference = 1.0
 
         x_col, hue_col = _resolve_x_hue(x, hue, names=names, df=df)
 
         return cls(
             data=df,
             x=x_col,
-            y=_resolve_y(unit, df=df),
+            y=y,
             horizontal=horizontal,
             hue=hue_col,
             kind=kind,
             names=names,
+            reference=reference,
             user_kwargs={**kwargs},
         )
 
@@ -126,6 +145,8 @@ class CatplotParams:
             case "hue_order":
                 return df[self.hue].unique().tolist()
             case "log_scale":
+                if self.reference is not None:
+                    return None  # Speedup is a linear ratio; the reference line marks the baseline.
                 column = next(filter(lambda c: c.startswith("Time ["), df.columns))
                 means = df.groupby([DATA, FUNC], observed=True)[column].mean()
                 return (False, True) if means.max() / means.min() > 20 else None  # noqa: PLR2004
@@ -178,6 +199,23 @@ def _make_df(run_results: ResultsDict | pd.DataFrame, names: list[str]) -> pd.Da
 
     as_category = [DATA, FUNC]
     df[as_category] = df[as_category].astype("category")
+    return df
+
+
+def _make_speedup_df(
+    run_results: ResultsDict | pd.DataFrame,
+    *,
+    baseline: str,
+    names: list[str],
+    agg: "Aggregation",
+) -> pd.DataFrame:
+    from rics.performance import relative_to
+
+    summary = relative_to(run_results, baseline=baseline, names=names, agg=agg)
+    # The baseline is definitionally speedup==1.0; it's shown as the reference line, so drop its (flat) bars.
+    summary = summary[summary["candidate"] != baseline]
+    df = summary.rename(columns={"candidate": FUNC, "data": DATA})
+    df[[DATA, FUNC]] = df[[DATA, FUNC]].astype("category")
     return df
 
 

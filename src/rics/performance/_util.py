@@ -5,6 +5,7 @@ import pandas as pd
 
 from rics.types import verify_literal
 
+from .plot_types import Aggregation
 from .types import ResultsDict
 
 
@@ -62,6 +63,62 @@ def to_dataframe(run_results: ResultsDict, names: Iterable[str] = (), *, tidy: b
     df["Times mean"] = df["Time [s]"] / df["Test data"].map(groupby.mean())
 
     return df
+
+
+def relative_to(
+    run_results: ResultsDict | pd.DataFrame,
+    baseline: str,
+    *,
+    names: Iterable[str] = (),
+    agg: Aggregation = "min",
+) -> pd.DataFrame:
+    """Compare candidates against a `baseline` candidate.
+
+    Reduces the repeated timings to one number per candidate/data pair (using `agg`) and expresses each candidate
+    relative to `baseline` on the same data.
+
+    Args:
+        run_results: Output of :meth:`.MultiCaseTimer.run` (or a :func:`.to_dataframe` frame).
+        baseline: Label of the candidate to compare against.
+        names: Level names for tuple keys in the data (creates new columns). See :func:`.plot_run` for details.
+        agg: How to summarize the repeated timings; one of ``'min'`` (default), ``'median'``, ``'mean'``.
+
+    Returns:
+        A tidy frame with columns ``['candidate', 'data', *names, 'seconds', 'baseline_seconds', 'speedup']`` where
+        ``speedup = baseline_seconds / seconds`` (``> 1`` means *faster* than the baseline). The geometric-mean speedup
+        per candidate is available in ``frame.attrs['geomean']``.
+
+    Raises:
+        KeyError: If `baseline` is not one of the candidate labels.
+        TypeError: If `agg` is not a valid aggregation.
+
+    Notes:
+        `baseline` must have a timing for every data label that appears for the other candidates. Data labels missing
+        from the baseline -- e.g. filtered out by ``skip_if`` -- produce ``NaN`` speedup for the affected rows, and a
+        ``NaN`` entry for that candidate in ``attrs['geomean']``.
+    """
+    import numpy as np
+
+    verify_literal(agg, Aggregation, name="agg")
+    names = tuple(names)
+    tidy = run_results.copy() if isinstance(run_results, pd.DataFrame) else to_dataframe(run_results, names=names)
+    if "Candidate" in tidy.columns:  # Convert a plotting-oriented frame to the tidy schema.
+        tidy = tidy.rename(columns={"Candidate": "candidate", "Test data": "data", "Time [s]": "seconds"})
+
+    group = ["candidate", "data", *names]
+    summary = tidy.groupby(group, observed=True)["seconds"].agg(agg).reset_index()
+
+    candidates = set(summary["candidate"])
+    if baseline not in candidates:
+        msg = f"Bad {baseline=}; not one of the candidate labels {sorted(candidates)}."
+        raise KeyError(msg)
+
+    base = summary[summary["candidate"] == baseline].set_index("data")["seconds"]
+    summary["baseline_seconds"] = summary["data"].map(base)
+    summary["speedup"] = summary["baseline_seconds"] / summary["seconds"]
+
+    summary.attrs["geomean"] = summary.groupby("candidate")["speedup"].agg(lambda s: np.exp(np.log(s).mean())).to_dict()
+    return summary
 
 
 def _has_names(data_label: Hashable, *, names: tuple[str, ...]) -> TypeGuard[tuple[str, ...]]:
