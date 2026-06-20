@@ -10,6 +10,7 @@ from rics.misc import tname
 from rics.strings import format_perf_counter
 
 from ._generated_data import GeneratedData
+from ._progress import make_progress
 from ._skip_if import SkipIfFunc, SkipIfParams
 from .types import CandFunc, DataType, Ts
 
@@ -37,18 +38,11 @@ def compute_candidate_numbers(
     logger.debug("Computing number of iterations with repeat=%i and time_allocation=%f.", repeat, time_allocation)
     start = perf_counter()
 
-    if progress:
-        from tqdm.auto import tqdm
-
-        pbar = tqdm(total=len(candidates))
-    else:
-        pbar = None
+    pbar = make_progress(len(candidates), enabled=progress, logger=logger)
 
     candidate_numbers: _CandidateNumbers = {}
     for label, func in candidates.items():
-        if pbar:
-            pbar.desc = f"autorange('{label}')"
-            pbar.refresh()
+        pbar.set_description(f"autorange('{label}')")
 
         calibration = autonumber(
             func,
@@ -63,11 +57,9 @@ def compute_candidate_numbers(
             logger.warning(f"Discarding candidate={label!r}; skipped by {tname(skip_if)} at {time_allocation=}.")
         else:
             logger.debug("Candidate number for candidate=%r: %i (time=%f).", label, *calibration)
-        if pbar:
-            pbar.update()
+        pbar.update()
 
-    if pbar:
-        pbar.clear()
+    pbar.close()
 
     kept = {k: v for k, v in candidate_numbers.items() if v is not None}
     logger.info(

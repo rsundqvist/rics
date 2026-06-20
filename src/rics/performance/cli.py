@@ -64,6 +64,13 @@ _show_warning_orig = _warnings.showwarning
     show_default=True,
 )
 @click.option(
+    "--progress/--no-progress",
+    default=True,
+    help="Show a progress bar (uses `tqdm` on a TTY, periodic logging otherwise).",
+    is_flag=True,
+    show_default=True,
+)
+@click.option(
     "--name",
     "-n",
     default="performance.png",
@@ -101,6 +108,7 @@ def main(
     time_per_candidate: float,
     repeat: int,
     warmup: int,
+    progress: bool,
     name: str,
     create: bool,
     per_candidate: bool,
@@ -180,6 +188,7 @@ def main(
             time_per_candidate=time_per_candidate,
             repeat=repeat,
             warmup=warmup,
+            progress=progress,
             plot=plot,
             show=False,
         )

@@ -11,6 +11,7 @@ from rics.strings import format_seconds as fmt_time
 
 from ._autonumber import compute_candidate_numbers
 from ._generated_data import GeneratedData
+from ._progress import make_progress
 from ._skip_if import SkipIfFunc, SkipIfParams
 from .types import CandFunc, DataFunc, DataType, ResultsDict, SetupFunc, Ts
 
@@ -143,7 +144,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             repeat: Number of times to repeat for all candidates per data label.
             number: Number of times to execute each candidate, per repetition.
             skip_if: A callable ``(skip_if) -> bool``; see the :class:`params <SkipIfParams>` type.
-            progress: If ``True``, display a progress bar. Requires ``tqdm``.
+            progress: If ``True``, display progress. Uses ``tqdm`` on a TTY and falls back to periodic logging
+                otherwise (so ``tqdm`` is optional).
 
         Examples:
             If `repeat=5` and `time_per_candidate=3` for an instance with and 2 candidates, the total
@@ -178,12 +180,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             logger=logger,
         )
 
-        if progress:
-            from tqdm.auto import tqdm
-
-            pbar = tqdm(total=total)
-        else:
-            pbar = None
+        pbar = make_progress(total, enabled=progress, logger=logger)
 
         i = 0
         run_results: ResultsDict = {}
@@ -198,9 +195,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             logger.info(f"Evaluate candidate {candidate_label!r} {repeat}x{candidate_number} times per datum..")
             for data_label, test_data in self._data.items():
                 i += 1
-                if pbar:
-                    pbar.desc = f"{candidate_label}({data_label})"
-                    pbar.refresh()
+                pbar.set_description(f"{candidate_label}({data_label})")
 
                 if skip_if:
                     skip_if_params: SkipIfParams[DataType, *Ts] = SkipIfParams(
@@ -213,8 +208,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                     )
 
                     if skip_if(skip_if_params):
-                        if pbar:
-                            pbar.update()
+                        pbar.update()
                         logger.debug(f"Skip combination {i}/{total}: {candidate_label!r} @ {data_label!r}.")
                         continue
 
@@ -244,9 +238,9 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
                     )
 
                 candidate_results[data_label] = timings
-                if pbar:
-                    pbar.update()
+                pbar.update()
 
+        pbar.close()
         return run_results
 
     def _new_timer(self, func: CandFunc[DataType], data: DataType) -> Timer:
