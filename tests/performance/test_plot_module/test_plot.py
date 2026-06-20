@@ -45,6 +45,33 @@ def test_estimator(kind: Kind, estimator: str) -> None:
     run(kind, estimator=estimator)
 
 
+_GRID_RESULTS: ResultsDict = {
+    "baseline": {("s100", 10): [1.0, 1.1], ("s100", 100): [1.2, 1.3], ("s1000", 10): [2.0, 2.1]},
+    "optimized": {("s100", 10): [0.5, 0.6], ("s100", 100): [0.6, 0.7], ("s1000", 10): [0.7, 0.8]},
+}
+_GRID_NAMES = ["source", "rows"]
+
+
+@pytest.mark.parametrize(
+    "x, hue",
+    [
+        ("rows", "candidate"),  # named dim on x, candidate as hue
+        ("candidate", "rows"),  # named dim as hue
+        ("data", None),  # default hue (candidate)
+        (None, "rows"),  # x auto-resolved
+        (None, None),  # full default
+    ],
+)
+def test_x_hue_from_named_dims(kind: Kind, x: str | None, hue: str | None) -> None:
+    facet_grid = plot_run(_GRID_RESULTS, kind=kind, x=x, hue=hue, names=_GRID_NAMES, col="source")
+    plt.close(facet_grid.fig)
+
+
+def test_bad_x_raises(kind: Kind) -> None:
+    with pytest.raises(ValueError, match="Bad x='nope'"):
+        plot_run(_GRID_RESULTS, kind=kind, x="nope", names=_GRID_NAMES)
+
+
 @cache
 def get_run_results() -> ResultsDict:
     with Path(__file__).parent.joinpath("run-results.json").open("r") as f:
