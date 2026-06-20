@@ -7,11 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Several new `MultiCaseTimer` features:
+  * Accept `run(setup: (data) -> data)` callable (not timed; like `timeit`).
+  * Accept `run(stratify)`, including `"auto"` (minimize in-group cost ratios).
+- New `performance` helper features:
+  * Add `relative_to()`: compare candidates against a baseline candidate (per-pair speedup table + geometric mean).
+  * Add `plot_run(relative_to=<baseline>)`: plot per-candidate speedup against a baseline.
+
+### Changed
+- `performance.plot_run()` now accepts an explicit `hue` argument, and both `x` and `hue` may reference a test-data
+  dimension `name` (not just `'candidate'`/`'data'`). Enables e.g. `plot_run(..., x='rows', hue='candidate',
+  col='source')`.
+- `MultiCaseTimer.run(progress=True)` falls back to periodic `logging` when output is not a TTY (instead of
+  `tqdm` carriage-return spam), making `tqdm` optional-er in non-interactive runs.
+
+### Fixed
+- The `MultiCaseTimer` now respects `skip_if` during the autonumber phase.
+
 ## [6.1.4] - 2026-06-17
 
 ### Fixed
 - Fix multiple issues in the `Variable.parse_string()` method.
 - Fix `VenvHelper` breakout issues for; would sync the wrong `uv` environment.
+- The `MultiCaseTimer.run()` method now calls `skip_if` during the autonumber phase.
 
 ## [6.1.3] - 2026-03-07
 
