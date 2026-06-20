@@ -29,7 +29,9 @@ class AliasedCommandGroup(click.Group):
         return [c for c in candidates if "".join(part[0] for part in c.split("-")) == cmd_name]
 
     def resolve_command(
-        self, ctx: click.Context, args: list[str]
+        self,
+        ctx: click.Context,
+        args: list[str],
     ) -> tuple[str | None, click.Command | None, list[str]]:
         _, cmd, args = super().resolve_command(ctx, args)
 

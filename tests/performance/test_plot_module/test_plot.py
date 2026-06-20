@@ -14,7 +14,7 @@ from rics.performance.types import ResultsDict
 
 pytestmark = [
     pytest.mark.filterwarnings("ignore:.*points cannot be placed:UserWarning"),
-    pytest.mark.filterwarnings("ignore:The test results may be unreliable:UserWarning"),
+    pytest.mark.filterwarnings("ignore:Results may be unreliable:UserWarning"),
     # pytest.mark.parametrize("kind", get_args(Kind)),  # For some reason, 'swarm' is very slow.
     pytest.mark.parametrize("kind", ["bar", "violin"]),
 ]

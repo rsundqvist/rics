@@ -179,12 +179,14 @@ def convert_log_level(
     return int_level
 
 
-_UserLoggerArg = str | _l.Logger | _l.LoggerAdapter[_t.Any]
+AnyLoggerAdapter = _l.LoggerAdapter[_t.Any]  # TODO(python-3.13): Default generics instead of Any.
+
+_UserLoggerArg = str | _l.Logger | AnyLoggerAdapter
 _UserVerbosityLevel = (
     _t.Mapping[str, LogLevel]
     | _t.Mapping[_l.Logger, LogLevel]
     | _t.Mapping[str | _l.Logger, LogLevel]
-    | _t.Mapping[str | _l.LoggerAdapter[_t.Any], LogLevel]
+    | _t.Mapping[str | AnyLoggerAdapter, LogLevel]
     | _t.Mapping[_UserLoggerArg, LogLevel]
 )
 _UserVerbosityLevels = _t.Iterable[_UserVerbosityLevel]
@@ -438,8 +440,8 @@ LoggerArg = _l.Logger | str | None | _t.Literal[False]
 @_t.overload
 def get_logger(logger: LoggerArg) -> _l.Logger: ...
 @_t.overload
-def get_logger(logger: _l.LoggerAdapter[_t.Any]) -> _l.LoggerAdapter[_t.Any]: ...
-def get_logger(logger: LoggerArg | _l.LoggerAdapter[_t.Any]) -> _l.Logger | _l.LoggerAdapter[_t.Any]:
+def get_logger(logger: AnyLoggerAdapter) -> AnyLoggerAdapter: ...
+def get_logger(logger: LoggerArg | AnyLoggerAdapter) -> _l.Logger | AnyLoggerAdapter:
     """Get a logger.
 
     Returns a :attr:`~logging.Logger.disabled` logger if `logger` is ``None``. Loggers and adapters are returned as-is.
@@ -458,9 +460,9 @@ def get_logger(logger: LoggerArg | _l.LoggerAdapter[_t.Any]) -> _l.Logger | _l.L
     if isinstance(logger, str):
         return _l.getLogger(logger)
 
-    if isinstance(
-        logger, (_l.Logger, _l.LoggerAdapter)
-    ):  # Rule is deprecated. https://github.com/astral-sh/ruff/pull/16681
+    # TODO(python-3.13): Add extras + use merge_extra.
+
+    if isinstance(logger, (_l.Logger, _l.LoggerAdapter)):
         return logger
 
     msg = f"{logger=} is not a logging.Logger"
