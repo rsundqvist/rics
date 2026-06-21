@@ -104,6 +104,18 @@ def autonumber(
         )
         return skip_if(params)
 
+    # Single-entry cache so a one-variant stratum (e.g. every stratify="auto" cost probe) is generated once rather
+    # than once per autorange round. We deliberately keep AT MOST ONE variant alive at a time: a multi-variant stratum
+    # is regenerated each round, because the timer must never hold more than one dataset in memory at once (a hard
+    # requirement for benchmarking high memory-pressure workloads).
+    cache: dict[Hashable, DataType] = {}
+
+    def data_for(data_label_: Hashable) -> DataType:
+        if data_label_ not in cache:
+            cache.clear()  # Drop the previous variant before materializing the next.
+            cache[data_label_] = test_data[data_label_]  # dict access or on-demand generation; see GeneratedData.
+        return cache[data_label_]
+
     i = 1
     while True:
         for j in 1, 2, 3, 5:
@@ -112,7 +124,7 @@ def autonumber(
             total_time_taken = 0.0
             all_skipped = True
             for data_label in stratum_labels:
-                data = _data_for(test_data, data_label)
+                data = data_for(data_label)
                 if should_skip(data_label, data):
                     continue
                 all_skipped = False
@@ -126,17 +138,3 @@ def autonumber(
                     total_time_taken = round(total_time_taken, 2)
                 return number, total_time_taken
         i *= 10
-
-
-def _data_for(
-    test_data: "dict[Hashable, DataType] | GeneratedData[DataType, *Ts]",
-    label: Hashable,
-) -> DataType:
-    """Materialize a single label's data on demand.
-
-    Calibration probes one stratum at a time; resolving data per-label here (rather than scanning the whole dataset and
-    filtering) keeps generated data to one variant in memory and avoids regenerating the variants we skip.
-    """
-    if isinstance(test_data, GeneratedData):
-        return test_data.generate(label)  # type: ignore[arg-type]  # a generated label *is* its case tuple
-    return test_data[label]

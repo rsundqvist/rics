@@ -1,5 +1,5 @@
 import logging
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Hashable, Iterator
 from inspect import Parameter, signature
 from typing import Any, Generic
 
@@ -63,6 +63,9 @@ class GeneratedData(Generic[DataType, *Ts]):
         Used by calibration so that probing one variant keeps a single dataset in memory at a time.
         """
         return self._func(*case, **self._kwargs)
+
+    def __getitem__(self, key: Hashable) -> DataType:
+        return self.generate(key)  # type: ignore[arg-type]
 
     def items(self) -> Iterator[tuple[tuple[*Ts], DataType]]:
         func = self._func

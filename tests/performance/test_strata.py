@@ -322,3 +322,114 @@ def test_run_warns_when_reused_strata_skip_if_differs():
 
     with pytest.warns(UserWarning, match="different skip_if|skip_if"):
         timer.run(number=1, stratify=strata)  # run's skip_if is None -> mismatch
+
+
+def test_run_warns_when_reused_auto_strata_skip_if_differs():
+    # A cached "auto" grouping reused under a different skip_if warns, just like an explicitly-passed Strata.
+    class StubTimer(MultiCaseTimer[DataType]):
+        def _get_raw_timings(self, func, test_data, repeat, number, **kwargs):  # type: ignore[override]  # noqa: ARG002
+            return [0.0] * repeat
+
+    data = {(10, "a"): (10, "a"), (1000, "a"): (1000, "a")}
+    timer = StubTimer(lambda d: sum(range(d[0])), test_data=data)
+
+    timer.fit_strata("auto", skip_if=lambda params: False)  # noqa: ARG005  # cache fit under one skip_if
+    with pytest.warns(UserWarning, match="skip_if"):
+        timer.run(time_per_candidate=0.01, stratify="auto", skip_if=None)  # reused under a different skip_if
+
+
+def test_reused_strata_skip_if_warning_does_not_spam():
+    # Fresh lambdas each fail the identity check, but the (informational) warning must fire at most once per instance.
+    import warnings
+
+    class StubTimer(MultiCaseTimer[DataType]):
+        def _get_raw_timings(self, func, test_data, repeat, number, **kwargs):  # type: ignore[override]  # noqa: ARG002
+            return [0.0] * repeat
+
+    data = {(10, "a"): (10, "a"), (1000, "a"): (1000, "a")}
+    timer = StubTimer(lambda d: sum(range(d[0])), test_data=data)
+    timer.fit_strata("auto", skip_if=lambda params: False)  # noqa: ARG005
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        for _ in range(3):
+            timer.run(time_per_candidate=0.01, stratify="auto", skip_if=lambda params: False)  # noqa: ARG005
+
+    reuse_warnings = [w for w in caught if "Reusing strata" in str(w.message)]
+    assert len(reuse_warnings) == 1  # one-shot guard, not once per run
+
+
+def test_autonumber_generates_each_variant_once_across_rounds():
+    # Escalating autorange rounds must reuse materialized data, not regenerate an (expensive) variant every round.
+    import logging
+    from functools import partial
+    from timeit import Timer
+
+    from rics.performance._autonumber import autonumber
+    from rics.performance._generated_data import GeneratedData
+
+    generated: list[int] = []
+
+    def make(n: int) -> int:
+        generated.append(n)
+        return n
+
+    data = GeneratedData(make, [(2,)], None, logging.getLogger("test"))
+
+    autonumber(
+        lambda d: d,  # a no-op, so the 1ms budget is only met after many autorange rounds
+        "noop",
+        data,
+        {(2,)},
+        time_allocation=1e-3,
+        skip_if=None,
+        make_timer=lambda f, d: Timer(partial(f, d)),
+    )
+
+    assert generated == [2]  # generated once, not once per round
+
+
+def test_autonumber_never_holds_more_than_one_variant_in_memory():
+    # Memory-pressure guarantee: a multi-variant stratum must be regenerated per round, never accumulated, so the
+    # number of *reachable* datasets stays O(1) regardless of stratum size. An O(n) implementation (materializing
+    # the whole stratum) would keep all four reachable at once. A stand-in timer is used deliberately: timeit.Timer
+    # keeps the dataset in a reference cycle, deferring release to the GC and masking true (reachable) retention.
+    import logging
+    from timeit import Timer
+
+    from rics.performance._autonumber import autonumber
+    from rics.performance._generated_data import GeneratedData
+
+    class Tracked:
+        live = 0
+        peak = 0
+
+        def __init__(self) -> None:
+            Tracked.live += 1
+            Tracked.peak = max(Tracked.peak, Tracked.live)
+
+        def __del__(self) -> None:
+            Tracked.live -= 1
+
+    class _ScaledTimer:
+        # Reports time proportional to `number` (forcing several autorange rounds); retains nothing across calls.
+        def timeit(self, number: int) -> float:
+            return number * 1e-4
+
+    def make_timer(func: object, data: object) -> Timer:  # noqa: ARG001
+        return _ScaledTimer()  # type: ignore[return-value]
+
+    cases = [(1,), (2,), (3,), (4,)]
+    data = GeneratedData(lambda n: Tracked(), cases, None, logging.getLogger("test"))  # noqa: ARG005
+
+    autonumber(
+        lambda d: d,
+        "noop",
+        data,
+        set(cases),  # one multi-variant stratum
+        time_allocation=3e-3,  # met around number=10 -> several rounds, each regenerating all four variants
+        skip_if=None,
+        make_timer=make_timer,
+    )
+
+    assert Tracked.peak <= 2  # bounded (transient gen overlap), not proportional to the 4-variant stratum
