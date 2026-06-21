@@ -104,23 +104,22 @@ def autonumber(
         )
         return skip_if(params)
 
+    # Materialize each (non-skipped) variant once, up front, so the escalating autorange rounds reuse these objects
+    # instead of regenerating them every round -- important when test data comes from an expensive callable. skip_if
+    # is constant during calibration (est_time=None, results_so_far={}), so evaluating it once here is equivalent.
+    probe_data: list[DataType] = []
+    for data_label in stratum_labels:
+        data = _data_for(test_data, data_label)
+        if not should_skip(data_label, data):
+            probe_data.append(data)
+    if not probe_data:
+        return None  # Every variant in this stratum was filtered by skip_if.
+
     i = 1
     while True:
         for j in 1, 2, 3, 5:
             number = i * j
-
-            total_time_taken = 0.0
-            all_skipped = True
-            for data_label in stratum_labels:
-                data = _data_for(test_data, data_label)
-                if should_skip(data_label, data):
-                    continue
-                all_skipped = False
-                total_time_taken += make_timer(func, data).timeit(number)
-
-            if all_skipped:
-                return None
-
+            total_time_taken = sum(make_timer(func, data).timeit(number) for data in probe_data)
             if total_time_taken >= time_allocation:
                 if total_time_taken > 1:
                     total_time_taken = round(total_time_taken, 2)
@@ -134,8 +133,10 @@ def _data_for(
 ) -> DataType:
     """Materialize a single label's data on demand.
 
-    Calibration probes one stratum at a time; resolving data per-label here (rather than scanning the whole dataset and
-    filtering) keeps generated data to one variant in memory and avoids regenerating the variants we skip.
+    Calibration probes one stratum at a time and resolves data per-label here (rather than scanning the whole dataset
+    and filtering), so only the stratum's variants are generated -- skipped ones never are. The caller materializes
+    each variant once per :func:`autonumber` call (held for its duration), so an expensive generator runs once per
+    variant rather than once per autorange round.
     """
     if isinstance(test_data, GeneratedData):
         return test_data.generate(label)  # type: ignore[arg-type]  # a generated label *is* its case tuple

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `MultiCaseTimer` calibration now materializes each test-data variant once per autorange probe instead of
+  regenerating it on every round, so `stratify="auto"` no longer repeatedly rebuilds expensive generated data.
+
+### Fixed
+- `MultiCaseTimer.run(stratify="auto")` now warns when a cached grouping is reused under a different `skip_if`,
+  matching the explicitly-passed `Strata` path.
+
 ## [6.2.0] - 2026-06-21
 
 ### Added

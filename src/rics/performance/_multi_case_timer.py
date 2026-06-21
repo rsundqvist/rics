@@ -114,6 +114,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         self._setup = setup
         self._warmup = warmup
         self._strata: Strata | None = None  # Lazily fit + cached on the first run(stratify="auto").
+        self._warned_strata_skip_if = False  # One-shot guard; see _warn_if_reused_under_different_skip_if.
 
     @classmethod
     def process_candidates(cls, candidates: CandidateMethodArg[DataType]) -> dict[str, CandFunc[DataType]]:
@@ -236,6 +237,21 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         self._logger.info(f"Cached {strata!r} in {fmt_perf(start)}; subsequent run(stratify='auto') will reuse it.")
         return self
 
+    def _warn_if_reused_under_different_skip_if(self, strata: Strata, skip_if: SkipIfFunc[DataType, *Ts] | None) -> None:
+        # Identity (`is`) is the only sane comparison for callables, but it false-positives on fresh-yet-equivalent
+        # predicates (inline lambdas, bound methods, partials -- all new objects each call). The grouping never
+        # actually depends on skip_if, so this is purely informational; fire it at most once per instance to avoid
+        # spamming a repeated run(stratify="auto", skip_if=<fresh lambda>) loop.
+        if strata.skip_if is skip_if or self._warned_strata_skip_if:
+            return
+        self._warned_strata_skip_if = True
+        warnings.warn(
+            f"Reusing strata fit with skip_if={strata.skip_if!r} under a run with skip_if={skip_if!r}; "
+            "the grouping is kept as-is (it depends only on the data labels, not on skip_if).",
+            UserWarning,
+            stacklevel=4,
+        )
+
     def _resolve_strata(
         self,
         stratify: StratifyArg,
@@ -247,19 +263,15 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             uncovered = [label for label in self._data if label not in stratify.labels]
             if uncovered:
                 raise ValueError(f"Reused strata does not cover every data label; missing: {uncovered}.")
-            if stratify.skip_if is not skip_if:
-                warnings.warn(
-                    f"Reusing strata fit with skip_if={stratify.skip_if!r} under a run with skip_if={skip_if!r}; "
-                    "the grouping is kept as-is (it depends only on the data labels, not on skip_if).",
-                    UserWarning,
-                    stacklevel=3,
-                )
+            self._warn_if_reused_under_different_skip_if(stratify, skip_if)
             return stratify
 
         if stratify == "auto" and number is None:
             # Probe once, then reuse across runs; an explicit `number` makes grouping moot, so fall through instead.
             if self._strata is None:
                 self.fit_strata("auto", skip_if=skip_if)
+            else:
+                self._warn_if_reused_under_different_skip_if(self._strata, skip_if)
             return self.strata
 
         # No probe needed: None/full/int/callable, or any stratify when `number` makes the grouping moot.
@@ -304,6 +316,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         Notes:
             * Calibration is inaccurate for candidates where a single call already exceeds `time_per_candidate`; the
               derived ``number`` then bottoms out at 1.
+            * A candidate whose every variant is filtered by `skip_if` during calibration is omitted from the returned
+              results entirely -- it gets no entry, not an empty ``{}``.
 
         See Also:
             The :py:class:`timeit.Timer` class which this implementation depends on.
