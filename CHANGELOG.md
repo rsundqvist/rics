@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.0] - 2026-06-21
+
 ### Added
 - Several new `MultiCaseTimer` features:
   * Accept `run(setup: (data) -> data)` callable (not timed; like `timeit`).
@@ -30,7 +32,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix multiple issues in the `Variable.parse_string()` method.
 - Fix `VenvHelper` breakout issues for; would sync the wrong `uv` environment.
-- The `MultiCaseTimer.run()` method now calls `skip_if` during the autonumber phase.
 
 ## [6.1.3] - 2026-03-07
 
@@ -635,7 +636,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.1.4...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.2.0...HEAD
+[6.2.0]: https://github.com/rsundqvist/rics/compare/v6.1.4...v6.2.0
 [6.1.4]: https://github.com/rsundqvist/rics/compare/v6.1.3...v6.1.4
 [6.1.3]: https://github.com/rsundqvist/rics/compare/v6.1.2...v6.1.3
 [6.1.2]: https://github.com/rsundqvist/rics/compare/v6.1.1...v6.1.2

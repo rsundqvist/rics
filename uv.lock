@@ -3067,7 +3067,7 @@ wheels = [
 
 [[package]]
 name = "rics"
-version = "6.1.4.dev1"
+version = "6.2.0"
 source = { editable = "." }
 
 [package.optional-dependencies]
