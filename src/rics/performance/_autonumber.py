@@ -104,22 +104,35 @@ def autonumber(
         )
         return skip_if(params)
 
-    # Materialize each (non-skipped) variant once, up front, so the escalating autorange rounds reuse these objects
-    # instead of regenerating them every round -- important when test data comes from an expensive callable. skip_if
-    # is constant during calibration (est_time=None, results_so_far={}), so evaluating it once here is equivalent.
-    probe_data: list[DataType] = []
-    for data_label in stratum_labels:
-        data = _data_for(test_data, data_label)
-        if not should_skip(data_label, data):
-            probe_data.append(data)
-    if not probe_data:
-        return None  # Every variant in this stratum was filtered by skip_if.
+    # Single-entry cache so a one-variant stratum (e.g. every stratify="auto" cost probe) is generated once rather
+    # than once per autorange round. We deliberately keep AT MOST ONE variant alive at a time: a multi-variant stratum
+    # is regenerated each round, because the timer must never hold more than one dataset in memory at once (a hard
+    # requirement for benchmarking high memory-pressure workloads).
+    cache: dict[Hashable, DataType] = {}
+
+    def data_for(data_label_: Hashable) -> DataType:
+        if data_label_ not in cache:
+            cache.clear()  # Drop the previous variant before materializing the next.
+            cache[data_label_] = _data_for(test_data, data_label_)
+        return cache[data_label_]
 
     i = 1
     while True:
         for j in 1, 2, 3, 5:
             number = i * j
-            total_time_taken = sum(make_timer(func, data).timeit(number) for data in probe_data)
+
+            total_time_taken = 0.0
+            all_skipped = True
+            for data_label in stratum_labels:
+                data = data_for(data_label)
+                if should_skip(data_label, data):
+                    continue
+                all_skipped = False
+                total_time_taken += make_timer(func, data).timeit(number)
+
+            if all_skipped:
+                return None
+
             if total_time_taken >= time_allocation:
                 if total_time_taken > 1:
                     total_time_taken = round(total_time_taken, 2)
@@ -134,9 +147,9 @@ def _data_for(
     """Materialize a single label's data on demand.
 
     Calibration probes one stratum at a time and resolves data per-label here (rather than scanning the whole dataset
-    and filtering), so only the stratum's variants are generated -- skipped ones never are. The caller materializes
-    each variant once per :func:`autonumber` call (held for its duration), so an expensive generator runs once per
-    variant rather than once per autorange round.
+    and filtering), so only the stratum's variants are generated. The caller caches the single most-recent variant, so
+    a one-variant stratum is generated once rather than once per autorange round -- while never holding more than one
+    dataset in memory at a time (multi-variant strata are regenerated each round).
     """
     if isinstance(test_data, GeneratedData):
         return test_data.generate(label)  # type: ignore[arg-type]  # a generated label *is* its case tuple

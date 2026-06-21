@@ -387,3 +387,49 @@ def test_autonumber_generates_each_variant_once_across_rounds():
     )
 
     assert generated == [2]  # generated once, not once per round
+
+
+def test_autonumber_never_holds_more_than_one_variant_in_memory():
+    # Memory-pressure guarantee: a multi-variant stratum must be regenerated per round, never accumulated, so the
+    # number of *reachable* datasets stays O(1) regardless of stratum size. An O(n) implementation (materializing
+    # the whole stratum) would keep all four reachable at once. A stand-in timer is used deliberately: timeit.Timer
+    # keeps the dataset in a reference cycle, deferring release to the GC and masking true (reachable) retention.
+    import logging
+    from timeit import Timer
+
+    from rics.performance._autonumber import autonumber
+    from rics.performance._generated_data import GeneratedData
+
+    class Tracked:
+        live = 0
+        peak = 0
+
+        def __init__(self) -> None:
+            Tracked.live += 1
+            Tracked.peak = max(Tracked.peak, Tracked.live)
+
+        def __del__(self) -> None:
+            Tracked.live -= 1
+
+    class _ScaledTimer:
+        # Reports time proportional to `number` (forcing several autorange rounds); retains nothing across calls.
+        def timeit(self, number: int) -> float:
+            return number * 1e-4
+
+    def make_timer(func: object, data: object) -> Timer:  # noqa: ARG001
+        return _ScaledTimer()  # type: ignore[return-value]
+
+    cases = [(1,), (2,), (3,), (4,)]
+    data = GeneratedData(lambda n: Tracked(), cases, None, logging.getLogger("test"))  # noqa: ARG005
+
+    autonumber(
+        lambda d: d,
+        "noop",
+        data,
+        set(cases),  # one multi-variant stratum
+        time_allocation=3e-3,  # met around number=10 -> several rounds, each regenerating all four variants
+        skip_if=None,
+        make_timer=make_timer,
+    )
+
+    assert Tracked.peak <= 2  # bounded (transient gen overlap), not proportional to the 4-variant stratum
