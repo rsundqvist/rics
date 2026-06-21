@@ -48,7 +48,9 @@ def run_multivariate_test(
             (so ``tqdm`` is optional).
         setup: A callable ``(data) -> data`` invoked -- **not** measured -- before each timed repetition to produce a
             fresh input (mirrors :py:class:`timeit.Timer`'s ``setup``). Use for candidates that mutate their input, or
-            to reset shared state (e.g. caches) between repetitions.
+            to reset shared state (e.g. caches) between repetitions. Note that ``setup`` runs once per *repetition*,
+            not per call, so a mutating candidate still sees mutated state across the ``number`` calls within a
+            repetition; use ``number=1`` for strict per-call isolation.
         warmup: Number of untimed calls per candidate/data pair before timing begins (warms caches/JIT/imports).
         stratify: Groups variants of comparable cost so that the iteration count is calibrated once per ``(candidate,
             stratum)`` instead of once per candidate function. Using ``"auto"`` implicitly calls
