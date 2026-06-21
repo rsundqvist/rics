@@ -245,7 +245,9 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         self._logger.info(f"Cached {strata!r} in {fmt_perf(start)}; subsequent run(stratify='auto') will reuse it.")
         return self
 
-    def _warn_if_reused_under_different_skip_if(self, strata: Strata, skip_if: SkipIfFunc[DataType, *Ts] | None) -> None:
+    def _warn_if_reused_under_different_skip_if(
+        self, strata: Strata, skip_if: SkipIfFunc[DataType, *Ts] | None
+    ) -> None:
         # Identity (`is`) is the only sane comparison for callables, but it false-positives on fresh-yet-equivalent
         # predicates (inline lambdas, bound methods, partials -- all new objects each call). The grouping never
         # actually depends on skip_if, so this is purely informational; fire it at most once per instance to avoid

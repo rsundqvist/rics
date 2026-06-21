@@ -113,7 +113,7 @@ def autonumber(
     def data_for(data_label_: Hashable) -> DataType:
         if data_label_ not in cache:
             cache.clear()  # Drop the previous variant before materializing the next.
-            cache[data_label_] = _data_for(test_data, data_label_)
+            cache[data_label_] = test_data[data_label_]  # dict access or on-demand generation; see GeneratedData.
         return cache[data_label_]
 
     i = 1
@@ -138,19 +138,3 @@ def autonumber(
                     total_time_taken = round(total_time_taken, 2)
                 return number, total_time_taken
         i *= 10
-
-
-def _data_for(
-    test_data: "dict[Hashable, DataType] | GeneratedData[DataType, *Ts]",
-    label: Hashable,
-) -> DataType:
-    """Materialize a single label's data on demand.
-
-    Calibration probes one stratum at a time and resolves data per-label here (rather than scanning the whole dataset
-    and filtering), so only the stratum's variants are generated. The caller caches the single most-recent variant, so
-    a one-variant stratum is generated once rather than once per autorange round -- while never holding more than one
-    dataset in memory at a time (multi-variant strata are regenerated each round).
-    """
-    if isinstance(test_data, GeneratedData):
-        return test_data.generate(label)  # type: ignore[arg-type]  # a generated label *is* its case tuple
-    return test_data[label]
