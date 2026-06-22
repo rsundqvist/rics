@@ -72,7 +72,7 @@ docs = [
     "sphinx-llm~=0.4.1 ; python_version >= '3.12'",
 ]
 notebooks = [
-    "jupyterlab~=4.5.8",
+    "jupyterlab>=4.5.8,<4.7.0",
     "ipywidgets",
     "jupyterlab-execute-time",
     "tqdm",
