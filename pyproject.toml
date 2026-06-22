@@ -65,7 +65,7 @@ manual-extras = [
 ]
 docs = [
     "sphinx~=9.1.0 ; python_version >= '3.12'",
-    "pydata-sphinx-theme~=0.18.0 ; python_version >= '3.12'",
+    "pydata-sphinx-theme>=0.18,<0.20 ; python_version >= '3.12'",
     "myst-parser~=5.1.0 ; python_version >= '3.12'", # https://github.com/executablebooks/MyST-Parser/issues/749
     "nbsphinx~=0.9.8 ; python_version >= '3.12'",
     "ipython~=9.14.1 ; python_version >= '3.12'",
