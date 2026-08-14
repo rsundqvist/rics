@@ -39,13 +39,16 @@ merged into their "parent" commits automatically, assuming they are located afte
 git config --global rerere.enabled true  # Remember merge conflict resolutions
 git config --global column.ui auto  # Show >1 branch/row
 git config --global branch.sort -committerdate  # default=alphabetical
+git config --global core.fsync all  # Survive unclean shutdowns; see "Object file is empty"
 ```
 
 ## Various issues
 In no particular order.
 
 ### Object file is empty.
-Not sure what causes this. Use the solution below with care.
+Caused by unclean shutdown that occurs shortly after a commit. Git does not fsync loose objects by default. Details are
+platform dependent; the pattern below is common in Ubuntu using ext4 (VMware guest). Setting `core.fsync all` is a
+mitigation, not a fix.
 
 #### Symptom
 ```
@@ -56,7 +59,7 @@ fatal: bad object HEAD
 
 #### Solution
 ```bash
-find .git/objects/ -type f -empty | xargs rm
+find .git/objects/ -type f -empty -delete
 git fetch -p
 git fsck --full
 ```
