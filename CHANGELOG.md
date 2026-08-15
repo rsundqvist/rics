@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.1] - 2026-08-15
+
 ### Fixed
 - `MultiCaseTimer` no longer accumulates generated test data; a four-variant run held 92 datasets at once, and now
   holds one as documented.
@@ -646,7 +648,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.2.0...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.2.1...HEAD
+[6.2.1]: https://github.com/rsundqvist/rics/compare/v6.2.0...v6.2.1
 [6.2.0]: https://github.com/rsundqvist/rics/compare/v6.1.4...v6.2.0
 [6.1.4]: https://github.com/rsundqvist/rics/compare/v6.1.3...v6.1.4
 [6.1.3]: https://github.com/rsundqvist/rics/compare/v6.1.2...v6.1.3
