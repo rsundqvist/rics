@@ -13,7 +13,6 @@ clusters comparable-cost variants -- see :func:`choose_auto_level`.
 import logging
 from collections.abc import Callable, Hashable, Iterable, Iterator, Mapping
 from time import perf_counter
-from timeit import Timer
 from typing import TYPE_CHECKING, Any, TypeAlias
 
 from rics.strings import format_perf_counter
@@ -23,6 +22,7 @@ from .types import CandFunc, DataType, StratifyArg, StratifyFunc, Ts
 
 if TYPE_CHECKING:
     from ._generated_data import GeneratedData
+    from ._timer import TimerLike
 
 _Cost: TypeAlias = dict[Hashable, float]
 """Measured per-label cost estimate (seconds per call); see :func:`estimate_label_costs`."""
@@ -289,7 +289,7 @@ def estimate_label_costs(
     test_data: "dict[Hashable, DataType] | GeneratedData[DataType, *Ts]",
     *,
     skip_if: SkipIfFunc[DataType, *Ts] | None,
-    make_timer: Callable[[CandFunc[DataType], DataType], Timer],
+    make_timer: "Callable[[CandFunc[DataType], DataType], TimerLike]",
     logger: logging.Logger | logging.LoggerAdapter[Any],
     min_probe_time: float = _AUTO_PROBE_SECONDS,
 ) -> _Cost:

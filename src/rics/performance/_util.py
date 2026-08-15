@@ -24,7 +24,8 @@ def to_dataframe(run_results: ResultsDict, names: Iterable[str] = (), *, tidy: b
         The `run_result` input as a :class:`pandas.DataFrame`.
 
     Raises:
-        TypeError: If `names` is not compatible with the given `run_results`.
+        TypeError: If `names` is not compatible with the data labels in `run_results`.
+        ValueError: If a name collides with one of the built-in columns.
     """
     names = tuple(names)
     frames = []

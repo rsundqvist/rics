@@ -1,11 +1,12 @@
 import logging
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Hashable, Iterator
 from inspect import Parameter, signature
 from typing import Any, Generic
 
 from rics.misc import tname
 from rics.strings import ReprFormatter
 
+from ._timer import collect_dead_variants
 from .types import DataFunc, DataType, Ts
 
 
@@ -64,10 +65,14 @@ class GeneratedData(Generic[DataType, *Ts]):
         """
         return self._func(*case, **self._kwargs)
 
+    def __getitem__(self, key: Hashable) -> DataType:
+        return self.generate(key)  # type: ignore[arg-type]
+
     def items(self) -> Iterator[tuple[tuple[*Ts], DataType]]:
         func = self._func
 
         for n, case in enumerate(self._cases, start=1):
+            collect_dead_variants()  # Frees the previous variant, and anything calibration left behind.
             data = self.generate(case)
 
             if self._logger_enabled:
@@ -79,7 +84,9 @@ class GeneratedData(Generic[DataType, *Ts]):
                 args = ", ".join(items)
                 self._logger.debug(
                     f"Yield case {n}/{len(self._cases)}: "
-                    f"{tname(func, prefix_classname=True)}({args})={tname(data, prefix_classname=True)}.",
+                    f"{tname(func, prefix_classname=True)}({args})={formatter.format_value(data)}.",
                 )
 
             yield case, data
+
+            del data  # Release before the consumer asks for the next variant.
