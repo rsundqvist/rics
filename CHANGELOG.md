@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (notably the `stratify="auto"` cost probe) is generated once per calibration instead.
 - `MultiCaseTimer.run(stratify="auto")` now warns when a cached grouping is reused under a different `skip_if`,
   matching the explicitly-passed `Strata` path.
+- `VenvHelper`'s `uv` resolver no longer picks the caller's own virtualenv instead of the target project's on
+  `uv >= 0.12`, where `uv run <script>` discovers projects relative to the script's own path instead of `cwd`.
 
 ## [6.2.0] - 2026-06-21
 

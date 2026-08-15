@@ -109,13 +109,15 @@ class Resolve:
         if not _check_files(cwd, "uv", logger):
             return None
 
-        paths = _print_paths(logger, "uv", "run")
+        # --project pins resolution to `cwd`; without it, `uv run <script>` resolves the project from the
+        # script's own location once the script lives outside `cwd` (as `_print_paths.py` always does).
+        paths = _print_paths(logger, "uv", "run", "--project", str(cwd))
 
         if paths is None:
             return None
 
         logger.debug("Ensure pip in uv venv.")  # Not installed unless --seed/UV_VENV_SEED=pip is used.
-        _get_output(logger, "uv", "pip", "install", "--no-upgrade", "--quiet", "pip")
+        _get_output(logger, "uv", "pip", "install", "--project", str(cwd), "--no-upgrade", "--quiet", "pip")
 
         return paths
 
