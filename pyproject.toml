@@ -68,7 +68,7 @@ docs = [
     "pydata-sphinx-theme~=0.20.0 ; python_version >= '3.12'",
     "myst-parser~=5.1.0 ; python_version >= '3.12'", # https://github.com/executablebooks/MyST-Parser/issues/749
     "nbsphinx~=0.9.8 ; python_version >= '3.12'",
-    "ipython~=9.16.1 ; python_version >= '3.12'",
+    "ipython>=9.16.1,<9.18.0 ; python_version >= '3.12'",
     "sphinx-llm~=1.0.0 ; python_version >= '3.12'",
 ]
 notebooks = [
