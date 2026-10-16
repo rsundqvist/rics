@@ -152,7 +152,6 @@ dmypy.json
 .idea/*
 
 !.idea/runConfigurations
-!.idea/rics.iml
 /docs/auto_examples/
 /docs/gen_modules/
 /docs/sg_execution_times.rst
