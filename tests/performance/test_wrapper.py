@@ -1,25 +1,16 @@
-import sys
-
 from rics.performance import MultiCaseTimer, run_multivariate_test
 
-
-def unload_modules():
-    for key in list(
-        filter(
-            lambda s: "cli_modules" in s or "test_data" in s or "candidates" in s,
-            sys.modules,
-        )
-    ):
-        del sys.modules[key]
+# The CLI imports `candidates` and `test_data` from the working directory.
+CLI_MODULES = ("candidates", "test_data", "tests.performance.cli_modules")
 
 
 def get_raw_timings(_self, func, test_data, repeat, _number, /, **_):
     return [func.sleep_multiplier * test_data] * repeat
 
 
-def test_run_multivariate_test(monkeypatch):
+def test_run_multivariate_test(monkeypatch, unload_modules):
     monkeypatch.setattr(MultiCaseTimer, "_get_raw_timings", get_raw_timings)
-    unload_modules()
+    unload_modules(*CLI_MODULES)
 
     from tests.performance.cli_modules.with_all import candidates, test_data
 

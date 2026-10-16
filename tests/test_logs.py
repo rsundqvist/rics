@@ -14,7 +14,7 @@ from rics.logs import (
 logging.addLevelName(1, "EXTRA_VERBOSE_DEBUG")
 
 
-@pytest.mark.skip(reason="Messes up logging for other tests.")
+@pytest.mark.usefixtures("restore_logging")
 @pytest.mark.parametrize(
     "logger_name, level_name",
     [
@@ -26,7 +26,7 @@ logging.addLevelName(1, "EXTRA_VERBOSE_DEBUG")
     ],
 )
 def test_set_levels(logger_name, level_name):
-    basic_config(level=logging.CRITICAL, id_translation_level=logging.DEBUG)
+    basic_config(level=logging.CRITICAL, rics_level=logging.INFO, id_translation_level=logging.DEBUG)
     assert logging.getLogger().getEffectiveLevel() == logging.CRITICAL, "Bad root level"
 
     expected_level = logging.getLevelName(level_name)
