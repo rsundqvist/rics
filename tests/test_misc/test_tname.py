@@ -71,3 +71,12 @@ class Test:
 )
 def test_inheritance(obj, expected):
     assert misc.tname(obj, prefix_classname=True) == expected
+
+
+def test_series_with_func_label():
+    import pandas as pd
+
+    series = pd.Series([1], index=["func"])
+
+    assert misc.tname(series) == "Series"
+    assert misc.tname(series, include_module=True) == "pandas.Series"
