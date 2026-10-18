@@ -255,6 +255,7 @@ class LoggingSetupHelper:
         elif verbosity < max_level:
             raise ValueError(f"{verbosity=} < -1")
         else:
+            # TODO(6.3.0): Emit a DeprecationWarning for verbosity > self.max; raise in 7.0.0.
             levels = self._levels[:verbosity]
 
         rv: dict[str, int] = {}
