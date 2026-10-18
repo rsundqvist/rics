@@ -49,9 +49,9 @@ def format_bytes(n: int, *, binary: bool = True, long: bool = False, decimals: i
         Metric and binary have different upper limits.
 
         >>> format_bytes(21**21, binary=True)
-        '2416.44 YiB'
+        '4832.87 YiB'
         >>> format_bytes(21**21, binary=True, long=True)
-        '2416.44 yobibytes'
+        '4832.87 yobibytes'
         >>> format_bytes(21**21, binary=False)
         '5.84 RB'
         >>> format_bytes(21**21, binary=False, long=True)
@@ -88,7 +88,7 @@ def format_bytes(n: int, *, binary: bool = True, long: bool = False, decimals: i
         prefix = prefixes[n_divisions]
     except IndexError:
         prefix = prefixes[-1]
-        x = n / base ** len(prefixes)
+        x = 2 * n / base ** len(prefixes)
 
     prefix += "bytes" if long else "B"
     return f"{x / 2:.{decimals}f} {prefix}"
