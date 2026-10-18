@@ -489,5 +489,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             else:
                 key = f"{s[:29]}..." if len(s) > 32 else s  # noqa: PLR2004
                 key = f"Sample data: '{key}'"
+
+            if key in result:
+                raise ValueError(f"Derived test data label {key!r} is not unique. Use a dict to assign data labels.")
             result[key] = data
         return result
