@@ -30,7 +30,7 @@ def run_multivariate_test(
 
     This is a convenience method which combines :meth:`MultiCaseTimer.run() <rics.performance.MultiCaseTimer.run>`,
     :meth:`~rics.performance.to_dataframe` and -- if plotting is enabled -- :meth:`~rics.performance.plot_run`. For full
-    functionally these methods should be use directly.
+    functionality, use these methods directly.
 
     Args:
         candidate_method: A dict ``{label: function}``. Alternatively, you may pass a collection of functions or a
@@ -124,7 +124,7 @@ def _verify_can_plot() -> None:
 
     if find_spec("seaborn") is None:
         msg = (
-            "Package `seaborn` not installed. Run of one:"
+            "Package `seaborn` not installed. Run one of:"
             "\n  pip install seaborn"
             "\n  pip install rics[plotting]"
             "\nto enable plots."
