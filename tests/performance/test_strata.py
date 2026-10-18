@@ -200,6 +200,25 @@ def test_run_rejects_reused_strata_missing_labels():
         timer.run(time_per_candidate=0.01, stratify=strata)
 
 
+def test_run_ignores_strata_labels_missing_from_data():
+    # Strata may cover more labels than the data, e.g. when shared across timers; calibrating on those must not fail.
+    timer: MultiCaseTimer[int] = MultiCaseTimer({"f": lambda n: n}, test_data={"a": 1, "b": 2})
+    result = timer.run(time_per_candidate=0.01, repeat=1, stratify={"s": ["a", "b", "c"], "only-extra": ["d"]})
+    assert set(result["f"]) == {"a", "b"}
+
+
+def test_run_does_not_generate_strata_labels_missing_from_data():
+    generated: list[int] = []
+
+    def make(n: int) -> int:
+        generated.append(n)
+        return n
+
+    timer: MultiCaseTimer[int, int] = MultiCaseTimer(lambda n: n, make, case_args=[(1,), (2,)])
+    timer.run(time_per_candidate=0.01, repeat=1, stratify={"s": [(1,), (2,), (10**6,)]})
+    assert 10**6 not in generated
+
+
 def test_autonumber_probes_only_stratum_labels():
     # Calibration must materialize data only for the stratum being probed, not the whole dataset.
     import logging

@@ -44,6 +44,9 @@ def compute_candidate_numbers(
 
     pbar = make_progress(len(candidates) * len(strata), enabled=progress, logger=logger)
 
+    # Strata may name labels this data lacks, e.g. when shared across timers; calibrating on those would fail or skew.
+    present = set(test_data)
+
     numbers: _CandidateNumbers = {}
     for label, func in candidates.items():
         by_stratum: _StratumNumbers = {}
@@ -53,7 +56,7 @@ def compute_candidate_numbers(
                 func,
                 label,
                 test_data,
-                data_labels,
+                [data_label for data_label in data_labels if data_label in present],
                 time_allocation=time_allocation,
                 skip_if=skip_if,
                 make_timer=make_timer,
