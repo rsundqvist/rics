@@ -346,7 +346,7 @@ def _handle_value_error(e: ValueError) -> None:
 
     msg += f" Alternatively, you may define an attribute 'ALL = {{label: ...}}' in '{file}'."
     click.secho("ABORT: " + msg, fg="red")
-    sys.exit(-1)
+    sys.exit(-1)  # TODO(7.0.0): Exit with 1; -1 surfaces as 255, which looks like a crash.
 
 
 def _width() -> int:
