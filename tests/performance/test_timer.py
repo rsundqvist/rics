@@ -2,7 +2,7 @@ from collections import defaultdict
 
 import pytest
 
-from rics.performance import MultiCaseTimer, SkipIfParams
+from rics.performance import MultiCaseTimer, SkipIfParams, _multi_case_timer
 
 # These tests calibrate with tiny budgets, which can emit a benign "Results may be unreliable" warning.
 pytestmark = pytest.mark.filterwarnings("ignore:Results may be unreliable:UserWarning")
@@ -82,3 +82,32 @@ def test_skip_all_variants_for_candidate(caplog):
     )
     assert not run_results
     assert "Discarding candidate" in caplog.text
+
+
+def test_progress_completes_when_a_candidate_is_discarded(monkeypatch):
+    class Recorder:
+        def __init__(self, total):
+            self.total = total
+            self.done = 0
+
+        def set_description(self, desc): ...
+
+        def update(self, n=1):
+            self.done += n
+
+        def close(self): ...
+
+    recorders: list[Recorder] = []
+
+    def make_progress(total, **_):
+        recorders.append(Recorder(total))
+        return recorders[-1]
+
+    monkeypatch.setattr(_multi_case_timer, "make_progress", make_progress)
+
+    MultiCaseTimer({"kept": len, "dropped": len}, test_data=[[1], [2]]).run(
+        time_per_candidate=0.01,
+        skip_if=lambda params: params.candidate_label == "dropped",
+    )
+    (pbar,) = recorders
+    assert pbar.done == pbar.total == 4

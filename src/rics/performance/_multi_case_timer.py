@@ -371,6 +371,9 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         for candidate_label, func in self._candidates.items():
             by_stratum = candidate_to_stratum_to_number[candidate_label]
             if by_stratum is None:
+                # Discarded during calibration; its combinations still count towards the total.
+                i += n_data
+                pbar.update(n_data)
                 continue
 
             run_results[candidate_label] = candidate_results = {}
