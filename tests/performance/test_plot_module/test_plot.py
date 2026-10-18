@@ -103,6 +103,15 @@ def test_relative_to_rejects_unit(kind: Kind) -> None:
         plot_run(_GRID_RESULTS, kind=kind, relative_to="baseline", unit="ms")
 
 
+@pytest.mark.parametrize("horizontal", [False, True])
+def test_log_scale_on_time_axis(kind: Kind, horizontal: bool) -> None:
+    run_results: ResultsDict = {"slow": {"data": [1.0, 1.1]}, "fast": {"data": [0.001, 0.0011]}}
+    facet_grid = plot_run(run_results, kind=kind, horizontal=horizontal)
+    ax = facet_grid.axes.flat[0]
+    assert (ax.get_xscale(), ax.get_yscale()) == (("log", "linear") if horizontal else ("linear", "log"))
+    plt.close(facet_grid.fig)
+
+
 @cache
 def get_run_results() -> ResultsDict:
     with Path(__file__).parent.joinpath("run-results.json").open("r") as f:
