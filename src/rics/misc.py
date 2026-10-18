@@ -130,6 +130,9 @@ def get_by_full_name(
         'Logger.info'
 
         When using this syntax, the path to the left of the separator must be a valid module path.
+
+    See Also:
+        The reverse operation, :func:`get_public_module`.
     """
     name = name.strip()
     if name == "":
@@ -275,11 +278,15 @@ def tname(
 ) -> str:
     """Get name of method or class.
 
+    Meant for display, e.g. in logs and error messages; the result may not resolve back to `arg`. Use
+    :func:`get_public_module` with ``include_name=True`` and :func:`get_by_full_name` to look an object up by name.
+
     Args:
         arg: Something get a name for.
         prefix_classname: If ``True``, prepend the class name if `arg` belongs to a class.
         attrs: Attribute names to search for wrapped functions. The default, `'func'`, is the name used by the built-in
-            :py:func:`functools.partial` wrapper. May cause infinite recursion.
+            :py:func:`functools.partial` wrapper. Any attribute with one of these names is followed, including
+            methods, properties and values made up by ``__getattr__``.
         include_module: If ``True``, prepend the public module (see :func:`get_public_module`).
 
     Returns:
@@ -287,27 +294,47 @@ def tname(
 
     Raises:
         ValueError: If no name could be derived for `arg`.
+        RecursionError: If unwrapping `arg` does not terminate, e.g. due to a wrapper cycle.
 
     """
+    # TODO(6.3.0): Scope creep; this is a display name with unwrapping and module lookup bolted on. Consider splitting
+    #  into `unwrap(obj, attrs)` and a `display_name(obj, prefix_classname, include_module)`.
+    if attrs:
+        attrs = [attrs] if isinstance(attrs, str) else [*attrs]
+        arg = _unwrap(arg, attrs)
+
     if arg is None:
         return "None"
 
-    if include_module:
-        module = _get_module(arg)
-        name = tname(arg, prefix_classname=prefix_classname, attrs=attrs, include_module=False)
-        return f"{module}.{name}"
+    name = _get_name(arg, prefix_classname)
+    return f"{_get_module(arg)}.{name}" if include_module else name
 
-    if attrs:
-        from rics.collections.misc import as_list
 
-        attrs = as_list(attrs)
+def _unwrap(arg: type[_t.Any] | _t.Any | None, attrs: list[str]) -> type[_t.Any] | _t.Any | None:
+    sentinel = object()
+    original = arg
+
+    # TODO(7.0.0): Detect cycles with a `seen` id-to-object dict (holding refs so ids aren't reused) and raise
+    #  ValueError like inspect.unwrap; keep `max_depth` for runaway __getattr__. New exception type, hence not 6.x.
+
+    # Real chains are a few levels deep (nested partials flatten themselves). This only bounds cycles and runaway
+    # __getattr__, e.g. a Mock creating (and keeping) a new child on every probe.
+    max_depth = 100
+    for _ in range(max_depth):
         for attr in attrs:
-            wrapped = getattr(arg, attr, arg)
-            if wrapped is arg:
+            # shortcut: any matching attr is followed (also by the `fget` probes), even properties and __getattr__ values,
+            #  so pd.Series([1], index=["func"]) names as 'int64'. Fine for display; heuristics must be maintained.
+            wrapped = getattr(arg, attr, sentinel)
+            if wrapped is not sentinel and wrapped is not arg:
                 break
-            return tname(wrapped, prefix_classname=prefix_classname, attrs=attrs)
+        else:
+            return arg
 
-    return _get_name(arg, prefix_classname)
+        arg = wrapped
+
+    # Types only; repr() may raise or be huge.
+    msg = f"Gave up unwrapping {type(original).__qualname__} with {attrs=} after {max_depth} levels; last {type(arg).__qualname__}."
+    raise RecursionError(msg)
 
 
 def _get_name(arg: type[_t.Any] | _t.Any, prefix_classname: bool) -> str:
@@ -318,7 +345,8 @@ def _get_name(arg: type[_t.Any] | _t.Any, prefix_classname: bool) -> str:
         elif isinstance(arg, _MethodType):
             cls_name = type(arg_self).__qualname__
         else:
-            cls_name = type(arg).__name__
+            # Builtins: module-level ones like `len` have a `__module__`, methods like `[].append` don't.
+            return arg.__name__ if isinstance(getattr(arg, "__module__", None), str) else arg.__qualname__
         return f"{cls_name}.{arg.__name__}"
 
     if hasattr(arg, "__qualname__"):
@@ -338,12 +366,17 @@ def _get_module(arg: type[_t.Any] | _t.Any) -> str:
     if hasattr(arg, "fget"):
         # Instance-level properties accessed using the class.
         obj = arg.fget
-    elif hasattr(arg, "__self__"):
-        obj = arg.__self__
+    elif isinstance(arg, _MethodType) or not isinstance(getattr(arg, "__module__", None), str):
+        # Builtin functions with a `__module__` are module-level; their `__self__` may be the module or something
+        # unimportable (pybind11).
+        obj = getattr(arg, "__self__", arg)
     elif hasattr(arg, "__name__"):
         obj = arg
     else:
         obj = type(arg)
+
+    if not isinstance(getattr(obj, "__module__", None), str):
+        obj = type(obj)  # E.g. the list of `[].append`.
 
     return get_public_module(obj, include_name=False, resolve_reexport=True)
 
