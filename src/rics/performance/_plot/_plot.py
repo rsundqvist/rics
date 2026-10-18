@@ -63,7 +63,7 @@ def plot_run(
                row="exponent",
            )
 
-        to plot each sign/exponent in a separate facet, comparing only the exponents in the subplots.
+        to plot each sign/exponent in a separate facet, comparing only the bases in the subplots.
 
     Args:
         run_results: Output of :meth:`.MultiCaseTimer.run`.
