@@ -92,6 +92,7 @@ def make_timer(func: CandFunc[DataType], data: DataType, setup: SetupFunc[DataTy
     holder: dict[str, DataType] = {}
 
     def _setup() -> None:
+        holder.clear()  # Else the previous repetition's copy is alive while setup() builds the next.
         holder["data"] = setup(data)
 
     def _stmt() -> None:

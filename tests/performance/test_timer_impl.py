@@ -74,6 +74,18 @@ def test_timer_semantics(experimental):  # noqa: ARG001
     assert gc.isenabled()  # Restored after timing.
 
 
+def test_setup_holds_one_copy_at_a_time(experimental):  # noqa: ARG001
+    # The variant plus the current setup() output; the previous repetition's copy must be gone by then.
+    Tracked.reset()
+    variant = Tracked()
+
+    _timer.make_timer(lambda _d: None, variant, lambda _d: Tracked()).repeat(3, 1)
+
+    assert Tracked.peak == 2
+    del variant
+    Tracked.reset()
+
+
 @pytest.mark.parametrize(
     "skip_if",
     [
