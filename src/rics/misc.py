@@ -216,7 +216,9 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
         resolve_reexport: If ``True``, traverse the module hierarchy and look for the earliest where `obj` is
             reexported. This may be expensive.
         include_name: If ``True``, include the name of `obj` reexported from a parent module. The first instance found
-            will be used if `obj` is reexported multiple times.
+            will be used if `obj` is reexported multiple times. If `obj` is not found in any public module, the name is
+            ``f"{obj.__module__}.{obj.__qualname__}"``. Objects without a ``__qualname__`` (e.g. instances) get no
+            name at all; the result is then the public part of ``obj.__module__``, which need not contain `obj`.
 
     Returns:
         Public module of `obj`.
@@ -239,6 +241,9 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
         The analogous :func:`get_by_full_name`-function.
 
     """
+    # TODO(6.3.0): This does two jobs. Split into a public-module lookup and a `get_full_name` that is the strict
+    #  inverse of get_by_full_name (raising when there is no importable path), so neither has to compromise for the
+    #  other. Deprecate `include_name`.
     import inspect
 
     if include_name and not resolve_reexport:
@@ -263,6 +268,10 @@ def get_public_module(obj: _t.Any, resolve_reexport: bool = False, include_name:
                 if include_name:
                     parts.append(name)
                 return ".".join(parts)
+
+        # TODO(7.0.0): Emit `module:qualname` so that dotted qualnames (e.g. methods) resolve with get_by_full_name.
+        if include_name and isinstance(qualname := getattr(obj, "__qualname__", None), str):
+            return f"{module_name}.{qualname}"
 
     if not parts:
         return module_name
