@@ -97,6 +97,10 @@ class CatplotParams:
 
         x_col, hue_col = _resolve_x_hue(x, hue, names=names, df=df)
 
+        if not names and DATA in (x_col, hue_col) and any(isinstance(label, tuple) for label in df[DATA].unique()):
+            msg = "Cannot plot tuple data labels without `names`; pass one name per tuple element."
+            raise ValueError(msg)
+
         return cls(
             data=df,
             x=x_col,

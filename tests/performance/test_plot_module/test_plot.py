@@ -120,6 +120,11 @@ def test_formatted_labels_keep_data_order(kind: Kind) -> None:
     plt.close(facet_grid.fig)
 
 
+def test_tuple_labels_require_names(kind: Kind) -> None:
+    with pytest.raises(ValueError, match="without `names`"):
+        plot_run({"f": {(1,): [1.0], (2,): [2.0]}}, kind=kind)
+
+
 @cache
 def get_run_results() -> ResultsDict:
     with Path(__file__).parent.joinpath("run-results.json").open("r") as f:

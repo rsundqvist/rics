@@ -74,7 +74,7 @@ def plot_run(
         horizontal: If ``True``, plot the metric on the X-axis instead. The `x` becomes the new Y-axis quantity.
         unit: Y-axis time :attr:`~rics.performance.plot_types.Unit`. Not allowed in `relative_to` mode.
         kind: The :attr:`~rics.performance.plot_types.Kind` of plot to draw.
-        names: Test data level names.
+        names: Test data level names. Required to plot tuple data labels.
         relative_to: If given, plot the speedup of each candidate relative to this baseline candidate (see
             :func:`.relative_to`) instead of absolute timings. The Y-axis becomes a dimensionless ``speedup`` and a
             reference line is drawn at ``1.0``. The baseline itself (always ``1.0``) is represented by the reference
@@ -88,7 +88,7 @@ def plot_run(
     Raises:
         ModuleNotFoundError: If Seaborn isn't installed.
         TypeError: For unknown `unit` arguments.
-        ValueError: For unknown `x`/`hue` arguments, or `unit` combined with `relative_to`.
+        ValueError: For unknown `x`/`hue`, `unit` combined with `relative_to`, or tuple data labels without `names`.
     """
     params = CatplotParams.make(
         run_results,
