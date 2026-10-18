@@ -1,6 +1,10 @@
+import functools
+
 import pytest
 
 from rics import misc
+
+from .data import Foo
 
 
 @pytest.mark.parametrize(
@@ -13,6 +17,37 @@ from rics import misc
 def test_builtin_not_reexported(obj, name):
     assert misc.get_public_module(obj, resolve_reexport=True) == "builtins"
     assert misc.get_public_module(obj, resolve_reexport=True, include_name=True) == "builtins." + name
+
+
+def test_private_module_round_trip():
+    from rics._internal_support.changelog import split_changelog
+
+    name = misc.get_public_module(split_changelog, resolve_reexport=True, include_name=True)
+    assert misc.get_by_full_name(name) is split_changelog
+
+
+@pytest.mark.parametrize(
+    "obj, expected",
+    [
+        (functools.partial(len), "functools"),
+        (Foo(), "tests.test_misc.data"),
+        # Only the public part of the module; `obj` isn't in `rics`.
+        (type("Private", (), {"__module__": "rics._private"})(), "rics"),
+    ],
+)
+def test_no_qualname(obj, expected):
+    assert misc.get_public_module(obj, resolve_reexport=True, include_name=True) == expected
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Accepted limitation; matching a private C module (`_operator`) to its public reexporter takes heuristics.",
+)
+def test_private_c_module():
+    import operator
+
+    assert misc.get_public_module(operator.add, resolve_reexport=True, include_name=True) == "operator.add"
+    assert misc.tname(operator.add, include_module=True) == "operator.add"
 
 
 @pytest.mark.xfail(
