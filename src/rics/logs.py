@@ -201,7 +201,7 @@ class LoggingSetupHelper:
 
         >>> [{"id_translation": "DEBUG"}, {"id_translation": "INFO"}]
 
-        are **not** permitted, since going from ``verbosity=1`` to ``verbosity=2`` would reduce the amount of legts
+        are **not** permitted, since going from ``verbosity=1`` to ``verbosity=2`` would reduce the amount of logs
         emitted. Calling :meth:`LoggingSetupHelper.configure_logging` with ``verbosity=0`` disables logging entirely.
 
     Args:
@@ -239,13 +239,13 @@ class LoggingSetupHelper:
         """Get log levels per logger at the given `verbosity` level.
 
         Args:
-            verbosity: Verbosity level. Pass -1 for max level.
+            verbosity: Verbosity level. Pass -1 for max level; levels above the max are treated as the max.
 
         Returns:
             A dict ``{logger: log_level}``
 
         Raises:
-            ValueError: If `verbose` is zero, less than -1, or too high.
+            ValueError: If `verbosity` is zero or less than -1.
         """
         max_level = -1
         if verbosity in {max_level, self.max}:
@@ -253,13 +253,9 @@ class LoggingSetupHelper:
         elif verbosity == 0:
             raise ValueError(f"{verbosity=} = 0")
         elif verbosity < max_level:
-            raise ValueError(f"{verbosity=} < -2")
+            raise ValueError(f"{verbosity=} < -1")
         else:
-            try:
-                levels = self._levels[:verbosity]
-            except IndexError:
-                msg = f"Got {verbosity=}, but only {self.max} levels are defined."
-                raise ValueError(msg) from None
+            levels = self._levels[:verbosity]
 
         rv: dict[str, int] = {}
         for level_dict in reversed(levels):

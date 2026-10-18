@@ -257,7 +257,7 @@ def snake_to_camel(s: str, *, lower: bool = True) -> str:
 
     Args:
         s: A string to convert.
-        lower: If ``False``, return ``PamelCase`` instead of ``camelCase``.
+        lower: If ``False``, return ``PascalCase`` instead of ``camelCase``.
 
     Returns:
         A ``camelCase`` string.
@@ -330,7 +330,7 @@ def str_as_bool(s: str) -> bool:
         Input strings are normalized using :py:meth:`str.strip` and :py:meth:`str.lower`.
 
     Notes:
-        Using ``bool(<str>)`` is equivalent to ``len(<str>) == 0``.
+        Using ``bool(<str>)`` is equivalent to ``len(<str>) != 0``.
     """
     if not isinstance(s, str):
         msg = f"Input must be a string; got {type(s).__name__}."
