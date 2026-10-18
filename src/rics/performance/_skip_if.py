@@ -18,9 +18,12 @@ class SkipIfParams(Generic[DataType, *Ts]):
     data_label: Hashable | tuple[*Ts]
     """Data label."""
     est_time: float | None
-    """Estimated time to finish all repetitions. Only when `number` is derived."""
+    """Estimated time for all repetitions over the whole stratum of `data_label`, not just this variant.
+
+    ``None`` during calibration, and when ``number`` is given explicitly.
+    """
     results_so_far: ResultsDict
-    """A snapshot timing values."""
+    """The run's live results, ``{candidate_label: {data_label: [runtime, ...]}}``. Empty during calibration."""
 
 
 SkipIfFunc: TypeAlias = Callable[[SkipIfParams[DataType, *Ts]], bool]

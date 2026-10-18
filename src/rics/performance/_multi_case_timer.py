@@ -82,8 +82,8 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
         logger: Logger instance to use.
 
     Raises:
-        TypeError: If `args` or `kwargs` are set when `test_data` is not a callable.
-        ValueError: If `args` is empty and `test_data` is a callable.
+        TypeError: If `case_args` or `kwargs` are set when `test_data` is not a callable.
+        ValueError: If `case_args` is empty and `test_data` is a callable.
     """
 
     LOGGER: ClassVar[logging.Logger | logging.LoggerAdapter[Any]] = logging.getLogger(__package__)
@@ -320,7 +320,7 @@ class MultiCaseTimer(Generic[DataType, *Ts]):
             stratify: Groups variants of comparable cost so that ``number`` is calibrated once per ``(candidate,
                 stratum)`` instead of once per candidate function. Using ``"auto"`` implicitly calls :meth:`fit_strata`
                 the first time. Set to ``None`` to disable.
-            skip_if: A callable ``(skip_if) -> bool``; see the :class:`params <SkipIfParams>` type.
+            skip_if: A callable ``(params) -> bool``; see the :class:`params <SkipIfParams>` type.
             progress: If ``True``, display progress. Uses ``tqdm`` on a TTY and falls back to periodic logging
                 otherwise (so ``tqdm`` is optional).
 
