@@ -437,6 +437,8 @@ class ReprFormatter:
         self._prefix_classname = prefix_classname
         self._include_module = include_module
 
+        # TODO(6.3.0): Add a `cache: bool` toggle. Cached output goes stale if a value is mutated, or if it is collected
+        #  and a new object reuses its id; a no-op for short-lived formatters, a trap for long-lived ones.
         self._cache: dict[int, str] = {}
 
     def format_value(self, value: _t.Any) -> str:
