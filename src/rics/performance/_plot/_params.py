@@ -149,7 +149,9 @@ class CatplotParams:
                     return None  # Speedup is a linear ratio; the reference line marks the baseline.
                 column = next(filter(lambda c: c.startswith("Time ["), df.columns))
                 means = df.groupby([DATA, FUNC], observed=True)[column].mean()
-                return (False, True) if means.max() / means.min() > 20 else None  # noqa: PLR2004
+                if means.max() / means.min() <= 20:  # noqa: PLR2004
+                    return None
+                return (True, False) if self.horizontal else (False, True)  # Timings are on the x-axis if horizontal.
 
         raise KeyError(f"Bad {key=}. Possible choices={self.COMPUTED_DEFAULTS}.")
 
