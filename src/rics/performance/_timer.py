@@ -1,7 +1,7 @@
 """Timer construction for :class:`.MultiCaseTimer`.
 
-:class:`timeit.Timer` ``exec``s its loop from a source template, which leaves the dataset in a reference cycle.
-Dropping the last reference to a variant therefore does not free it; only the cyclic collector does, and that runs on
+:class:`timeit.Timer` ``exec``s its loop from a source template, which may leave the dataset in a reference cycle.
+Dropping the last reference to a variant then does not free it; only the cyclic collector does, and that runs on
 container *allocation* counts rather than bytes -- so it rarely fires for the few-but-huge datasets the timer's memory
 guarantee targets. Hence :func:`collect_dead_variants`.
 
@@ -102,7 +102,7 @@ def make_timer(func: CandFunc[DataType], data: DataType, setup: SetupFunc[DataTy
 
 
 def collect_dead_variants() -> None:
-    """Reclaim variants left in reference cycles by :class:`timeit.Timer`; see the module docstring.
+    """Reclaim variants that :class:`timeit.Timer` may leave in reference cycles; see the module docstring.
 
     Call only for generated data: a full collection costs O(heap), and dict-backed test data holds every variant
     anyway.
