@@ -304,6 +304,7 @@ class InheritedKeysDict(_t.Mapping[OKT, dict[KT, VT]]):  # noqa: PLW1641
         if isinstance(arg, InheritedKeysDict):  # pragma: no cover
             return arg
 
+        arg = arg.copy()
         default: dict[KT, VT] | None = arg.pop("default", None)
         specific: dict[OKT, dict[KT, VT]] | None = arg.pop("specific", None)
 
