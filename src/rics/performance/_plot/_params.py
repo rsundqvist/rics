@@ -2,7 +2,6 @@ from collections.abc import Hashable, Iterable, Mapping
 from dataclasses import dataclass, field, fields
 from typing import TYPE_CHECKING, Any, ClassVar, Self
 
-import numpy as np
 import pandas as pd
 
 from rics.collections.dicts import compute_if_absent
@@ -176,7 +175,7 @@ class CatplotParams:
         # single named dimension (or the candidate) keep their raw order.
         for axis, order_key in (("x", "order"), ("hue", "hue_order")):
             if getattr(self, axis) == DATA and (old_order := kwargs.get(order_key)):
-                updates[order_key] = np.unique([format_label(label) for label in old_order]).tolist()
+                updates[order_key] = [*dict.fromkeys(format_label(label) for label in old_order)]  # Keep data order.
 
         data = kwargs["data"].copy()
         data[DATA] = data[DATA].map(format_label)
