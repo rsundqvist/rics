@@ -38,6 +38,19 @@ def test_cli_standalone(unload_modules):
     assert result.exit_code == 0, result.stderr
 
 
+@pytest.mark.usefixtures("tmp_path_cwd", "restore_logging")  # No -v: disables logging.root.
+def test_cli_no_case_data(unload_modules):
+    unload_modules(*CLI_MODULES)
+    Path("candidates.py").write_text("def candidate_noop(data):\n    pass\n")
+    Path("test_data.py").write_text("not_a_case = 1\n")
+
+    result = CliRunner().invoke(cli.main, ["timeit"])
+
+    assert result.exit_code != 0
+    assert "ABORT: No case data given." in result.output
+    assert "'test_data.py'" in result.output
+
+
 @pytest.mark.parametrize("plot", (False, True))
 @pytest.mark.parametrize("with_all", (False, True))
 def test_cli(monkeypatch, tmp_path_cwd, unload_modules, with_all, plot):

@@ -176,14 +176,22 @@ def main(
     finally:
         sys.path.pop(0)
 
+    try:
+        candidate_labels = [*_Timer.process_candidates(candidates)]
+        data_labels = [*_Timer.process_test_data(test_data)]
+    except ValueError as e:
+        _handle_value_error(e)
+        raise
+
     now = datetime.datetime.now()
-    eta_str = (now + datetime.timedelta(seconds=len(candidates) * time_per_candidate)).strftime("%A %d, %H:%M:%S")
+    eta = now + datetime.timedelta(seconds=repeat * len(candidates) * time_per_candidate)
+    eta_str = eta.strftime("%A %d, %H:%M:%S")
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
     w2 = f"<{_width() - 2}"
     click.secho(f"{f'| Found {len(candidates)} candidates and {len(test_data)} data variants:':{w2}} |", fg="green")
-    click.secho(f"{f'|  -    Candidates: {[*_Timer.process_candidates(candidates)]}':{w2}} |", fg="green")
-    click.secho(f"{f'|  - Data variants: {[*_Timer.process_test_data(test_data)]}':{w2}} |", fg="green")
+    click.secho(f"{f'|  -    Candidates: {candidate_labels}':{w2}} |", fg="green")
+    click.secho(f"{f'|  - Data variants: {data_labels}':{w2}} |", fg="green")
     click.secho(f"{f'| Started: {now_str}, ETA: {eta_str}':{w2}} |", fg="green")
     click.secho("=" * width, fg="green")
 
@@ -331,12 +339,12 @@ def _handle_value_error(e: ValueError) -> None:
         file = "candidates.py"
     elif msg.startswith("No case"):
         msg += " Case data attributes must start with 'case_'."
-        file = "candidates.py"
+        file = "test_data.py"
 
     if file is None:
         return
 
-    msg += f" Alternatively, you may define an attribute  'ALL = {{label: ...}}' in '{file}'."
+    msg += f" Alternatively, you may define an attribute 'ALL = {{label: ...}}' in '{file}'."
     click.secho("ABORT: " + msg, fg="red")
     sys.exit(-1)
 
@@ -348,7 +356,7 @@ def _width() -> int:
 
 
 def _show_warnings(message: Warning | str, category: type[Warning], *args: _Any, **kwargs: _Any) -> None:
-    if isinstance(message, UserWarning) and message.args[0].startswith("The test results may be unreliable"):
+    if isinstance(message, UserWarning) and message.args[0].startswith("Results may be unreliable"):
         click.secho(f"WARNING: {message}", fg="yellow")
         return
     _show_warning_orig(message, category, *args, **kwargs)
