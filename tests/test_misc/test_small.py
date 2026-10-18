@@ -1,5 +1,9 @@
 import pickle
 
+import pytest
+import requests
+import responses
+
 from rics import misc
 
 
@@ -22,6 +26,15 @@ def test_get_local_or_remote(tmp_path):
     with path.open("rb") as f:
         actual = pickle.load(f)
     assert actual == ["my-data", {"is": "amazing"}]
+
+
+@responses.activate
+def test_get_local_or_remote_http_error(tmp_path):
+    responses.get("https://example.com/foo.txt", status=404, body="Not Found")
+
+    with pytest.raises(requests.HTTPError):
+        misc.get_local_or_remote("foo.txt", remote_root="https://example.com", local_root=tmp_path)
+    assert not tmp_path.joinpath("foo.txt").exists()
 
 
 def test_serializable():

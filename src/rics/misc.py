@@ -397,7 +397,8 @@ def get_local_or_remote(
 ) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
 
-    If `file` is not available at the local root path, it will be downloaded using `requests`_. A postprocessor may
+    If `file` is not available at the local root path, it will be downloaded using `requests`_; an HTTP error status
+    raises ``requests.HTTPError`` and leaves no local file behind. A postprocessor may
     be given in which case the name of the final file will be ``local_root/<name-of-postprocessor>/file``. Removing
     a raw local file (i.e. ``local_root/file``) will invalidate postprocessed files as well.
 

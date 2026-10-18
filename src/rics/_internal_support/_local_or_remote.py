@@ -107,6 +107,7 @@ def _fetch(local_file_path: Path, remote_file_path: str, show_progress: bool) ->
 
     _GLOR_LOGGER.info(f"Fetching data from '{remote_file_path}'..")
     response = requests.get(remote_file_path, stream=True, timeout=300)
+    response.raise_for_status()
     chunks = response.iter_content(_CHUNK_SIZE)
     with local_file_path.open("wb") as output_file:
         if show_progress:
