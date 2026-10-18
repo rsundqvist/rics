@@ -165,11 +165,9 @@ def percentage_ticks(
 
     Args:
         ax: An axis to decorate, or an object with a `yaxis` attribute.
-        sign: If ``True``, show prepend `'+'` for positive ticks.
+        sign: If ``True``, prepend `'+'` to positive ticks.
         decimals: Number of decimals to keep.
 
-    Return:
-        The formatting string.
     """
     axis: _Axis = ax.yaxis if hasattr(ax, "yaxis") else ax
 
