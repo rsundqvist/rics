@@ -112,6 +112,14 @@ def test_log_scale_on_time_axis(kind: Kind, horizontal: bool) -> None:
     plt.close(facet_grid.fig)
 
 
+def test_formatted_labels_keep_data_order(kind: Kind) -> None:
+    run_results: ResultsDict = {"f": {("a", base): [1.0] for base in (2, 9, 10)}}
+    facet_grid = plot_run(run_results, kind=kind, x="data", names=["source", "base"], col="source")
+    ticks = [t.get_text() for t in facet_grid.axes.flat[0].get_xticklabels()]
+    assert ticks == ["base = 2", "base = 9", "base = 10"]
+    plt.close(facet_grid.fig)
+
+
 @cache
 def get_run_results() -> ResultsDict:
     with Path(__file__).parent.joinpath("run-results.json").open("r") as f:
