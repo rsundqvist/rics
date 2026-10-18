@@ -167,7 +167,6 @@ def main(
 
     _configure_stuff(
         logging=cxt.meta.get("verbosity") is None,  # Configure logging only when invoked directly.
-        ghost=False,
     )
 
     try:
