@@ -138,7 +138,7 @@ def main(
            --time-per-candidate argument is respected.
         3. Print the best times per candidate/test_data
            combination to stdout.
-        4. Save a performance overview figure to disk.
+        4. Save a performance overview figure to disk (only if --plot is set).
         5. Save raw timing data to disk as CSV.
 
     \b
@@ -208,7 +208,8 @@ def main(
         _warnings.showwarning = _show_warning_orig
 
     _print_best_result(per_candidate, result, title)
-    _save_plot(name_path, title)
+    if plot:
+        _save_plot(name_path, title)
     _save_report(name_path, result, not yes)
 
 

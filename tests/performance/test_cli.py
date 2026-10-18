@@ -38,8 +38,9 @@ def test_cli_standalone(unload_modules):
     assert result.exit_code == 0, result.stderr
 
 
+@pytest.mark.parametrize("plot", (False, True))
 @pytest.mark.parametrize("with_all", (False, True))
-def test_cli(monkeypatch, tmp_path_cwd, unload_modules, with_all):
+def test_cli(monkeypatch, tmp_path_cwd, unload_modules, with_all, plot):
     monkeypatch.setattr(MultiCaseTimer, "_get_raw_timings", get_raw_timings)
     unload_modules(*CLI_MODULES)
 
@@ -56,11 +57,11 @@ def test_cli(monkeypatch, tmp_path_cwd, unload_modules, with_all):
 
     result = CliRunner().invoke(
         cli.main,
-        ["-v", "timeit", "--time-per-candidate=0.1", "--name=unit-test"],
+        ["-v", "timeit", "--time-per-candidate=0.1", "--name=unit-test", "--plot" if plot else "--no-plot"],
         catch_exceptions=False,
     )
     assert result.exit_code == 0
-    assert tmp_path_cwd.joinpath("unit-test.jpg").is_file()
+    assert tmp_path_cwd.joinpath("unit-test.jpg").is_file() == plot
     csv = tmp_path_cwd.joinpath("unit-test.csv")
     assert csv.is_file()
     verify(pd.read_csv(csv))
