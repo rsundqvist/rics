@@ -3,6 +3,7 @@ import pytest
 from rics.collections.dicts import (
     DictComparer,
     InheritedKeysDict,
+    MakeDict,
     compute_if_absent,
     flatten_dict,
     reverse_dict,
@@ -160,6 +161,13 @@ def test_inherited_keys_dict(ikd):
     with pytest.raises(KeyError):
         empty: InheritedKeysDict[str, str, str] = InheritedKeysDict()
         _ = empty["any-key-will-do"]
+
+
+def test_inherited_keys_dict_make_keeps_input():
+    arg: MakeDict[str, int, str] = {"default": {0: "shared0"}, "specific": {"ctx0": {0: "c0-v0"}}}
+    expected = {**arg}
+    InheritedKeysDict.make(arg)
+    assert arg == expected
 
 
 def test_copy_inherited_keys_dict(ikd):
