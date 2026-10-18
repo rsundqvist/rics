@@ -110,4 +110,5 @@ def collect_dead_variants() -> None:
     if USE_EXPERIMENTAL_TIMER:
         return  # No cycles to break.
 
+    # TODO(6.3.0): A review couldn't reproduce the cycle on 3.12-3.14; drop these O(heap) collections if it's gone.
     gc.collect()
