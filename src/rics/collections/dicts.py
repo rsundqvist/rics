@@ -289,7 +289,7 @@ class InheritedKeysDict(_t.Mapping[OKT, dict[KT, VT]]):  # noqa: PLW1641
                 }
             }
 
-        No other top-level keys are accepted, but neither `default` nor `context-specific` are required.
+        No other top-level keys are accepted, but neither `default` nor `specific` are required.
 
         Args:
             arg: Input to make an instance from.
@@ -298,7 +298,7 @@ class InheritedKeysDict(_t.Mapping[OKT, dict[KT, VT]]):  # noqa: PLW1641
             A new instance.
 
         Raises:
-            ValueError: If there are any keys other than 'default' and 'context-specific' present in `mapping`.
+            ValueError: If there are any keys other than 'default' and 'specific' present in `arg`.
 
         """
         if isinstance(arg, InheritedKeysDict):  # pragma: no cover
@@ -374,7 +374,7 @@ def format_changed_keys(
         'added(1): {-1: None}, removed(1): {2}'
 
     Notes:
-        This is a convenience function that warps :func:`DictComparer.to_string`.
+        This is a convenience function that wraps :func:`DictComparer.to_string`.
     """
     return DictComparer(mapping, baseline=baseline).to_string(added=added, updated=updated, removed=removed)
 

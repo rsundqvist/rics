@@ -23,7 +23,7 @@ def interpolate_environment_variables(
     from rics.env.interpolation import replace_in_string
 
     warnings.warn(
-        "Function `interpolate_environment_variables()` is deprecated."
+        "Function `interpolate_environment_variables()` is deprecated. "
         "Use `rics.env.interpolation.replace_in_string` instead.",
         UserWarning,
         stacklevel=2,
@@ -80,7 +80,7 @@ def get_by_full_name(
     """Combine :py:func:`importlib.import_module` and :py:func:`getattr` to retrieve items by name.
 
     You may retrieve top-level module members such as classes by adding the class name after the module path (e.g.
-    ``logging.Logger``). The member may also be specifying using the ``':'``-syntax, e.g. ``logging:Logger``. The
+    ``logging.Logger``). The member may also be specified using the ``':'``-syntax, e.g. ``logging:Logger``. The
     ``':'``-syntax also supports retrieving object members e.g. ``logging:Logger.info``. This is not possible using the
     dot-based syntax since ``logging.Logger`` cannot be imported by the ``importlib.import_module`` function.
 
@@ -416,11 +416,10 @@ def get_local_or_remote(
 
     Raises:
         ValueError: If local root path does not exist or is not a directory.
-        ValueError: If the local file does not exist and ``remote=None``.
         ModuleNotFoundError: If the ``tqdm`` package is not installed but ``show_progress=True``.
 
     Examples:
-        Fetch the Title Basics table (a CSV file) of the `IMDb dataset`_.
+        Fetch the Name Basics table (a TSV file) of the `IMDb dataset`_.
 
         >>> from rics.misc import get_local_or_remote
         >>> import pandas as pd
@@ -429,17 +428,17 @@ def get_local_or_remote(
         >>> local_root = "my-data"  # default = "."
         >>> remote_root = "https://datasets.imdbws.com"
         >>> path = get_local_or_remote(
-        ...     file, remote_root, local_root, show_progress=True
+        ...     file, remote_root=remote_root, local_root=local_root, show_progress=True
         ... )  # doctest: +SKIP
         >>> pd.read_csv(path, sep="\t").shape  # doctest: +SKIP
         https://datasets.imdbws.com/name.basics.tsv.gz: 100%|██████████| 214M/214M [00:05<00:00, 39.3MiB/s]
         (11453719, 6)
 
-        We had download `name.basics.tsv.gz` the first time, but ``get_local_or_remote`` returns immediately the second
-        time it is called. Fetching can be forced using ``force_remote=True``.
+        We had to download `name.basics.tsv.gz` the first time, but ``get_local_or_remote`` returns immediately the
+        second time it is called. Fetching can be forced using ``force=True``.
 
         >>> path = get_local_or_remote(
-        ...     file, remote_root, local_root, show_progress=True
+        ...     file, remote_root=remote_root, local_root=local_root, show_progress=True
         ... )  # doctest: +SKIP
         >>> pd.read_csv(path, sep="\t").shape  # doctest: +SKIP
         (11453719, 6)

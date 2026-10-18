@@ -118,6 +118,14 @@ class TestLoggingSetupHelper:
                 "Level 2 (index=1), logger='rics': Found transition 'INFO (20) -> WARNING (30)'."
             )
 
+    @pytest.mark.parametrize("verbosity", [-2, 0])
+    def test_bad_verbosity(self, helper, verbosity):
+        with pytest.raises(ValueError):
+            helper.get_log_levels(verbosity)
+
+    def test_verbosity_above_max_is_max(self, helper):
+        assert helper.get_log_levels(helper.max + 1) == helper.get_log_levels(-1)
+
     class TestFormatting:
         def test_by_log_level(self, helper):
             assert helper._by_log_level() == [
