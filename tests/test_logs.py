@@ -9,6 +9,7 @@ from rics.logs import (
     basic_config,
     convert_log_level,
     disable_temporarily,
+    get_logger,
 )
 
 logging.addLevelName(1, "EXTRA_VERBOSE_DEBUG")
@@ -174,3 +175,8 @@ class TestBadLogLevel:
             f"Hint: Did you mean {name}='INFO'?",
             "Hint: Register this level using `logging.addLevelName()`.",
         ]
+
+
+@pytest.mark.parametrize("logger", [None, False])
+def test_get_logger_disabled(logger):
+    assert get_logger(logger).disabled
