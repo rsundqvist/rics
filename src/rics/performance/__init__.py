@@ -1,5 +1,6 @@
 """Performance testing utility."""
 
+# TODO(7.0.0): Importing this requires pandas and numpy, which no extra declares; import them lazily or add an extra.
 from ._format_perf_counter import format_perf_counter, format_seconds
 from ._multi_case_timer import MultiCaseTimer
 from ._plot import plot_run
