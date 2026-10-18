@@ -81,7 +81,7 @@ _show_warning_orig = _warnings.showwarning
 @click.option(
     "--name",
     "-n",
-    default="performance.png",
+    default="performance",
     help="Name to use for artifacts produced. Also used as the figure title (stylized).",
     type=click.Path(dir_okay=False, writable=True),
     show_default=True,
