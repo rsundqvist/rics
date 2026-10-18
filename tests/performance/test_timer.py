@@ -25,6 +25,11 @@ def test_setup_runs_unmeasured_per_repeat():
     assert setup_calls["n"] == repeat
 
 
+def test_derived_data_labels_must_be_unique():
+    with pytest.raises(ValueError, match="not unique"):
+        MultiCaseTimer(len, [list(range(100)), list(range(200))])
+
+
 def test_warmup_adds_untimed_calls():
     calls = {"n": 0}
 
