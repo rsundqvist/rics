@@ -6,6 +6,7 @@ from click.testing import CliRunner
 
 from rics import cli
 from rics.performance import MultiCaseTimer
+from rics.performance import cli as performance_cli
 
 from .test_wrapper import CLI_MODULES, get_raw_timings, verify
 
@@ -18,6 +19,20 @@ def test_cli_create(unload_modules):
     result = CliRunner().invoke(
         cli.main,
         ["-v", "timeit", "--time-per-candidate=0.01", "--create", "--name=create-unit-test"],
+        catch_exceptions=False,
+    )
+    assert result.exit_code == 0, result.stderr
+
+
+@pytest.mark.filterwarnings("ignore:Results may be unreliable:UserWarning")
+@pytest.mark.usefixtures("tmp_path_cwd", "restore_logging")
+def test_cli_standalone(unload_modules):
+    """Invoked without the `rics` group, as by the `mtimeit` entrypoint; configures logging itself."""
+    unload_modules(*CLI_MODULES)
+
+    result = CliRunner().invoke(
+        performance_cli.main,
+        ["--time-per-candidate=0.01", "--create", "--name=standalone-unit-test"],
         catch_exceptions=False,
     )
     assert result.exit_code == 0, result.stderr
