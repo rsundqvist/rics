@@ -9,7 +9,7 @@ def get_user_command(cxt: click.Context | None = None, *, meta: bool = True) -> 
     """Recreate the user CLI command.
 
     Args:
-        cxt: Click context. Derive is ``None``.
+        cxt: Click context. Derive if ``None``.
         meta: If ``True``, use :attr:`click.Context.meta` caching.
 
     Returns:

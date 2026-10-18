@@ -42,12 +42,12 @@ def verify_enum(
         Matching is case-insensitive when strings are given.
 
         >>> verify_enum("NO", Response)
-        '<Response.No: 2>'
+        <Response.No: 2>
 
         Enums may also be passed.
 
         >>> verify_enum(Response.Yes, Response)
-        '<Response.Yes: 1>'
+        <Response.Yes: 1>
 
         The default variable name used for errors is derived using :func:`rics.strings.camel_to_snake`.
 

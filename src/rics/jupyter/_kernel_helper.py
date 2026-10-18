@@ -84,7 +84,7 @@ class KernelHelper:
         try:
             from ipykernel.kernelspec import install
         except ModuleNotFoundError as e:
-            msg = "Package `ipykernel` not installed. Run of one:\n  pip install ipykernel\n  pip install rics[cli]\nto use this feature."
+            msg = "Package `ipykernel` not installed. Run one of:\n  pip install ipykernel\n  pip install rics[cli]\nto use this feature."
             raise RuntimeError(msg) from e
 
         logger = self.logger

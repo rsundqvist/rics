@@ -12,13 +12,12 @@ Default values:
     Default values are specified by stating the default value after a colon; ``${<var>:default-value}``. The default
     value may be blank, in which case an empty string is used as the default.
 
-There are three main ways of using this module:
+There are two main ways of using this module:
 
     * The :meth:`.Variable.parse_string`-function, combined with :meth:`.Variable.get_value`. This gives you the most
       amount of control.
-    * The :func:`replace_in_string`-function, for basic interpolation without recursion in an entire string.
-    * The :func:`rics.misc.interpolate_environment_variables`-function, which adds some additional logic on top of what
-      the :class:`Variable`-methods provide.
+    * The :func:`replace_in_string`-function, for interpolation in an entire string. Unlike
+      :meth:`.Variable.get_value`, it resolves nested defaults unless ``allow_nested=False``.
 
 Examples:
     We'll set ``ENV_VAR0=VALUE0`` and ``ENV_VAR1=VALUE1``. Vars 2 and 4 are not set.
