@@ -73,6 +73,7 @@ def run_multivariate_test(
         The :func:`~rics.performance.plot_run` and :func:`~rics.performance.get_best` functions.
     """
     if plot:
+        # TODO(6.3.0): Validate the plot arguments up front too; a plot_run error after timing discards the results.
         _verify_can_plot()
     elif plot_kwargs:
         # TODO(7.0.0): Raise.
