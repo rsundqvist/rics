@@ -83,7 +83,7 @@ test = [
     "coverage~=7.15.4",
     "pytest-cov~=7.1.0",
     "responses~=0.26.1",
-    "poetry~=2.4.1",
+    "poetry>=2.4.1,<2.6.0",
 ]
 devops = [
     "nox~=2026.8.10",
