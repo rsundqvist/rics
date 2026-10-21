@@ -109,6 +109,8 @@ def _fetch(local_file_path: Path, remote_file_path: str, show_progress: bool) ->
     response = requests.get(remote_file_path, stream=True, timeout=300)
     response.raise_for_status()
     chunks = response.iter_content(_CHUNK_SIZE)
+    # TODO(6.3.0): A download that fails midway leaves a partial file, which later calls serve as cached. Write to a
+    #  temporary file and rename it on success.
     with local_file_path.open("wb") as output_file:
         if show_progress:
             total = response.headers.get("Content-Length")

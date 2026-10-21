@@ -20,7 +20,8 @@ class SkipIfParams(Generic[DataType, *Ts]):
     est_time: float | None
     """Estimated time for all repetitions over the whole stratum of `data_label`, not just this variant.
 
-    ``None`` during calibration, and when ``number`` is given explicitly.
+    ``None`` during calibration, when ``number`` is given explicitly, and for variants whose whole stratum
+    `skip_if` filtered out during calibration.
     """
     results_so_far: ResultsDict
     """The run's live results, ``{candidate_label: {data_label: [runtime, ...]}}``. Empty during calibration."""

@@ -203,6 +203,7 @@ intersphinx_mapping = {
     "id_translation": (id_translation_docs, None),
     "time_split": (time_split_docs, None),
     "click": ("https://click.palletsprojects.com/en/stable/", None),
+    "requests": ("https://requests.readthedocs.io/en/latest/", None),
 }
 
 # -- Nbsphinx

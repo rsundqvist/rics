@@ -1,5 +1,7 @@
+import math
 from collections import defaultdict
 
+import numpy as np
 import pytest
 
 from rics.performance import MultiCaseTimer, SkipIfParams, _multi_case_timer
@@ -28,6 +30,18 @@ def test_setup_runs_unmeasured_per_repeat():
 def test_derived_data_labels_must_be_unique():
     with pytest.raises(ValueError, match="not unique"):
         MultiCaseTimer(len, [list(range(100)), list(range(200))])
+
+
+@pytest.mark.parametrize(
+    "candidates, expected",
+    [
+        ([sum, np.sum], ["builtin_function_or_method.sum", "sum"]),
+        ([math.floor, np.floor], ["builtin_function_or_method.floor", "floor"]),
+    ],
+)
+def test_builtin_candidate_labels(candidates, expected):
+    # A builtin and its numpy counterpart must not collide; see the TODO in rics.misc._get_name.
+    assert list(MultiCaseTimer.process_candidates(candidates)) == expected
 
 
 def test_warmup_adds_untimed_calls():

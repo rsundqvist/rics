@@ -186,5 +186,23 @@ class TestBadLogLevel:
 
 
 @pytest.mark.parametrize("logger", [None, False])
-def test_get_logger_disabled(logger):
-    assert get_logger(logger).disabled
+def test_get_logger_disabled(logger, capsys):
+    null = get_logger(logger)
+    assert null.disabled
+
+    # Not caplog: pytest attaches its capture handler to non-propagating loggers such as this one.
+    records: list[logging.LogRecord] = []
+
+    class Collect(logging.Handler):
+        def emit(self, record: logging.LogRecord) -> None:
+            records.append(record)
+
+    handler = Collect()
+    logging.root.addHandler(handler)
+    try:
+        null.getChild("child").warning("Should not be seen.")
+    finally:
+        logging.root.removeHandler(handler)
+
+    assert not records
+    assert not capsys.readouterr().err  # No logging.lastResort fallback.

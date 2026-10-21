@@ -17,7 +17,7 @@ There are two main ways of using this module:
     * The :meth:`.Variable.parse_string`-function, combined with :meth:`.Variable.get_value`. This gives you the most
       amount of control.
     * The :func:`replace_in_string`-function, for interpolation in an entire string. Unlike
-      :meth:`.Variable.get_value`, it resolves nested defaults unless ``allow_nested=False``.
+      :meth:`.Variable.get_value`, it resolves nested defaults by default; ``allow_nested=False`` raises on them.
 
 Examples:
     We'll set ``ENV_VAR0=VALUE0`` and ``ENV_VAR1=VALUE1``. Vars 2 and 4 are not set.

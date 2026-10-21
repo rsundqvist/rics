@@ -24,6 +24,7 @@ def make_postprocessors(kwargs: dict[str, Any], params: "CatplotParams") -> list
 
     if kind == "bar":
         # TODO(seaborn==0.13.2): log_scale makes bars vanish, so we do this instead.
+        # TODO(6.3.0): bool() of a tuple is True, so log_scale=(False, False) still gives log bars. Honor the time axis.
         log_scale = kwargs.pop("log_scale", None)
         postprocessors.append(BarPlotProcessor(bool(log_scale), params.horizontal))
 

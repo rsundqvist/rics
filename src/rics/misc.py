@@ -292,7 +292,8 @@ def tname(
 
     Args:
         arg: Something get a name for.
-        prefix_classname: If ``True``, prepend the class name if `arg` belongs to a class.
+        prefix_classname: If ``True``, prepend the class name if `arg` belongs to a class. Builtins bound to a module or
+            an instance get their own type name instead, e.g. ``'builtin_function_or_method.len'`` for ``len``.
         attrs: Attribute names to search for wrapped functions. The default, `'func'`, is the name used by the built-in
             :py:func:`functools.partial` wrapper. Any attribute with one of these names is followed, including
             methods, properties and values made up by ``__getattr__``.
@@ -354,8 +355,15 @@ def _get_name(arg: type[_t.Any] | _t.Any, prefix_classname: bool) -> str:
         elif isinstance(arg, _MethodType):
             cls_name = type(arg_self).__qualname__
         else:
-            # Builtins: module-level ones like `len` have a `__module__`, methods like `[].append` don't.
-            return arg.__name__ if isinstance(getattr(arg, "__module__", None), str) else arg.__qualname__
+            # TODO(6.3.0): Name builtins as `len` / `list.append`. MultiCaseTimer derives candidate labels from this, so
+            #  it must first handle the collisions that creates, e.g. `[sum, np.sum]` and `[math.floor, np.floor]`. This
+            #  also fixes include_module paths like `math.builtin_function_or_method.floor`, which name no real object.
+            #  Candidate labels change for users (a lone `len` becomes `'len'`): add a "Changed" changelog entry. Also
+            #  drop the builtin sentence from the `prefix_classname` docstring and update the expectations in
+            #  test_builtin_prefix_classname, test_pybind11 and test_builtin_candidate_labels. Then restore these:
+            #  # Builtins: module-level ones like `len` have a `__module__`, methods like `[].append` don't.
+            #  return arg.__name__ if isinstance(getattr(arg, "__module__", None), str) else arg.__qualname__
+            cls_name = type(arg).__name__
         return f"{cls_name}.{arg.__name__}"
 
     if hasattr(arg, "__qualname__"):
@@ -439,10 +447,10 @@ def get_local_or_remote(
 ) -> _Path:
     r"""Retrieve the path of a local file, downloading it if needed.
 
-    If `file` is not available at the local root path, it will be downloaded using `requests`_; an HTTP error status
-    raises ``requests.HTTPError`` and leaves no local file behind. A postprocessor may
-    be given in which case the name of the final file will be ``local_root/<name-of-postprocessor>/file``. Removing
-    a raw local file (i.e. ``local_root/file``) will invalidate postprocessed files as well.
+    If `file` is not available at the local root path, it will be downloaded using `requests`_. An HTTP error status
+    raises ``requests.HTTPError`` instead of writing the error page to the local file. A postprocessor may be given, in
+    which case the name of the final file will be ``local_root/<name-of-postprocessor>/file``. Removing a raw local
+    file (i.e. ``local_root/file``) will invalidate postprocessed files as well.
 
     Args:
         file: A file to retrieve or download.
@@ -459,6 +467,7 @@ def get_local_or_remote(
     Raises:
         ValueError: If local root path does not exist or is not a directory.
         ModuleNotFoundError: If the ``tqdm`` package is not installed but ``show_progress=True``.
+        requests.HTTPError: If the server responds with an HTTP error status.
 
     Examples:
         Fetch the Name Basics table (a TSV file) of the `IMDb dataset`_.

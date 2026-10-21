@@ -97,9 +97,12 @@ class CatplotParams:
 
         x_col, hue_col = _resolve_x_hue(x, hue, names=names, df=df)
 
-        if not names and DATA in (x_col, hue_col) and any(isinstance(label, tuple) for label in df[DATA].unique()):
-            msg = "Cannot plot tuple data labels without `names`; pass one name per tuple element."
-            raise ValueError(msg)
+        if not names and any(isinstance(label, tuple) for label in df[DATA].unique()):
+            # Seaborn reads tuples as a MultiIndex `order` on an axis, and as (group, label) pairs in the legend.
+            df[DATA] = df[DATA].map(str)
+            for key in ("order", "hue_order"):  # User-given orders must name the converted labels.
+                if (order := kwargs.get(key)) is not None:
+                    kwargs[key] = [str(label) if isinstance(label, tuple) else label for label in order]
 
         return cls(
             data=df,

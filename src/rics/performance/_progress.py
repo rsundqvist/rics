@@ -93,6 +93,7 @@ def make_progress(
         return _NullProgress()
 
     stream = stream if stream is not None else sys.stderr
+    # TODO(6.3.0): ipykernel's stderr never reports a TTY, so notebooks get log lines; tqdm.auto would show a widget.
     if getattr(stream, "isatty", lambda: False)():
         try:
             return _TqdmProgress(total)

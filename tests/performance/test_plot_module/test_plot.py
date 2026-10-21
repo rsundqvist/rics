@@ -120,9 +120,45 @@ def test_formatted_labels_keep_data_order(kind: Kind) -> None:
     plt.close(facet_grid.fig)
 
 
-def test_tuple_labels_require_names(kind: Kind) -> None:
-    with pytest.raises(ValueError, match="without `names`"):
-        plot_run({"f": {(1,): [1.0], (2,): [2.0]}}, kind=kind)
+@pytest.mark.parametrize(
+    "labels",
+    [[(10,), (100,)], [(10, "rows"), (100, "rows")], [(1, "a", 2.5), (2, "b", 3.5)]],
+    ids=["1-tuple", "2-tuple", "3-tuple"],
+)
+@pytest.mark.parametrize("where", ["x", "hue", "horizontal"])
+def test_tuple_labels_without_names(kind: Kind, labels: list[tuple[Any, ...]], where: str) -> None:
+    run_results: ResultsDict = {"f": {label: [1.0] for label in labels}, "g": {label: [2.0] for label in labels}}
+    kwargs = {"hue": "data"} if where == "hue" else {"x": "data", "horizontal": where == "horizontal"}
+    facet_grid = plot_run(run_results, kind=kind, **kwargs)
+
+    ax = facet_grid.axes.flat[0]
+    if where == "hue":
+        texts = [t.get_text() for t in facet_grid.legend.texts]
+    else:
+        texts = [t.get_text() for t in (ax.get_yticklabels() if where == "horizontal" else ax.get_xticklabels())]
+    plt.close(facet_grid.fig)
+
+    assert texts == [str(label) for label in labels]
+
+
+@pytest.mark.parametrize("where", ["x", "hue"])
+def test_tuple_labels_without_names_and_user_order(kind: Kind, where: str) -> None:
+    labels = [(10, "r"), (100, "s")]
+
+    def draw(keys: list[Any]) -> tuple[list[str], int]:
+        run_results: ResultsDict = {"f": {k: [1.0] for k in keys}, "g": {k: [2.0] for k in keys}}
+        order = keys[::-1]  # Reversed, so the user's order must be the one applied.
+        kwargs: dict[str, Any] = (
+            {"hue": "data", "hue_order": order} if where == "hue" else {"x": "data", "order": order}
+        )
+        facet_grid = plot_run(run_results, kind=kind, **kwargs)
+        ax = facet_grid.axes.flat[0]
+        texts = [t.get_text() for t in (facet_grid.legend.texts if where == "hue" else ax.get_xticklabels())]
+        artists = len(ax.patches) + len(ax.collections)
+        plt.close(facet_grid.fig)
+        return texts, artists
+
+    assert draw(labels) == draw([str(label) for label in labels])
 
 
 @cache

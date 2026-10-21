@@ -441,8 +441,8 @@ def get_logger(logger: AnyLoggerAdapter) -> AnyLoggerAdapter: ...
 def get_logger(logger: LoggerArg | AnyLoggerAdapter) -> _l.Logger | AnyLoggerAdapter:
     """Get a logger.
 
-    Returns a :attr:`~logging.Logger.disabled` logger if `logger` is ``None`` or ``False``. Loggers and adapters are
-    returned as-is.
+    Returns a :attr:`~logging.Logger.disabled` logger if `logger` is ``None`` or ``False``; its child loggers are
+    silenced too. Loggers and adapters are returned as-is.
 
     Args:
         logger: An adapter, logger, logger name, ``None``, or ``False``.
@@ -453,6 +453,9 @@ def get_logger(logger: LoggerArg | AnyLoggerAdapter) -> _l.Logger | AnyLoggerAda
     if logger is None or logger is False:
         logger = _l.getLogger("null")
         logger.disabled = True
+        logger.propagate = False
+        if not logger.handlers:
+            logger.addHandler(_l.NullHandler())
         return logger
 
     if isinstance(logger, str):

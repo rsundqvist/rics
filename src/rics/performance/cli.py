@@ -184,7 +184,8 @@ def main(
         raise
 
     now = datetime.datetime.now()
-    eta = now + datetime.timedelta(seconds=repeat * len(candidates) * time_per_candidate)
+    n_strata = len(data_labels) if stratify else 1  # --stratify uses stratify="full": one stratum per variant.
+    eta = now + datetime.timedelta(seconds=repeat * len(candidates) * n_strata * time_per_candidate)
     eta_str = eta.strftime("%A %d, %H:%M:%S")
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
