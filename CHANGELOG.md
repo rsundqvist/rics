@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `tname()` and `get_public_module()`:
+  * `tname(include_module=True)` now takes the module from the wrapped object of e.g. a `functools.partial`,
+    `partialmethod` or `cached_property`: `'rics.misc.format_kwargs'` instead of `'functools.format_kwargs'`.
+  * `tname(include_module=True)` no longer crashes on builtin functions and methods, e.g. `len`, `math.floor` or
+    pybind11 functions such as those in matplotlib.
+  * `tname(attrs=[...])` now tries every name in `attrs`; it used to stop at the first name the object lacked.
+  * `get_public_module(include_name=True)` no longer drops the name when `obj` isn't found in a public module. It
+    falls back to the defining module, e.g. `'builtins.dict_keys'` instead of `'builtins'`.
+- `MultiCaseTimer`:
+  * Raise when labels derived from non-dict `test_data` collide; such variants used to be dropped silently.
+  * `run(stratify=...)` no longer crashes or miscalibrates when the strata name labels the test data lacks.
+  * With `setup`, at most one `setup` copy is held in memory at a time (it used to be two).
+  * `run(progress=True)` now reaches 100% when `skip_if` discards a whole candidate.
+- `plot_run()`:
+  * With `horizontal=True`, the automatic log scale is on the time axis for every `kind`, not just bar plots.
+  * With `names`, axis tick and legend labels keep their data order instead of being sorted as strings.
+  * Tuple data labels without `names` now plot, instead of crashing or mislabelling the legend.
+- The `rics timeit` CLI:
+  * `mtimeit` and `python -m rics.performance.cli` no longer crash on startup.
+  * The CSV report is no longer lost when matplotlib is missing, and no blank figure is saved without `--plot`.
+  * The friendly error for missing candidates or cases is shown again, and names the right file.
+  * The unreliable-results warning is highlighted again, and the ETA accounts for `--repeat` and `--stratify`.
+- Other utilities:
+  * `format_bytes()` no longer halves values beyond the largest prefix, e.g. `'1024.00 YiB'` for `1024**9`.
+  * `get_local_or_remote()` raises on HTTP error statuses instead of caching the error page as the file.
+  * `get_logger(False)` returns a disabled logger instead of raising, so `MultiCaseTimer(logger=False)` works.
+  * Child loggers of `get_logger(None)`/`get_logger(False)` no longer emit log records.
+  * `InheritedKeysDict.make()` no longer empties the dict passed to it.
+
 ## [6.2.1] - 2026-08-15
 
 ### Fixed
