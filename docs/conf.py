@@ -11,12 +11,12 @@ if True:  # E402 hack
 # This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
-import shutil
 from importlib import import_module, metadata
 
 import rics
 from rics._internal_support import make_toc_tree_titles_shorter, myst_parser_markdown_doc_refs
 from rics._internal_support.changelog import split_changelog
+from rics._internal_support.notebooks import copy_notebooks
 
 type_modules = (
     "rics.collections.dicts",
@@ -208,7 +208,7 @@ intersphinx_mapping = {
 # -- Nbsphinx
 nbsphinx_execute = "never"
 
-shutil.copytree("../notebooks/demo/", "documentation/examples/notebooks", dirs_exist_ok=True)
-shutil.copytree("../notebooks/cli/", "documentation/cli/notebooks", dirs_exist_ok=True)
+copy_notebooks("../notebooks/demo/", "documentation/examples/notebooks")
+copy_notebooks("../notebooks/cli/", "documentation/cli/notebooks")
 
 split_changelog("changelog", "../CHANGELOG.md")
