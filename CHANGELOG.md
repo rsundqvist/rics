@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.2.2] - 2026-10-21
+
 ### Fixed
 - `tname()` and `get_public_module()`:
   * `tname(include_module=True)` now takes the module from the wrapped object of e.g. a `functools.partial`,
@@ -678,7 +680,8 @@ First release on PyPI!
 - The `rics.mapping` package for linking elements in multiple directions.
 - The `rics.cardinality` package; enum types for `1:1`, `1:N`, `N:1`, and `M:N`.
 
-[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.2.1...HEAD
+[Unreleased]: https://github.com/rsundqvist/rics/compare/v6.2.2...HEAD
+[6.2.2]: https://github.com/rsundqvist/rics/compare/v6.2.1...v6.2.2
 [6.2.1]: https://github.com/rsundqvist/rics/compare/v6.2.0...v6.2.1
 [6.2.0]: https://github.com/rsundqvist/rics/compare/v6.1.4...v6.2.0
 [6.1.4]: https://github.com/rsundqvist/rics/compare/v6.1.3...v6.1.4
